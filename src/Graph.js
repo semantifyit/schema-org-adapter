@@ -52,7 +52,7 @@ class Graph {
         this.properties = {}; //keys are the URI
         this.dataTypes = {}; //keys are the URI
         this.enumerations = {}; //keys are the URI
-        this.enumerationValues = {}; //keys are the URI
+        this.enumerationMembers = {}; //keys are the URI
         this.meta = {}; //keys are the URI, elements are the meta elements of the vocabulary (Enumeration, Class, Property, Datatype)
     }
 
@@ -82,21 +82,59 @@ class Graph {
              enumerations ("@type" = "rdfs:Class")
              enumerationMembers ("@type" = @id of enumeration)
              */
-            this.addGraphClass(new GraphClass({
-                "@id": "http://schema.org/MedicalProcedure",
-                "@type": "rdfs:Class",
-                "http://schema.org/isPartOf": {
-                    "@id": "http://health-lifesci.schema.org"
-                },
-                "http://www.w3.org/2002/07/owl#equivalentClass": {
-                    "@id": "http://purl.bioontology.org/ontology/SNOMEDCT/50731006"
-                },
-                "rdfs:comment": "A process of care used in either a diagnostic, therapeutic, preventive or palliative capacity that relies on invasive (surgical), non-invasive, or other techniques.",
-                "rdfs:label": "MedicalProcedure",
-                "rdfs:subClassOf": {
-                    "@id": "http://schema.org/MedicalEntity"
+            for (let i = 0; i < vocab["@graph"].length; i++) {
+                let curNode = JSON.parse(JSON.stringify(vocab["@graph"][i]));
+                if(util.isString(curNode["@type"])){
+                    switch (curNode["@type"]) {
+                        case "rdfs:Class":
+                            this.addGraphNode(this.classes, curNode);
+                            break;
+                        case "rdf:Property":
+                            this.addGraphNode(this.properties, curNode);
+                            break;
+                        default:
+                            //@type is not something expected -> enumerationMember
+                            this.addGraphNode(this.enumerationMembers, curNode);
+                            break;
+                    }
+                } else {
+                    //@type is not a string -> datatype
+                    // [
+                    //     "rdfs:Class",
+                    //     "schema:DataType"
+                    // ]
+                    //but can be also enumeration
+                    //[
+                    //   "schema:MedicalImagingTechnique",
+                    //   "schema:MedicalSpecialty"
+                    // ]
+                    if(curNode["@type"].indexOf("rdfs:Class") !== -1 && curNode["@type"].indexOf("schema:DataType") !== -1 ){
+                        //datatype
+                        this.addGraphNode(this.dataTypes, curNode);
+                    } else {
+                        //enumeration member
+                        this.addGraphNode(this.enumerationMembers, curNode);
+                    }
+
                 }
-            }));
+            }
+            console.log(this.dataTypes);
+
+            // this.addGraphClass(new GraphClass({
+            //     "@id": "http://schema.org/MedicalProcedure",
+            //     "@type": "rdfs:Class",
+            //     "http://schema.org/isPartOf": {
+            //         "@id": "http://health-lifesci.schema.org"
+            //     },
+            //     "http://www.w3.org/2002/07/owl#equivalentClass": {
+            //         "@id": "http://purl.bioontology.org/ontology/SNOMEDCT/50731006"
+            //     },
+            //     "rdfs:comment": "A process of care used in either a diagnostic, therapeutic, preventive or palliative capacity that relies on invasive (surgical), non-invasive, or other techniques.",
+            //     "rdfs:label": "MedicalProcedure",
+            //     "rdfs:subClassOf": {
+            //         "@id": "http://schema.org/MedicalEntity"
+            //     }
+            // }));
 
             return true;
         } catch (e) {
@@ -106,14 +144,15 @@ class Graph {
     }
 
     /**
-     * Creates/Updates a class node in the graph
-     * @param {object} graphClass - The class node in JSON-LD format
+     * Creates/Updates a node in the graph
+     * @param {object} memory - The memory object where the new node should be added (Classes, Properties, Enumerations, EnumerationMembers, DataTypes, Meta)
+     * @param {object} newNode - The node in JSON-LD format to be added
      * @return {boolean} returns true on success
      */
-    addGraphClass(graphClass) {
+    addGraphNode(memory, newNode){
         try {
-            if (graphClass.id !== undefined) {
-                this.classes[graphClass.id] = graphClass;
+            if (memory[newNode["@id"]] === undefined) {
+                memory[newNode["@id"]] = newNode;
             } else {
                 //merging algorithm
             }

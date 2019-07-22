@@ -8,11 +8,10 @@ let mySA = new SDOAdapter();
 mySA.addVocabularies([VOC_OBJ_SDO3_7, VOC_OBJ_DACH], onStart);
 
 function onStart() {
-    let testClass = mySA.getClass("http://schema.org/MedicalProcedure");
+    let testClass = mySA.getClass("schema:MedicalProcedure");
 
     console.log(testClass.getId());
     console.log(testClass.getName());
     console.log(testClass.getDescription("en"));
     console.log(testClass.toJSON(true));
-
 }
