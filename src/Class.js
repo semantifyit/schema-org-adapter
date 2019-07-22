@@ -26,7 +26,7 @@ class Class {
         return descriptionObj[language];
     }
 
-    toJSON(explicit) {
+    toJSON(explicit = false) {
         // explicit === true ->
         // properties of all parent classes
         // subproperties of all properties

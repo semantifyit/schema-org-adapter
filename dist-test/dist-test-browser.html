@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+test
+</body>
+<script src="./../dist/sdoAdapter.js"></script>
+<script>
+    (function () {
+        let mySA = new sdoAdapter();
+        mySA.addVocabularies([{
+            "@context": {
+                "dach-kg": "http://http://dachkg.org/ontology/1.0/",
+                "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+                "rdfa": "http://www.w3.org/ns/rdfa#",
+                "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+                "schema": "http://schema.org/",
+                "xsd": "http://www.w3.org/2001/XMLSchema#"
+            },
+            "@graph": [
+                {
+                    "@id": "dach-kg:endLocation",
+                    "@type": "rdf:Property",
+                    "rdfs:comment": "A sub property of schema.org location. The final location of the trail.",
+                    "rdfs:label": "endLocation",
+                    "rdfs:subPropertyOf": {
+                        "@id": "schema:location"
+                    },
+                    "schema:domainIncludes": {
+                        "@id": "dach-kg:Trail"
+                    },
+                    "schema:rangeIncludes": {
+                        "@id": "schema:Place"
+                    }
+                },
+                {
+                    "@id": "dach-kg:Trail",
+                    "@type": "rdfs:Class",
+                    "rdfs:comment": "A  a path, track or unpaved lane or road for sport activities or walking.",
+                    "rdfs:label": "Trail",
+                    "rdfs:subClassOf": {
+                        "@id": "schema:Place"
+                    }
+                },
+                {
+                    "@id": "dach-kg:startLocation",
+                    "@type": "rdf:Property",
+                    "rdfs:comment": "A sub property of schema.org location. The start location of the trail.",
+                    "rdfs:label": "startLocation",
+                    "rdfs:subPropertyOf": {
+                        "@id": "schema:location"
+                    },
+                    "schema:domainIncludes": {
+                        "@id": "dach-kg:Trail"
+                    },
+                    "schema:rangeIncludes": {
+                        "@id": "schema:Place"
+                    }
+                }
+            ]
+        }], onStart);
+
+        function onStart() {
+            let testClass = mySA.getClass("http://schema.org/MedicalProcedure");
+            console.log(testClass.getId());
+            console.log(testClass.getName());
+            console.log(testClass.getDescription("en"));
+            console.log(testClass.toJSON(true));
+        }
+    })();
+</script>
+</html>

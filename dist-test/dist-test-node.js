@@ -1,6 +1,8 @@
-const SDOAdapter = require("../src/SDOAdapter");
-let mySA = new SDOAdapter();
-mySA.addVocabularies(["schema.org/3.6", {"vocab": "schema.org/3.7"}, '{"vocab": "schema.org/3.7"}'], onStart);
+const sdoAdapter = require("./../dist/sdoAdapter");
+const VOC_OBJ_SDO3_7 = require('../testData/schema_3.7');
+let mySA = new sdoAdapter();
+
+mySA.addVocabularies([VOC_OBJ_SDO3_7], onStart);
 
 function onStart() {
     let testClass = mySA.getClass("http://schema.org/MedicalProcedure");
