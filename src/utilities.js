@@ -57,6 +57,20 @@ function isArray(value) {
     return Array.isArray(value);
 }
 
+//make sure each string is only 1 time in the array
+function uniquifyArray(array) {
+    let seen = {};
+    let result = [];
+    for (let i = 0; i < array.length; i++) {
+        let item = array[i];
+        if (seen[item] !== 1) {
+            seen[item] = 1;
+            result.push(item);
+        }
+    }
+    return result;
+}
+
 function generateContext(currentContext, newContext) {
     let keysCurrentContext = Object.keys(currentContext);
     let keysNewContext = Object.keys(newContext);
@@ -181,13 +195,45 @@ function mergeVocabNodes(oldNode, newNode) {
     return null; //todo
 }
 
+
+/*
+term - A term is a short word defined in a context that MAY be expanded to an IRI
+compact IRI - A compact IRI is has the form of prefix:suffix and is used as a way of expressing an IRI without needing to define separate term definitions for each IRI contained within a common vocabulary identified by prefix.
+prefix - A prefix is the first component of a compact IRI which comes from a term that maps to a string that, when prepended to the suffix of the compact IRI results in an absolute IRI.*/
+
+function toCompactIRI(absoluteIRI, context) {
+    let terms = Object.keys(context);
+    for (let i = 0; i < terms.length; i++) {
+        let vocabIRI = context[terms[i]];
+        if (isString(vocabIRI) && absoluteIRI.startsWith(vocabIRI)) {
+            return terms[i] + ":" + absoluteIRI.substring(vocabIRI.length);
+        }
+    }
+    return null;
+}
+
+function toAbsoluteIRI(compactIRI, context) {
+    let terms = Object.keys(context);
+    for (let i = 0; i < terms.length; i++) {
+        let vocabIRI = context[terms[i]];
+        if (compactIRI.substring(0, compactIRI.indexOf(":")) === terms[i]) {
+            return vocabIRI.concat(compactIRI.substring(compactIRI.indexOf(":") + 1));
+        }
+    }
+    return null;
+}
+
+
 module.exports = {
     applyFilter,
     copByVal,
     isArray,
     isString,
     isObject,
+    uniquifyArray,
     preProcessVocab,
     generateContext,
-    curateNode
+    curateNode,
+    toCompactIRI,
+    toAbsoluteIRI
 };

@@ -5,7 +5,7 @@ let mySA = new sdoAdapter();
 mySA.addVocabularies([VOC_OBJ_SDO3_7], onStart);
 
 function onStart() {
-    let testClass = mySA.getClass("http://schema.org/MedicalProcedure");
+    let testClass = mySA.getClass("schema:Hotel");
 
     console.log(testClass.getId());
     console.log(testClass.getName());

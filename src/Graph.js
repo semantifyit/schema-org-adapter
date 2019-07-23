@@ -1,6 +1,6 @@
 const util = require("./utilities");
-const GraphClass = require("./GraphClass");
 const Class = require("./Class");
+const ReasoningEngine = require("./ReasoningEngine");
 
 class Graph {
     /**
@@ -9,6 +9,8 @@ class Graph {
      */
     constructor(sdoAdapter) {
         this.sdoAdapter = sdoAdapter;
+        this.reasoner = new ReasoningEngine(this);
+        // Simply speaking, a context is used to map terms to IRIs. Terms are case sensitive and any valid string that is not a reserved JSON-LD keyword can be used as a term.
         // soa:superClassOf is an inverse of rdfs:subClassOf that should help us
         // soa:superPropertyOf is an inverse of rdfs:subPropertyOf that should help us
         // soa:hasProperty is an inverse of schema:domainIncludes
@@ -79,12 +81,12 @@ class Graph {
                 "@type": "@id"
             }
         };
-        this.classes = {}; //keys are the URI
-        this.properties = {}; //keys are the URI
-        this.dataTypes = {}; //keys are the URI
-        this.enumerations = {}; //keys are the URI
-        this.enumerationMembers = {}; //keys are the URI
-        this.meta = {}; //keys are the URI, elements are the meta elements of the vocabulary (Enumeration, Class, Property, Datatype)
+        this.classes = {}; //keys are the compacted IRI
+        this.properties = {}; //keys are the compacted IRI
+        this.dataTypes = {}; //keys are the compacted IRI
+        this.enumerations = {}; //keys are the compacted IRI
+        this.enumerationMembers = {}; //keys are the compacted IRI
+        this.meta = {}; //keys are the compacted IRI, elements are the meta elements of the vocabulary (Enumeration, Class, Property, Datatype)
     }
 
     /**
@@ -407,7 +409,7 @@ class Graph {
             if (memory[newNode["@id"]] === undefined) {
                 memory[newNode["@id"]] = newNode;
             } else {
-                //merging algorithm
+                //merging algorithm todo
             }
             return true;
         } catch (e) {
@@ -418,21 +420,22 @@ class Graph {
 
     /**
      * Creates/Updates a class node in the graph
-     * @param {string} URI - The URI of the wished class node
+     * @param {string} id - The id of the wished class node, can be an IRI (absolute or compact) or a label
      * @param {object} filter - (optional) The filter settings to be applied on the search
-     * @return {Class} the Class object for the given URI
+     * @return {Class} the Class object for the given IRI
      */
-    getClass(URI, filter = null) {
-        let classObj = this.classes[URI];
+    getClass(id, filter = null) {
+        let compactIRI = this.discoverCompactIRI(id);
+        let classObj = this.classes[compactIRI];
         if (classObj !== undefined) {
             classObj = util.applyFilter([classObj], filter);
             if (classObj.length === 0) {
-                throw new Error("There is no class with that URI and filter settings.");
+                throw new Error("There is no class with that IRI and filter settings.");
             } else {
-                return new Class(URI, this);
+                return new Class(compactIRI, this);
             }
         } else {
-            throw new Error("There is no class with the URI " + URI);
+            throw new Error("There is no class with the IRI " + id);
         }
 
     }
@@ -451,6 +454,29 @@ class Graph {
         }
 
     }
+
+    //input can be a compact or absolute IRI
+    discoverCompactIRI(input) {
+        if (input.indexOf(":") !== -1) {
+            //is iri
+            let terms = Object.keys(this.context);
+            for (let i = 0; i < terms.length; i++) {
+                let absoluteIRI = this.context[terms[i]];
+                if (util.isString(absoluteIRI)) {
+                    if (input.startsWith(terms[i])) {
+                        //is compactIRI
+                        return input;
+                    } else if (input.startsWith(absoluteIRI)) {
+                        //is absoluteIRI
+                        return util.toCompactIRI(input, this.context);
+                    }
+                }
+            }
+        } else {
+            //is label
+        }
+    }
+
 }
 
 module.exports = Graph;

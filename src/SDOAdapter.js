@@ -1,5 +1,6 @@
 const Graph = require("./Graph");
 const util = require("./utilities");
+const request = require("request");
 
 class SDOAdapter {
     constructor() {
@@ -28,8 +29,26 @@ class SDOAdapter {
         }
     }
 
-    getClass(URI, filter = null) {
-        return this.graph.getClass(URI, filter)
+    async retrieveVocab(URL) {
+        //todo retrieve a JSON-LD document from the given URL
+    }
+
+    getClass(id, filter = null) {
+        return this.graph.getClass(id, filter)
+    }
+
+    getVocabularies() {
+        let vocabKeys = Object.keys(this.graph.context);
+        let result = {};
+        let blacklist = ["soa", "xsd", "rdf", "rdfa", "rdfs", "dc"]; //standard vocabs that should not be exposed
+        for (let i = 0; i < vocabKeys.length; i++) {
+            if (util.isString(this.graph.context[vocabKeys[i]])) {
+                if (blacklist.indexOf(vocabKeys[i]) === -1) {
+                    result[vocabKeys[i]] = this.graph.context[vocabKeys[i]];
+                }
+            }
+        }
+        return result;
     }
 }
 
