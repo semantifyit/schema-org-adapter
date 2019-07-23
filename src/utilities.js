@@ -153,10 +153,31 @@ function curateNode(vocabNode) {
     } else {
         vocabNode["rdfs:label"] = null;
     }
+    //make arrays for some terms in any case
+    if (isString(vocabNode["rdfs:subClassOf"])) {
+        vocabNode["rdfs:subClassOf"] = [vocabNode["rdfs:subClassOf"]];
+    } else if (vocabNode["rdfs:subClassOf"] === undefined && vocabNode["@type"] === "rdfs:Class") {
+        vocabNode["rdfs:subClassOf"] = [];
+    }
+    if (isString(vocabNode["rdfs:subPropertyOf"])) {
+        vocabNode["rdfs:subPropertyOf"] = [vocabNode["rdfs:subPropertyOf"]];
+    } else if (vocabNode["rdfs:subPropertyOf"] === undefined && vocabNode["@type"] === "rdf:Property") {
+        vocabNode["rdfs:subPropertyOf"] = [];
+    }
+    if (isString(vocabNode["schema:domainIncludes"])) {
+        vocabNode["schema:domainIncludes"] = [vocabNode["schema:domainIncludes"]];
+    } else if (vocabNode["schema:domainIncludes"] === undefined && vocabNode["@type"] === "rdf:Property") {
+        vocabNode["schema:domainIncludes"] = [];
+    }
+    if (isString(vocabNode["schema:rangeIncludes"])) {
+        vocabNode["schema:rangeIncludes"] = [vocabNode["schema:rangeIncludes"]];
+    } else if (vocabNode["schema:rangeIncludes"] === undefined && vocabNode["@type"] === "rdf:Property") {
+        vocabNode["schema:rangeIncludes"] = [];
+    }
     return vocabNode;
 }
 
-function mergeVocabNodes(oldNode, newNode){
+function mergeVocabNodes(oldNode, newNode) {
     return null; //todo
 }
 
