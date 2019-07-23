@@ -30,6 +30,22 @@ class Graph {
                 "@id": "soa:superPropertyOf",
                 "@type": "@id"
             },
+            "soa:hasProperty": {
+                "@id": "soa:hasProperty",
+                "@type": "@id"
+            },
+            "soa:isRangeOf": {
+                "@id": "soa:isRangeOf",
+                "@type": "@id"
+            },
+            "soa:hasEnumerationMember": {
+                "@id": "soa:hasEnumerationMember",
+                "@type": "@id"
+            },
+            "soa:enumerationDomainIncludes": {
+                "@id": "soa:enumerationDomainIncludes",
+                "@type": "@id"
+            },
             "rdfs:subClassOf": {
                 "@id": "rdfs:subClassOf",
                 "@type": "@id"
