@@ -11,6 +11,16 @@ class Class {
         return "Class";
     }
 
+    //dc:source
+    getSource(){
+
+    }
+
+    //schema:isPartOf
+    getVocabulary(){
+
+    }
+
     getIRI(compactedForm = false) {
         //compactedForm = true -> return compacted IRI -> "schema:Book"
         //compactedForm = false -> return absolute IRI -> "http://schema.org/Book"
@@ -48,11 +58,31 @@ class Class {
     }
 
 
-    toString() {
-        return this.toJSON(true);
+
+    getSubClasses(explicit = false, filter = null){
+
     }
 
-    toJSON(explicit = true) {
+    getSuperClasses(explicit = false, filter = null){
+
+    }
+
+
+    isSuperseededBy(){
+        //return null if undefined, return IRI of superseeded if any schema:supersededBy
+        let classObj = this.graph.classes[this.IRI];
+        if(util.isString(classObj["schema:supersededBy"])){
+            return classObj["schema:supersededBy"];
+        } else {
+            return null;
+        }
+    }
+
+    toString() {
+        return this.toJSON(true, null);
+    }
+
+    toJSON(explicit = true, filter = null) {
         // explicit === false (implicit === true) ->
         // properties of all parent classes
         // subproperties of all properties

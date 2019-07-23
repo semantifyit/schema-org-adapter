@@ -17,4 +17,7 @@ function onStart() {
     console.log('getProperties(false) '+testClass.getProperties(false));
     console.log('getProperties(true) '+testClass.getProperties(true));
     console.log(testClass.toString());
+
+    let testProp = mySA.getProperty("schema:aspect");
+    console.log("isSuperseededBy() "+testProp.isSuperseededBy());
 }

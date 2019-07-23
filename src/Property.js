@@ -1,13 +1,19 @@
 //the functions for a property Object
+const util = require("./utilities");
 
 class Property {
-    constructor(URI, graph) {
-        this.URI = URI; //should be the written out version e.g. http://schema.org/MediaObject ?
+    constructor(IRI, graph) {
+        this.IRI = IRI; //should be the written out version e.g. http://schema.org/MediaObject ?
         this.graph = graph; //the underlying data graph to enable the methods
     }
 
-    getURI(useVocabIndicator = true) {
-        return this.URI;
+    static getTermType() {
+        return "Property";
+    }
+
+
+    getIRI(useVocabIndicator = true) {
+        return this.IRI;
     }
 
     getName(language = "en") {
@@ -24,6 +30,16 @@ class Property {
             return null;
         }
         return descriptionObj[language];
+    }
+
+    isSuperseededBy(){
+        //return null if undefined, return IRI of superseeded if any schema:supersededBy
+        let classObj = this.graph.properties[this.IRI];
+        if(util.isString(classObj["schema:supersededBy"])){
+            return classObj["schema:supersededBy"];
+        } else {
+            return null;
+        }
     }
 
     toJSON(explicit = false) {

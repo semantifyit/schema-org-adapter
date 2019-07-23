@@ -3,10 +3,19 @@ const util = require("./utilities");
 const request = require("request");
 
 class SDOAdapter {
+    /**
+     * The SDOAdapter is a singleton class that represents the interface between the user and this library. Its methods enable to add vocabularies to its memory as well as retrieving vocabulary items
+     * @constructor
+     */
     constructor() {
         this.graph = new Graph(this);
     }
 
+    /**
+     * Adds vocabularies (in JSON-LD format or as URL) to the memory of the adapter
+     * @param {object} vocabArray - The vocabularies to add the graph, in JSON-LD format or as URL
+     * @param {function} callback - The callback function executed at the end of the loading process
+     */
     async addVocabularies(vocabArray, callback) {
         if (util.isArray(vocabArray)) {
             //check every vocab if it is a valid JSON-LD. If non-url string -> try to JSON.Parse . If URL -> fetch
@@ -35,6 +44,10 @@ class SDOAdapter {
 
     getClass(id, filter = null) {
         return this.graph.getClass(id, filter)
+    }
+
+    getProperty(id, filter = null) {
+        return this.graph.getProperty(id, filter)
     }
 
     getVocabularies() {

@@ -7,7 +7,7 @@
     "build": "browserify src/SDOAdapter.js -s sdoAdapter | derequire -cm --toplevel > dist/sdoAdapter.js",
     "buildMinified": "browserify src/SDOAdapter.js -s sdoAdapter -g [uglifyify] | derequire -cm --toplevel > dist/sdoAdapter.js",
     "test": "jest",
-    "genDoc": "jsdoc"
+    "genDoc": "jsdoc src/"
   },
   "author": "",
   "license": "ISC",

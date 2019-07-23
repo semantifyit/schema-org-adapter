@@ -1,5 +1,9 @@
 const util = require("./utilities");
 const Class = require("./Class");
+const Property = require("./Property");
+const Enumeration = require("./Enumeration");
+const EnumerationMember = require("./EnumerationMember");
+const DataType = require("./DataType");
 const ReasoningEngine = require("./ReasoningEngine");
 
 class Graph {
@@ -390,7 +394,6 @@ class Graph {
                     }
                 }
             }
-
             return true;
         } catch (e) {
             console.log(e);
@@ -419,14 +422,15 @@ class Graph {
     }
 
     /**
-     * Creates/Updates a class node in the graph
-     * @param {string} id - The id of the wished class node, can be an IRI (absolute or compact) or a label
-     * @param {object} filter - (optional) The filter settings to be applied on the search
-     * @return {Class} the Class object for the given IRI
+     * Creates a JS-Class for a Class of the Graph
+     * @param {string} id - The id of the wished Class-node, can be an IRI (absolute or compact) or a label
+     * @param {object} filter - (optional) The filter settings to be applied on the result
+     * @return {Class} the JS-Class for the given IRI
      */
     getClass(id, filter = null) {
         let compactIRI = this.discoverCompactIRI(id);
         let classObj = this.classes[compactIRI];
+        //todo enumerations can also be counted as classes
         if (classObj !== undefined) {
             classObj = util.applyFilter([classObj], filter);
             if (classObj.length === 0) {
@@ -440,14 +444,21 @@ class Graph {
 
     }
 
-    getProperty(URI, filter = null) {
-        let graphProperty = this.classes[URI];
-        if (graphProperty !== undefined) {
-            graphProperty = util.applyFilter([graphProperty], filter);
-            if (graphProperty.length === 0) {
+    /**
+     * Creates a JS-Class for a Property of the Graph
+     * @param {string} id - The id of the wished Property-node, can be an IRI (absolute or compact) or a label
+     * @param {object} filter - (optional) The filter settings to be applied on the result
+     * @return {Property} the JS-Class for the given IRI
+     */
+    getProperty(id, filter = null) {
+        let compactIRI = this.discoverCompactIRI(id);
+        let propertyObj = this.properties[compactIRI];
+        if (propertyObj !== undefined) {
+            propertyObj = util.applyFilter([propertyObj], filter);
+            if (propertyObj.length === 0) {
                 throw new Error("There is no property with that URI and filter settings.");
             } else {
-                return new Property(URI, this);
+                return new Property(compactIRI, this);
             }
         } else {
             throw new Error("There is no property with that URI.");
@@ -474,6 +485,7 @@ class Graph {
             }
         } else {
             //is label
+            //todo
         }
     }
 
