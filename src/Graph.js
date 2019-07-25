@@ -9,7 +9,7 @@ const ReasoningEngine = require("./ReasoningEngine");
 class Graph {
     /**
      * @constructor
-     * @param {object} sdoAdapter The parent sdoAdapter-class to which this Graph belongs
+     * @param {object} sdoAdapter - The parent sdoAdapter-class to which this Graph belongs
      */
     constructor(sdoAdapter) {
         this.sdoAdapter = sdoAdapter;
@@ -90,7 +90,6 @@ class Graph {
         this.dataTypes = {}; //keys are the compacted IRI
         this.enumerations = {}; //keys are the compacted IRI
         this.enumerationMembers = {}; //keys are the compacted IRI
-        this.meta = {}; //keys are the compacted IRI, elements are the meta elements of the vocabulary (Enumeration, Class, Property, Datatype)
     }
 
     /**
@@ -105,8 +104,9 @@ class Graph {
             this.context = util.generateContext(this.context, vocab["@context"]);
             //pre-process new vocab
             vocab = await util.preProcessVocab(vocab, this.context); //adapt @graph to new context
+            let vocabularies = this.sdoAdapter.getVocabularies();
             for (let i = 0; i < vocab["@graph"].length; i++) {
-                vocab["@graph"][i] = util.curateNode(vocab["@graph"][i]); //curate nodes
+                vocab["@graph"][i] = util.curateNode(vocab["@graph"][i], vocabularies); //curate nodes
             }
             //add new vocab
 
@@ -419,6 +419,40 @@ class Graph {
             console.log(e);
             return false;
         }
+    }
+
+    /**
+     * Creates a corresponding JS-Class for the given IRI, depending on its category in the Graph
+     * @param {string} id - The id of the wished term, can be an IRI (absolute or compact) or a label
+     * @param {object} filter - (optional) The filter settings to be applied on the result
+     * @return {Class|Property|Enumeration|EnumerationMember|DataType} the JS-Class for the given IRI
+     */
+    getTerm(id, filter = null) {
+        let compactIRI = this.discoverCompactIRI(id);
+        let targetObj;
+        let targetType;
+        let tryCounter = 0;
+        do{
+            switch (tryCounter){
+                case 0:
+                    targetObj = this.classes[compactIRI];
+                    targetType = "Class";
+                    break;
+            }
+        } while (targetObj === undefined && tryCounter < 6);
+
+
+        if (targetObj !== undefined) {
+            targetObj = util.applyFilter([targetObj], filter);
+            if (targetObj.length === 0) {
+                throw new Error("There is no term with that IRI and filter settings.");
+            } else {
+                return new Class(compactIRI, this);
+            }
+        } else {
+            throw new Error("There is no term with the IRI " + id);
+        }
+
     }
 
     /**

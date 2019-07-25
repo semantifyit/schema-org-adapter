@@ -2,13 +2,23 @@
 const util = require("./utilities");
 
 class Property {
+    /**
+     * A Property represents an rdf:Property. It is identified by its IRI
+     * @constructor
+     * @param {string} IRI - The compacted IRI of this Property, e.g. "schema:address"
+     * @param {object} graph - The underlying data graph to enable the methods of this Property
+     */
     constructor(IRI, graph) {
-        this.IRI = IRI; //should be the written out version e.g. http://schema.org/MediaObject ?
-        this.graph = graph; //the underlying data graph to enable the methods
+        this.IRI = IRI;
+        this.graph = graph;
     }
 
+    /**
+     * Retrieves the term type of this Property (is always "rdf:Property")
+     * @returns {string} The term type of this Property -> "rdf:Property"
+     */
     static getTermType() {
-        return "Property";
+        return "rdf:Property";
     }
 
 

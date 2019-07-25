@@ -1,17 +1,24 @@
 const jsonld = require("jsonld");
 
-function applyFilter(dataArray, filter) {
+
+/**
+ * Applies a filter to the IRIs given in the dataArray.
+ * @param {array} dataArray - Array of IRIs that should be filtered
+ * @param {object} filter - The filter options, which can be: "isSuperseded": T/F, "hasTermType": string/Array, "isFromVocabulary": string/Array
+ * @returns {array} Array of IRIs that are in compliance with the given filter options
+ */
+function applyFilter(dataArray, filter, graph) {
     if (!Array.isArray(dataArray) || dataArray.length === 0 || filter === null) {
         return dataArray;
     }
     let result = [];
     for (let i = 0; i < dataArray.length; i++) {
-        //superseeded
-        if (filter.superseeded !== undefined) {
-            if (filter.superseeded === false && dataArray[i].getSuperseeded() !== false) {
+        let actualTerm = graph.getTerm(dataArray[i]);
+        //superseded
+        if (filter.superseded !== undefined) {
+            if (filter.superseded === false && actualTerm.isSupersededBy() !== null) {
                 continue; //skip this element
-            }
-            if (filter.superseeded === true && dataArray[i].getSuperseeded() === false) {
+            } else if (filter.superseded === true && actualTerm.isSupersededBy() === null) {
                 continue; //skip this element
             }
         }
@@ -19,7 +26,7 @@ function applyFilter(dataArray, filter) {
 
         //termType
         if (filter.termType !== undefined) {
-            if (filter.termType !== dataArray[i].getTermType()) {
+            if (filter.termType !== actualTerm.getTermType()) {
                 continue; //skip this element
             }
         }
@@ -144,7 +151,7 @@ async function preProcessVocab(vocab, newContext) {
     return await jsonld.compact(await jsonld.expand(vocab), newContext);
 }
 
-function curateNode(vocabNode) {
+function curateNode(vocabNode, vocabularies) {
     if (vocabNode["rdfs:comment"] !== undefined) {
         //make a vocab object with "en" as the standard value
         if (isString(vocabNode["rdfs:comment"])) {
@@ -187,6 +194,27 @@ function curateNode(vocabNode) {
         vocabNode["schema:rangeIncludes"] = [vocabNode["schema:rangeIncludes"]];
     } else if (vocabNode["schema:rangeIncludes"] === undefined && vocabNode["@type"] === "rdf:Property") {
         vocabNode["schema:rangeIncludes"] = [];
+    }
+    if (!isString(vocabNode["schema:isPartOf"])) {
+        let vocabKeys = Object.keys(vocabularies);
+        let vocab;
+        for (let i = 0; i < vocabKeys.length; i++) {
+            if (vocabNode["@id"].substring(0, vocabNode["@id"].indexOf(":")) === vocabKeys[i]) {
+                vocab = vocabularies[vocabKeys[i]];
+                break;
+            }
+        }
+        if (vocab !== undefined) {
+            let newChange;
+            do {
+                newChange = false;
+                if (vocab.endsWith("/") || vocab.endsWith("#")) {
+                    vocab = vocab.substring(0, vocab.length - 1);
+                    newChange = true;
+                }
+            } while (newChange === true);
+            vocabNode["schema:isPartOf"] = vocab;
+        }
     }
     return vocabNode;
 }

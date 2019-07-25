@@ -14,7 +14,7 @@ class SDOAdapter {
     /**
      * Adds vocabularies (in JSON-LD format or as URL) to the memory of the adapter
      * @param {object} vocabArray - The vocabularies to add the graph, in JSON-LD format or as URL
-     * @param {function} callback - The callback function executed at the end of the loading process
+     * @param {function|null} callback - The callback function executed at the end of the loading process
      */
     async addVocabularies(vocabArray, callback) {
         if (util.isArray(vocabArray)) {
@@ -31,8 +31,9 @@ class SDOAdapter {
                     throw new Error("The first argument of the function must be an Array of vocabularies (URL as String or JSON-LD as Object)");
                 }
             }
-
-            callback();
+            if (callback !== null) {
+                callback();
+            }
         } else {
             throw new Error("The first argument of the function must be an Array of vocabularies (URL or JSON-LD)");
         }

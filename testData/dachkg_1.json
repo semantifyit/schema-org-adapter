@@ -1,6 +1,6 @@
 {
   "@context": {
-    "dach-kg": "http://http://dachkg.org/ontology/1.0/",
+    "dachkg": "http://dachkg.org/ontology/1.0/",
     "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
     "rdfa": "http://www.w3.org/ns/rdfa#",
     "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
@@ -9,7 +9,7 @@
   },
   "@graph": [
     {
-      "@id": "dach-kg:endLocation",
+      "@id": "dachkg:endLocation",
       "@type": "rdf:Property",
       "rdfs:comment": "A sub property of schema.org location. The final location of the trail.",
       "rdfs:label": "endLocation",
@@ -17,14 +17,14 @@
         "@id": "schema:location"
       },
       "schema:domainIncludes": {
-        "@id": "dach-kg:Trail"
+        "@id": "dachkg:Trail"
       },
       "schema:rangeIncludes": {
         "@id": "schema:Place"
       }
     },
     {
-      "@id": "dach-kg:Trail",
+      "@id": "dachkg:Trail",
       "@type": "rdfs:Class",
       "rdfs:comment": "A  a path, track or unpaved lane or road for sport activities or walking.",
       "rdfs:label": "Trail",
@@ -33,7 +33,7 @@
       }
     },
     {
-      "@id": "dach-kg:startLocation",
+      "@id": "dachkg:startLocation",
       "@type": "rdf:Property",
       "rdfs:comment": "A sub property of schema.org location. The start location of the trail.",
       "rdfs:label": "startLocation",
@@ -41,7 +41,7 @@
         "@id": "schema:location"
       },
       "schema:domainIncludes": {
-        "@id": "dach-kg:Trail"
+        "@id": "dachkg:Trail"
       },
       "schema:rangeIncludes": {
         "@id": "schema:Place"
