@@ -51,6 +51,23 @@ class SDOAdapter {
         return this.graph.getProperty(id, filter)
     }
 
+    getAllProperties(filter = null) {
+        let propertiesIRIList = this.getListOfProperties(filter);
+        let result = [];
+        for (let i = 0; i < propertiesIRIList.length; i++) {
+            try {
+                result.push(this.getProperty(propertiesIRIList[i]));
+            } catch (e) {
+
+            }
+        }
+        return result;
+    }
+
+    getListOfProperties(filter = null) {
+        return util.applyFilter(Object.keys(this.graph.properties), filter, this.graph);
+    }
+
     getVocabularies() {
         let vocabKeys = Object.keys(this.graph.context);
         let result = {};

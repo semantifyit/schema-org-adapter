@@ -91,7 +91,7 @@ class Class {
 
     /**
      * Retrieves the explicit/implicit properties (soa:hasProperty) of this Class
-     * @param {boolean} implicit - (default = true) retrieves also implicit properties (inheritance from super-classes and any sub-properties)
+     * @param {boolean} implicit - (default = true) retrieves also implicit properties (inheritance from super-classes)
      * @param {object|null} filter - (default = null) an optional filter for the properties
      * @returns {array} The properties of this Class
      */
@@ -102,10 +102,10 @@ class Class {
         if (implicit === true) {
             //add properties from super-classes
             result.push(... this.graph.reasoner.inferPropertiesFromSuperClasses(classObj["rdfs:subClassOf"]));
-            //add sub-properties
-            for (let p = 0; p < result.length; p++) {
-                result.push(... this.graph.reasoner.inferSubProperties(result[p]));
-            }
+            //add sub-properties ?
+            // for (let p = 0; p < result.length; p++) {
+            //     result.push(... this.graph.reasoner.inferSubProperties(result[p]));
+            // }
         }
         return util.applyFilter(util.uniquifyArray(result), filter, this.graph);
     }
@@ -175,7 +175,7 @@ class Class {
     toJSON(implicit = true, filter = null) {
         // (implicit === true) ->
         // properties of all parent classes
-        // sub-properties of all properties
+        // sub-properties of all properties ??
         // sub-classes and their subclasses
         // super-classes and their superclasses
         let result = {};

@@ -2,31 +2,80 @@ const jsonld = require("jsonld");
 
 
 /**
- * Applies a filter to the IRIs given in the dataArray.
+ * Applies a filter to the IRIs in the given Array
  * @param {array} dataArray - Array of IRIs that should be filtered
  * @param {object} filter - The filter options, which can be: "isSuperseded": T/F, "hasTermType": string/Array, "isFromVocabulary": string/Array
  * @returns {array} Array of IRIs that are in compliance with the given filter options
  */
 function applyFilter(dataArray, filter, graph) {
-    if (!Array.isArray(dataArray) || dataArray.length === 0 || filter === null) {
+    if (!Array.isArray(dataArray) || dataArray.length === 0 || filter === null || Object.keys(filter).length === 0) {
         return dataArray;
     }
     let result = [];
     for (let i = 0; i < dataArray.length; i++) {
         let actualTerm = graph.getTerm(dataArray[i]);
         //superseded
-        if (filter.superseded !== undefined) {
-            if (filter.superseded === false && actualTerm.isSupersededBy() !== null) {
+        if (filter.isSuperseded !== undefined) {
+            if (filter.isSuperseded === false && actualTerm.isSupersededBy() !== null) {
                 continue; //skip this element
-            } else if (filter.superseded === true && actualTerm.isSupersededBy() === null) {
+            } else if (filter.isSuperseded === true && actualTerm.isSupersededBy() === null) {
                 continue; //skip this element
             }
         }
-        //partOf
-
+        //partOf - vocabularies are given as indicators (e.g. "schema")
+        if (filter.fromVocabulary !== undefined) {
+            let matchFound = false;
+            if (isString(filter.fromVocabulary)) {
+                if (actualTerm.getIRI(true).startsWith(filter.fromVocabulary)) {
+                    matchFound = true;
+                }
+            } else if (isArray(filter.fromVocabulary)) {
+                for (let v = 0; v < filter.fromVocabulary.length; v++) {
+                    if (actualTerm.getIRI(true).startsWith(filter.fromVocabulary[v])) {
+                        matchFound = true;
+                    }
+                }
+            }
+            if (!matchFound) {
+                continue; //skip this element
+            }
+        }
         //termType
         if (filter.termType !== undefined) {
-            if (filter.termType !== actualTerm.getTermType()) {
+            let matchFound = false;
+            let toCheck = [];
+            if (isString(filter.termType)) {
+                toCheck.push(filter.termType)
+            } else if (isArray(filter.termType)) {
+                toCheck = filter.termType;
+            }
+            for (let t = 0; t < toCheck.length; t++) {
+                let typeIRI;
+                switch (toCheck[t]) {
+                    case "Class":
+                        typeIRI = "rdfs:Class";
+                        break;
+                    case "Property":
+                        typeIRI = "rdf:Property";
+                        break;
+                    case "Enumeration":
+                        typeIRI = "schema:Enumeration";
+                        break;
+                    case "EnumerationMember":
+                        typeIRI = "schema:EnumerationMember";
+                        break;
+                    case "DataType":
+                        typeIRI = "schema:DataType";
+                        break;
+                    default:
+                        console.log("Invalid filter.termType " + toCheck[t]);
+                }
+                if (typeIRI === actualTerm.getTermType()) {
+                    matchFound = true;
+                    break;
+                }
+            }
+            if (!matchFound) {
                 continue; //skip this element
             }
         }

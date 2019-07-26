@@ -80,10 +80,7 @@ describe('Class methods', () => {
             expect(musicEventProps).toContain(eventProps[i]);
         }
         let crWork = mySA.getClass("schema:CreativeWork");
-        expect(crWork.getProperties(true)).toContain("schema:legislationJurisdiction");
-        expect(crWork.getProperties(false)).not.toContain("schema:legislationJurisdiction");
-        expect(crWork.getProperties(false)).not.toContain("schema:legislationJurisdiction");
-        expect(crWork.getProperties(false)).not.toContain("schema:legislationJurisdiction");
+        expect(crWork.getProperties(true)).not.toContain("schema:legislationJurisdiction");
     });
 
     test("getSuperClasses()", async () => {

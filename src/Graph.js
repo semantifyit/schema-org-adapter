@@ -432,22 +432,38 @@ class Graph {
         let targetObj;
         let targetType;
         let tryCounter = 0;
-        do{
-            switch (tryCounter){
+        do {
+            switch (tryCounter) {
                 case 0:
                     targetObj = this.classes[compactIRI];
                     targetType = "Class";
                     break;
+                case 1:
+                    targetObj = this.properties[compactIRI];
+                    targetType = "Property";
+                    break;
             }
+            tryCounter++;
         } while (targetObj === undefined && tryCounter < 6);
 
 
         if (targetObj !== undefined) {
-            targetObj = util.applyFilter([targetObj], filter);
+            targetObj = util.applyFilter([targetObj["@id"]], filter);
             if (targetObj.length === 0) {
                 throw new Error("There is no term with that IRI and filter settings.");
             } else {
-                return new Class(compactIRI, this);
+                switch (targetType) {
+                    case "Class":
+                        return new Class(compactIRI, this);
+                    case "Property":
+                        return new Property(compactIRI, this);
+                    case "Enumeration":
+                        return new Enumeration(compactIRI, this);
+                    case "EnumerationMember":
+                        return new EnumerationMember(compactIRI, this);
+                    case "DataType":
+                        return new DataType(compactIRI, this);
+                }
             }
         } else {
             throw new Error("There is no term with the IRI " + id);
@@ -497,7 +513,6 @@ class Graph {
         } else {
             throw new Error("There is no property with that URI.");
         }
-
     }
 
     //input can be a compact or absolute IRI

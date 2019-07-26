@@ -17,7 +17,7 @@ class Property {
      * Retrieves the term type of this Property (is always "rdf:Property")
      * @returns {string} The term type of this Property -> "rdf:Property"
      */
-    static getTermType() {
+    getTermType() {
         return "rdf:Property";
     }
 
@@ -42,15 +42,19 @@ class Property {
         return descriptionObj[language];
     }
 
-    isSuperseededBy(){
-        //return null if undefined, return IRI of superseeded if any schema:supersededBy
-        let classObj = this.graph.properties[this.IRI];
-        if(util.isString(classObj["schema:supersededBy"])){
-            return classObj["schema:supersededBy"];
+    /**
+     * Retrieves the class superseding (schema:supersededBy) this Class
+     * @returns {string|null} The Class superseding this Class (null if none)
+     */
+    isSupersededBy() {
+        let propertyObj = this.graph.properties[this.IRI];
+        if (util.isString(propertyObj["schema:supersededBy"])) {
+            return propertyObj["schema:supersededBy"];
         } else {
             return null;
         }
     }
+
 
     toJSON(explicit = false) {
         // explicit === true ->

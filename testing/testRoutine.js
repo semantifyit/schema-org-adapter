@@ -16,6 +16,7 @@ function onStart() {
     console.log('getDescription("en") ' + testClass.getDescription("en"));
     console.log('getProperties(false) ' + testClass.getProperties(false));
     console.log('getProperties(true) ' + testClass.getProperties(true));
+    console.log('getProperties(true, {}) ' + testClass.getProperties(true, {}));
     console.log(testClass.toString());
     console.log(JSON.stringify(testClass.toJSON(true, null), null, 2));
 
