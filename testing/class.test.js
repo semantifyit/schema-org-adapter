@@ -64,6 +64,14 @@ describe('Class methods', () => {
         expect(hotel.getDescription('de')).toBe(null);
     });
 
+    test("isSupersededBy()", async () => {
+        let mySA = await initAdapter();
+        let UserPlays = mySA.getClass("schema:UserPlays");
+        expect(UserPlays.isSupersededBy()).toBe("schema:InteractionCounter");
+        let Hotel = mySA.getClass("schema:Hotel");
+        expect(Hotel.isSupersededBy()).toBe(null);
+    });
+
     test("getProperties()", async () => {
         let mySA = await initAdapter();
         let person = mySA.getClass("schema:Person");

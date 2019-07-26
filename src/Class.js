@@ -14,26 +14,24 @@ class Class {
     }
 
     /**
+     * Retrieves the IRI (@id) of this Class in compact/absolute form
+     * @param {boolean} compactForm - (default = false), if true -> return compact IRI -> "schema:Book", if false -> return absolute IRI -> "http://schema.org/Book"
+     * @returns {string} The IRI (@id) of this Class
+     */
+    getIRI(compactForm = false) {
+        if (compactForm) {
+            return this.IRI;
+        } else {
+            return util.toAbsoluteIRI(this.IRI, this.graph.context);
+        }
+    }
+
+    /**
      * Retrieves the term type (@type) of this Class (is always "rdfs:Class")
      * @returns {string} The term type of this Class -> "rdfs:Class"
      */
     getTermType() {
         return "rdfs:Class";
-    }
-
-    //dc:source
-
-    /**
-     * Retrieves the source (dc:source) of this Class
-     * @returns {string|null} The source IRI given by the "dc:source" of this Class (null if none)
-     */
-    getSource() {
-        let classObj = this.graph.classes[this.IRI];
-        if (classObj["dc:source"] !== undefined) {
-            return classObj["dc:source"];
-        } else {
-            return null;
-        }
     }
 
     /**
@@ -50,18 +48,30 @@ class Class {
     }
 
     /**
-     * Retrieves the IRI (@id) of this Class in compact/absolute form
-     * @param {boolean} compactForm - (default = false), if true -> return compact IRI -> "schema:Book", if false -> return absolute IRI -> "http://schema.org/Book"
-     * @returns {string} The IRI (@id) of this Class
+     * Retrieves the source (dc:source) of this Class
+     * @returns {string|null} The source IRI given by the "dc:source" of this Class (null if none)
      */
-    getIRI(compactForm = false) {
-        if (compactForm) {
-            return this.IRI;
+    getSource() {
+        let classObj = this.graph.classes[this.IRI];
+        if (classObj["dc:source"] !== undefined) {
+            return classObj["dc:source"];
         } else {
-            return util.toAbsoluteIRI(this.IRI, this.graph.context);
+            return null;
         }
     }
 
+    /**
+     * Retrieves the class superseding (schema:supersededBy) this Class
+     * @returns {string|null} The Class superseding this Class (null if none)
+     */
+    isSupersededBy() {
+        let classObj = this.graph.classes[this.IRI];
+        if (util.isString(classObj["schema:supersededBy"])) {
+            return classObj["schema:supersededBy"];
+        } else {
+            return null;
+        }
+    }
 
     /**
      * Retrieves the name (rdfs:label) of this Class in a wished language (optional)
@@ -146,19 +156,6 @@ class Class {
     }
 
     /**
-     * Retrieves the class superseding (schema:supersededBy) this Class
-     * @returns {string|null} The Class superseding this Class (null if none)
-     */
-    isSupersededBy() {
-        let classObj = this.graph.classes[this.IRI];
-        if (util.isString(classObj["schema:supersededBy"])) {
-            return classObj["schema:supersededBy"];
-        } else {
-            return null;
-        }
-    }
-
-    /**
      * Generates a string representation of this Class (Based on its JSON representation)
      * @returns {string} The string representation of this Class
      */
@@ -181,15 +178,15 @@ class Class {
         let result = {};
         result["id"] = this.getIRI(true);
         result["IRI"] = this.getIRI();
-        result["vocabulary"] = this.getVocabulary();
         result["type"] = this.getTermType();
+        result["vocabulary"] = this.getVocabulary();
+        result["source"] = this.getSource();
+        result["supersededBy"] = this.isSupersededBy();
         result["name"] = this.getName();
         result["description"] = this.getDescription();
-        result["properties"] = this.getProperties(implicit, filter);
         result["superClasses"] = this.getSuperClasses(implicit, filter);
         result["subClasses"] = this.getSubClasses(implicit, filter);
-        result["supersededBy"] = this.isSupersededBy();
-        result["source"] = this.getSource();
+        result["properties"] = this.getProperties(implicit, filter);
         return result;
     }
 }

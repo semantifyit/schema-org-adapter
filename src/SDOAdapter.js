@@ -47,6 +47,23 @@ class SDOAdapter {
         return this.graph.getClass(id, filter)
     }
 
+    getAllClasses(filter = null) {
+        let classesIRIList = this.getListOfClasses(filter);
+        let result = [];
+        for (let i = 0; i < classesIRIList.length; i++) {
+            try {
+                result.push(this.getClass(classesIRIList[i]));
+            } catch (e) {
+
+            }
+        }
+        return result;
+    }
+
+    getListOfClasses(filter = null) {
+        return util.applyFilter(Object.keys(this.graph.classes), filter, this.graph);
+    }
+
     getProperty(id, filter = null) {
         return this.graph.getProperty(id, filter)
     }

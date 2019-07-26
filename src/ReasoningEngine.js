@@ -114,6 +114,31 @@ class ReasoningEngine {
         }
     }
 
+    inferSuperProperties(propertyIRI) {
+        let propertyObj = this.graph.properties[propertyIRI];
+        let result = [];
+        if (propertyObj !== undefined) {
+            result.push(... propertyObj["rdfs:subPropertyOf"]);
+            let addition = util.copByVal(result); //make a copy
+            do {
+                let newAddition = [];
+                for (let i = 0; i < addition.length; i++) {
+                    let parentPropertyObj = this.graph.properties[addition[i]];
+                    if (parentPropertyObj !== undefined) {
+                        newAddition.push(... parentPropertyObj["rdfs:subPropertyOf"]);
+                    }
+                }
+                newAddition = util.uniquifyArray(newAddition);
+                addition = util.copByVal(newAddition);
+                result.push(...newAddition);
+            } while (addition.length !== 0);
+            result = util.uniquifyArray(result);
+            return result;
+        } else {
+            return null;
+        }
+    }
+
 
 }
 

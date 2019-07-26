@@ -14,6 +14,19 @@ class Property {
     }
 
     /**
+     * Retrieves the IRI (@id) of this Property in compact/absolute form
+     * @param {boolean} compactForm - (default = false), if true -> return compact IRI -> "schema:address", if false -> return absolute IRI -> "http://schema.org/address"
+     * @returns {string} The IRI (@id) of this Property
+     */
+    getIRI(compactForm = false) {
+        if (compactForm) {
+            return this.IRI;
+        } else {
+            return util.toAbsoluteIRI(this.IRI, this.graph.context);
+        }
+    }
+
+    /**
      * Retrieves the term type of this Property (is always "rdf:Property")
      * @returns {string} The term type of this Property -> "rdf:Property"
      */
@@ -21,30 +34,35 @@ class Property {
         return "rdf:Property";
     }
 
-
-    getIRI(useVocabIndicator = true) {
-        return this.IRI;
-    }
-
-    getName(language = "en") {
-        let nameObj = this.graph.classes[this.graph.transformURI(this.URI)]["rdfs:label"];
-        if (nameObj === null || nameObj[language] === undefined) {
+    /**
+     * Retrieves the original vocabulary (schema:isPartOf) of this Property
+     * @returns {string|null} The vocabulary IRI given by the "schema:isPartOf" of this Property
+     */
+    getVocabulary() {
+        let propertyObj = this.graph.properties[this.IRI];
+        if (propertyObj["schema:isPartOf"] !== undefined) {
+            return propertyObj["schema:isPartOf"];
+        } else {
             return null;
         }
-        return nameObj[language];
-    }
-
-    getDescription(language = "en") {
-        let descriptionObj = this.graph.classes[this.graph.transformURI(this.URI)]["rdfs:comment"];
-        if (descriptionObj === null || descriptionObj[language] === undefined) {
-            return null;
-        }
-        return descriptionObj[language];
     }
 
     /**
-     * Retrieves the class superseding (schema:supersededBy) this Class
-     * @returns {string|null} The Class superseding this Class (null if none)
+     * Retrieves the source (dc:source) of this Property
+     * @returns {string|null} The source IRI given by the "dc:source" of this Property (null if none)
+     */
+    getSource() {
+        let propertyObj = this.graph.properties[this.IRI];
+        if (propertyObj["dc:source"] !== undefined) {
+            return propertyObj["dc:source"];
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * Retrieves the Property superseding (schema:supersededBy) this Property
+     * @returns {string|null} The Property superseding this Property (null if none)
      */
     isSupersededBy() {
         let propertyObj = this.graph.properties[this.IRI];
@@ -55,17 +73,135 @@ class Property {
         }
     }
 
+    /**
+     * Retrieves the name (rdfs:label) of this Property in a wished language (optional)
+     * @param {string} language - (default = "en") the wished language for the name
+     * @returns {string|null} The name of this Property (null if not given for specified language)
+     */
+    getName(language = "en") {
+        let nameObj = this.graph.properties[this.IRI]["rdfs:label"];
+        if (nameObj === null || nameObj[language] === undefined) {
+            return null;
+        }
+        return nameObj[language];
+    }
 
-    toJSON(explicit = false) {
-        // explicit === true ->
-        // properties of all parent classes
-        // subproperties of all properties
-        // subclasses and their subclasses
-        // superclasses and their superclasses
+    /**
+     * Retrieves the description (rdfs:comment) of this Property in a wished language (optional)
+     * @param {string} language - (default = "en") the wished language for the description
+     * @returns {string|null} The description of this Property (null if not given for specified language)
+     */
+    getDescription(language = "en") {
+        let descriptionObj = this.graph.properties[this.IRI]["rdfs:comment"];
+        if (descriptionObj === null || descriptionObj[language] === undefined) {
+            return null;
+        }
+        return descriptionObj[language];
+    }
+
+
+    /**
+     * Retrieves the explicit/implicit ranges (schema:rangeIncludes) of this Property
+     * @param {boolean} implicit - (default = true) retrieves also implicit ranges (inheritance from sub-classes of the ranges)
+     * @param {object|null} filter - (default = null) an optional filter for the ranges
+     * @returns {array} The ranges of this Property
+     */
+    getRanges(implicit = true, filter = null) {
+        let propertyObj = this.graph.properties[this.IRI];
+        let result = [];
+        result.push(... propertyObj["schema:rangeIncludes"]);
+        if (implicit === true) {
+            //add sub-classes from ranges
+            result.push(... this.graph.reasoner.inferImplicitSubClasses(result));
+            //remove "null" values from array (if range included data types)
+            result = result.filter(function (el) {
+                return el !== null;
+            });
+        }
+        return util.applyFilter(util.uniquifyArray(result), filter, this.graph);
+    }
+
+    /**
+     * Retrieves the explicit/implicit domains (schema:domainIncludes) of this Property
+     * @param {boolean} implicit - (default = true) retrieves also implicit domains (inheritance from sub-classes of the domains)
+     * @param {object|null} filter - (default = null) an optional filter for the domains
+     * @returns {array} The domains of this Property
+     */
+    getDomains(implicit = true, filter = null) {
+        let propertyObj = this.graph.properties[this.IRI];
+        let result = [];
+        result.push(... propertyObj["schema:domainIncludes"]);
+        if (implicit === true) {
+            //add sub-classes from ranges
+            result.push(... this.graph.reasoner.inferImplicitSubClasses(result));
+        }
+        return util.applyFilter(util.uniquifyArray(result), filter, this.graph);
+    }
+
+    /**
+     * Retrieves the explicit/implicit super-properties (rdfs:subPropertyOf) of this Property
+     * @param {boolean} implicit - (default = true) retrieves also implicit super-properties (recursive from super-properties)
+     * @param {object|null} filter - (default = null) an optional filter for the super-properties
+     * @returns {array} The super-properties of this Property
+     */
+    getSuperProperties(implicit = true, filter = null) {
+        let propertyObj = this.graph.properties[this.IRI];
+        let result = [];
+
+        if (implicit === true) {
+            result.push(... this.graph.reasoner.inferSuperProperties(this.IRI));
+        } else {
+            result.push(... propertyObj["rdfs:subPropertyOf"]);
+        }
+        return util.applyFilter(util.uniquifyArray(result), filter, this.graph);
+    }
+
+    /**
+     * Retrieves the explicit/implicit sub-properties (soa:superPropertyOf) of this Property
+     * @param {boolean} implicit - (default = true) retrieves also implicit sub-properties (recursive from sub-properties)
+     * @param {object|null} filter - (default = null) an optional filter for the sub-properties
+     * @returns {array} The sub-properties of this Property
+     */
+    getSubProperties(implicit = true, filter = null) {
+        let propertyObj = this.graph.properties[this.IRI];
+        let result = [];
+
+        if (implicit === true) {
+            result.push(... this.graph.reasoner.inferSubProperties(this.IRI));
+        } else {
+            result.push(... propertyObj["soa:superPropertyOf"]);
+        }
+        return util.applyFilter(util.uniquifyArray(result), filter, this.graph);
+    }
+
+    /**
+     * Generates a string representation of this Property (Based on its JSON representation)
+     * @returns {string} The string representation of this Property
+     */
+    toString() {
+        return JSON.stringify(this.toJSON(false, null), null, 2);
+    }
+
+    /**
+     * Generates an explicit/implicit JSON representation of this Property.
+     * @param {boolean} implicit - (default = true) includes also implicit data (e.g. domains, ranges, etc.)
+     * @param {object|null} filter - (default = null) an optional filter for the generated data
+     * @returns {object} The JSON representation of this Class
+     */
+    toJSON(implicit = true, filter = null) {
         let result = {};
-        result["@id"] = this.getId();
+        result["id"] = this.getIRI(true);
+        result["IRI"] = this.getIRI();
+        result["type"] = this.getTermType();
+        result["vocabulary"] = this.getVocabulary();
+        result["source"] = this.getSource();
+        result["supersededBy"] = this.isSupersededBy();
         result["name"] = this.getName();
         result["description"] = this.getDescription();
+        result["ranges"] = this.getRanges(implicit, filter);
+        result["domains"] = this.getDomains(implicit, filter);
+        result["superProperties"] = this.getSuperProperties(implicit, filter);
+        result["subProperties"] = this.getSubProperties(implicit, filter);
         return result;
     }
 }
