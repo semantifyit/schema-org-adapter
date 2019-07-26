@@ -1,41 +1,164 @@
 //the functions for a data type Object
+const util = require("./utilities");
 
 class DataType {
-    constructor(URI, graph) {
-        this.URI = URI; //should be the written out version e.g. http://schema.org/MediaObject ?
-        this.graph = graph; //the underlying data graph to enable the methods
+    /**
+     * A DataType represents an schema:DataType. It is identified by its IRI
+     * @constructor
+     * @param {string} IRI - The compacted IRI of this DataType, e.g. "schema:Number"
+     * @param {object} graph - The underlying data graph to enable the methods of this DataType
+     */
+    constructor(IRI, graph) {
+        this.IRI = IRI;
+        this.graph = graph;
     }
 
-    getURI(useVocabIndicator = true) {
-        return this.URI;
+    /**
+     * Retrieves the IRI (@id) of this DataType in compact/absolute form
+     * @param {boolean} compactForm - (default = false), if true -> return compact IRI -> "schema:Number", if false -> return absolute IRI -> "http://schema.org/Number"
+     * @returns {string} The IRI (@id) of this DataType
+     */
+    getIRI(compactForm = false) {
+        if (compactForm) {
+            return this.IRI;
+        } else {
+            return util.toAbsoluteIRI(this.IRI, this.graph.context);
+        }
     }
 
+    /**
+     * Retrieves the term type (@type) of this DataType (is always "schema:DataType")
+     * @returns {string} The term type of this DataType -> "schema:DataType"
+     */
+    getTermType() {
+        return "schema:DataType";
+    }
+
+    /**
+     * Retrieves the original vocabulary (schema:isPartOf) of this DataType
+     * @returns {string|null} The vocabulary IRI given by the "schema:isPartOf" of this DataType
+     */
+    getVocabulary() {
+        let dataTypeObj = this.graph.dataTypes[this.IRI];
+        if (dataTypeObj["schema:isPartOf"] !== undefined) {
+            return dataTypeObj["schema:isPartOf"];
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * Retrieves the source (dc:source) of this DataType
+     * @returns {string|null} The source IRI given by the "dc:source" of this DataType (null if none)
+     */
+    getSource() {
+        let dataTypeObj = this.graph.dataTypes[this.IRI];
+        if (dataTypeObj["dc:source"] !== undefined) {
+            return dataTypeObj["dc:source"];
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * Retrieves the DataType superseding (schema:supersededBy) this DataType
+     * @returns {string|null} The DataType superseding this DataType (null if none)
+     */
+    isSupersededBy() {
+        let dataTypeObj = this.graph.dataTypes[this.IRI];
+        if (util.isString(dataTypeObj["schema:supersededBy"])) {
+            return dataTypeObj["schema:supersededBy"];
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * Retrieves the name (rdfs:label) of this DataType in a wished language (optional)
+     * @param {string} language - (default = "en") the wished language for the name
+     * @returns {string|null} The name of this DataType (null if not given for specified language)
+     */
     getName(language = "en") {
-        let nameObj = this.graph.classes[this.graph.transformURI(this.URI)]["rdfs:label"];
+        let nameObj = this.graph.dataTypes[this.IRI]["rdfs:label"];
         if (nameObj === null || nameObj[language] === undefined) {
             return null;
         }
         return nameObj[language];
     }
 
+    /**
+     * Retrieves the description (rdfs:comment) of this DataType in a wished language (optional)
+     * @param {string} language - (default = "en") the wished language for the description
+     * @returns {string|null} The description of this DataType (null if not given for specified language)
+     */
     getDescription(language = "en") {
-        let descriptionObj = this.graph.classes[this.graph.transformURI(this.URI)]["rdfs:comment"];
+        let descriptionObj = this.graph.dataTypes[this.IRI]["rdfs:comment"];
         if (descriptionObj === null || descriptionObj[language] === undefined) {
             return null;
         }
         return descriptionObj[language];
     }
 
-    toJSON(explicit = false) {
-        // explicit === true ->
-        // properties of all parent classes
-        // subproperties of all properties
-        // subclasses and their subclasses
-        // superclasses and their superclasses
+    /**
+     * Retrieves the explicit/implicit super-DataTypes (rdfs:subClassOf) of this DataType
+     * @param {boolean} implicit - (default = true) retrieves also implicit super-DataTypes (recursive from super-DataTypes)
+     * @param {object|null} filter - (default = null) an optional filter for the super-DataTypes
+     * @returns {array} The super-DataTypes of this DataType
+     */
+    getSuperDataTypes(implicit = true, filter = null) {
+        let dataTypeObj = this.graph.dataTypes[this.IRI];
+        let result = [];
+        if (implicit === true) {
+            result.push(... this.graph.reasoner.inferImplicitSuperDataTypes(this.IRI));
+        } else {
+            result.push(... dataTypeObj["rdfs:subClassOf"]);
+        }
+        return util.applyFilter(util.uniquifyArray(result), filter, this.graph);
+    }
+
+    /**
+     * Retrieves the explicit/implicit sub-DataTypes (soa:superClassOf) of this DataType
+     * @param {boolean} implicit - (default = true) retrieves also implicit sub-DataTypes (recursive from sub-DataTypes)
+     * @param {object|null} filter - (default = null) an optional filter for the sub-DataTypes
+     * @returns {array} The sub-DataTypes of this DataType
+     */
+    getSubDataTypes(implicit = true, filter = null) {
+        let dataTypeObj = this.graph.dataTypes[this.IRI];
+        let result = [];
+        if (implicit === true) {
+            result.push(... this.graph.reasoner.inferImplicitSubDataTypes(this.IRI));
+        } else {
+            result.push(... dataTypeObj["soa:superClassOf"]);
+        }
+        return util.applyFilter(util.uniquifyArray(result), filter, this.graph);
+    }
+
+    /**
+     * Generates a string representation of this DataType (Based on its JSON representation)
+     * @returns {string} The string representation of this DataType
+     */
+    toString() {
+        return JSON.stringify(this.toJSON(false, null), null, 2);
+    }
+
+    /**
+     * Generates an explicit/implicit JSON representation of this DataType.
+     * @param {boolean} implicit - (default = true) includes also implicit data (e.g. sub-DataTypes, super-DataTypes)
+     * @param {object|null} filter - (default = null) an optional filter for the generated data
+     * @returns {object} The JSON representation of this DataType
+     */
+    toJSON(implicit = true, filter = null) {
         let result = {};
-        result["@id"] = this.getId();
+        result["id"] = this.getIRI(true);
+        result["IRI"] = this.getIRI();
+        result["type"] = this.getTermType();
+        result["vocabulary"] = this.getVocabulary();
+        result["source"] = this.getSource();
+        result["supersededBy"] = this.isSupersededBy();
         result["name"] = this.getName();
         result["description"] = this.getDescription();
+        result["superDataTypes"] = this.getSuperDataTypes(implicit, filter);
+        result["subDataTypes"] = this.getSubDataTypes(implicit, filter);
         return result;
     }
 }

@@ -89,6 +89,56 @@ class ReasoningEngine {
         }
     }
 
+    inferImplicitSuperDataTypes(dataTypeIRI) {
+        let dataTypeObj = this.graph.dataTypes[dataTypeIRI];
+        let result = [];
+        if (dataTypeObj !== undefined) {
+            result.push(... dataTypeObj["rdfs:subClassOf"]);
+            let addition = util.copByVal(result); //make a copy
+            do {
+                let newAddition = [];
+                for (let i = 0; i < addition.length; i++) {
+                    let parentDataTypeObj = this.graph.dataTypes[addition[i]];
+                    if (parentDataTypeObj !== undefined) {
+                        newAddition.push(... parentDataTypeObj["rdfs:subClassOf"]);
+                    }
+                }
+                newAddition = util.uniquifyArray(newAddition);
+                addition = util.copByVal(newAddition);
+                result.push(...newAddition);
+            } while (addition.length !== 0);
+            result = util.uniquifyArray(result);
+            return result;
+        } else {
+            return null;
+        }
+    }
+
+    inferImplicitSubDataTypes(dataTypeIRI) {
+        let dataTypeObj = this.graph.dataTypes[dataTypeIRI];
+        let result = [];
+        if (dataTypeObj !== undefined) {
+            result.push(... dataTypeObj["soa:superClassOf"]);
+            let addition = util.copByVal(result); //make a copy
+            do {
+                let newAddition = [];
+                for (let i = 0; i < addition.length; i++) {
+                    let childDataTypeObj = this.graph.dataTypes[addition[i]];
+                    if (childDataTypeObj !== undefined) {
+                        newAddition.push(... childDataTypeObj["soa:superClassOf"]);
+                    }
+                }
+                newAddition = util.uniquifyArray(newAddition);
+                addition = util.copByVal(newAddition);
+                result.push(...newAddition);
+            } while (addition.length !== 0);
+            result = util.uniquifyArray(result);
+            return result;
+        } else {
+            return null;
+        }
+    }
+
     inferSubProperties(propertyIRI) {
         let propertyObj = this.graph.properties[propertyIRI];
         let result = [];

@@ -85,6 +85,27 @@ class SDOAdapter {
         return util.applyFilter(Object.keys(this.graph.properties), filter, this.graph);
     }
 
+    getDataType(id, filter = null) {
+        return this.graph.getDataType(id, filter)
+    }
+
+    getAllDataTypes(filter = null) {
+        let dataTypesIRIList = this.getListOfDataTypes(filter);
+        let result = [];
+        for (let i = 0; i < dataTypesIRIList.length; i++) {
+            try {
+                result.push(this.getDataType(dataTypesIRIList[i]));
+            } catch (e) {
+
+            }
+        }
+        return result;
+    }
+
+    getListOfDataTypes(filter = null) {
+        return util.applyFilter(Object.keys(this.graph.dataTypes), filter, this.graph);
+    }
+
     getVocabularies() {
         let vocabKeys = Object.keys(this.graph.context);
         let result = {};

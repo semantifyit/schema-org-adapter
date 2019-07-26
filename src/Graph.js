@@ -203,6 +203,11 @@ class Graph {
                     }
                 }
             } while (newDatatype);
+            //C.3) change the @type of data-types to a single value, which is "schema:DataType"
+            let dtKeys = Object.keys(this.dataTypes);
+            for (let i = 0; i < dtKeys.length; i++) {
+                this.dataTypes[dtKeys[i]]["@type"] = "schema:DataType";
+            }
 
             //D) Inheritance
             /*    Schema.org's Inheritance design states if an entity is the superClass/superProperty of another entity. In our data model design we also hold the information if an entity is the subClass/subProperty of another entity. In this step this inheritance information is generated.*/
@@ -442,6 +447,10 @@ class Graph {
                     targetObj = this.properties[compactIRI];
                     targetType = "Property";
                     break;
+                case 2:
+                    targetObj = this.dataTypes[compactIRI];
+                    targetType = "DataType";
+                    break;
             }
             tryCounter++;
         } while (targetObj === undefined && tryCounter < 6);
@@ -482,7 +491,7 @@ class Graph {
         let classObj = this.classes[compactIRI];
         //todo enumerations can also be counted as classes
         if (classObj !== undefined) {
-            classObj = util.applyFilter([classObj], filter);
+            classObj = util.applyFilter([compactIRI], filter, this);
             if (classObj.length === 0) {
                 throw new Error("There is no class with that IRI and filter settings.");
             } else {
@@ -491,7 +500,6 @@ class Graph {
         } else {
             throw new Error("There is no class with the IRI " + id);
         }
-
     }
 
     /**
@@ -504,7 +512,7 @@ class Graph {
         let compactIRI = this.discoverCompactIRI(id);
         let propertyObj = this.properties[compactIRI];
         if (propertyObj !== undefined) {
-            propertyObj = util.applyFilter([propertyObj], filter);
+            propertyObj = util.applyFilter([compactIRI], filter, this);
             if (propertyObj.length === 0) {
                 throw new Error("There is no property with that URI and filter settings.");
             } else {
@@ -512,6 +520,27 @@ class Graph {
             }
         } else {
             throw new Error("There is no property with that URI.");
+        }
+    }
+
+    /**
+     * Creates a JS-Class for a DataType of the Graph
+     * @param {string} id - The id of the wished DataType-node, can be an IRI (absolute or compact) or a label
+     * @param {object} filter - (optional) The filter settings to be applied on the result
+     * @return {DataType} the JS-Class for the given IRI
+     */
+    getDataType(id, filter = null) {
+        let compactIRI = this.discoverCompactIRI(id);
+        let dataTypeObj = this.dataTypes[compactIRI];
+        if (dataTypeObj !== undefined) {
+            dataTypeObj = util.applyFilter([compactIRI], filter, this);
+            if (dataTypeObj.length === 0) {
+                throw new Error("There is no data-type with that IRI and filter settings.");
+            } else {
+                return new DataType(compactIRI, this);
+            }
+        } else {
+            throw new Error("There is no data-type with the IRI " + id);
         }
     }
 
