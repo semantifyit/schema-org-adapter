@@ -268,11 +268,6 @@ function curateNode(vocabNode, vocabularies) {
     return vocabNode;
 }
 
-function mergeVocabNodes(oldNode, newNode) {
-    return null; //todo
-}
-
-
 /*
 term - A term is a short word defined in a context that MAY be expanded to an IRI
 compact IRI - A compact IRI is has the form of prefix:suffix and is used as a way of expressing an IRI without needing to define separate term definitions for each IRI contained within a common vocabulary identified by prefix.

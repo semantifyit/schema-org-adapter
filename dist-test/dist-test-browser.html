@@ -2,10 +2,15 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <title>SDO Adapter Test</title>
 </head>
 <body>
-test
+<div style="padding: 100px; background-color: #8e908c; font-size: 18px; ">
+    <pre id="output" >
+        This Div should render the test data gathered by the Library
+    </pre>
+</div>
+
 </body>
 <script src="./../dist/sdoAdapter.js"></script>
 <script>
@@ -13,7 +18,7 @@ test
         let mySA = new sdoAdapter();
         mySA.addVocabularies([{
             "@context": {
-                "dach-kg": "http://http://dachkg.org/ontology/1.0/",
+                "dachkg": "http://dachkg.org/ontology/1.0/",
                 "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
                 "rdfa": "http://www.w3.org/ns/rdfa#",
                 "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
@@ -22,7 +27,7 @@ test
             },
             "@graph": [
                 {
-                    "@id": "dach-kg:endLocation",
+                    "@id": "dachkg:endLocation",
                     "@type": "rdf:Property",
                     "rdfs:comment": "A sub property of schema.org location. The final location of the trail.",
                     "rdfs:label": "endLocation",
@@ -30,14 +35,14 @@ test
                         "@id": "schema:location"
                     },
                     "schema:domainIncludes": {
-                        "@id": "dach-kg:Trail"
+                        "@id": "dachkg:Trail"
                     },
                     "schema:rangeIncludes": {
                         "@id": "schema:Place"
                     }
                 },
                 {
-                    "@id": "dach-kg:Trail",
+                    "@id": "dachkg:Trail",
                     "@type": "rdfs:Class",
                     "rdfs:comment": "A  a path, track or unpaved lane or road for sport activities or walking.",
                     "rdfs:label": "Trail",
@@ -46,7 +51,7 @@ test
                     }
                 },
                 {
-                    "@id": "dach-kg:startLocation",
+                    "@id": "dachkg:startLocation",
                     "@type": "rdf:Property",
                     "rdfs:comment": "A sub property of schema.org location. The start location of the trail.",
                     "rdfs:label": "startLocation",
@@ -54,7 +59,7 @@ test
                         "@id": "schema:location"
                     },
                     "schema:domainIncludes": {
-                        "@id": "dach-kg:Trail"
+                        "@id": "dachkg:Trail"
                     },
                     "schema:rangeIncludes": {
                         "@id": "schema:Place"
@@ -64,11 +69,11 @@ test
         }], onStart);
 
         function onStart() {
-            let testClass = mySA.getClass("http://schema.org/Book");
-            console.log(testClass.getId());
+            let testClass = mySA.getClass("Trail");
             console.log(testClass.getName());
             console.log(testClass.getDescription("en"));
             console.log(testClass.toJSON(true));
+            document.getElementById("output").innerHTML = JSON.stringify(testClass.toJSON(true), null, 2);
         }
     })();
 </script>

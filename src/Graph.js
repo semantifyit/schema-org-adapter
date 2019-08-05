@@ -21,6 +21,7 @@ class Graph {
         // soa:isRangeOf is an inverse of schema:rangeIncludes
         // soa:hasEnumerationMember is used for enumerations to list all its enumeration members (their @type includes the @id of the enumeration)
         // soa:enumerationDomainIncludes is an inverse of soa:hasEnumerationMember
+        // soa:EnumerationMember is introduced as meta type for the members of an schema:Enumeration
         this.context = {
             "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
             "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
@@ -98,8 +99,9 @@ class Graph {
      * @return {boolean} returns true on success
      */
     async addVocabulary(vocab) {
+        //this algorithm is well-documented in /docu/algorithm.md
         try {
-            //A) Load and pre-process Vocabulary
+            //A) Pre-process Vocabulary
             //create new context
             this.context = util.generateContext(this.context, vocab["@context"]);
             //pre-process new vocab
@@ -108,16 +110,14 @@ class Graph {
             for (let i = 0; i < vocab["@graph"].length; i++) {
                 vocab["@graph"][i] = util.curateNode(vocab["@graph"][i], vocabularies); //curate nodes
             }
-            //add new vocab
-
             //B) Classify Input
             /**
              Classify every @graph node based on its @type. The node is transformed to another data-model based on the @type and stored in a new memory storage for an easier further usage. This is the first of two steps for an exact classification of the node, since the @type is not enough for a correct classification. The mapping of our data model and the @type(s) of the corresponding @graph nodes are as follows:
              classes ("@type" = "rdfs:Class")
              properties ("@type" = "rdf:Property")
              dataTypes ("@type" = "rdfs:Class" + "http://schema.org/DataType")
-             enumerations ("@type" = "rdfs:Class")
-             enumerationMembers ("@type" = @id of enumeration)
+             enumerations ("@type" = "rdfs:Class", has "http://schema.org/Enumeration" as implicit super-class)
+             enumerationMembers ("@type" = @id(s) of enumeration(s))
              */
             for (let i = 0; i < vocab["@graph"].length; i++) {
                 let curNode = JSON.parse(JSON.stringify(vocab["@graph"][i]));
@@ -408,7 +408,7 @@ class Graph {
 
     /**
      * Creates/Updates a node in the graph
-     * @param {object} memory - The memory object where the new node should be added (Classes, Properties, Enumerations, EnumerationMembers, DataTypes, Meta)
+     * @param {object} memory - The memory object where the new node should be added (Classes, Properties, Enumerations, EnumerationMembers, DataTypes)
      * @param {object} newNode - The node in JSON-LD format to be added
      * @return {boolean} returns true on success
      */
@@ -417,7 +417,130 @@ class Graph {
             if (memory[newNode["@id"]] === undefined) {
                 memory[newNode["@id"]] = newNode;
             } else {
-                //merging algorithm todo
+                //merging algorithm
+                let oldNode = memory[newNode["@id"]];
+                //@id stays the same
+                //@type should stay the same (we already defined the memory to save it)
+                //schema:isPartOf -> overwrite
+                if (newNode["schema:isPartOf"] !== undefined) {
+                    oldNode["schema:isPartOf"] = newNode["schema:isPartOf"];
+                }
+                //dc:source -> overwrite
+                if (newNode["dc:source"] !== undefined) {
+                    oldNode["dc:source"] = newNode["dc:source"];
+                }
+                //schema:category -> overwrite
+                if (newNode["schema:category"] !== undefined) {
+                    oldNode["schema:category"] = newNode["schema:category"];
+                }
+                //schema:supersededBy -> overwrite
+                if (newNode["schema:supersededBy"] !== undefined) {
+                    oldNode["schema:supersededBy"] = newNode["schema:supersededBy"];
+                }
+                //rdfs:label -> add new languages, overwrite old ones if needed
+                if (newNode["rdfs:label"] !== undefined) {
+                    let labelKeysNew = Object.keys(newNode["rdfs:label"]);
+                    for (let i = 0; i < labelKeysNew.length; i++) {
+                        oldNode["rdfs:label"][labelKeysNew[i]] = newNode["rdfs:label"][labelKeysNew[i]];
+                    }
+                }
+                //rdfs:comment -> add new languages, overwrite old ones if needed
+                if (newNode["rdfs:comment"] !== undefined) {
+                    let commentKeysNew = Object.keys(newNode["rdfs:comment"]);
+                    for (let i = 0; i < commentKeysNew.length; i++) {
+                        oldNode["rdfs:comment"][commentKeysNew[i]] = newNode["rdfs:comment"][commentKeysNew[i]];
+                    }
+                }
+                //rdfs:subClassOf -> add new ids
+                if (newNode["rdfs:subClassOf"] !== undefined) {
+                    for (let i = 0; i < newNode["rdfs:subClassOf"].length; i++) {
+                        if (oldNode["rdfs:subClassOf"].indexOf(newNode["rdfs:subClassOf"][i]) === -1) {
+                            //add new entry
+                            oldNode["rdfs:subClassOf"].push(newNode["rdfs:subClassOf"][i]);
+                        }
+                    }
+                }
+                //soa:superClassOf -> add new ids
+                if (newNode["soa:superClassOf"] !== undefined) {
+                    for (let i = 0; i < newNode["soa:superClassOf"].length; i++) {
+                        if (oldNode["soa:superClassOf"].indexOf(newNode["soa:superClassOf"][i]) === -1) {
+                            //add new entry
+                            oldNode["soa:superClassOf"].push(newNode["soa:superClassOf"][i]);
+                        }
+                    }
+                }
+                //soa:hasProperty -> add new ids
+                if (newNode["soa:hasProperty"] !== undefined) {
+                    for (let i = 0; i < newNode["soa:hasProperty"].length; i++) {
+                        if (oldNode["soa:hasProperty"].indexOf(newNode["soa:hasProperty"][i]) === -1) {
+                            //add new entry
+                            oldNode["soa:hasProperty"].push(newNode["soa:hasProperty"][i]);
+                        }
+                    }
+                }
+                //soa:isRangeOf -> add new ids
+                if (newNode["soa:isRangeOf"] !== undefined) {
+                    for (let i = 0; i < newNode["soa:isRangeOf"].length; i++) {
+                        if (oldNode["soa:isRangeOf"].indexOf(newNode["soa:isRangeOf"][i]) === -1) {
+                            //add new entry
+                            oldNode["soa:isRangeOf"].push(newNode["soa:isRangeOf"][i]);
+                        }
+                    }
+                }
+                //soa:enumerationDomainIncludes -> add new ids
+                if (newNode["soa:enumerationDomainIncludes"] !== undefined) {
+                    for (let i = 0; i < newNode["soa:enumerationDomainIncludes"].length; i++) {
+                        if (oldNode["soa:enumerationDomainIncludes"].indexOf(newNode["soa:enumerationDomainIncludes"][i]) === -1) {
+                            //add new entry
+                            oldNode["soa:enumerationDomainIncludes"].push(newNode["soa:enumerationDomainIncludes"][i]);
+                        }
+                    }
+                }
+                //soa:hasEnumerationMember -> add new ids
+                if (newNode["soa:hasEnumerationMember"] !== undefined) {
+                    for (let i = 0; i < newNode["soa:hasEnumerationMember"].length; i++) {
+                        if (oldNode["soa:hasEnumerationMember"].indexOf(newNode["soa:hasEnumerationMember"][i]) === -1) {
+                            //add new entry
+                            oldNode["soa:hasEnumerationMember"].push(newNode["soa:hasEnumerationMember"][i]);
+                        }
+                    }
+                }
+                //rdfs:subPropertyOf -> add new ids
+                if (newNode["rdfs:subPropertyOf"] !== undefined) {
+                    for (let i = 0; i < newNode["rdfs:subPropertyOf"].length; i++) {
+                        if (oldNode["rdfs:subPropertyOf"].indexOf(newNode["rdfs:subPropertyOf"][i]) === -1) {
+                            //add new entry
+                            oldNode["rdfs:subPropertyOf"].push(newNode["rdfs:subPropertyOf"][i]);
+                        }
+                    }
+                }
+                //schema:domainIncludes -> add new ids
+                if (newNode["schema:domainIncludes"] !== undefined) {
+                    for (let i = 0; i < newNode["schema:domainIncludes"].length; i++) {
+                        if (oldNode["schema:domainIncludes"].indexOf(newNode["schema:domainIncludes"][i]) === -1) {
+                            //add new entry
+                            oldNode["schema:domainIncludes"].push(newNode["schema:domainIncludes"][i]);
+                        }
+                    }
+                }
+                //schema:rangeIncludes -> add new ids
+                if (newNode["schema:rangeIncludes"] !== undefined) {
+                    for (let i = 0; i < newNode["schema:rangeIncludes"].length; i++) {
+                        if (oldNode["schema:rangeIncludes"].indexOf(newNode["schema:rangeIncludes"][i]) === -1) {
+                            //add new entry
+                            oldNode["schema:rangeIncludes"].push(newNode["schema:rangeIncludes"][i]);
+                        }
+                    }
+                }
+                //soa:superPropertyOf-> add new ids
+                if (newNode["schema:superPropertyOf"] !== undefined) {
+                    for (let i = 0; i < newNode["schema:superPropertyOf"].length; i++) {
+                        if (oldNode["schema:superPropertyOf"].indexOf(newNode["schema:superPropertyOf"][i]) === -1) {
+                            //add new entry
+                            oldNode["schema:superPropertyOf"].push(newNode["schema:superPropertyOf"][i]);
+                        }
+                    }
+                }
             }
             return true;
         } catch (e) {
@@ -451,13 +574,20 @@ class Graph {
                     targetObj = this.dataTypes[compactIRI];
                     targetType = "DataType";
                     break;
+                case 3:
+                    targetObj = this.enumerations[compactIRI];
+                    targetType = "Enumeration";
+                    break;
+                case 4:
+                    targetObj = this.enumerationMembers[compactIRI];
+                    targetType = "EnumerationMember";
+                    break;
             }
             tryCounter++;
         } while (targetObj === undefined && tryCounter < 6);
 
-
         if (targetObj !== undefined) {
-            targetObj = util.applyFilter([targetObj["@id"]], filter);
+            targetObj = util.applyFilter([targetObj["@id"]], filter, this);
             if (targetObj.length === 0) {
                 throw new Error("There is no term with that IRI and filter settings.");
             } else {
@@ -477,29 +607,37 @@ class Graph {
         } else {
             throw new Error("There is no term with the IRI " + id);
         }
-
     }
 
     /**
      * Creates a JS-Class for a Class of the Graph
      * @param {string} id - The id of the wished Class-node, can be an IRI (absolute or compact) or a label
      * @param {object} filter - (optional) The filter settings to be applied on the result
-     * @return {Class} the JS-Class for the given IRI
+     * @return {Class|Enumeration} the JS-Class for the given IRI
      */
     getClass(id, filter = null) {
         let compactIRI = this.discoverCompactIRI(id);
-        let classObj = this.classes[compactIRI];
-        //todo enumerations can also be counted as classes
-        if (classObj !== undefined) {
-            classObj = util.applyFilter([compactIRI], filter, this);
-            if (classObj.length === 0) {
-                throw new Error("There is no class with that IRI and filter settings.");
+        if (compactIRI !== null) {
+            let classObj = this.classes[compactIRI];
+            if (classObj !== undefined) {
+                classObj = util.applyFilter([compactIRI], filter, this);
+                if (classObj.length === 0) {
+                    throw new Error("There is no class with that IRI and filter settings.");
+                } else {
+                    return new Class(compactIRI, this);
+                }
             } else {
-                return new Class(compactIRI, this);
+                //enumerations can also be counted as classes
+                classObj = this.enumerations[compactIRI];
+                if (classObj !== undefined) {
+                    try {
+                        return this.getEnumeration(compactIRI);
+                    } catch (e) {
+                    }
+                }
             }
-        } else {
-            throw new Error("There is no class with the IRI " + id);
         }
+        throw new Error("There is no class with the IRI " + id);
     }
 
     /**
@@ -510,17 +648,18 @@ class Graph {
      */
     getProperty(id, filter = null) {
         let compactIRI = this.discoverCompactIRI(id);
-        let propertyObj = this.properties[compactIRI];
-        if (propertyObj !== undefined) {
-            propertyObj = util.applyFilter([compactIRI], filter, this);
-            if (propertyObj.length === 0) {
-                throw new Error("There is no property with that URI and filter settings.");
-            } else {
-                return new Property(compactIRI, this);
+        if (compactIRI !== null) {
+            let propertyObj = this.properties[compactIRI];
+            if (propertyObj !== undefined) {
+                propertyObj = util.applyFilter([compactIRI], filter, this);
+                if (propertyObj.length === 0) {
+                    throw new Error("There is no property with that URI and filter settings.");
+                } else {
+                    return new Property(compactIRI, this);
+                }
             }
-        } else {
-            throw new Error("There is no property with that URI.");
         }
+        throw new Error("There is no property with that URI.");
     }
 
     /**
@@ -531,20 +670,70 @@ class Graph {
      */
     getDataType(id, filter = null) {
         let compactIRI = this.discoverCompactIRI(id);
-        let dataTypeObj = this.dataTypes[compactIRI];
-        if (dataTypeObj !== undefined) {
-            dataTypeObj = util.applyFilter([compactIRI], filter, this);
-            if (dataTypeObj.length === 0) {
-                throw new Error("There is no data-type with that IRI and filter settings.");
-            } else {
-                return new DataType(compactIRI, this);
+        if (compactIRI !== null) {
+            let dataTypeObj = this.dataTypes[compactIRI];
+            if (dataTypeObj !== undefined) {
+                dataTypeObj = util.applyFilter([compactIRI], filter, this);
+                if (dataTypeObj.length === 0) {
+                    throw new Error("There is no data-type with that IRI and filter settings.");
+                } else {
+                    return new DataType(compactIRI, this);
+                }
             }
-        } else {
-            throw new Error("There is no data-type with the IRI " + id);
         }
+        throw new Error("There is no data-type with the IRI " + id);
     }
 
-    //input can be a compact or absolute IRI
+    /**
+     * Creates a JS-Class for an Enumeration of the Graph
+     * @param {string} id - The id of the wished Enumeration-node, can be an IRI (absolute or compact) or a label
+     * @param {object} filter - (optional) The filter settings to be applied on the result
+     * @return {Enumeration} the JS-Class for the given IRI
+     */
+    getEnumeration(id, filter = null) {
+        let compactIRI = this.discoverCompactIRI(id);
+        if (compactIRI !== null) {
+            let enumObj = this.enumerations[compactIRI];
+            if (enumObj !== undefined) {
+                enumObj = util.applyFilter([compactIRI], filter, this);
+                if (enumObj.length === 0) {
+                    throw new Error("There is no enumeration with that IRI and filter settings.");
+                } else {
+                    return new Enumeration(compactIRI, this);
+                }
+            }
+        }
+        throw new Error("There is no enumeration with the IRI " + id);
+    }
+
+    /**
+     * Creates a JS-Class for an EnumerationMember of the Graph
+     * @param {string} id - The id of the wished EnumerationMember-node, can be an IRI (absolute or compact) or a label
+     * @param {object} filter - (optional) The filter settings to be applied on the result
+     * @return {EnumerationMember} the JS-Class for the given IRI
+     */
+    getEnumerationMember(id, filter = null) {
+        let compactIRI = this.discoverCompactIRI(id);
+        if (compactIRI !== null) {
+            let enumObj = this.enumerationMembers[compactIRI];
+            if (enumObj !== undefined) {
+                enumObj = util.applyFilter([compactIRI], filter, this);
+                if (enumObj.length === 0) {
+                    throw new Error("There is no EnumerationMember with that IRI and filter settings.");
+                } else {
+                    return new EnumerationMember(compactIRI, this);
+                }
+            }
+        }
+        throw new Error("There is no EnumerationMember with the IRI " + id);
+    }
+
+
+    /**
+     * Transforms/Discovers the right compact IRI for a given input, which may be a already a compact IRI, or an absolute IRI, or a term label for a vocabulary member
+     * @param {string} input - The input string to discover (if label) or transform (if absolute IRI)
+     * @return {string|null} the corresponding compact IRI (null if input is not valid)
+     */
     discoverCompactIRI(input) {
         if (input.indexOf(":") !== -1) {
             //is iri
@@ -563,10 +752,54 @@ class Graph {
             }
         } else {
             //is label
-            //todo
+            let classesKeys = Object.keys(this.classes);
+            for (let i = 0; i < classesKeys.length; i++) {
+                if (this.containsLabel(this.classes[classesKeys[i]], input) === true) {
+                    return classesKeys[i];
+                }
+            }
+            let propertiesKeys = Object.keys(this.properties);
+            for (let i = 0; i < propertiesKeys.length; i++) {
+                if (this.containsLabel(this.properties[propertiesKeys[i]], input) === true) {
+                    return propertiesKeys[i];
+                }
+            }
+            let dataTypeKeys = Object.keys(this.dataTypes);
+            for (let i = 0; i < dataTypeKeys.length; i++) {
+                if (this.containsLabel(this.dataTypes[dataTypeKeys[i]], input) === true) {
+                    return dataTypeKeys[i];
+                }
+            }
+            let enumerationKeys = Object.keys(this.enumerations);
+            for (let i = 0; i < enumerationKeys.length; i++) {
+                if (this.containsLabel(this.enumerations[enumerationKeys[i]], input) === true) {
+                    return enumerationKeys[i];
+                }
+            }
+            let enumerationMemberKeys = Object.keys(this.enumerationMembers);
+            for (let i = 0; i < enumerationMemberKeys.length; i++) {
+                if (this.containsLabel(this.enumerationMembers[enumerationMemberKeys[i]], input) === true) {
+                    return enumerationMemberKeys[i];
+                }
+            }
         }
+        //if nothing was found yet, the input is invalid
+        return null;
     }
 
+    //helper function for discoverCompactIRI()
+    //returns true, if the termObj uses the given label (in any language)
+    containsLabel(termObj, label) {
+        if (termObj !== undefined && util.isObject(termObj["rdfs:label"])) {
+            let langKeys = Object.keys(termObj["rdfs:label"]);
+            for (let i = 0; i < langKeys.length; i++) {
+                if (termObj["rdfs:label"][langKeys[i]] === label) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
 }
 
 module.exports = Graph;
