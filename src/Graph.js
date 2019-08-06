@@ -134,7 +134,7 @@ class Graph {
                             this.addGraphNode(this.enumerationMembers, curNode);
                             break;
                     }
-                } else {
+                } else if (util.isArray(curNode["@type"])) {
                     //@type is not a string -> datatype or enumeration
                     // [
                     //     "rdfs:Class",
@@ -152,6 +152,9 @@ class Graph {
                         this.addGraphNode(this.enumerationMembers, curNode);
                     }
 
+                } else {
+                    console.log("unexpected @type format for the following node:");
+                    console.log(JSON.stringify(curNode, null, 2));
                 }
             }
             //C) Classification cleaning
@@ -422,37 +425,37 @@ class Graph {
                 //@id stays the same
                 //@type should stay the same (we already defined the memory to save it)
                 //schema:isPartOf -> overwrite
-                if (newNode["schema:isPartOf"] !== undefined) {
+                if (newNode["schema:isPartOf"] !== undefined && newNode["schema:isPartOf"] !== null) {
                     oldNode["schema:isPartOf"] = newNode["schema:isPartOf"];
                 }
                 //dc:source -> overwrite
-                if (newNode["dc:source"] !== undefined) {
+                if (newNode["dc:source"] !== undefined && newNode["dc:source"] !== null) {
                     oldNode["dc:source"] = newNode["dc:source"];
                 }
                 //schema:category -> overwrite
-                if (newNode["schema:category"] !== undefined) {
+                if (newNode["schema:category"] !== undefined && newNode["schema:category"] !== null) {
                     oldNode["schema:category"] = newNode["schema:category"];
                 }
                 //schema:supersededBy -> overwrite
-                if (newNode["schema:supersededBy"] !== undefined) {
+                if (newNode["schema:supersededBy"] !== undefined && newNode["schema:supersededBy"] !== null) {
                     oldNode["schema:supersededBy"] = newNode["schema:supersededBy"];
                 }
                 //rdfs:label -> add new languages, overwrite old ones if needed
-                if (newNode["rdfs:label"] !== undefined) {
+                if (newNode["rdfs:label"] !== undefined && newNode["rdfs:label"] !== null) {
                     let labelKeysNew = Object.keys(newNode["rdfs:label"]);
                     for (let i = 0; i < labelKeysNew.length; i++) {
                         oldNode["rdfs:label"][labelKeysNew[i]] = newNode["rdfs:label"][labelKeysNew[i]];
                     }
                 }
                 //rdfs:comment -> add new languages, overwrite old ones if needed
-                if (newNode["rdfs:comment"] !== undefined) {
+                if (newNode["rdfs:comment"] !== undefined && newNode["rdfs:comment"] !== null) {
                     let commentKeysNew = Object.keys(newNode["rdfs:comment"]);
                     for (let i = 0; i < commentKeysNew.length; i++) {
                         oldNode["rdfs:comment"][commentKeysNew[i]] = newNode["rdfs:comment"][commentKeysNew[i]];
                     }
                 }
                 //rdfs:subClassOf -> add new ids
-                if (newNode["rdfs:subClassOf"] !== undefined) {
+                if (newNode["rdfs:subClassOf"] !== undefined && newNode["rdfs:subClassOf"] !== null) {
                     for (let i = 0; i < newNode["rdfs:subClassOf"].length; i++) {
                         if (oldNode["rdfs:subClassOf"].indexOf(newNode["rdfs:subClassOf"][i]) === -1) {
                             //add new entry
@@ -461,7 +464,7 @@ class Graph {
                     }
                 }
                 //soa:superClassOf -> add new ids
-                if (newNode["soa:superClassOf"] !== undefined) {
+                if (newNode["soa:superClassOf"] !== undefined && newNode["soa:superClassOf"] !== null) {
                     for (let i = 0; i < newNode["soa:superClassOf"].length; i++) {
                         if (oldNode["soa:superClassOf"].indexOf(newNode["soa:superClassOf"][i]) === -1) {
                             //add new entry
@@ -470,7 +473,7 @@ class Graph {
                     }
                 }
                 //soa:hasProperty -> add new ids
-                if (newNode["soa:hasProperty"] !== undefined) {
+                if (newNode["soa:hasProperty"] !== undefined && newNode["soa:hasProperty"] !== null) {
                     for (let i = 0; i < newNode["soa:hasProperty"].length; i++) {
                         if (oldNode["soa:hasProperty"].indexOf(newNode["soa:hasProperty"][i]) === -1) {
                             //add new entry
@@ -479,7 +482,7 @@ class Graph {
                     }
                 }
                 //soa:isRangeOf -> add new ids
-                if (newNode["soa:isRangeOf"] !== undefined) {
+                if (newNode["soa:isRangeOf"] !== undefined && newNode["soa:isRangeOf"] !== null) {
                     for (let i = 0; i < newNode["soa:isRangeOf"].length; i++) {
                         if (oldNode["soa:isRangeOf"].indexOf(newNode["soa:isRangeOf"][i]) === -1) {
                             //add new entry
@@ -488,7 +491,7 @@ class Graph {
                     }
                 }
                 //soa:enumerationDomainIncludes -> add new ids
-                if (newNode["soa:enumerationDomainIncludes"] !== undefined) {
+                if (newNode["soa:enumerationDomainIncludes"] !== undefined && newNode["soa:enumerationDomainIncludes"] !== null) {
                     for (let i = 0; i < newNode["soa:enumerationDomainIncludes"].length; i++) {
                         if (oldNode["soa:enumerationDomainIncludes"].indexOf(newNode["soa:enumerationDomainIncludes"][i]) === -1) {
                             //add new entry
@@ -497,7 +500,7 @@ class Graph {
                     }
                 }
                 //soa:hasEnumerationMember -> add new ids
-                if (newNode["soa:hasEnumerationMember"] !== undefined) {
+                if (newNode["soa:hasEnumerationMember"] !== undefined && newNode["soa:hasEnumerationMember"] !== null) {
                     for (let i = 0; i < newNode["soa:hasEnumerationMember"].length; i++) {
                         if (oldNode["soa:hasEnumerationMember"].indexOf(newNode["soa:hasEnumerationMember"][i]) === -1) {
                             //add new entry
@@ -506,7 +509,7 @@ class Graph {
                     }
                 }
                 //rdfs:subPropertyOf -> add new ids
-                if (newNode["rdfs:subPropertyOf"] !== undefined) {
+                if (newNode["rdfs:subPropertyOf"] !== undefined && newNode["rdfs:subPropertyOf"] !== null) {
                     for (let i = 0; i < newNode["rdfs:subPropertyOf"].length; i++) {
                         if (oldNode["rdfs:subPropertyOf"].indexOf(newNode["rdfs:subPropertyOf"][i]) === -1) {
                             //add new entry
@@ -515,7 +518,7 @@ class Graph {
                     }
                 }
                 //schema:domainIncludes -> add new ids
-                if (newNode["schema:domainIncludes"] !== undefined) {
+                if (newNode["schema:domainIncludes"] !== undefined && newNode["schema:domainIncludes"] !== null) {
                     for (let i = 0; i < newNode["schema:domainIncludes"].length; i++) {
                         if (oldNode["schema:domainIncludes"].indexOf(newNode["schema:domainIncludes"][i]) === -1) {
                             //add new entry
@@ -524,7 +527,7 @@ class Graph {
                     }
                 }
                 //schema:rangeIncludes -> add new ids
-                if (newNode["schema:rangeIncludes"] !== undefined) {
+                if (newNode["schema:rangeIncludes"] !== undefined && newNode["schema:rangeIncludes"] !== null) {
                     for (let i = 0; i < newNode["schema:rangeIncludes"].length; i++) {
                         if (oldNode["schema:rangeIncludes"].indexOf(newNode["schema:rangeIncludes"][i]) === -1) {
                             //add new entry
@@ -533,7 +536,7 @@ class Graph {
                     }
                 }
                 //soa:superPropertyOf-> add new ids
-                if (newNode["schema:superPropertyOf"] !== undefined) {
+                if (newNode["schema:superPropertyOf"] !== undefined && newNode["schema:superPropertyOf"] !== null) {
                     for (let i = 0; i < newNode["schema:superPropertyOf"].length; i++) {
                         if (oldNode["schema:superPropertyOf"].indexOf(newNode["schema:superPropertyOf"][i]) === -1) {
                             //add new entry
@@ -545,6 +548,10 @@ class Graph {
             return true;
         } catch (e) {
             console.log(e);
+            console.log("memory[newNode[@id]]:");
+            console.log(JSON.stringify(memory[newNode["@id"]], null, 2));
+            console.log("newNode:");
+            console.log(JSON.stringify(newNode, null, 2));
             return false;
         }
     }

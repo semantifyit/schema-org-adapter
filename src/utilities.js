@@ -195,6 +195,21 @@ function generateContext(currentContext, newContext) {
 }
 
 async function preProcessVocab(vocab, newContext) {
+    //recursively put all nodes from inner @graphs to the outermost @graph (is the case for older schema.jsonld versions)
+    let foundInnerGraph = false;
+    do {
+        let newGraph = [];
+        foundInnerGraph = false;
+        for (let i = 0; i < vocab["@graph"].length; i++) {
+            if (vocab["@graph"][i]["@graph"] !== undefined) {
+                newGraph.push(...copByVal(vocab["@graph"][i]["@graph"])); //copy all elements of the inner @graph into the outer @graph
+                foundInnerGraph = true;
+            } else {
+                newGraph.push(copByVal(vocab["@graph"][i])); //copy this element to the outer @graph
+            }
+        }
+        vocab["@graph"] = copByVal(newGraph);
+    } while (foundInnerGraph === true);
     //expand to remove the old context
     //compact to apply the new context (which is supposed to have been merged before with the old context through the function generateContext())
     return await jsonld.compact(await jsonld.expand(vocab), newContext);
@@ -210,7 +225,7 @@ function curateNode(vocabNode, vocabularies) {
             };
         }
     } else {
-        vocabNode["rdfs:comment"] = null;
+        vocabNode["rdfs:comment"] = {};
     }
     if (vocabNode["rdfs:label"] !== undefined) {
         //make a vocab object with "en" as the standard value
@@ -221,7 +236,7 @@ function curateNode(vocabNode, vocabularies) {
             };
         }
     } else {
-        vocabNode["rdfs:label"] = null;
+        vocabNode["rdfs:label"] = {};
     }
     //make arrays for some terms in any case
     if (isString(vocabNode["rdfs:subClassOf"])) {
