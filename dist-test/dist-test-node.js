@@ -10,8 +10,8 @@ function onStart() {
     console.log(testClass.getIRI());
     console.log(testClass.getName());
     console.log(testClass.getDescription("en"));
-    console.log(testClass.toJSON(true));
+    console.log(JSON.stringify(testClass.toJSON(true),null,2));
 
     let testClass2 = mySA.getClass("dachkg:Trail");
-    console.log(testClass2.toJSON(true));
+    console.log(JSON.stringify(testClass2.toJSON(true),null,2));
 }

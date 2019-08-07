@@ -62,7 +62,7 @@ function applyFilter(dataArray, filter, graph) {
                         typeIRI = "schema:Enumeration";
                         break;
                     case "EnumerationMember":
-                        typeIRI = "schema:EnumerationMember";
+                        typeIRI = "soa:EnumerationMember";
                         break;
                     case "DataType":
                         typeIRI = "schema:DataType";
