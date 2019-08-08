@@ -18,6 +18,7 @@
     "browserify": "^16.3.0",
     "jest": "^24.8.0",
     "jsonld": "^1.6.2",
+    "node-fetch": "^2.6.0",
     "uglifyify": "^5.0.1"
   },
   "browserify": {

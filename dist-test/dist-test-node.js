@@ -7,11 +7,11 @@ mySA.addVocabularies([VOC_OBJ_SDO3_7, VOC_OBJ_DACH], onStart);
 
 function onStart() {
     let testClass = mySA.getClass("schema:Hotel");
-    console.log(testClass.getIRI());
-    console.log(testClass.getName());
-    console.log(testClass.getDescription("en"));
-    console.log(JSON.stringify(testClass.toJSON(true),null,2));
+    // console.log(testClass.getIRI());
+    // console.log(testClass.getName());
+    // console.log(testClass.getDescription("en"));
+    // console.log(JSON.stringify(testClass.toJSON(true),null,2));
 
     let testClass2 = mySA.getClass("dachkg:Trail");
-    console.log(JSON.stringify(testClass2.toJSON(true),null,2));
+    console.log(JSON.stringify(testClass2.toJSON(true, {"isSuperseded": false}), null, 2));
 }

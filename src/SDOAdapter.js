@@ -1,7 +1,6 @@
 const Graph = require("./Graph");
 const util = require("./utilities");
-
-//const request = require("request");
+const nodeFetch = require("node-fetch");
 
 class SDOAdapter {
     /**
@@ -22,10 +21,21 @@ class SDOAdapter {
             //check every vocab if it is a valid JSON-LD. If string -> try to JSON.parse()
             for (let i = 0; i < vocabArray.length; i++) {
                 if (util.isString(vocabArray[i])) {
-                    try {
-                        await this.graph.addVocabulary(JSON.parse(vocabArray[i]));
-                    } catch (e) {
-                        console.log("Parsing of vocabulary string produced an invalid JSON-LD.")
+                    if (vocabArray[i].startsWith("www") || vocabArray[i].startsWith("http")) {
+                        //assume it is a URL
+                        let fetchedVocab = await this.fetchVocabularyFromURL(vocabArray[i]);
+                        try {
+                            await this.graph.addVocabulary(fetchedVocab);
+                        } catch (e) {
+                            console.log("The given URL " + vocabArray[i] + " did not contain a valid JSON-LD vocabulary.")
+                        }
+                    } else {
+                        //assume it is a string-version of a JSON-LD
+                        try {
+                            await this.graph.addVocabulary(JSON.parse(vocabArray[i]));
+                        } catch (e) {
+                            console.log("Parsing of vocabulary string produced an invalid JSON-LD.")
+                        }
                     }
                 } else if (util.isObject(vocabArray[i])) {
                     await this.graph.addVocabulary(vocabArray[i]);
@@ -40,6 +50,18 @@ class SDOAdapter {
         } else {
             throw new Error("The first argument of the function must be an Array of vocabularies (JSON-LD)");
         }
+    }
+
+    async fetchVocabularyFromURL(url) {
+        const response = await nodeFetch(url, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded'
+            },
+        });
+        let json = await response.json();
+        //console.log(json);
+        return json;
     }
 
     /**

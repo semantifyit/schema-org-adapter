@@ -6,7 +6,7 @@
 </head>
 <body>
 <div style="padding: 100px; background-color: #8e908c; font-size: 18px; ">
-    <pre id="output" >
+    <pre id="output">
         This Div should render the test data gathered by the Library
     </pre>
 </div>
@@ -16,57 +16,9 @@
 <script>
     (function () {
         let mySA = new sdoAdapter();
-        mySA.addVocabularies([{
-            "@context": {
-                "dachkg": "http://dachkg.org/ontology/1.0/",
-                "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
-                "rdfa": "http://www.w3.org/ns/rdfa#",
-                "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
-                "schema": "http://schema.org/",
-                "xsd": "http://www.w3.org/2001/XMLSchema#"
-            },
-            "@graph": [
-                {
-                    "@id": "dachkg:endLocation",
-                    "@type": "rdf:Property",
-                    "rdfs:comment": "A sub property of schema.org location. The final location of the trail.",
-                    "rdfs:label": "endLocation",
-                    "rdfs:subPropertyOf": {
-                        "@id": "schema:location"
-                    },
-                    "schema:domainIncludes": {
-                        "@id": "dachkg:Trail"
-                    },
-                    "schema:rangeIncludes": {
-                        "@id": "schema:Place"
-                    }
-                },
-                {
-                    "@id": "dachkg:Trail",
-                    "@type": "rdfs:Class",
-                    "rdfs:comment": "A  a path, track or unpaved lane or road for sport activities or walking.",
-                    "rdfs:label": "Trail",
-                    "rdfs:subClassOf": {
-                        "@id": "schema:Place"
-                    }
-                },
-                {
-                    "@id": "dachkg:startLocation",
-                    "@type": "rdf:Property",
-                    "rdfs:comment": "A sub property of schema.org location. The start location of the trail.",
-                    "rdfs:label": "startLocation",
-                    "rdfs:subPropertyOf": {
-                        "@id": "schema:location"
-                    },
-                    "schema:domainIncludes": {
-                        "@id": "dachkg:Trail"
-                    },
-                    "schema:rangeIncludes": {
-                        "@id": "schema:Place"
-                    }
-                }
-            ]
-        }], onStart);
+        let sdoVocabURL = "https://raw.githubusercontent.com/schemaorg/schemaorg/master/data/releases/3.9/all-layers.jsonld";
+        let dachVocabURL = "https://raw.githubusercontent.com/STIInnsbruck/dachkg-schema/master/schema/dachkg_schema.json";
+        mySA.addVocabularies([sdoVocabURL, dachVocabURL], onStart);
 
         function onStart() {
             let testClass = mySA.getClass("Trail");

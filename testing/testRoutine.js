@@ -2,9 +2,12 @@ const SDOAdapter = require("../src/SDOAdapter");
 
 const VOC_OBJ_DACH = require('../testData/dachkg_1');
 const VOC_OBJ_SDO3_7 = require('../testData/schema_3.9');
+const VOC_URL_SDO3_9 = "https://raw.githubusercontent.com/schemaorg/schemaorg/master/data/releases/3.9/all-layers.jsonld";
+const VOC_URL_SDO_LATEST = "http://schema.org/version/latest/all-layers.jsonld";
+const VOC_URL_DACH = "https://raw.githubusercontent.com/STIInnsbruck/dachkg-schema/master/schema/dachkg_schema.json";
 
 let mySA = new SDOAdapter();
-mySA.addVocabularies([VOC_OBJ_SDO3_7, VOC_OBJ_DACH], onStart);
+mySA.addVocabularies([VOC_URL_SDO_LATEST, VOC_URL_DACH], onStart);
 
 function onStart() {
     // let testClass = mySA.getClass("http://schema.org/Person");
