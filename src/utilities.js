@@ -223,6 +223,19 @@ function curateNode(vocabNode, vocabularies) {
             vocabNode["rdfs:comment"] = {
                 "en": vocabNode["rdfs:comment"]
             };
+        } else if (isObject(vocabNode["rdfs:comment"])) {
+
+            let newVal = {};
+            newVal[vocabNode["rdfs:comment"]["@language"]] = vocabNode["rdfs:comment"]["@value"];
+            vocabNode["rdfs:comment"] = copByVal(newVal);
+        } else if (isArray(vocabNode["rdfs:comment"])) {
+            let newVal = {};
+            for (let i = 0; i < vocabNode["rdfs:comment"].length; i++) {
+                if (isObject(vocabNode["rdfs:comment"][i])) {
+                    newVal[vocabNode["rdfs:comment"][i]["@language"]] = vocabNode["rdfs:comment"][i]["@value"];
+                }
+            }
+            vocabNode["rdfs:comment"] = copByVal(newVal);
         }
     } else {
         vocabNode["rdfs:comment"] = {};
@@ -230,10 +243,36 @@ function curateNode(vocabNode, vocabularies) {
     if (vocabNode["rdfs:label"] !== undefined) {
         //make a vocab object with "en" as the standard value
         if (isString(vocabNode["rdfs:label"])) {
+            //"rdfs:label": "transcript"
             //standard -> "en"
             vocabNode["rdfs:label"] = {
                 "en": vocabNode["rdfs:label"]
             };
+        } else if (isObject(vocabNode["rdfs:label"])) {
+            //"rdfs:label": {
+            //   "@language": "en",
+            //   "@value": "translationOfWork"
+            // }
+            let newVal = {};
+            newVal[vocabNode["rdfs:label"]["@language"]] = vocabNode["rdfs:label"]["@value"];
+            vocabNode["rdfs:label"] = copByVal(newVal);
+        } else if (isArray(vocabNode["rdfs:label"])) {
+            //"rdfs:label": [{
+            //   "@language": "en",
+            //   "@value": "translationOfWork"
+            // },
+            // {
+            //   "@language": "de",
+            //   "@value": "UebersetzungsArbeit"
+            // }
+            // ]
+            let newVal = {};
+            for (let i = 0; i < vocabNode["rdfs:label"].length; i++) {
+                if (isObject(vocabNode["rdfs:label"][i])) {
+                    newVal[vocabNode["rdfs:label"][i]["@language"]] = vocabNode["rdfs:label"][i]["@value"];
+                }
+            }
+            vocabNode["rdfs:label"] = copByVal(newVal);
         }
     } else {
         vocabNode["rdfs:label"] = {};

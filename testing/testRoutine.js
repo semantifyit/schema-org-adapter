@@ -29,12 +29,13 @@ function onStart() {
     console.log(JSON.stringify(extVocClass.toJSON(false, null), null, 2));
     let testClass = mySA.getClass("schema:Person");
     console.log(JSON.stringify(testClass.toJSON(false, null), null, 2));
-    let testProperty = mySA.getProperty("schema:address");
+    let testProperty = mySA.getProperty("schema:translationOfWork");
     console.log(JSON.stringify(testProperty.toJSON(false, null), null, 2));
-    let testDataType = mySA.getDataType("schema:Number");
-    console.log(JSON.stringify(testDataType.toJSON(false, null), null, 2));
-    let testEnumeration = mySA.getEnumeration("schema:MedicalImagingTechnique");
-    console.log(JSON.stringify(testEnumeration.toJSON(false, null), null, 2));
-    let testEnumerationMember = mySA.getEnumerationMember("schema:Radiography");
-    console.log(JSON.stringify(testEnumerationMember.toJSON(false, null), null, 2));
+    console.log(JSON.stringify(testProperty.getName("en"),null,2));
+    // let testDataType = mySA.getDataType("schema:Number");
+    // console.log(JSON.stringify(testDataType.toJSON(false, null), null, 2));
+    // let testEnumeration = mySA.getEnumeration("schema:MedicalImagingTechnique");
+    // console.log(JSON.stringify(testEnumeration.toJSON(false, null), null, 2));
+    // let testEnumerationMember = mySA.getEnumerationMember("schema:Radiography");
+    // console.log(JSON.stringify(testEnumerationMember.toJSON(false, null), null, 2));
 }
