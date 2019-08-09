@@ -52,10 +52,9 @@ class ReasoningEngine {
                 result.push(...newAddition);
             } while (addition.length !== 0);
             result = util.uniquifyArray(result);
-            return result;
-        } else {
-            return null;
+
         }
+        return result;
     }
 
     inferImplicitSubClasses(classIRI) {
@@ -84,9 +83,8 @@ class ReasoningEngine {
             } while (addition.length !== 0);
             result = util.uniquifyArray(result);
             return result;
-        } else {
-            return null;
         }
+        return result;
     }
 
     inferImplicitSuperDataTypes(dataTypeIRI) {
@@ -108,10 +106,8 @@ class ReasoningEngine {
                 result.push(...newAddition);
             } while (addition.length !== 0);
             result = util.uniquifyArray(result);
-            return result;
-        } else {
-            return null;
         }
+        return result;
     }
 
     inferImplicitSubDataTypes(dataTypeIRI) {
@@ -133,10 +129,8 @@ class ReasoningEngine {
                 result.push(...newAddition);
             } while (addition.length !== 0);
             result = util.uniquifyArray(result);
-            return result;
-        } else {
-            return null;
         }
+        return result;
     }
 
     inferSubProperties(propertyIRI) {
@@ -158,10 +152,8 @@ class ReasoningEngine {
                 result.push(...newAddition);
             } while (addition.length !== 0);
             result = util.uniquifyArray(result);
-            return result;
-        } else {
-            return null;
         }
+        return result;
     }
 
     inferSuperProperties(propertyIRI) {
@@ -183,10 +175,8 @@ class ReasoningEngine {
                 result.push(...newAddition);
             } while (addition.length !== 0);
             result = util.uniquifyArray(result);
-            return result;
-        } else {
-            return null;
         }
+        return result;
     }
 
 

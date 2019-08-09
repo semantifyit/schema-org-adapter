@@ -25,6 +25,8 @@
             console.log(testClass.getName());
             console.log(testClass.getDescription("en"));
             console.log(testClass.toJSON(true));
+            let testProperty = mySA.getProperty("accountablePerson");
+            console.log(testProperty.getRanges());
             document.getElementById("output").innerHTML = JSON.stringify(testClass.toJSON(true), null, 2);
         }
     })();
