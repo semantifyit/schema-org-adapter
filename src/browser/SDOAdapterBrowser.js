@@ -55,14 +55,13 @@ class SDOAdapter {
         try {
             return new Promise(function (resolve, reject) {
                 var xmlhttp = new XMLHttpRequest();
-                console.log(xmlhttp)
                 xmlhttp.onload = function () {
                     if (xmlhttp.status === 200) {
                         const parsedData = JSON.parse(xmlhttp.response);
-                        console.log(parsedData)
                         resolve(parsedData);
                     } else {
-                        reject(xmlhttp.status)
+                        console.log("Error fetching Vocabulary: " + xmlhttp.status);
+                        reject("");
                     }
                 };
                 xmlhttp.open("GET", url, true);
@@ -70,6 +69,7 @@ class SDOAdapter {
             });
         } catch (e) {
             console.log(e)
+            return "";
         }
     }
 
