@@ -1,7 +1,9 @@
-const sdoAdapter = require("./../dist/sdoAdapter");
+const sdoAdapter = require("./../dist/node/sdoAdapter");
 const VOC_OBJ_SDO3_7 = require('../testData/schema_3.7');
 const VOC_OBJ_DACH = require('../testData/dachkg_1');
+
 let mySA = new sdoAdapter();
+
 
 mySA.addVocabularies([VOC_OBJ_SDO3_7, VOC_OBJ_DACH], onStart);
 

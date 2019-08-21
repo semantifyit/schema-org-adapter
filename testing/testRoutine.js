@@ -1,4 +1,4 @@
-const SDOAdapter = require("../src/SDOAdapter");
+const SDOAdapter = require("../src/node/SDOAdapterNode");
 
 const VOC_OBJ_DACH = require('../testData/dachkg_1');
 const VOC_OBJ_SDO3_7 = require('../testData/schema_3.9');

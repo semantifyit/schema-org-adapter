@@ -12,11 +12,12 @@
 </div>
 
 </body>
-<script src="./../dist/sdoAdapter.js"></script>
+<script src="./../dist/browser/sdoAdapter.js"></script>
 <script>
     (function () {
         let mySA = new sdoAdapter();
-        let sdoVocabURL = "https://raw.githubusercontent.com/schemaorg/schemaorg/master/data/releases/3.9/all-layers.jsonld";
+        let sdoVocabURL = "http://raw.githubusercontent.com/schemaorg/schemaorg/master/data/releases/3.9/all-layers.jsonld";
+        //sdoVocabURL = "http://schema.org/version/latest/all-layers.jsonld";
         let dachVocabURL = "https://raw.githubusercontent.com/STIInnsbruck/dachkg-schema/master/schema/dachkg_schema.json";
         mySA.addVocabularies([sdoVocabURL, dachVocabURL], onStart);
 

@@ -4,8 +4,10 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "build": "browserify src/SDOAdapter.js -s sdoAdapter | derequire -cm --toplevel > dist/sdoAdapter.js",
-    "buildMinified": "browserify src/SDOAdapter.js -s sdoAdapter -g [uglifyify] | derequire -cm --toplevel > dist/sdoAdapter.js",
+    "buildBrowser": "browserify src/browser/SDOAdapterBrowser.js -s sdoAdapter | derequire -cm --toplevel > dist/browser/sdoAdapter.js",
+    "buildBrowserMinified": "browserify src/browser/SDOAdapterBrowser.js -s sdoAdapter -g [uglifyify] | derequire -cm --toplevel > dist/browser/sdoAdapter.js",
+    "buildNode": "browserify src/node/SDOAdapterNode.js -s sdoAdapter --no-builtins --no-bundle-external --no-bf | derequire -cm --toplevel > dist/node/sdoAdapter.js",
+    "buildNodeMinified": "browserify src/node/SDOAdapterNode.js -s sdoAdapter --no-builtins --no-bundle-external --no-bf -g [uglifyify] | derequire -cm --toplevel > dist/node/sdoAdapter.js",
     "test": "jest",
     "genDoc": "jsdoc src/"
   },
@@ -18,7 +20,7 @@
     "browserify": "^16.5.0",
     "jest": "^24.9.0",
     "jsonld": "^1.6.2",
-    "node-fetch": "^2.6.0",
+    "superagent": "^5.1.0",
     "uglifyify": "^5.0.1"
   },
   "browserify": {
