@@ -638,7 +638,7 @@ class Graph {
                 classObj = this.enumerations[compactIRI];
                 if (classObj !== undefined) {
                     try {
-                        return this.getEnumeration(compactIRI);
+                        return this.getEnumeration(compactIRI, filter);
                     } catch (e) {
                     }
                 }
