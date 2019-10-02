@@ -78,6 +78,8 @@ describe('Property methods', () => {
         expect(serviceAudience.getRanges(false)).not.toContain("schema:MedicalAudience");
         let startLocation = mySA.getProperty("dachkg:startLocation");
         expect(startLocation.getRanges(true)).toContain("schema:Place");
+        expect(startLocation.getRanges(true)).toContain("schema:TouristDestination");
+        expect(startLocation.getRanges(false)).not.toContain("schema:TouristDestination");
         expect(startLocation.getRanges(true, {"fromVocabulary": "dachkg"})).not.toContain("schema:Place");
     });
 

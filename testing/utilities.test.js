@@ -123,6 +123,5 @@ describe('util tools', () => {
         expect(mySA.getListOfProperties(filter10)).not.toContain("schema:name");
         expect(mySA.getListOfProperties(filter11)).toContain("dachkg:endLocation");
         expect(mySA.getListOfProperties(filter11)).toContain("schema:aspect");
-
     });
-})
+});

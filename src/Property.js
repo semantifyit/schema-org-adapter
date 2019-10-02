@@ -112,7 +112,11 @@ class Property {
         result.push(... propertyObj["schema:rangeIncludes"]);
         if (implicit === true) {
             //add sub-classes from ranges
-            result.push(... this.graph.reasoner.inferImplicitSubClasses(result));
+            let inferredSubClasses = [];
+            for (let i = 0; i < result.length; i++) {
+                inferredSubClasses.push(... this.graph.reasoner.inferImplicitSubClasses(result[i]));
+            }
+            result.push(... inferredSubClasses);
             //remove "null" values from array (if range included data types)
             result = result.filter(function (el) {
                 return el !== null;
@@ -133,7 +137,11 @@ class Property {
         result.push(... propertyObj["schema:domainIncludes"]);
         if (implicit === true) {
             //add sub-classes from ranges
-            result.push(... this.graph.reasoner.inferImplicitSubClasses(result));
+            let inferredSubClasses = [];
+            for (let i = 0; i < result.length; i++) {
+                inferredSubClasses.push(... this.graph.reasoner.inferImplicitSubClasses(result[i]));
+            }
+            result.push(... inferredSubClasses);
         }
         return util.applyFilter(util.uniquifyArray(result), filter, this.graph);
     }
