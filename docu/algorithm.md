@@ -25,7 +25,7 @@ Classify every _@graph_ node based on its **@type**. The node is stored in a cor
 - **classes** ("@type" = "rdfs:Class")
 - **properties** ("@type" = "rdf:Property")
 - **dataTypes** ("@type" = "rdfs:Class" + "http://schema.org/DataType")
-- **enumerations** ("@type" = "rdfs:Class", has "http://schema.org/Enumeration" as implicit super-class)
+- **enumerations** ("@type" = "rdfs:Class", has "http://schema.org/Enumeration" as implicit or explicit super-class)
 - **enumerationMembers** ("@type" = @id(s) of enumeration(s))
 
 Example _@graph node_ for an Enumeration Instance (enumerationMember):
