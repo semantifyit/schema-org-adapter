@@ -210,9 +210,27 @@ async function preProcessVocab(vocab, newContext) {
         }
         vocab["@graph"] = copByVal(newGraph);
     } while (foundInnerGraph === true);
+
     //expand to remove the old context
+    const expandedVocab = await jsonld.expand(vocab);
+
     //compact to apply the new context (which is supposed to have been merged before with the old context through the function generateContext())
-    return await jsonld.compact(await jsonld.expand(vocab), newContext);
+    //option "graph": true not feasible here, because then vocabs with "@id" result in inner @graphs again
+    //solution: edge case handling (see below)
+    const compactedVocab = await jsonld.compact(expandedVocab, newContext);
+
+    //edge case: @graph had only one node, so values of @graph are in outermost layer
+    if (compactedVocab["@graph"] === undefined) {
+        delete compactedVocab["@context"];
+        return {
+            "@context": newContext,
+            "@graph": [
+                compactedVocab
+            ]
+        }
+    } else {
+        return compactedVocab;
+    }
 }
 
 function curateNode(vocabNode, vocabularies) {
