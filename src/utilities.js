@@ -215,7 +215,7 @@ async function preProcessVocab(vocab, newContext) {
     const expandedVocab = await jsonld.expand(vocab);
 
     //compact to apply the new context (which is supposed to have been merged before with the old context through the function generateContext())
-    //option "graph": true not feasible here, because than vocabs with "@id" result in inner @graphs again
+    //option "graph": true not feasible here, because then vocabs with "@id" result in inner @graphs again
     //solution: edge case handling (see below)
     const compactedVocab = await jsonld.compact(expandedVocab, newContext);
 
