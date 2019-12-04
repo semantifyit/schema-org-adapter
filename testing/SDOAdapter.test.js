@@ -1,13 +1,13 @@
 const SDOAdapter = require("../src/node/SDOAdapterNode");
 const VOC_OBJ_DACH = require('../testData/dachkg_1');
 const VOC_OBJ_SDO3_7 = require('../testData/schema_3.7');
-const VOC_OBJ_Jan = require('../testData/testjan');
+const VOC_OBJ_GWON = require('../testData/graph_with_one_node');
 
 describe('SDO Adapter methods', () => {
 
     test("addVocabularies()", async () => {
         let mySA = new SDOAdapter();
-        await mySA.addVocabularies([VOC_OBJ_SDO3_7, VOC_OBJ_Jan], null);
+        await mySA.addVocabularies([VOC_OBJ_SDO3_7, VOC_OBJ_GWON], null);
     });
 
     test("getVocabularies()", async () => {
