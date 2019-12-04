@@ -4,6 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "build": "npm run buildBrowser && npm run buildNode",
+    "buildMinified": "npm run buildBrowserMinified && npm run buildNodeMinified",
     "buildBrowser": "browserify src/browser/SDOAdapterBrowser.js -s sdoAdapter | derequire -cm --toplevel > dist/browser/sdoAdapter.js",
     "buildBrowserMinified": "browserify src/browser/SDOAdapterBrowser.js -s sdoAdapter -g [uglifyify] | derequire -cm --toplevel > dist/browser/sdoAdapter.js",
     "buildNode": "browserify src/node/SDOAdapterNode.js -s sdoAdapter --no-builtins --no-bundle-external --no-bf | derequire -cm --toplevel > dist/node/sdoAdapter.js",
