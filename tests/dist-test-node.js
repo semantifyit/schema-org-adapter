@@ -1,6 +1,6 @@
 const SDOAdapter = require("../src/SDOAdapter");
 
-const VOC_OBJ_DACH = require('../testData/dachkg_1');
+const VOC_OBJ_DACH = require('./data/dachkg_1');
 const VOC_URL_DACH = "https://raw.githubusercontent.com/STIInnsbruck/dachkg-schema/master/schema/dachkg_trail.json";
 
 let mySA = new SDOAdapter();

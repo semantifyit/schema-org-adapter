@@ -1,8 +1,8 @@
 const SDOAdapter = require("../src/SDOAdapter");
-const VOC_OBJ_DACH = require('../testData/dachkg_1');
-const VOC_OBJ_SDO3_7 = require('../testData/schema_3.7');
-const VOC_OBJ_SDO5_0 = require('../testData/schema_5.0');
-const VOC_OBJ_GWON = require('../testData/graph_with_one_node');
+const VOC_OBJ_DACH = require('./data/dachkg_1');
+const VOC_OBJ_SDO3_7 = require('./data/schema_3.7');
+const VOC_OBJ_SDO5_0 = require('./data/schema_5.0');
+const VOC_OBJ_GWON = require('./data/graph_with_one_node');
 const VOC_URL_DACH = "https://raw.githubusercontent.com/STIInnsbruck/dachkg-schema/master/schema/dachkg_trail.json";
 const VOC_URL_SDO_LATEST = "https://schema.org/version/latest/all-layers.jsonld";
 const VOC_URL_SDO5_0 = "https://raw.githubusercontent.com/schemaorg/schemaorg/master/data/releases/5.0/all-layers.jsonld";
@@ -232,5 +232,4 @@ describe('SDO Adapter methods', () => {
             expect(url5).toBe("https://raw.githubusercontent.com/schemaorg/schemaorg/master/data/releases/3.9/auto.jsonld");
         }
     );
-
 });

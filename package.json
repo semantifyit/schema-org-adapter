@@ -2,18 +2,35 @@
   "name": "schema-org-adapter",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "src/sdoAdapter.js",
   "scripts": {
-    "build": "browserify src/SDOAdapter.js -s sdoAdapter | derequire -cm --toplevel > dist/sdoAdapter.js",
-    "buildMinified": "browserify src/SDOAdapter.js -s sdoAdapter -g [uglifyify] | derequire -cm --toplevel > dist/sdoAdapter.min.js",
+    "build": "browserify src/SDOAdapter.js -s sdoAdapter | derequire -cm --toplevel > dist/schema-org-adapter.js",
+    "buildMinified": "browserify src/SDOAdapter.js -s sdoAdapter -g [uglifyify] | derequire -cm --toplevel > dist/schema-org-adapter.min.js",
     "test": "jest",
     "genDoc": "jsdoc src/"
   },
   "jest": {
     "testEnvironment": "node"
   },
-  "author": "",
-  "license": "ISC",
+  "author": {
+    "name": "Omar J. A. Holzknecht for STI Innsbruck",
+    "url": "https://semantify.it"
+  },
+  "license": "CC-BY-SA",
+  "homepage": "https://github.com/semantifyit/schema-org-adapter",
+  "keywords": [
+    "schema.org",
+    "adapter",
+    "schema",
+    "org",
+    "converter",
+    "sdo-adapter",
+    "semantic web"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/semantifyit/schema-org-adapter"
+  },
   "dependencies": {
     "axios": "^0.19.1",
     "jsonld": "^2.0.1"
@@ -46,5 +63,9 @@
     "jest": "^24.9.0",
     "jsdoc": "^3.6.3",
     "uglifyify": "^5.0.2"
-  }
+  },
+  "files": [
+    "src/*",
+    "dist/*"
+  ]
 }

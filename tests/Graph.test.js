@@ -1,7 +1,7 @@
 const SDOAdapter = require("../src/SDOAdapter");
 const Graph = require("../src/Graph");
-const VOC_OBJ_DACH = require('../testData/dachkg_1');
-const VOC_OBJ_SDO3_7 = require('../testData/schema_3.7');
+const VOC_OBJ_DACH = require('./data/dachkg_1');
+const VOC_OBJ_SDO3_7 = require('./data/schema_3.7');
 
 async function initGraph() {
     let mySA = new SDOAdapter();
