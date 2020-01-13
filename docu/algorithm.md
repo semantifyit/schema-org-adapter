@@ -17,7 +17,7 @@ Example _@graph node_ for a Class:
 }
 ```
 
-Each of these nodes is curated, ensuring a wished format depending on the **@type** of the node (see utilities.curateNode() for details).
+Each of these nodes is curated, ensuring a wished format depending on the **@type** of the node (see utilities.curateVocabNode() for details).
 
 ### B.) Classify Input
 Classify every _@graph_ node based on its **@type**. The node is stored in a corresponding memory storage for an easier further usage. This is the first of two steps for an exact classification of the node, since the **@type** is not enough for a correct classification. The mapping of our data model and the **@type(s)** of the corresponding **@graph** nodes are as follows:

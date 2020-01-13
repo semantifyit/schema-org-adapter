@@ -4,13 +4,11 @@
   "description": "",
   "main": "src/sdoAdapter.js",
   "scripts": {
-    "build": "browserify src/SDOAdapter.js -s sdoAdapter | derequire -cm --toplevel > dist/schema-org-adapter.js",
-    "buildMinified": "browserify src/SDOAdapter.js -s sdoAdapter -g [uglifyify] | derequire -cm --toplevel > dist/schema-org-adapter.min.js",
+    "build": "browserify src/SDOAdapter.js -s SDOAdapter | derequire -cm --toplevel > dist/schema-org-adapter.js",
+    "buildMinified": "browserify src/SDOAdapter.js -s SDOAdapter -g [uglifyify] | derequire -cm --toplevel > dist/schema-org-adapter.min.js",
     "test": "jest",
-    "genDoc": "jsdoc src/"
-  },
-  "jest": {
-    "testEnvironment": "node"
+    "genJsDoc": "jsdoc src/",
+    "eslint check": "eslint src/*.js tests/*.js"
   },
   "author": {
     "name": "Omar J. A. Holzknecht for STI Innsbruck",
@@ -35,6 +33,31 @@
     "axios": "^0.19.1",
     "jsonld": "^2.0.1"
   },
+  "devDependencies": {
+    "@babel/preset-env": "^7.0.0",
+    "babel-core": "^6.26.3",
+    "babel-eslint": "^10.0.3",
+    "babelify": "^10.0.0",
+    "browserify": "^16.5.0",
+    "derequire": "^2.0.6",
+    "eslint": "^6.8.0",
+    "eslint-plugin-jest": "^23.6.0",
+    "eslint-plugin-jsdoc": "^20.3.0",
+    "eslint-plugin-markdown": "^1.0.1",
+    "eslint-plugin-node": "^11.0.0",
+    "jest": "^24.9.0",
+    "jsdoc": "^3.6.3",
+    "standard": "^14.3.1",
+    "uglifyify": "^5.0.2"
+  },
+  "jest": {
+    "testEnvironment": "node"
+  },
+  "standard": {
+    "env": [
+      "jest"
+    ]
+  },
   "browserify": {
     "transform": [
       [
@@ -53,16 +76,6 @@
         }
       ]
     ]
-  },
-  "devDependencies": {
-    "@babel/preset-env": "^7.0.0",
-    "babel-core": "^6.26.3",
-    "babelify": "^10.0.0",
-    "browserify": "^16.5.0",
-    "derequire": "^2.0.6",
-    "jest": "^24.9.0",
-    "jsdoc": "^3.6.3",
-    "uglifyify": "^5.0.2"
   },
   "files": [
     "src/*",

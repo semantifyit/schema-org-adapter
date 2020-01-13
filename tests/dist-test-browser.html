@@ -14,23 +14,23 @@
 </body>
 <script src="../dist/schema-org-adapter.min.js"></script>
 <script>
-    (function () {
-        let mySA = new sdoAdapter();
-        let sdoVocabURL = "https://raw.githubusercontent.com/schemaorg/schemaorg/master/data/releases/3.9/all-layers.jsonld";
-        let dachVocabURL = "https://raw.githubusercontent.com/STIInnsbruck/dachkg-schema/master/schema/dachkg_trail.json";
+  (function () {
+    let mySA = new SDOAdapter()
+    // let sdoVocabURL = 'https://raw.githubusercontent.com/schemaorg/schemaorg/master/data/releases/3.9/all-layers.jsonld'
+    let dachVocabURL = 'https://raw.githubusercontent.com/STIInnsbruck/dachkg-schema/master/schema/dachkg_trail.json'
 
-        mySA.getSDOVocabularyURL("latest", "all-layers").then(function (sdoURL) {
-            mySA.addVocabularies([sdoURL, dachVocabURL]).then(function(){
-                let testClass = mySA.getClass("Trail");
-                console.log(testClass.getName());
-                console.log(testClass.getDescription("en"));
-                console.log(testClass.toJSON(true));
-                let testProperty = mySA.getProperty("accountablePerson");
-                console.log(testProperty.getRanges());
-                document.getElementById("output").innerHTML = JSON.stringify(testClass.toJSON(true), null, 2);
-            });
-        });
+    mySA.getSDOVocabularyURL('latest', 'all-layers').then(function (sdoURL) {
+      mySA.addVocabularies([sdoURL, dachVocabURL]).then(function () {
+        let testClass = mySA.getClass('Trail')
+        console.log(testClass.getName())
+        console.log(testClass.getDescription('en'))
+        console.log(testClass.toJSON(true))
+        let testProperty = mySA.getProperty('accountablePerson')
+        console.log(testProperty.getRanges())
+        document.getElementById('output').innerHTML = JSON.stringify(testClass.toJSON(true), null, 2)
+      })
+    })
 
-    })();
+  })()
 </script>
 </html>

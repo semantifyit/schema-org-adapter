@@ -1,0 +1,35 @@
+{
+  "plugins": [
+    "jest",
+    "markdown",
+    "node",
+    "jsdoc"
+  ],
+  "extends": [
+    "eslint:recommended",
+    "plugin:jsdoc/recommended",
+    "plugin:node/recommended",
+    "plugin:jest/recommended"
+  ],
+  "env": {
+    "browser": true,
+    "es6": true,
+    "node": true,
+    "jest": true
+  },
+  "parser": "babel-eslint",
+  "parserOptions": {
+    "ecmaVersion": 6,
+    "sourceType": "module"
+  },
+  "rules": {
+  },
+  "globals": {
+    "Graph": true,
+    "Class": true,
+    "Property": true,
+    "DataType": true,
+    "Enumeration": true,
+    "EnumerationMember": true
+  }
+}

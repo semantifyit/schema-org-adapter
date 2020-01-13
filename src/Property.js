@@ -4,7 +4,8 @@ const util = require("./utilities");
 class Property {
     /**
      * A Property represents an rdf:Property. It is identified by its IRI
-     * @constructor
+     *
+     * @class
      * @param {string} IRI - The compacted IRI of this Property, e.g. "schema:address"
      * @param {object} graph - The underlying data graph to enable the methods of this Property
      */
@@ -15,6 +16,7 @@ class Property {
 
     /**
      * Retrieves the IRI (@id) of this Property in compact/absolute form
+     *
      * @param {boolean} compactForm - (default = false), if true -> return compact IRI -> "schema:address", if false -> return absolute IRI -> "http://schema.org/address"
      * @returns {string} The IRI (@id) of this Property
      */
@@ -28,6 +30,7 @@ class Property {
 
     /**
      * Retrieves the term type of this Property (is always "rdf:Property")
+     *
      * @returns {string} The term type of this Property -> "rdf:Property"
      */
     getTermType() {
@@ -36,6 +39,7 @@ class Property {
 
     /**
      * Retrieves the original vocabulary (schema:isPartOf) of this Property
+     *
      * @returns {string|null} The vocabulary IRI given by the "schema:isPartOf" of this Property
      */
     getVocabulary() {
@@ -49,6 +53,7 @@ class Property {
 
     /**
      * Retrieves the source (dc:source) of this Property
+     *
      * @returns {string|null} The source IRI given by the "dc:source" of this Property (null if none)
      */
     getSource() {
@@ -62,6 +67,7 @@ class Property {
 
     /**
      * Retrieves the Property superseding (schema:supersededBy) this Property
+     *
      * @returns {string|null} The Property superseding this Property (null if none)
      */
     isSupersededBy() {
@@ -75,6 +81,7 @@ class Property {
 
     /**
      * Retrieves the name (rdfs:label) of this Property in a wished language (optional)
+     *
      * @param {string} language - (default = "en") the wished language for the name
      * @returns {string|null} The name of this Property (null if not given for specified language)
      */
@@ -88,6 +95,7 @@ class Property {
 
     /**
      * Retrieves the description (rdfs:comment) of this Property in a wished language (optional)
+     *
      * @param {string} language - (default = "en") the wished language for the description
      * @returns {string|null} The description of this Property (null if not given for specified language)
      */
@@ -102,9 +110,10 @@ class Property {
 
     /**
      * Retrieves the explicit/implicit ranges (schema:rangeIncludes) of this Property
+     *
      * @param {boolean} implicit - (default = true) retrieves also implicit ranges (inheritance from sub-classes of the ranges)
      * @param {object|null} filter - (default = null) an optional filter for the ranges
-     * @returns {array} The ranges of this Property
+     * @returns {Array} The ranges of this Property
      */
     getRanges(implicit = true, filter = null) {
         let propertyObj = this.graph.properties[this.IRI];
@@ -127,9 +136,10 @@ class Property {
 
     /**
      * Retrieves the explicit/implicit domains (schema:domainIncludes) of this Property
+     *
      * @param {boolean} implicit - (default = true) retrieves also implicit domains (inheritance from sub-classes of the domains)
      * @param {object|null} filter - (default = null) an optional filter for the domains
-     * @returns {array} The domains of this Property
+     * @returns {Array} The domains of this Property
      */
     getDomains(implicit = true, filter = null) {
         let propertyObj = this.graph.properties[this.IRI];
@@ -148,9 +158,10 @@ class Property {
 
     /**
      * Retrieves the explicit/implicit super-properties (rdfs:subPropertyOf) of this Property
+     *
      * @param {boolean} implicit - (default = true) retrieves also implicit super-properties (recursive from super-properties)
      * @param {object|null} filter - (default = null) an optional filter for the super-properties
-     * @returns {array} The super-properties of this Property
+     * @returns {Array} The super-properties of this Property
      */
     getSuperProperties(implicit = true, filter = null) {
         let propertyObj = this.graph.properties[this.IRI];
@@ -166,9 +177,10 @@ class Property {
 
     /**
      * Retrieves the explicit/implicit sub-properties (soa:superPropertyOf) of this Property
+     *
      * @param {boolean} implicit - (default = true) retrieves also implicit sub-properties (recursive from sub-properties)
      * @param {object|null} filter - (default = null) an optional filter for the sub-properties
-     * @returns {array} The sub-properties of this Property
+     * @returns {Array} The sub-properties of this Property
      */
     getSubProperties(implicit = true, filter = null) {
         let propertyObj = this.graph.properties[this.IRI];
@@ -184,6 +196,7 @@ class Property {
 
     /**
      * Generates a string representation of this Property (Based on its JSON representation)
+     *
      * @returns {string} The string representation of this Property
      */
     toString() {
@@ -192,6 +205,7 @@ class Property {
 
     /**
      * Generates an explicit/implicit JSON representation of this Property.
+     *
      * @param {boolean} implicit - (default = true) includes also implicit data (e.g. domains, ranges, etc.)
      * @param {object|null} filter - (default = null) an optional filter for the generated data
      * @returns {object} The JSON representation of this Class
