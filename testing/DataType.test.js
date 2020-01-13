@@ -1,10 +1,10 @@
-const SDOAdapter = require("../src/node/SDOAdapterNode");
+const SDOAdapter = require("../src/SDOAdapter");
 const VOC_OBJ_DACH = require('../testData/dachkg_1');
 const VOC_OBJ_SDO3_7 = require('../testData/schema_3.7');
 
 async function initAdapter() {
     let mySA = new SDOAdapter();
-    await mySA.addVocabularies([VOC_OBJ_SDO3_7, VOC_OBJ_DACH], null);
+    await mySA.addVocabularies([VOC_OBJ_SDO3_7, VOC_OBJ_DACH]);
     return mySA;
 }
 

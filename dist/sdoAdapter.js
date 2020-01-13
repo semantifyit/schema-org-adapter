@@ -1,52 +1,1858 @@
 (function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.sdoAdapter = f()}})(function(){var define,module,exports;return (function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
-
-},{}],2:[function(require,module,exports){
-/*
- * Copyright (c) 2017-2018 Digital Bazaar, Inc. All rights reserved.
- */
+module.exports = require('./lib/axios');
+},{"./lib/axios":3}],2:[function(require,module,exports){
 'use strict';
 
-const {clone} = require('./util');
+var utils = require('./../utils');
+var settle = require('./../core/settle');
+var buildURL = require('./../helpers/buildURL');
+var buildFullPath = require('../core/buildFullPath');
+var parseHeaders = require('./../helpers/parseHeaders');
+var isURLSameOrigin = require('./../helpers/isURLSameOrigin');
+var createError = require('../core/createError');
 
-module.exports = class ActiveContextCache {
-  /**
-   * Creates an active context cache.
-   *
-   * @param size the maximum size of the cache.
-   */
-  constructor(size = 100) {
-    this.order = [];
-    this.cache = new Map();
-    this.size = size;
+module.exports = function xhrAdapter(config) {
+  return new Promise(function dispatchXhrRequest(resolve, reject) {
+    var requestData = config.data;
+    var requestHeaders = config.headers;
+
+    if (utils.isFormData(requestData)) {
+      delete requestHeaders['Content-Type']; // Let the browser set it
+    }
+
+    var request = new XMLHttpRequest();
+
+    // HTTP basic authentication
+    if (config.auth) {
+      var username = config.auth.username || '';
+      var password = config.auth.password || '';
+      requestHeaders.Authorization = 'Basic ' + btoa(username + ':' + password);
+    }
+
+    var fullPath = buildFullPath(config.baseURL, config.url);
+    request.open(config.method.toUpperCase(), buildURL(fullPath, config.params, config.paramsSerializer), true);
+
+    // Set the request timeout in MS
+    request.timeout = config.timeout;
+
+    // Listen for ready state
+    request.onreadystatechange = function handleLoad() {
+      if (!request || request.readyState !== 4) {
+        return;
+      }
+
+      // The request errored out and we didn't get a response, this will be
+      // handled by onerror instead
+      // With one exception: request that using file: protocol, most browsers
+      // will return status as 0 even though it's a successful request
+      if (request.status === 0 && !(request.responseURL && request.responseURL.indexOf('file:') === 0)) {
+        return;
+      }
+
+      // Prepare the response
+      var responseHeaders = 'getAllResponseHeaders' in request ? parseHeaders(request.getAllResponseHeaders()) : null;
+      var responseData = !config.responseType || config.responseType === 'text' ? request.responseText : request.response;
+      var response = {
+        data: responseData,
+        status: request.status,
+        statusText: request.statusText,
+        headers: responseHeaders,
+        config: config,
+        request: request
+      };
+
+      settle(resolve, reject, response);
+
+      // Clean up request
+      request = null;
+    };
+
+    // Handle browser request cancellation (as opposed to a manual cancellation)
+    request.onabort = function handleAbort() {
+      if (!request) {
+        return;
+      }
+
+      reject(createError('Request aborted', config, 'ECONNABORTED', request));
+
+      // Clean up request
+      request = null;
+    };
+
+    // Handle low level network errors
+    request.onerror = function handleError() {
+      // Real errors are hidden from us by the browser
+      // onerror should only fire if it's a network error
+      reject(createError('Network Error', config, null, request));
+
+      // Clean up request
+      request = null;
+    };
+
+    // Handle timeout
+    request.ontimeout = function handleTimeout() {
+      var timeoutErrorMessage = 'timeout of ' + config.timeout + 'ms exceeded';
+      if (config.timeoutErrorMessage) {
+        timeoutErrorMessage = config.timeoutErrorMessage;
+      }
+      reject(createError(timeoutErrorMessage, config, 'ECONNABORTED',
+        request));
+
+      // Clean up request
+      request = null;
+    };
+
+    // Add xsrf header
+    // This is only done if running in a standard browser environment.
+    // Specifically not if we're in a web worker, or react-native.
+    if (utils.isStandardBrowserEnv()) {
+      var cookies = require('./../helpers/cookies');
+
+      // Add xsrf header
+      var xsrfValue = (config.withCredentials || isURLSameOrigin(fullPath)) && config.xsrfCookieName ?
+        cookies.read(config.xsrfCookieName) :
+        undefined;
+
+      if (xsrfValue) {
+        requestHeaders[config.xsrfHeaderName] = xsrfValue;
+      }
+    }
+
+    // Add headers to the request
+    if ('setRequestHeader' in request) {
+      utils.forEach(requestHeaders, function setRequestHeader(val, key) {
+        if (typeof requestData === 'undefined' && key.toLowerCase() === 'content-type') {
+          // Remove Content-Type if data is undefined
+          delete requestHeaders[key];
+        } else {
+          // Otherwise add header to the request
+          request.setRequestHeader(key, val);
+        }
+      });
+    }
+
+    // Add withCredentials to request if needed
+    if (!utils.isUndefined(config.withCredentials)) {
+      request.withCredentials = !!config.withCredentials;
+    }
+
+    // Add responseType to request if needed
+    if (config.responseType) {
+      try {
+        request.responseType = config.responseType;
+      } catch (e) {
+        // Expected DOMException thrown by browsers not compatible XMLHttpRequest Level 2.
+        // But, this can be suppressed for 'json' type as it can be parsed by default 'transformResponse' function.
+        if (config.responseType !== 'json') {
+          throw e;
+        }
+      }
+    }
+
+    // Handle progress if needed
+    if (typeof config.onDownloadProgress === 'function') {
+      request.addEventListener('progress', config.onDownloadProgress);
+    }
+
+    // Not all browsers support upload events
+    if (typeof config.onUploadProgress === 'function' && request.upload) {
+      request.upload.addEventListener('progress', config.onUploadProgress);
+    }
+
+    if (config.cancelToken) {
+      // Handle cancellation
+      config.cancelToken.promise.then(function onCanceled(cancel) {
+        if (!request) {
+          return;
+        }
+
+        request.abort();
+        reject(cancel);
+        // Clean up request
+        request = null;
+      });
+    }
+
+    if (requestData === undefined) {
+      requestData = null;
+    }
+
+    // Send the request
+    request.send(requestData);
+  });
+};
+
+},{"../core/buildFullPath":9,"../core/createError":10,"./../core/settle":14,"./../helpers/buildURL":18,"./../helpers/cookies":20,"./../helpers/isURLSameOrigin":22,"./../helpers/parseHeaders":25,"./../utils":27}],3:[function(require,module,exports){
+'use strict';
+
+var utils = require('./utils');
+var bind = require('./helpers/bind');
+var Axios = require('./core/Axios');
+var mergeConfig = require('./core/mergeConfig');
+var defaults = require('./defaults');
+
+/**
+ * Create an instance of Axios
+ *
+ * @param {Object} defaultConfig The default config for the instance
+ * @return {Axios} A new instance of Axios
+ */
+function createInstance(defaultConfig) {
+  var context = new Axios(defaultConfig);
+  var instance = bind(Axios.prototype.request, context);
+
+  // Copy axios.prototype to instance
+  utils.extend(instance, Axios.prototype, context);
+
+  // Copy context to instance
+  utils.extend(instance, context);
+
+  return instance;
+}
+
+// Create the default instance to be exported
+var axios = createInstance(defaults);
+
+// Expose Axios class to allow class inheritance
+axios.Axios = Axios;
+
+// Factory for creating new instances
+axios.create = function create(instanceConfig) {
+  return createInstance(mergeConfig(axios.defaults, instanceConfig));
+};
+
+// Expose Cancel & CancelToken
+axios.Cancel = require('./cancel/Cancel');
+axios.CancelToken = require('./cancel/CancelToken');
+axios.isCancel = require('./cancel/isCancel');
+
+// Expose all/spread
+axios.all = function all(promises) {
+  return Promise.all(promises);
+};
+axios.spread = require('./helpers/spread');
+
+module.exports = axios;
+
+// Allow use of default import syntax in TypeScript
+module.exports.default = axios;
+
+},{"./cancel/Cancel":4,"./cancel/CancelToken":5,"./cancel/isCancel":6,"./core/Axios":7,"./core/mergeConfig":13,"./defaults":16,"./helpers/bind":17,"./helpers/spread":26,"./utils":27}],4:[function(require,module,exports){
+'use strict';
+
+/**
+ * A `Cancel` is an object that is thrown when an operation is canceled.
+ *
+ * @class
+ * @param {string=} message The message.
+ */
+function Cancel(message) {
+  this.message = message;
+}
+
+Cancel.prototype.toString = function toString() {
+  return 'Cancel' + (this.message ? ': ' + this.message : '');
+};
+
+Cancel.prototype.__CANCEL__ = true;
+
+module.exports = Cancel;
+
+},{}],5:[function(require,module,exports){
+'use strict';
+
+var Cancel = require('./Cancel');
+
+/**
+ * A `CancelToken` is an object that can be used to request cancellation of an operation.
+ *
+ * @class
+ * @param {Function} executor The executor function.
+ */
+function CancelToken(executor) {
+  if (typeof executor !== 'function') {
+    throw new TypeError('executor must be a function.');
   }
 
-  get(activeCtx, localCtx) {
-    const level1 = this.cache.get(activeCtx);
-    if(level1) {
-      const key = JSON.stringify(localCtx);
-      const result = level1.get(key);
-      return result || null;
-    }
-    return null;
-  }
+  var resolvePromise;
+  this.promise = new Promise(function promiseExecutor(resolve) {
+    resolvePromise = resolve;
+  });
 
-  set(activeCtx, localCtx, result) {
-    if(this.order.length === this.size) {
-      const entry = this.order.shift();
-      this.cache.get(entry.activeCtx).delete(entry.localCtx);
+  var token = this;
+  executor(function cancel(message) {
+    if (token.reason) {
+      // Cancellation has already been requested
+      return;
     }
-    const key = JSON.stringify(localCtx);
-    this.order.push({activeCtx, localCtx: key});
-    let level1 = this.cache.get(activeCtx);
-    if(!level1) {
-      level1 = new Map();
-      this.cache.set(activeCtx, level1);
-    }
-    level1.set(key, clone(result));
+
+    token.reason = new Cancel(message);
+    resolvePromise(token.reason);
+  });
+}
+
+/**
+ * Throws a `Cancel` if cancellation has been requested.
+ */
+CancelToken.prototype.throwIfRequested = function throwIfRequested() {
+  if (this.reason) {
+    throw this.reason;
   }
 };
 
-},{"./util":23}],3:[function(require,module,exports){
+/**
+ * Returns an object that contains a new `CancelToken` and a function that, when called,
+ * cancels the `CancelToken`.
+ */
+CancelToken.source = function source() {
+  var cancel;
+  var token = new CancelToken(function executor(c) {
+    cancel = c;
+  });
+  return {
+    token: token,
+    cancel: cancel
+  };
+};
+
+module.exports = CancelToken;
+
+},{"./Cancel":4}],6:[function(require,module,exports){
+'use strict';
+
+module.exports = function isCancel(value) {
+  return !!(value && value.__CANCEL__);
+};
+
+},{}],7:[function(require,module,exports){
+'use strict';
+
+var utils = require('./../utils');
+var buildURL = require('../helpers/buildURL');
+var InterceptorManager = require('./InterceptorManager');
+var dispatchRequest = require('./dispatchRequest');
+var mergeConfig = require('./mergeConfig');
+
+/**
+ * Create a new instance of Axios
+ *
+ * @param {Object} instanceConfig The default config for the instance
+ */
+function Axios(instanceConfig) {
+  this.defaults = instanceConfig;
+  this.interceptors = {
+    request: new InterceptorManager(),
+    response: new InterceptorManager()
+  };
+}
+
+/**
+ * Dispatch a request
+ *
+ * @param {Object} config The config specific for this request (merged with this.defaults)
+ */
+Axios.prototype.request = function request(config) {
+  /*eslint no-param-reassign:0*/
+  // Allow for axios('example/url'[, config]) a la fetch API
+  if (typeof config === 'string') {
+    config = arguments[1] || {};
+    config.url = arguments[0];
+  } else {
+    config = config || {};
+  }
+
+  config = mergeConfig(this.defaults, config);
+
+  // Set config.method
+  if (config.method) {
+    config.method = config.method.toLowerCase();
+  } else if (this.defaults.method) {
+    config.method = this.defaults.method.toLowerCase();
+  } else {
+    config.method = 'get';
+  }
+
+  // Hook up interceptors middleware
+  var chain = [dispatchRequest, undefined];
+  var promise = Promise.resolve(config);
+
+  this.interceptors.request.forEach(function unshiftRequestInterceptors(interceptor) {
+    chain.unshift(interceptor.fulfilled, interceptor.rejected);
+  });
+
+  this.interceptors.response.forEach(function pushResponseInterceptors(interceptor) {
+    chain.push(interceptor.fulfilled, interceptor.rejected);
+  });
+
+  while (chain.length) {
+    promise = promise.then(chain.shift(), chain.shift());
+  }
+
+  return promise;
+};
+
+Axios.prototype.getUri = function getUri(config) {
+  config = mergeConfig(this.defaults, config);
+  return buildURL(config.url, config.params, config.paramsSerializer).replace(/^\?/, '');
+};
+
+// Provide aliases for supported request methods
+utils.forEach(['delete', 'get', 'head', 'options'], function forEachMethodNoData(method) {
+  /*eslint func-names:0*/
+  Axios.prototype[method] = function(url, config) {
+    return this.request(utils.merge(config || {}, {
+      method: method,
+      url: url
+    }));
+  };
+});
+
+utils.forEach(['post', 'put', 'patch'], function forEachMethodWithData(method) {
+  /*eslint func-names:0*/
+  Axios.prototype[method] = function(url, data, config) {
+    return this.request(utils.merge(config || {}, {
+      method: method,
+      url: url,
+      data: data
+    }));
+  };
+});
+
+module.exports = Axios;
+
+},{"../helpers/buildURL":18,"./../utils":27,"./InterceptorManager":8,"./dispatchRequest":11,"./mergeConfig":13}],8:[function(require,module,exports){
+'use strict';
+
+var utils = require('./../utils');
+
+function InterceptorManager() {
+  this.handlers = [];
+}
+
+/**
+ * Add a new interceptor to the stack
+ *
+ * @param {Function} fulfilled The function to handle `then` for a `Promise`
+ * @param {Function} rejected The function to handle `reject` for a `Promise`
+ *
+ * @return {Number} An ID used to remove interceptor later
+ */
+InterceptorManager.prototype.use = function use(fulfilled, rejected) {
+  this.handlers.push({
+    fulfilled: fulfilled,
+    rejected: rejected
+  });
+  return this.handlers.length - 1;
+};
+
+/**
+ * Remove an interceptor from the stack
+ *
+ * @param {Number} id The ID that was returned by `use`
+ */
+InterceptorManager.prototype.eject = function eject(id) {
+  if (this.handlers[id]) {
+    this.handlers[id] = null;
+  }
+};
+
+/**
+ * Iterate over all the registered interceptors
+ *
+ * This method is particularly useful for skipping over any
+ * interceptors that may have become `null` calling `eject`.
+ *
+ * @param {Function} fn The function to call for each interceptor
+ */
+InterceptorManager.prototype.forEach = function forEach(fn) {
+  utils.forEach(this.handlers, function forEachHandler(h) {
+    if (h !== null) {
+      fn(h);
+    }
+  });
+};
+
+module.exports = InterceptorManager;
+
+},{"./../utils":27}],9:[function(require,module,exports){
+'use strict';
+
+var isAbsoluteURL = require('../helpers/isAbsoluteURL');
+var combineURLs = require('../helpers/combineURLs');
+
+/**
+ * Creates a new URL by combining the baseURL with the requestedURL,
+ * only when the requestedURL is not already an absolute URL.
+ * If the requestURL is absolute, this function returns the requestedURL untouched.
+ *
+ * @param {string} baseURL The base URL
+ * @param {string} requestedURL Absolute or relative URL to combine
+ * @returns {string} The combined full path
+ */
+module.exports = function buildFullPath(baseURL, requestedURL) {
+  if (baseURL && !isAbsoluteURL(requestedURL)) {
+    return combineURLs(baseURL, requestedURL);
+  }
+  return requestedURL;
+};
+
+},{"../helpers/combineURLs":19,"../helpers/isAbsoluteURL":21}],10:[function(require,module,exports){
+'use strict';
+
+var enhanceError = require('./enhanceError');
+
+/**
+ * Create an Error with the specified message, config, error code, request and response.
+ *
+ * @param {string} message The error message.
+ * @param {Object} config The config.
+ * @param {string} [code] The error code (for example, 'ECONNABORTED').
+ * @param {Object} [request] The request.
+ * @param {Object} [response] The response.
+ * @returns {Error} The created error.
+ */
+module.exports = function createError(message, config, code, request, response) {
+  var error = new Error(message);
+  return enhanceError(error, config, code, request, response);
+};
+
+},{"./enhanceError":12}],11:[function(require,module,exports){
+'use strict';
+
+var utils = require('./../utils');
+var transformData = require('./transformData');
+var isCancel = require('../cancel/isCancel');
+var defaults = require('../defaults');
+
+/**
+ * Throws a `Cancel` if cancellation has been requested.
+ */
+function throwIfCancellationRequested(config) {
+  if (config.cancelToken) {
+    config.cancelToken.throwIfRequested();
+  }
+}
+
+/**
+ * Dispatch a request to the server using the configured adapter.
+ *
+ * @param {object} config The config that is to be used for the request
+ * @returns {Promise} The Promise to be fulfilled
+ */
+module.exports = function dispatchRequest(config) {
+  throwIfCancellationRequested(config);
+
+  // Ensure headers exist
+  config.headers = config.headers || {};
+
+  // Transform request data
+  config.data = transformData(
+    config.data,
+    config.headers,
+    config.transformRequest
+  );
+
+  // Flatten headers
+  config.headers = utils.merge(
+    config.headers.common || {},
+    config.headers[config.method] || {},
+    config.headers
+  );
+
+  utils.forEach(
+    ['delete', 'get', 'head', 'post', 'put', 'patch', 'common'],
+    function cleanHeaderConfig(method) {
+      delete config.headers[method];
+    }
+  );
+
+  var adapter = config.adapter || defaults.adapter;
+
+  return adapter(config).then(function onAdapterResolution(response) {
+    throwIfCancellationRequested(config);
+
+    // Transform response data
+    response.data = transformData(
+      response.data,
+      response.headers,
+      config.transformResponse
+    );
+
+    return response;
+  }, function onAdapterRejection(reason) {
+    if (!isCancel(reason)) {
+      throwIfCancellationRequested(config);
+
+      // Transform response data
+      if (reason && reason.response) {
+        reason.response.data = transformData(
+          reason.response.data,
+          reason.response.headers,
+          config.transformResponse
+        );
+      }
+    }
+
+    return Promise.reject(reason);
+  });
+};
+
+},{"../cancel/isCancel":6,"../defaults":16,"./../utils":27,"./transformData":15}],12:[function(require,module,exports){
+'use strict';
+
+/**
+ * Update an Error with the specified config, error code, and response.
+ *
+ * @param {Error} error The error to update.
+ * @param {Object} config The config.
+ * @param {string} [code] The error code (for example, 'ECONNABORTED').
+ * @param {Object} [request] The request.
+ * @param {Object} [response] The response.
+ * @returns {Error} The error.
+ */
+module.exports = function enhanceError(error, config, code, request, response) {
+  error.config = config;
+  if (code) {
+    error.code = code;
+  }
+
+  error.request = request;
+  error.response = response;
+  error.isAxiosError = true;
+
+  error.toJSON = function() {
+    return {
+      // Standard
+      message: this.message,
+      name: this.name,
+      // Microsoft
+      description: this.description,
+      number: this.number,
+      // Mozilla
+      fileName: this.fileName,
+      lineNumber: this.lineNumber,
+      columnNumber: this.columnNumber,
+      stack: this.stack,
+      // Axios
+      config: this.config,
+      code: this.code
+    };
+  };
+  return error;
+};
+
+},{}],13:[function(require,module,exports){
+'use strict';
+
+var utils = require('../utils');
+
+/**
+ * Config-specific merge-function which creates a new config-object
+ * by merging two configuration objects together.
+ *
+ * @param {Object} config1
+ * @param {Object} config2
+ * @returns {Object} New object resulting from merging config2 to config1
+ */
+module.exports = function mergeConfig(config1, config2) {
+  // eslint-disable-next-line no-param-reassign
+  config2 = config2 || {};
+  var config = {};
+
+  var valueFromConfig2Keys = ['url', 'method', 'params', 'data'];
+  var mergeDeepPropertiesKeys = ['headers', 'auth', 'proxy'];
+  var defaultToConfig2Keys = [
+    'baseURL', 'url', 'transformRequest', 'transformResponse', 'paramsSerializer',
+    'timeout', 'withCredentials', 'adapter', 'responseType', 'xsrfCookieName',
+    'xsrfHeaderName', 'onUploadProgress', 'onDownloadProgress',
+    'maxContentLength', 'validateStatus', 'maxRedirects', 'httpAgent',
+    'httpsAgent', 'cancelToken', 'socketPath'
+  ];
+
+  utils.forEach(valueFromConfig2Keys, function valueFromConfig2(prop) {
+    if (typeof config2[prop] !== 'undefined') {
+      config[prop] = config2[prop];
+    }
+  });
+
+  utils.forEach(mergeDeepPropertiesKeys, function mergeDeepProperties(prop) {
+    if (utils.isObject(config2[prop])) {
+      config[prop] = utils.deepMerge(config1[prop], config2[prop]);
+    } else if (typeof config2[prop] !== 'undefined') {
+      config[prop] = config2[prop];
+    } else if (utils.isObject(config1[prop])) {
+      config[prop] = utils.deepMerge(config1[prop]);
+    } else if (typeof config1[prop] !== 'undefined') {
+      config[prop] = config1[prop];
+    }
+  });
+
+  utils.forEach(defaultToConfig2Keys, function defaultToConfig2(prop) {
+    if (typeof config2[prop] !== 'undefined') {
+      config[prop] = config2[prop];
+    } else if (typeof config1[prop] !== 'undefined') {
+      config[prop] = config1[prop];
+    }
+  });
+
+  var axiosKeys = valueFromConfig2Keys
+    .concat(mergeDeepPropertiesKeys)
+    .concat(defaultToConfig2Keys);
+
+  var otherKeys = Object
+    .keys(config2)
+    .filter(function filterAxiosKeys(key) {
+      return axiosKeys.indexOf(key) === -1;
+    });
+
+  utils.forEach(otherKeys, function otherKeysDefaultToConfig2(prop) {
+    if (typeof config2[prop] !== 'undefined') {
+      config[prop] = config2[prop];
+    } else if (typeof config1[prop] !== 'undefined') {
+      config[prop] = config1[prop];
+    }
+  });
+
+  return config;
+};
+
+},{"../utils":27}],14:[function(require,module,exports){
+'use strict';
+
+var createError = require('./createError');
+
+/**
+ * Resolve or reject a Promise based on response status.
+ *
+ * @param {Function} resolve A function that resolves the promise.
+ * @param {Function} reject A function that rejects the promise.
+ * @param {object} response The response.
+ */
+module.exports = function settle(resolve, reject, response) {
+  var validateStatus = response.config.validateStatus;
+  if (!validateStatus || validateStatus(response.status)) {
+    resolve(response);
+  } else {
+    reject(createError(
+      'Request failed with status code ' + response.status,
+      response.config,
+      null,
+      response.request,
+      response
+    ));
+  }
+};
+
+},{"./createError":10}],15:[function(require,module,exports){
+'use strict';
+
+var utils = require('./../utils');
+
+/**
+ * Transform the data for a request or a response
+ *
+ * @param {Object|String} data The data to be transformed
+ * @param {Array} headers The headers for the request or response
+ * @param {Array|Function} fns A single function or Array of functions
+ * @returns {*} The resulting transformed data
+ */
+module.exports = function transformData(data, headers, fns) {
+  /*eslint no-param-reassign:0*/
+  utils.forEach(fns, function transform(fn) {
+    data = fn(data, headers);
+  });
+
+  return data;
+};
+
+},{"./../utils":27}],16:[function(require,module,exports){
+(function (process){
+'use strict';
+
+var utils = require('./utils');
+var normalizeHeaderName = require('./helpers/normalizeHeaderName');
+
+var DEFAULT_CONTENT_TYPE = {
+  'Content-Type': 'application/x-www-form-urlencoded'
+};
+
+function setContentTypeIfUnset(headers, value) {
+  if (!utils.isUndefined(headers) && utils.isUndefined(headers['Content-Type'])) {
+    headers['Content-Type'] = value;
+  }
+}
+
+function getDefaultAdapter() {
+  var adapter;
+  if (typeof XMLHttpRequest !== 'undefined') {
+    // For browsers use XHR adapter
+    adapter = require('./adapters/xhr');
+  } else if (typeof process !== 'undefined' && Object.prototype.toString.call(process) === '[object process]') {
+    // For node use HTTP adapter
+    adapter = require('./adapters/http');
+  }
+  return adapter;
+}
+
+var defaults = {
+  adapter: getDefaultAdapter(),
+
+  transformRequest: [function transformRequest(data, headers) {
+    normalizeHeaderName(headers, 'Accept');
+    normalizeHeaderName(headers, 'Content-Type');
+    if (utils.isFormData(data) ||
+      utils.isArrayBuffer(data) ||
+      utils.isBuffer(data) ||
+      utils.isStream(data) ||
+      utils.isFile(data) ||
+      utils.isBlob(data)
+    ) {
+      return data;
+    }
+    if (utils.isArrayBufferView(data)) {
+      return data.buffer;
+    }
+    if (utils.isURLSearchParams(data)) {
+      setContentTypeIfUnset(headers, 'application/x-www-form-urlencoded;charset=utf-8');
+      return data.toString();
+    }
+    if (utils.isObject(data)) {
+      setContentTypeIfUnset(headers, 'application/json;charset=utf-8');
+      return JSON.stringify(data);
+    }
+    return data;
+  }],
+
+  transformResponse: [function transformResponse(data) {
+    /*eslint no-param-reassign:0*/
+    if (typeof data === 'string') {
+      try {
+        data = JSON.parse(data);
+      } catch (e) { /* Ignore */ }
+    }
+    return data;
+  }],
+
+  /**
+   * A timeout in milliseconds to abort a request. If set to 0 (default) a
+   * timeout is not created.
+   */
+  timeout: 0,
+
+  xsrfCookieName: 'XSRF-TOKEN',
+  xsrfHeaderName: 'X-XSRF-TOKEN',
+
+  maxContentLength: -1,
+
+  validateStatus: function validateStatus(status) {
+    return status >= 200 && status < 300;
+  }
+};
+
+defaults.headers = {
+  common: {
+    'Accept': 'application/json, text/plain, */*'
+  }
+};
+
+utils.forEach(['delete', 'get', 'head'], function forEachMethodNoData(method) {
+  defaults.headers[method] = {};
+});
+
+utils.forEach(['post', 'put', 'patch'], function forEachMethodWithData(method) {
+  defaults.headers[method] = utils.merge(DEFAULT_CONTENT_TYPE);
+});
+
+module.exports = defaults;
+
+}).call(this,require('_process'))
+},{"./adapters/http":2,"./adapters/xhr":2,"./helpers/normalizeHeaderName":24,"./utils":27,"_process":60}],17:[function(require,module,exports){
+'use strict';
+
+module.exports = function bind(fn, thisArg) {
+  return function wrap() {
+    var args = new Array(arguments.length);
+    for (var i = 0; i < args.length; i++) {
+      args[i] = arguments[i];
+    }
+    return fn.apply(thisArg, args);
+  };
+};
+
+},{}],18:[function(require,module,exports){
+'use strict';
+
+var utils = require('./../utils');
+
+function encode(val) {
+  return encodeURIComponent(val).
+    replace(/%40/gi, '@').
+    replace(/%3A/gi, ':').
+    replace(/%24/g, '$').
+    replace(/%2C/gi, ',').
+    replace(/%20/g, '+').
+    replace(/%5B/gi, '[').
+    replace(/%5D/gi, ']');
+}
+
+/**
+ * Build a URL by appending params to the end
+ *
+ * @param {string} url The base of the url (e.g., http://www.google.com)
+ * @param {object} [params] The params to be appended
+ * @returns {string} The formatted url
+ */
+module.exports = function buildURL(url, params, paramsSerializer) {
+  /*eslint no-param-reassign:0*/
+  if (!params) {
+    return url;
+  }
+
+  var serializedParams;
+  if (paramsSerializer) {
+    serializedParams = paramsSerializer(params);
+  } else if (utils.isURLSearchParams(params)) {
+    serializedParams = params.toString();
+  } else {
+    var parts = [];
+
+    utils.forEach(params, function serialize(val, key) {
+      if (val === null || typeof val === 'undefined') {
+        return;
+      }
+
+      if (utils.isArray(val)) {
+        key = key + '[]';
+      } else {
+        val = [val];
+      }
+
+      utils.forEach(val, function parseValue(v) {
+        if (utils.isDate(v)) {
+          v = v.toISOString();
+        } else if (utils.isObject(v)) {
+          v = JSON.stringify(v);
+        }
+        parts.push(encode(key) + '=' + encode(v));
+      });
+    });
+
+    serializedParams = parts.join('&');
+  }
+
+  if (serializedParams) {
+    var hashmarkIndex = url.indexOf('#');
+    if (hashmarkIndex !== -1) {
+      url = url.slice(0, hashmarkIndex);
+    }
+
+    url += (url.indexOf('?') === -1 ? '?' : '&') + serializedParams;
+  }
+
+  return url;
+};
+
+},{"./../utils":27}],19:[function(require,module,exports){
+'use strict';
+
+/**
+ * Creates a new URL by combining the specified URLs
+ *
+ * @param {string} baseURL The base URL
+ * @param {string} relativeURL The relative URL
+ * @returns {string} The combined URL
+ */
+module.exports = function combineURLs(baseURL, relativeURL) {
+  return relativeURL
+    ? baseURL.replace(/\/+$/, '') + '/' + relativeURL.replace(/^\/+/, '')
+    : baseURL;
+};
+
+},{}],20:[function(require,module,exports){
+'use strict';
+
+var utils = require('./../utils');
+
+module.exports = (
+  utils.isStandardBrowserEnv() ?
+
+  // Standard browser envs support document.cookie
+    (function standardBrowserEnv() {
+      return {
+        write: function write(name, value, expires, path, domain, secure) {
+          var cookie = [];
+          cookie.push(name + '=' + encodeURIComponent(value));
+
+          if (utils.isNumber(expires)) {
+            cookie.push('expires=' + new Date(expires).toGMTString());
+          }
+
+          if (utils.isString(path)) {
+            cookie.push('path=' + path);
+          }
+
+          if (utils.isString(domain)) {
+            cookie.push('domain=' + domain);
+          }
+
+          if (secure === true) {
+            cookie.push('secure');
+          }
+
+          document.cookie = cookie.join('; ');
+        },
+
+        read: function read(name) {
+          var match = document.cookie.match(new RegExp('(^|;\\s*)(' + name + ')=([^;]*)'));
+          return (match ? decodeURIComponent(match[3]) : null);
+        },
+
+        remove: function remove(name) {
+          this.write(name, '', Date.now() - 86400000);
+        }
+      };
+    })() :
+
+  // Non standard browser env (web workers, react-native) lack needed support.
+    (function nonStandardBrowserEnv() {
+      return {
+        write: function write() {},
+        read: function read() { return null; },
+        remove: function remove() {}
+      };
+    })()
+);
+
+},{"./../utils":27}],21:[function(require,module,exports){
+'use strict';
+
+/**
+ * Determines whether the specified URL is absolute
+ *
+ * @param {string} url The URL to test
+ * @returns {boolean} True if the specified URL is absolute, otherwise false
+ */
+module.exports = function isAbsoluteURL(url) {
+  // A URL is considered absolute if it begins with "<scheme>://" or "//" (protocol-relative URL).
+  // RFC 3986 defines scheme name as a sequence of characters beginning with a letter and followed
+  // by any combination of letters, digits, plus, period, or hyphen.
+  return /^([a-z][a-z\d\+\-\.]*:)?\/\//i.test(url);
+};
+
+},{}],22:[function(require,module,exports){
+'use strict';
+
+var utils = require('./../utils');
+var isValidXss = require('./isValidXss');
+
+module.exports = (
+  utils.isStandardBrowserEnv() ?
+
+  // Standard browser envs have full support of the APIs needed to test
+  // whether the request URL is of the same origin as current location.
+    (function standardBrowserEnv() {
+      var msie = /(msie|trident)/i.test(navigator.userAgent);
+      var urlParsingNode = document.createElement('a');
+      var originURL;
+
+      /**
+    * Parse a URL to discover it's components
+    *
+    * @param {String} url The URL to be parsed
+    * @returns {Object}
+    */
+      function resolveURL(url) {
+        var href = url;
+
+        if (isValidXss(url)) {
+          throw new Error('URL contains XSS injection attempt');
+        }
+
+        if (msie) {
+        // IE needs attribute set twice to normalize properties
+          urlParsingNode.setAttribute('href', href);
+          href = urlParsingNode.href;
+        }
+
+        urlParsingNode.setAttribute('href', href);
+
+        // urlParsingNode provides the UrlUtils interface - http://url.spec.whatwg.org/#urlutils
+        return {
+          href: urlParsingNode.href,
+          protocol: urlParsingNode.protocol ? urlParsingNode.protocol.replace(/:$/, '') : '',
+          host: urlParsingNode.host,
+          search: urlParsingNode.search ? urlParsingNode.search.replace(/^\?/, '') : '',
+          hash: urlParsingNode.hash ? urlParsingNode.hash.replace(/^#/, '') : '',
+          hostname: urlParsingNode.hostname,
+          port: urlParsingNode.port,
+          pathname: (urlParsingNode.pathname.charAt(0) === '/') ?
+            urlParsingNode.pathname :
+            '/' + urlParsingNode.pathname
+        };
+      }
+
+      originURL = resolveURL(window.location.href);
+
+      /**
+    * Determine if a URL shares the same origin as the current location
+    *
+    * @param {String} requestURL The URL to test
+    * @returns {boolean} True if URL shares the same origin, otherwise false
+    */
+      return function isURLSameOrigin(requestURL) {
+        var parsed = (utils.isString(requestURL)) ? resolveURL(requestURL) : requestURL;
+        return (parsed.protocol === originURL.protocol &&
+            parsed.host === originURL.host);
+      };
+    })() :
+
+  // Non standard browser envs (web workers, react-native) lack needed support.
+    (function nonStandardBrowserEnv() {
+      return function isURLSameOrigin() {
+        return true;
+      };
+    })()
+);
+
+},{"./../utils":27,"./isValidXss":23}],23:[function(require,module,exports){
+'use strict';
+
+module.exports = function isValidXss(requestURL) {
+  var xssRegex = /(\b)(on\w+)=|javascript|(<\s*)(\/*)script/gi;
+  return xssRegex.test(requestURL);
+};
+
+
+},{}],24:[function(require,module,exports){
+'use strict';
+
+var utils = require('../utils');
+
+module.exports = function normalizeHeaderName(headers, normalizedName) {
+  utils.forEach(headers, function processHeader(value, name) {
+    if (name !== normalizedName && name.toUpperCase() === normalizedName.toUpperCase()) {
+      headers[normalizedName] = value;
+      delete headers[name];
+    }
+  });
+};
+
+},{"../utils":27}],25:[function(require,module,exports){
+'use strict';
+
+var utils = require('./../utils');
+
+// Headers whose duplicates are ignored by node
+// c.f. https://nodejs.org/api/http.html#http_message_headers
+var ignoreDuplicateOf = [
+  'age', 'authorization', 'content-length', 'content-type', 'etag',
+  'expires', 'from', 'host', 'if-modified-since', 'if-unmodified-since',
+  'last-modified', 'location', 'max-forwards', 'proxy-authorization',
+  'referer', 'retry-after', 'user-agent'
+];
+
+/**
+ * Parse headers into an object
+ *
+ * ```
+ * Date: Wed, 27 Aug 2014 08:58:49 GMT
+ * Content-Type: application/json
+ * Connection: keep-alive
+ * Transfer-Encoding: chunked
+ * ```
+ *
+ * @param {String} headers Headers needing to be parsed
+ * @returns {Object} Headers parsed into an object
+ */
+module.exports = function parseHeaders(headers) {
+  var parsed = {};
+  var key;
+  var val;
+  var i;
+
+  if (!headers) { return parsed; }
+
+  utils.forEach(headers.split('\n'), function parser(line) {
+    i = line.indexOf(':');
+    key = utils.trim(line.substr(0, i)).toLowerCase();
+    val = utils.trim(line.substr(i + 1));
+
+    if (key) {
+      if (parsed[key] && ignoreDuplicateOf.indexOf(key) >= 0) {
+        return;
+      }
+      if (key === 'set-cookie') {
+        parsed[key] = (parsed[key] ? parsed[key] : []).concat([val]);
+      } else {
+        parsed[key] = parsed[key] ? parsed[key] + ', ' + val : val;
+      }
+    }
+  });
+
+  return parsed;
+};
+
+},{"./../utils":27}],26:[function(require,module,exports){
+'use strict';
+
+/**
+ * Syntactic sugar for invoking a function and expanding an array for arguments.
+ *
+ * Common use case would be to use `Function.prototype.apply`.
+ *
+ *  ```js
+ *  function f(x, y, z) {}
+ *  var args = [1, 2, 3];
+ *  f.apply(null, args);
+ *  ```
+ *
+ * With `spread` this example can be re-written.
+ *
+ *  ```js
+ *  spread(function(x, y, z) {})([1, 2, 3]);
+ *  ```
+ *
+ * @param {Function} callback
+ * @returns {Function}
+ */
+module.exports = function spread(callback) {
+  return function wrap(arr) {
+    return callback.apply(null, arr);
+  };
+};
+
+},{}],27:[function(require,module,exports){
+'use strict';
+
+var bind = require('./helpers/bind');
+
+/*global toString:true*/
+
+// utils is a library of generic helper functions non-specific to axios
+
+var toString = Object.prototype.toString;
+
+/**
+ * Determine if a value is an Array
+ *
+ * @param {Object} val The value to test
+ * @returns {boolean} True if value is an Array, otherwise false
+ */
+function isArray(val) {
+  return toString.call(val) === '[object Array]';
+}
+
+/**
+ * Determine if a value is undefined
+ *
+ * @param {Object} val The value to test
+ * @returns {boolean} True if the value is undefined, otherwise false
+ */
+function isUndefined(val) {
+  return typeof val === 'undefined';
+}
+
+/**
+ * Determine if a value is a Buffer
+ *
+ * @param {Object} val The value to test
+ * @returns {boolean} True if value is a Buffer, otherwise false
+ */
+function isBuffer(val) {
+  return val !== null && !isUndefined(val) && val.constructor !== null && !isUndefined(val.constructor)
+    && typeof val.constructor.isBuffer === 'function' && val.constructor.isBuffer(val);
+}
+
+/**
+ * Determine if a value is an ArrayBuffer
+ *
+ * @param {Object} val The value to test
+ * @returns {boolean} True if value is an ArrayBuffer, otherwise false
+ */
+function isArrayBuffer(val) {
+  return toString.call(val) === '[object ArrayBuffer]';
+}
+
+/**
+ * Determine if a value is a FormData
+ *
+ * @param {Object} val The value to test
+ * @returns {boolean} True if value is an FormData, otherwise false
+ */
+function isFormData(val) {
+  return (typeof FormData !== 'undefined') && (val instanceof FormData);
+}
+
+/**
+ * Determine if a value is a view on an ArrayBuffer
+ *
+ * @param {Object} val The value to test
+ * @returns {boolean} True if value is a view on an ArrayBuffer, otherwise false
+ */
+function isArrayBufferView(val) {
+  var result;
+  if ((typeof ArrayBuffer !== 'undefined') && (ArrayBuffer.isView)) {
+    result = ArrayBuffer.isView(val);
+  } else {
+    result = (val) && (val.buffer) && (val.buffer instanceof ArrayBuffer);
+  }
+  return result;
+}
+
+/**
+ * Determine if a value is a String
+ *
+ * @param {Object} val The value to test
+ * @returns {boolean} True if value is a String, otherwise false
+ */
+function isString(val) {
+  return typeof val === 'string';
+}
+
+/**
+ * Determine if a value is a Number
+ *
+ * @param {Object} val The value to test
+ * @returns {boolean} True if value is a Number, otherwise false
+ */
+function isNumber(val) {
+  return typeof val === 'number';
+}
+
+/**
+ * Determine if a value is an Object
+ *
+ * @param {Object} val The value to test
+ * @returns {boolean} True if value is an Object, otherwise false
+ */
+function isObject(val) {
+  return val !== null && typeof val === 'object';
+}
+
+/**
+ * Determine if a value is a Date
+ *
+ * @param {Object} val The value to test
+ * @returns {boolean} True if value is a Date, otherwise false
+ */
+function isDate(val) {
+  return toString.call(val) === '[object Date]';
+}
+
+/**
+ * Determine if a value is a File
+ *
+ * @param {Object} val The value to test
+ * @returns {boolean} True if value is a File, otherwise false
+ */
+function isFile(val) {
+  return toString.call(val) === '[object File]';
+}
+
+/**
+ * Determine if a value is a Blob
+ *
+ * @param {Object} val The value to test
+ * @returns {boolean} True if value is a Blob, otherwise false
+ */
+function isBlob(val) {
+  return toString.call(val) === '[object Blob]';
+}
+
+/**
+ * Determine if a value is a Function
+ *
+ * @param {Object} val The value to test
+ * @returns {boolean} True if value is a Function, otherwise false
+ */
+function isFunction(val) {
+  return toString.call(val) === '[object Function]';
+}
+
+/**
+ * Determine if a value is a Stream
+ *
+ * @param {Object} val The value to test
+ * @returns {boolean} True if value is a Stream, otherwise false
+ */
+function isStream(val) {
+  return isObject(val) && isFunction(val.pipe);
+}
+
+/**
+ * Determine if a value is a URLSearchParams object
+ *
+ * @param {Object} val The value to test
+ * @returns {boolean} True if value is a URLSearchParams object, otherwise false
+ */
+function isURLSearchParams(val) {
+  return typeof URLSearchParams !== 'undefined' && val instanceof URLSearchParams;
+}
+
+/**
+ * Trim excess whitespace off the beginning and end of a string
+ *
+ * @param {String} str The String to trim
+ * @returns {String} The String freed of excess whitespace
+ */
+function trim(str) {
+  return str.replace(/^\s*/, '').replace(/\s*$/, '');
+}
+
+/**
+ * Determine if we're running in a standard browser environment
+ *
+ * This allows axios to run in a web worker, and react-native.
+ * Both environments support XMLHttpRequest, but not fully standard globals.
+ *
+ * web workers:
+ *  typeof window -> undefined
+ *  typeof document -> undefined
+ *
+ * react-native:
+ *  navigator.product -> 'ReactNative'
+ * nativescript
+ *  navigator.product -> 'NativeScript' or 'NS'
+ */
+function isStandardBrowserEnv() {
+  if (typeof navigator !== 'undefined' && (navigator.product === 'ReactNative' ||
+                                           navigator.product === 'NativeScript' ||
+                                           navigator.product === 'NS')) {
+    return false;
+  }
+  return (
+    typeof window !== 'undefined' &&
+    typeof document !== 'undefined'
+  );
+}
+
+/**
+ * Iterate over an Array or an Object invoking a function for each item.
+ *
+ * If `obj` is an Array callback will be called passing
+ * the value, index, and complete array for each item.
+ *
+ * If 'obj' is an Object callback will be called passing
+ * the value, key, and complete object for each property.
+ *
+ * @param {Object|Array} obj The object to iterate
+ * @param {Function} fn The callback to invoke for each item
+ */
+function forEach(obj, fn) {
+  // Don't bother if no value provided
+  if (obj === null || typeof obj === 'undefined') {
+    return;
+  }
+
+  // Force an array if not already something iterable
+  if (typeof obj !== 'object') {
+    /*eslint no-param-reassign:0*/
+    obj = [obj];
+  }
+
+  if (isArray(obj)) {
+    // Iterate over array values
+    for (var i = 0, l = obj.length; i < l; i++) {
+      fn.call(null, obj[i], i, obj);
+    }
+  } else {
+    // Iterate over object keys
+    for (var key in obj) {
+      if (Object.prototype.hasOwnProperty.call(obj, key)) {
+        fn.call(null, obj[key], key, obj);
+      }
+    }
+  }
+}
+
+/**
+ * Accepts varargs expecting each argument to be an object, then
+ * immutably merges the properties of each object and returns result.
+ *
+ * When multiple objects contain the same key the later object in
+ * the arguments list will take precedence.
+ *
+ * Example:
+ *
+ * ```js
+ * var result = merge({foo: 123}, {foo: 456});
+ * console.log(result.foo); // outputs 456
+ * ```
+ *
+ * @param {Object} obj1 Object to merge
+ * @returns {Object} Result of all merge properties
+ */
+function merge(/* obj1, obj2, obj3, ... */) {
+  var result = {};
+  function assignValue(val, key) {
+    if (typeof result[key] === 'object' && typeof val === 'object') {
+      result[key] = merge(result[key], val);
+    } else {
+      result[key] = val;
+    }
+  }
+
+  for (var i = 0, l = arguments.length; i < l; i++) {
+    forEach(arguments[i], assignValue);
+  }
+  return result;
+}
+
+/**
+ * Function equal to merge with the difference being that no reference
+ * to original objects is kept.
+ *
+ * @see merge
+ * @param {Object} obj1 Object to merge
+ * @returns {Object} Result of all merge properties
+ */
+function deepMerge(/* obj1, obj2, obj3, ... */) {
+  var result = {};
+  function assignValue(val, key) {
+    if (typeof result[key] === 'object' && typeof val === 'object') {
+      result[key] = deepMerge(result[key], val);
+    } else if (typeof val === 'object') {
+      result[key] = deepMerge({}, val);
+    } else {
+      result[key] = val;
+    }
+  }
+
+  for (var i = 0, l = arguments.length; i < l; i++) {
+    forEach(arguments[i], assignValue);
+  }
+  return result;
+}
+
+/**
+ * Extends object a by mutably adding to it the properties of object b.
+ *
+ * @param {Object} a The object to be extended
+ * @param {Object} b The object to copy properties from
+ * @param {Object} thisArg The object to bind function to
+ * @return {Object} The resulting value of object a
+ */
+function extend(a, b, thisArg) {
+  forEach(b, function assignValue(val, key) {
+    if (thisArg && typeof val === 'function') {
+      a[key] = bind(val, thisArg);
+    } else {
+      a[key] = val;
+    }
+  });
+  return a;
+}
+
+module.exports = {
+  isArray: isArray,
+  isArrayBuffer: isArrayBuffer,
+  isBuffer: isBuffer,
+  isFormData: isFormData,
+  isArrayBufferView: isArrayBufferView,
+  isString: isString,
+  isNumber: isNumber,
+  isObject: isObject,
+  isUndefined: isUndefined,
+  isDate: isDate,
+  isFile: isFile,
+  isBlob: isBlob,
+  isFunction: isFunction,
+  isStream: isStream,
+  isURLSearchParams: isURLSearchParams,
+  isStandardBrowserEnv: isStandardBrowserEnv,
+  forEach: forEach,
+  merge: merge,
+  deepMerge: deepMerge,
+  extend: extend,
+  trim: trim
+};
+
+},{"./helpers/bind":17}],28:[function(require,module,exports){
+
+},{}],29:[function(require,module,exports){
+/* jshint esversion: 6 */
+/* jslint node: true */
+'use strict';
+
+module.exports = function (object) {
+  return serialize(object);
+
+  function serialize (object) {
+    if (object === null || typeof object !== 'object' || object.toJSON != null) {
+      return JSON.stringify(object);
+    }
+    if (Array.isArray(object) && object.length === 0) {
+      return '[]';
+    }
+    if (Array.isArray(object) && object.length === 1) {
+      return '[' + serialize(object[0]) + ']';
+    }
+    if (Array.isArray(object)) {
+      return '[' + object.reduce((t, cv, ci) => {
+        t = (ci === 1 ? serialize(t) : t);
+        return t + ',' + serialize(cv);
+      }) + ']';
+    }
+    const keys = Object.keys(object);
+    if (keys.length === 0) {
+      return '{}';
+    }
+    if (keys.length === 1) {
+      return '{' + serialize(keys[0]) + ':' + serialize(object[keys[0]]) + '}';
+    }
+    return '{' + keys.sort().reduce((t, cv, ci) => {
+      t = (ci === 1 ? serialize(t) + ':' + serialize(object[t]) : t);
+      return t + ',' + serialize(cv) + ':' + serialize(object[cv]);
+    }) + '}';
+  }
+};
+
+},{}],30:[function(require,module,exports){
+/*
+ * Copyright (c) 2019 Digital Bazaar, Inc. All rights reserved.
+ */
+'use strict';
+
+const {
+  isArray: _isArray,
+  isObject: _isObject,
+  isString: _isString,
+} = require('./types');
+const {prependBase} = require('./url');
+const JsonLdError = require('./JsonLdError');
+const ResolvedContext = require('./ResolvedContext');
+
+const MAX_CONTEXT_URLS = 10;
+
+module.exports = class ContextResolver {
+  /**
+   * Creates a ContextResolver.
+   *
+   * @param sharedCache a shared LRU cache with `get` and `set` APIs.
+   */
+  constructor({sharedCache}) {
+    this.perOpCache = new Map();
+    this.sharedCache = sharedCache;
+  }
+
+  async resolve({context, documentLoader, base, cycles = new Set()}) {
+    // process `@context`
+    if(context && _isObject(context) && context['@context']) {
+      context = context['@context'];
+    }
+
+    // context is one or more contexts
+    if(!_isArray(context)) {
+      context = [context];
+    }
+
+    // resolve each context in the array
+    const allResolved = [];
+    for(const ctx of context) {
+      if(_isString(ctx)) {
+        // see if `ctx` has been resolved before...
+        let resolved = this._get(ctx);
+        if(!resolved) {
+          // not resolved yet, resolve
+          resolved = await this._resolveRemoteContext(
+            {url: ctx, documentLoader, base, cycles});
+        }
+
+        // add to output and continue
+        if(_isArray(resolved)) {
+          allResolved.push(...resolved);
+        } else {
+          allResolved.push(resolved);
+        }
+        continue;
+      }
+      if(ctx === null) {
+        // handle `null` context, nothing to cache
+        allResolved.push(new ResolvedContext({document: null}));
+        continue;
+      }
+      if(!_isObject(ctx)) {
+        _throwInvalidLocalContext(context);
+      }
+      // context is an object, get/create `ResolvedContext` for it
+      const key = JSON.stringify(ctx);
+      let resolved = this._get(key);
+      if(!resolved) {
+        // create a new static `ResolvedContext` and cache it
+        resolved = new ResolvedContext({document: ctx});
+        this._cacheResolvedContext({key, resolved, tag: 'static'});
+      }
+      allResolved.push(resolved);
+    }
+
+    return allResolved;
+  }
+
+  _get(key) {
+    // get key from per operation cache; no `tag` is used with this cache so
+    // any retrieved context will always be the same during a single operation
+    let resolved = this.perOpCache.get(key);
+    if(!resolved) {
+      // see if the shared cache has a `static` entry for this URL
+      const tagMap = this.sharedCache.get(key);
+      if(tagMap) {
+        resolved = tagMap.get('static');
+        if(resolved) {
+          this.perOpCache.set(key, resolved);
+        }
+      }
+    }
+    return resolved;
+  }
+
+  _cacheResolvedContext({key, resolved, tag}) {
+    this.perOpCache.set(key, resolved);
+    if(tag !== undefined) {
+      let tagMap = this.sharedCache.get(key);
+      if(!tagMap) {
+        tagMap = new Map();
+        this.sharedCache.set(key, tagMap);
+      }
+      tagMap.set(tag, resolved);
+    }
+    return resolved;
+  }
+
+  async _resolveRemoteContext({url, documentLoader, base, cycles}) {
+    // resolve relative URL and fetch context
+    url = prependBase(base, url);
+    const {context, remoteDoc} = await this._fetchContext(
+      {url, documentLoader, cycles});
+
+    // update base according to remote document and resolve any relative URLs
+    base = remoteDoc.documentUrl || url;
+    _resolveContextUrls({context, base});
+
+    // resolve, cache, and return context
+    const resolved = await this.resolve(
+      {context, documentLoader, base, cycles});
+    this._cacheResolvedContext({key: url, resolved, tag: remoteDoc.tag});
+    return resolved;
+  }
+
+  async _fetchContext({url, documentLoader, cycles}) {
+    // check for max context URLs fetched during a resolve operation
+    if(cycles.size > MAX_CONTEXT_URLS) {
+      throw new JsonLdError(
+        'Maximum number of @context URLs exceeded.',
+        'jsonld.ContextUrlError',
+        {code: 'loading remote context failed', max: MAX_CONTEXT_URLS});
+    }
+
+    // check for context URL cycle
+    if(cycles.has(url)) {
+      throw new JsonLdError(
+        'Cyclical @context URLs detected.',
+        'jsonld.ContextUrlError',
+        {code: 'recursive context inclusion', url});
+    }
+
+    // track cycles
+    cycles.add(url);
+
+    let context;
+    let remoteDoc;
+
+    try {
+      remoteDoc = await documentLoader(url);
+      context = remoteDoc.document || null;
+      // parse string context as JSON
+      if(_isString(context)) {
+        context = JSON.parse(context);
+      }
+    } catch(e) {
+      throw new JsonLdError(
+        'Dereferencing a URL did not result in a valid JSON-LD object. ' +
+        'Possible causes are an inaccessible URL perhaps due to ' +
+        'a same-origin policy (ensure the server uses CORS if you are ' +
+        'using client-side JavaScript), too many redirects, a ' +
+        'non-JSON response, or more than one HTTP Link Header was ' +
+        'provided for a remote context.',
+        'jsonld.InvalidUrl',
+        {code: 'loading remote context failed', url, cause: e});
+    }
+
+    // ensure ctx is an object
+    if(!_isObject(context)) {
+      throw new JsonLdError(
+        'Dereferencing a URL did not result in a JSON object. The ' +
+        'response was valid JSON, but it was not a JSON object.',
+        'jsonld.InvalidUrl', {code: 'invalid remote context', url});
+    }
+
+    // use empty context if no @context key is present
+    if(!('@context' in context)) {
+      context = {'@context': {}};
+    } else {
+      context = {'@context': context['@context']};
+    }
+
+    // append @context URL to context if given
+    if(remoteDoc.contextUrl) {
+      if(!_isArray(context['@context'])) {
+        context['@context'] = [context['@context']];
+      }
+      context['@context'].push(remoteDoc.contextUrl);
+    }
+
+    return {context, remoteDoc};
+  }
+};
+
+function _throwInvalidLocalContext(ctx) {
+  throw new JsonLdError(
+    'Invalid JSON-LD syntax; @context must be an object.',
+    'jsonld.SyntaxError', {
+      code: 'invalid local context', context: ctx
+    });
+}
+
+/**
+ * Resolve all relative `@context` URLs in the given context by inline
+ * replacing them with absolute URLs.
+ *
+ * @param context the context.
+ * @param base the base IRI to use to resolve relative IRIs.
+ */
+function _resolveContextUrls({context, base}) {
+  const ctx = context['@context'];
+
+  if(_isString(ctx)) {
+    context['@context'] = prependBase(base, ctx);
+    return;
+  }
+
+  if(_isArray(ctx)) {
+    for(let i = 0; i < ctx.length; ++i) {
+      const element = ctx[i];
+      if(_isString(element)) {
+        ctx[i] = prependBase(base, element);
+        continue;
+      }
+      if(_isObject(element)) {
+        _resolveContextUrls({context: {'@context': element}, base});
+      }
+    }
+    return;
+  }
+
+  if(!_isObject(ctx)) {
+    // no @context URLs can be found in non-object
+    return;
+  }
+
+  // ctx is an object, resolve any context URLs in terms
+  for(const term in ctx) {
+    _resolveContextUrls({context: ctx[term], base});
+  }
+}
+
+},{"./JsonLdError":31,"./ResolvedContext":36,"./types":50,"./url":51}],31:[function(require,module,exports){
 /*
  * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
  */
@@ -71,7 +1877,7 @@ module.exports = class JsonLdError extends Error {
   }
 };
 
-},{}],4:[function(require,module,exports){
+},{}],32:[function(require,module,exports){
 /*
  * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
  */
@@ -125,7 +1931,7 @@ module.exports = jsonld => {
   return JsonLdProcessor;
 };
 
-},{}],5:[function(require,module,exports){
+},{}],33:[function(require,module,exports){
 /*
  * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
  */
@@ -134,7 +1940,7 @@ module.exports = jsonld => {
 // TODO: move `NQuads` to its own package
 module.exports = require('rdf-canonize').NQuads;
 
-},{"rdf-canonize":41}],6:[function(require,module,exports){
+},{"rdf-canonize":70}],34:[function(require,module,exports){
 /*
  * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
  */
@@ -276,13 +2082,11 @@ function getXMLSerializerClass() {
   return XMLSerializer;
 }
 
-},{"./constants":9,"xmldom":1}],7:[function(require,module,exports){
+},{"./constants":38,"xmldom":28}],35:[function(require,module,exports){
 /*
- * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
+ * Copyright (c) 2017-2019 Digital Bazaar, Inc. All rights reserved.
  */
 'use strict';
-
-const {callbackify, normalizeDocumentLoader} = require('./util');
 
 module.exports = class RequestQueue {
   /**
@@ -290,38 +2094,67 @@ module.exports = class RequestQueue {
    */
   constructor() {
     this._requests = {};
-    this.add = callbackify(this.add.bind(this));
   }
 
   wrapLoader(loader) {
     const self = this;
-    self._loader = normalizeDocumentLoader(loader);
+    self._loader = loader;
     return function(/* url */) {
       return self.add.apply(self, arguments);
     };
   }
 
   async add(url) {
-    const self = this;
-
-    let promise = self._requests[url];
+    let promise = this._requests[url];
     if(promise) {
       // URL already queued, wait for it to load
       return Promise.resolve(promise);
     }
 
     // queue URL and load it
-    promise = self._requests[url] = self._loader(url);
+    promise = this._requests[url] = this._loader(url);
 
     try {
       return await promise;
     } finally {
-      delete self._requests[url];
+      delete this._requests[url];
     }
   }
 };
 
-},{"./util":23}],8:[function(require,module,exports){
+},{}],36:[function(require,module,exports){
+/*
+ * Copyright (c) 2019 Digital Bazaar, Inc. All rights reserved.
+ */
+'use strict';
+
+const LRU = require('lru-cache');
+
+const MAX_ACTIVE_CONTEXTS = 10;
+
+module.exports = class ResolvedContext {
+  /**
+   * Creates a ResolvedContext.
+   *
+   * @param document the context document.
+   */
+  constructor({document}) {
+    this.document = document;
+    // TODO: enable customization of processed context cache
+    // TODO: limit based on size of processed contexts vs. number of them
+    this.cache = new LRU({max: MAX_ACTIVE_CONTEXTS});
+  }
+
+  getProcessed(activeCtx) {
+    return this.cache.get(activeCtx);
+  }
+
+  setProcessed(activeCtx, processedCtx) {
+    this.cache.set(activeCtx, processedCtx);
+  }
+};
+
+},{"lru-cache":53}],37:[function(require,module,exports){
 /*
  * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
  */
@@ -348,7 +2181,8 @@ const {
   expandIri: _expandIri,
   getContextValue: _getContextValue,
   isKeyword: _isKeyword,
-  process: _processContext
+  process: _processContext,
+  processingMode: _processingMode
 } = require('./context');
 
 const {
@@ -375,9 +2209,9 @@ module.exports = api;
  * @param options the compaction options.
  * @param compactionMap the compaction map to use.
  *
- * @return the compacted value.
+ * @return a promise that resolves to the compacted value.
  */
-api.compact = ({
+api.compact = async ({
   activeCtx,
   activeProperty = null,
   element,
@@ -389,7 +2223,7 @@ api.compact = ({
     let rval = [];
     for(let i = 0; i < element.length; ++i) {
       // compact, dropping any null values unless custom mapped
-      let compacted = api.compact({
+      let compacted = await api.compact({
         activeCtx,
         activeProperty,
         element: element[i],
@@ -397,8 +2231,7 @@ api.compact = ({
         compactionMap
       });
       if(compacted === null) {
-        // TODO: use `await` to support async
-        compacted = compactionMap({
+        compacted = await compactionMap({
           unmappedValue: element[i],
           activeCtx,
           activeProperty,
@@ -426,11 +2259,11 @@ api.compact = ({
   // use any scoped context on activeProperty
   const ctx = _getContextValue(activeCtx, activeProperty, '@context');
   if(!_isUndefined(ctx)) {
-    // Note: spec's `from term` var is named `isPropertyTermScopedContext`
-    activeCtx = _processContext({
+    activeCtx = await _processContext({
       activeCtx,
       localCtx: ctx,
-      isPropertyTermScopedContext: true,
+      propagate: true,
+      overrideProtected: true,
       options
     });
   }
@@ -462,13 +2295,48 @@ api.compact = ({
       return rval;
     }
 
+    // if expanded property is @list and we're contained within a list
+    // container, recursively compact this item to an array
+    if(_isList(element)) {
+      const container = _getContextValue(
+        activeCtx, activeProperty, '@container') || [];
+      if(container.includes('@list')) {
+        return api.compact({
+          activeCtx,
+          activeProperty,
+          element: element['@list'],
+          options,
+          compactionMap
+        });
+      }
+    }
+
     // FIXME: avoid misuse of active property as an expanded property?
     const insideReverse = (activeProperty === '@reverse');
 
     const rval = {};
 
-    // revert type scoped context
-    activeCtx = activeCtx.revertTypeScopedContext();
+    // original context before applying property-scoped and local contexts
+    const inputCtx = activeCtx;
+
+    // revert to previous context, if there is one,
+    // and element is not a value object or a node reference
+    if(!_isValue(element) && !_isSubjectReference(element)) {
+      activeCtx = activeCtx.revertToPreviousContext();
+    }
+
+    // apply property-scoped context after reverting term-scoped context
+    const propertyScopedCtx =
+      _getContextValue(inputCtx, activeProperty, '@context');
+    if(!_isUndefined(propertyScopedCtx)) {
+      activeCtx = await _processContext({
+        activeCtx,
+        localCtx: propertyScopedCtx,
+        propagate: true,
+        overrideProtected: true,
+        options
+      });
+    }
 
     if(options.link && '@id' in element) {
       // store linked element
@@ -493,13 +2361,13 @@ api.compact = ({
         {activeCtx: typeContext, iri: type, relativeTo: {vocab: true}});
 
       // Use any type-scoped context defined on this value
-      const ctx = _getContextValue(typeContext, compactedType, '@context');
+      const ctx = _getContextValue(inputCtx, compactedType, '@context');
       if(!_isUndefined(ctx)) {
-        activeCtx = _processContext({
+        activeCtx = await _processContext({
           activeCtx,
           localCtx: ctx,
           options,
-          isTypeScopedContext: true
+          propagate: false
         });
       }
     }
@@ -509,18 +2377,13 @@ api.compact = ({
     for(const expandedProperty of keys) {
       const expandedValue = element[expandedProperty];
 
-      // compact @id and @type(s)
-      if(expandedProperty === '@id' || expandedProperty === '@type') {
-        // if using a type-scoped context, resolve type values against previous
-        // context
-        const isType = expandedProperty === '@type';
-        const valueContext = isType ?
-          (activeCtx.previousContext || activeCtx) : activeCtx;
+      // compact @id
+      if(expandedProperty === '@id') {
         let compactedValue = _asArray(expandedValue).map(
           expandedIri => api.compactIri({
-            activeCtx: valueContext,
+            activeCtx,
             iri: expandedIri,
-            relativeTo: {vocab: isType}
+            relativeTo: {vocab: false}
           }));
         if(compactedValue.length === 1) {
           compactedValue = compactedValue[0];
@@ -528,8 +2391,37 @@ api.compact = ({
 
         // use keyword alias and add value
         const alias = api.compactIri(
-          {activeCtx, iri: expandedProperty, relativeTo: {vocab: true}});
-        const isArray = _isArray(compactedValue) && expandedValue.length === 0;
+          {activeCtx, iri: '@id', relativeTo: {vocab: true}});
+
+        rval[alias] = compactedValue;
+        continue;
+      }
+
+      // compact @type(s)
+      if(expandedProperty === '@type') {
+        // resolve type values against previous context
+        let compactedValue = _asArray(expandedValue).map(
+          expandedIri => api.compactIri({
+            activeCtx: inputCtx,
+            iri: expandedIri,
+            relativeTo: {vocab: true}
+          }));
+        if(compactedValue.length === 1) {
+          compactedValue = compactedValue[0];
+        }
+
+        // use keyword alias and add value
+        const alias = api.compactIri(
+          {activeCtx, iri: '@type', relativeTo: {vocab: true}});
+        const container = _getContextValue(
+          activeCtx, alias, '@container') || [];
+
+        // treat as array for @type if @container includes @set
+        const typeAsSet =
+          container.includes('@set') &&
+          _processingMode(activeCtx, 1.1);
+        const isArray =
+          typeAsSet || (_isArray(compactedValue) && expandedValue.length === 0);
         _addValue(rval, alias, compactedValue, {propertyIsArray: isArray});
         continue;
       }
@@ -537,7 +2429,7 @@ api.compact = ({
       // handle @reverse
       if(expandedProperty === '@reverse') {
         // recursively compact expanded value
-        const compactedValue = api.compact({
+        const compactedValue = await api.compact({
           activeCtx,
           activeProperty: '@reverse',
           element: expandedValue,
@@ -575,12 +2467,13 @@ api.compact = ({
 
       if(expandedProperty === '@preserve') {
         // compact using activeProperty
-        const compactedValue = api.compact({
+        const compactedValue = await api.compact({
           activeCtx,
           activeProperty,
           element: expandedValue,
           options,
-          compactionMap});
+          compactionMap
+        });
 
         if(!(_isArray(compactedValue) && compactedValue.length === 0)) {
           _addValue(rval, expandedProperty, compactedValue);
@@ -690,7 +2583,7 @@ api.compact = ({
         }
 
         // recursively compact expanded item
-        let compactedItem = api.compact({
+        let compactedItem = await api.compact({
           activeCtx,
           activeProperty: itemActiveProperty,
           element: (isList || isGraph) ? inner : expandedItem,
@@ -723,14 +2616,12 @@ api.compact = ({
                 relativeTo: {vocab: true}
               })] = expandedItem['@index'];
             }
-          } else if(nestResult.hasOwnProperty(itemActiveProperty)) {
-            // can't use @list container for more than 1 list
-            throw new JsonLdError(
-              'JSON-LD compact error; property has a "@list" @container ' +
-              'rule but there is more than a single @list that matches ' +
-              'the compacted term in the document. Compaction might mix ' +
-              'unwanted items into the list.',
-              'jsonld.SyntaxError', {code: 'compaction to list of lists'});
+          } else {
+            _addValue(nestResult, itemActiveProperty, compactedItem, {
+              valueIsArray: true,
+              allowDuplicate: true
+            });
+            continue;
           }
         }
 
@@ -762,6 +2653,11 @@ api.compact = ({
             _isSimpleGraph(expandedItem)) {
             // container includes @graph but not @id or @index and value is a
             // simple graph object add compact value
+            // if compactedItem contains multiple values, it is wrapped in
+            // `@included`
+            if(_isArray(compactedItem) && compactedItem.length > 1) {
+              compactedItem = {'@included': compactedItem};
+            }
             _addValue(
               nestResult, itemActiveProperty, compactedItem, {
                 propertyIsArray:
@@ -826,7 +2722,33 @@ api.compact = ({
             }
             key = expandedItem['@language'];
           } else if(container.includes('@index')) {
-            key = expandedItem['@index'];
+            const indexKey = _getContextValue(
+              activeCtx, itemActiveProperty, '@index') || '@index';
+            const containerKey = api.compactIri(
+              {activeCtx, iri: indexKey, vocab: true});
+            if(indexKey === '@index') {
+              key = expandedItem['@index'];
+              delete compactedItem[containerKey];
+            } else {
+              let others;
+              [key, ...others] = _asArray(compactedItem[indexKey] || []);
+              if(!_isString(key)) {
+                // Will use @none if it isn't a string.
+                key = null;
+              } else {
+                switch(others.length) {
+                  case 0:
+                    delete compactedItem[indexKey];
+                    break;
+                  case 1:
+                    compactedItem[indexKey] = others[0];
+                    break;
+                  default:
+                    compactedItem[indexKey] = others;
+                    break;
+                }
+              }
+            }
           } else if(container.includes('@id')) {
             const idKey = api.compactIri({activeCtx, iri: '@id', vocab: true});
             key = compactedItem[idKey];
@@ -849,6 +2771,19 @@ api.compact = ({
               default:
                 compactedItem[typeKey] = types;
                 break;
+            }
+
+            // If compactedItem contains a single entry
+            // whose key maps to @id, recompact without @type
+            if(Object.keys(compactedItem).length === 1 &&
+              '@id' in expandedItem) {
+              compactedItem = await api.compact({
+                activeCtx,
+                activeProperty: itemActiveProperty,
+                element: {'@id': expandedItem['@id']},
+                options,
+                compactionMap
+              });
             }
           }
 
@@ -1130,6 +3065,17 @@ api.compactIri = ({
     return choice;
   }
 
+  // If iri could be confused with a compact IRI using a term in this context,
+  // signal an error
+  for(const [term, td] of activeCtx.mappings) {
+    if(td && td._prefix && iri.startsWith(term + ':')) {
+      throw new JsonLdError(
+        `Absolute IRI "${iri}" confused with prefix "${term}".`,
+        'jsonld.SyntaxError',
+        {code: 'IRI confused with prefix', context: activeCtx});
+    }
+  }
+
   // compact IRI relative to base
   if(!relativeTo.vocab) {
     return _removeBase(activeCtx['@base'], iri);
@@ -1357,7 +3303,7 @@ function _selectTerm(
 
   // determine prefs for @id based on whether or not value compacts to a term
   if((typeOrLanguageValue === '@id' || typeOrLanguageValue === '@reverse') &&
-    _isSubjectReference(value)) {
+    _isObject(value) && '@id' in value) {
     // prefer @reverse first
     if(typeOrLanguageValue === '@reverse') {
       prefs.push('@reverse');
@@ -1420,7 +3366,7 @@ function _checkNestProperty(activeCtx, nestProperty, options) {
   }
 }
 
-},{"./JsonLdError":3,"./context":10,"./graphTypes":17,"./types":21,"./url":22,"./util":23}],9:[function(require,module,exports){
+},{"./JsonLdError":31,"./context":39,"./graphTypes":46,"./types":50,"./url":51,"./util":52}],38:[function(require,module,exports){
 /*
  * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
  */
@@ -1440,6 +3386,7 @@ module.exports = {
   RDF_TYPE: RDF + 'type',
   RDF_PLAIN_LITERAL: RDF + 'PlainLiteral',
   RDF_XML_LITERAL: RDF + 'XMLLiteral',
+  RDF_JSON_LITERAL: RDF + 'JSON',
   RDF_OBJECT: RDF + 'object',
   RDF_LANGSTRING: RDF + 'langString',
 
@@ -1450,14 +3397,13 @@ module.exports = {
   XSD_STRING: XSD + 'string',
 };
 
-},{}],10:[function(require,module,exports){
+},{}],39:[function(require,module,exports){
 /*
- * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
+ * Copyright (c) 2017-2019 Digital Bazaar, Inc. All rights reserved.
  */
 'use strict';
 
 const util = require('./util');
-const ActiveContextCache = require('./ActiveContextCache');
 const JsonLdError = require('./JsonLdError');
 
 const {
@@ -1479,15 +3425,11 @@ const {
   compareShortestLeast: _compareShortestLeast
 } = require('./util');
 
-const MAX_CONTEXT_URLS = 10;
-
 const INITIAL_CONTEXT_CACHE = new Map();
 const INITIAL_CONTEXT_CACHE_MAX_SIZE = 10000;
 
 const api = {};
 module.exports = api;
-
-api.cache = new ActiveContextCache();
 
 /**
  * Processes a local context and returns a new active context.
@@ -1495,17 +3437,16 @@ api.cache = new ActiveContextCache();
  * @param activeCtx the current active context.
  * @param localCtx the local context to process.
  * @param options the context processing options.
- * @param isPropertyTermScopedContext `true` if `localCtx` is a scoped context
- *   from a property term.
- * @param isTypeScopedContext `true` if `localCtx` is a scoped context
- *   from a type.
+ * @param propagate `true` if `false`, retains any previously defined term,
+ *   which can be rolled back when the descending into a new node object.
+ * @param overrideProtected `false` allows protected terms to be modified.
  *
- * @return the new active context.
+ * @return a Promise that resolves to the new active context.
  */
-api.process = ({
+api.process = async ({
   activeCtx, localCtx, options,
-  isPropertyTermScopedContext = false,
-  isTypeScopedContext = false
+  propagate = true,
+  overrideProtected = false
 }) => {
   // normalize local context to an array of @context objects
   if(_isObject(localCtx) && '@context' in localCtx &&
@@ -1519,29 +3460,34 @@ api.process = ({
     return activeCtx;
   }
 
-  // track the previous context
-  const previousContext = activeCtx.previousContext || activeCtx;
+  // resolve contexts
+  const resolved = await options.contextResolver.resolve({
+    context: localCtx,
+    documentLoader: options.documentLoader,
+    base: options.base
+  });
 
-  // if context is property scoped and there's a previous context, amend it,
-  // not the current one
-  if(isPropertyTermScopedContext && activeCtx.previousContext) {
-    // TODO: consider optimizing to a shallow copy
-    activeCtx = activeCtx.clone();
-    activeCtx.isPropertyTermScoped = true;
-    activeCtx.previousContext = api.process({
-      activeCtx: activeCtx.previousContext,
-      localCtx: ctxs,
-      options,
-      isPropertyTermScopedContext
-    });
-    return activeCtx;
+  // override propagate if first resolved context has `@propagate`
+  if(_isObject(resolved[0].document) &&
+    typeof resolved[0].document['@propagate'] === 'boolean') {
+    // retrieve early, error checking done later
+    propagate = resolved[0].document['@propagate'];
   }
 
   // process each context in order, update active context
   // on each iteration to ensure proper caching
   let rval = activeCtx;
-  for(let i = 0; i < ctxs.length; ++i) {
-    let ctx = ctxs[i];
+
+  // track the previous context
+  // if not propagating, make sure rval has a previous context
+  if(!propagate && !rval.previousContext) {
+    // clone `rval` context before updating
+    rval = rval.clone();
+    rval.previousContext = activeCtx;
+  }
+
+  for(const resolvedContext of resolved) {
+    let {document: ctx} = resolvedContext;
 
     // update active context to one computed from last iteration
     activeCtx = rval;
@@ -1549,8 +3495,8 @@ api.process = ({
     // reset to initial context
     if(ctx === null) {
       // We can't nullify if there are protected terms and we're
-      // not processing a property term scoped context
-      if(!isPropertyTermScopedContext &&
+      // not allowing overrides (e.g. processing a property term scoped context)
+      if(!overrideProtected &&
         Object.keys(activeCtx.protected).length !== 0) {
         const protectedMode = (options && options.protectedMode) || 'error';
         if(protectedMode === 'error') {
@@ -1574,11 +3520,8 @@ api.process = ({
           }
           activeCtx.protected = util.clone(oldActiveCtx.protected);
 
-          // cache result
-          if(api.cache) {
-            api.cache.set(oldActiveCtx, ctx, rval);
-          }
-
+          // cache processed result
+          resolvedContext.setProcessed(oldActiveCtx, rval);
           continue;
         }
         throw new JsonLdError(
@@ -1587,20 +3530,14 @@ api.process = ({
           {code: 'invalid protected mode', context: localCtx, protectedMode});
       }
       rval = activeCtx = api.getInitialContext(options).clone();
-      // if context is type-scoped, ensure previous context has been set
-      if(isTypeScopedContext) {
-        rval.previousContext = previousContext.clone();
-      }
       continue;
     }
 
-    // get context from cache if available
-    if(api.cache) {
-      const cached = api.cache.get(activeCtx, ctx);
-      if(cached) {
-        rval = activeCtx = cached;
-        continue;
-      }
+    // get processed context from cache if available
+    const processed = resolvedContext.getProcessed(activeCtx);
+    if(processed) {
+      rval = activeCtx = processed;
+      continue;
     }
 
     // dereference @context key if present
@@ -1615,7 +3552,7 @@ api.process = ({
         'jsonld.SyntaxError', {code: 'invalid local context', context: ctx});
     }
 
-    // TODO: there is likely a `preivousContext` cloning optimization that
+    // TODO: there is likely a `previousContext` cloning optimization that
     // could be applied here (no need to copy it under certain conditions)
 
     // clone context before updating it
@@ -1645,9 +3582,9 @@ api.process = ({
       defined.set('@version', true);
     }
 
-    // if not set explicitly, set processingMode to "json-ld-1.0"
+    // if not set explicitly, set processingMode to "json-ld-1.1"
     rval.processingMode =
-      rval.processingMode || activeCtx.processingMode || 'json-ld-1.0';
+      rval.processingMode || activeCtx.processingMode;
 
     // handle @base
     if('@base' in ctx) {
@@ -1658,7 +3595,7 @@ api.process = ({
       } else if(_isAbsoluteIri(base)) {
         base = parseUrl(base);
       } else if(_isRelativeIri(base)) {
-        base = parseUrl(prependBase(activeCtx['@base'].href, base));
+        base = parseUrl(prependBase(rval['@base'].href, base));
       } else {
         throw new JsonLdError(
           'Invalid JSON-LD syntax; the value of "@base" in a ' +
@@ -1680,13 +3617,14 @@ api.process = ({
           'Invalid JSON-LD syntax; the value of "@vocab" in a ' +
           '@context must be a string or null.',
           'jsonld.SyntaxError', {code: 'invalid vocab mapping', context: ctx});
-      } else if(!_isAbsoluteIri(value)) {
+      } else if(!_isAbsoluteIri(value) && api.processingMode(rval, 1.0)) {
         throw new JsonLdError(
           'Invalid JSON-LD syntax; the value of "@vocab" in a ' +
           '@context must be an absolute IRI.',
           'jsonld.SyntaxError', {code: 'invalid vocab mapping', context: ctx});
       } else {
-        rval['@vocab'] = value;
+        rval['@vocab'] = _expandIri(rval, value, {vocab: true, base: true},
+          undefined, undefined, options);
       }
       defined.set('@vocab', true);
     }
@@ -1708,6 +3646,26 @@ api.process = ({
       defined.set('@language', true);
     }
 
+    // handle @propagate
+    // note: we've already extracted it, here we just do error checking
+    if('@propagate' in ctx) {
+      const value = ctx['@propagate'];
+      if(activeCtx.processingMode === 'json-ld-1.0') {
+        throw new JsonLdError(
+          'Invalid JSON-LD syntax; @propagate not compatible with ' +
+          activeCtx.processingMode,
+          'jsonld.SyntaxError',
+          {code: 'invalid context member', context: ctx});
+      }
+      if(typeof value !== 'boolean') {
+        throw new JsonLdError(
+          'Invalid JSON-LD syntax; @propagate value must be a boolean.',
+          'jsonld.SyntaxError',
+          {code: 'invalid @propagate value', context: localCtx});
+      }
+      defined.set('@propagate', true);
+    }
+
     // handle @protected; determine whether this sub-context is declaring
     // all its terms to be "protected" (exceptions can be made on a
     // per-definition basis)
@@ -1715,20 +3673,18 @@ api.process = ({
 
     // process all other keys
     for(const key in ctx) {
-      api.createTermDefinition(
-        rval, ctx, key, defined, options,
-        isPropertyTermScopedContext);
+      api.createTermDefinition({
+        activeCtx: rval,
+        localCtx: ctx,
+        term: key,
+        defined,
+        options,
+        overrideProtected
+      });
     }
 
-    // if context is type-scoped, ensure previous context has been set
-    if(isTypeScopedContext && !rval.previousContext) {
-      rval.previousContext = previousContext.clone();
-    }
-
-    // cache result
-    if(api.cache) {
-      api.cache.set(activeCtx, ctx, rval);
-    }
+    // cache processed result
+    resolvedContext.setProcessed(activeCtx, rval);
   }
 
   return rval;
@@ -1746,12 +3702,16 @@ api.process = ({
  * @param {string} [options.protectedMode="error"] - "error" to throw error
  *   on `@protected` constraint violation, "warn" to allow violations and
  *   signal a warning.
- * @param isPropertyTermScopedContext `true` if `localCtx` is a scoped context
- *   from a property term.
+ * @param overrideProtected `false` allows protected terms to be modified.
  */
-api.createTermDefinition = (
-  activeCtx, localCtx, term, defined, options,
-  isPropertyTermScopedContext = false) => {
+api.createTermDefinition = ({
+  activeCtx,
+  localCtx,
+  term,
+  defined,
+  options,
+  overrideProtected = false,
+}) => {
   if(defined.has(term)) {
     // term already defined
     if(defined.get(term)) {
@@ -1767,14 +3727,30 @@ api.createTermDefinition = (
   // now defining term
   defined.set(term, false);
 
-  if(api.isKeyword(term)) {
+  // get context term value
+  let value;
+  if(localCtx.hasOwnProperty(term)) {
+    value = localCtx[term];
+  }
+
+  if(term === '@type' &&
+     _isObject(value) &&
+     value['@container'] === '@set' &&
+     api.processingMode(activeCtx, 1.1)) {
+
+    const validKeys = ['@container', '@id', '@protected'];
+    if(Object.keys(value).some(k => !validKeys.includes(k))) {
+      throw new JsonLdError(
+        'Invalid JSON-LD syntax; keywords cannot be overridden.',
+        'jsonld.SyntaxError',
+        {code: 'keyword redefinition', context: localCtx, term});
+    }
+  } else if(api.isKeyword(term)) {
     throw new JsonLdError(
       'Invalid JSON-LD syntax; keywords cannot be overridden.',
       'jsonld.SyntaxError',
       {code: 'keyword redefinition', context: localCtx, term});
-  }
-
-  if(term === '') {
+  } else if(term === '') {
     throw new JsonLdError(
       'Invalid JSON-LD syntax; a term cannot be an empty string.',
       'jsonld.SyntaxError',
@@ -1787,12 +3763,6 @@ api.createTermDefinition = (
   // remove old mapping
   if(activeCtx.mappings.has(term)) {
     activeCtx.mappings.delete(term);
-  }
-
-  // get context term value
-  let value;
-  if(localCtx.hasOwnProperty(term)) {
-    value = localCtx[term];
   }
 
   // clear context entry
@@ -1827,7 +3797,7 @@ api.createTermDefinition = (
 
   // JSON-LD 1.1 support
   if(api.processingMode(activeCtx, 1.1)) {
-    validKeys.push('@context', '@nest', '@prefix', '@protected');
+    validKeys.push('@context', '@index', '@nest', '@prefix', '@protected');
   }
 
   for(const kw in value) {
@@ -1842,7 +3812,7 @@ api.createTermDefinition = (
   // always compute whether term has a colon as an optimization for
   // _compactIri
   const colon = term.indexOf(':');
-  mapping._termHasColon = (colon !== -1);
+  mapping._termHasColon = (colon > 0);
 
   if('@reverse' in value) {
     if('@id' in value) {
@@ -1897,9 +3867,9 @@ api.createTermDefinition = (
       }
       mapping['@id'] = id;
       // indicate if this term may be used as a compact IRI prefix
-      mapping._prefix = (!mapping._termHasColon &&
-        id.match(/[:\/\?#\[\]@]$/) &&
-        (simpleTerm || api.processingMode(activeCtx, 1.0)));
+      mapping._prefix = (simpleTerm &&
+        !mapping._termHasColon &&
+        id.match(/[:\/\?#\[\]@]$/));
     }
   }
 
@@ -1909,7 +3879,9 @@ api.createTermDefinition = (
       const prefix = term.substr(0, colon);
       if(localCtx.hasOwnProperty(prefix)) {
         // define parent prefix
-        api.createTermDefinition(activeCtx, localCtx, prefix, defined, options);
+        api.createTermDefinition({
+          activeCtx, localCtx, term: prefix, defined, options
+        });
       }
 
       if(activeCtx.mappings.has(prefix)) {
@@ -1920,6 +3892,9 @@ api.createTermDefinition = (
         // term is an absolute IRI
         mapping['@id'] = term;
       }
+    } else if(term == '@type') {
+      // Special case, were we've previously determined that container is @set
+      mapping['@id'] = term;
     } else {
       // non-IRIs *must* define @ids if @vocab is not available
       if(!('@vocab' in activeCtx)) {
@@ -1952,7 +3927,7 @@ api.createTermDefinition = (
         {code: 'invalid type mapping', context: localCtx});
     }
 
-    if(type !== '@id' && type !== '@vocab') {
+    if(type !== '@id' && type !== '@vocab' && type !== '@json') {
       // expand @type to full IRI
       type = _expandIri(
         activeCtx, type, {vocab: true, base: false}, localCtx, defined,
@@ -2012,6 +3987,21 @@ api.createTermDefinition = (
         // otherwise, container may also include @set
         isValid &= container.length <= (hasSet ? 2 : 1);
       }
+
+      if(container.includes('@type')) {
+        // If mapping does not have an @type,
+        // set it to @id
+        mapping['@type'] = mapping['@type'] || '@id';
+
+        // type mapping must be either @id or @vocab
+        if(!['@id', '@vocab'].includes(mapping['@type'])) {
+          throw new JsonLdError(
+            'Invalid JSON-LD syntax; container: @type requires @type to be ' +
+            '@id or @vocab.',
+            'jsonld.SyntaxError',
+            {code: 'invalid type mapping', context: localCtx});
+        }
+      }
     } else {
       // in JSON-LD 1.0, container must not be an array (it must be a string,
       // which is one of the validContainers)
@@ -2045,6 +4035,23 @@ api.createTermDefinition = (
 
     // add @container to mapping
     mapping['@container'] = container;
+  }
+
+  // property indexing
+  if('@index' in value) {
+    if(!('@container' in value) || !mapping['@container'].includes('@index')) {
+      throw new JsonLdError(
+        'Invalid JSON-LD syntax; @index without @index in @container: ' +
+        `"${value['@index']}" on term "${term}".`, 'jsonld.SyntaxError',
+        {code: 'invalid term definition', context: localCtx});
+    }
+    if(!_isString(value['@index']) || value['@index'].indexOf('@') === 0) {
+      throw new JsonLdError(
+        'Invalid JSON-LD syntax; @index must expand to an IRI: ' +
+        `"${value['@index']}" on term "${term}".`, 'jsonld.SyntaxError',
+        {code: 'invalid term definition', context: localCtx});
+    }
+    mapping['@index'] = value['@index'];
   }
 
   // scoped contexts
@@ -2106,9 +4113,8 @@ api.createTermDefinition = (
       'jsonld.SyntaxError', {code: 'invalid keyword alias', context: localCtx});
   }
 
-  // FIXME if(1.1) ... ?
-  if(previousMapping && previousMapping.protected &&
-    !isPropertyTermScopedContext) {
+  // Check for overriding protected terms
+  if(previousMapping && previousMapping.protected && !overrideProtected) {
     // force new term to continue to be protected and see if the mappings would
     // be equal
     activeCtx.protected[term] = true;
@@ -2180,13 +4186,9 @@ function _expandIri(activeCtx, value, relativeTo, localCtx, defined, options) {
   // define term dependency if not defined
   if(localCtx && localCtx.hasOwnProperty(value) &&
     defined.get(value) !== true) {
-    api.createTermDefinition(activeCtx, localCtx, value, defined, options);
-  }
-
-  // if context is from a property term scoped context composed with a
-  // type-scoped context, then use previous context instead
-  if(activeCtx.isPropertyTermScoped && activeCtx.previousContext) {
-    activeCtx = activeCtx.previousContext;
+    api.createTermDefinition({
+      activeCtx, localCtx, term: value, defined, options
+    });
   }
 
   relativeTo = relativeTo || {};
@@ -2206,7 +4208,7 @@ function _expandIri(activeCtx, value, relativeTo, localCtx, defined, options) {
 
   // split value into prefix:suffix
   const colon = value.indexOf(':');
-  if(colon !== -1) {
+  if(colon > 0) {
     const prefix = value.substr(0, colon);
     const suffix = value.substr(colon + 1);
 
@@ -2218,17 +4220,21 @@ function _expandIri(activeCtx, value, relativeTo, localCtx, defined, options) {
 
     // prefix dependency not defined, define it
     if(localCtx && localCtx.hasOwnProperty(prefix)) {
-      api.createTermDefinition(activeCtx, localCtx, prefix, defined, options);
+      api.createTermDefinition({
+        activeCtx, localCtx, term: prefix, defined, options
+      });
     }
 
     // use mapping if prefix is defined
-    if(activeCtx.mappings.has(prefix)) {
-      const mapping = activeCtx.mappings.get(prefix);
+    const mapping = activeCtx.mappings.get(prefix);
+    if(mapping && mapping._prefix) {
       return mapping['@id'] + suffix;
     }
 
     // already absolute IRI
-    return value;
+    if(_isAbsoluteIri(value)) {
+      return value;
+    }
   }
 
   // prepend vocab
@@ -2267,7 +4273,7 @@ api.getInitialContext = options => {
     inverse: null,
     getInverse: _createInverseContext,
     clone: _cloneActiveContext,
-    revertTypeScopedContext: _revertTypeScopedContext,
+    revertToPreviousContext: _revertToPreviousContext,
     protected: {}
   };
   // TODO: consider using LRU cache instead
@@ -2444,10 +4450,9 @@ api.getInitialContext = options => {
     child.getInverse = this.getInverse;
     child.protected = util.clone(this.protected);
     if(this.previousContext) {
-      child.isPropertyTermScoped = this.previousContext.isPropertyTermScoped;
       child.previousContext = this.previousContext.clone();
     }
-    child.revertTypeScopedContext = this.revertTypeScopedContext;
+    child.revertToPreviousContext = this.revertToPreviousContext;
     if('@language' in this) {
       child['@language'] = this['@language'];
     }
@@ -2461,7 +4466,7 @@ api.getInitialContext = options => {
    * Reverts any type-scoped context in this active context to the previous
    * context.
    */
-  function _revertTypeScopedContext() {
+  function _revertToPreviousContext() {
     if(!this.previousContext) {
       return this;
     }
@@ -2515,20 +4520,6 @@ api.getContextValue = (ctx, key, type) => {
 };
 
 /**
- * Retrieves external @context URLs using the given document loader. Every
- * instance of @context in the input that refers to a URL will be replaced
- * with the JSON @context found at that URL.
- *
- * @param input the JSON-LD input with possible contexts.
- * @param options the options to use:
- *          documentLoader(url, [callback(err, remoteDoc)]) the document loader.
- * @param callback(err, input) called once the operation completes.
- */
-api.getAllContexts = async (input, options) => {
-  return _retrieveContextUrls(input, options);
-};
-
-/**
  * Processing Mode check.
  *
  * @param activeCtx the current active context.
@@ -2538,11 +4529,10 @@ api.getAllContexts = async (input, options) => {
  */
 api.processingMode = (activeCtx, version) => {
   if(version.toString() >= '1.1') {
-    return activeCtx.processingMode &&
+    return !activeCtx.processingMode ||
       activeCtx.processingMode >= 'json-ld-' + version.toString();
   } else {
-    return !activeCtx.processingMode ||
-      activeCtx.processingMode === 'json-ld-1.0';
+    return activeCtx.processingMode === 'json-ld-1.0';
   }
 };
 
@@ -2567,6 +4557,7 @@ api.isKeyword = v => {
     case '@graph':
     case '@id':
     case '@index':
+    case '@json':
     case '@language':
     case '@list':
     case '@nest':
@@ -2586,192 +4577,6 @@ api.isKeyword = v => {
   }
   return false;
 };
-
-async function _retrieveContextUrls(input, options) {
-  const documentLoader = util.normalizeDocumentLoader(options.documentLoader);
-
-  // retrieve all @context URLs in input
-  await retrieve(input, new Set(), documentLoader);
-
-  return input;
-
-  // recursive function that will retrieve all @context URLs in documents
-  async function retrieve(doc, cycles, documentLoader) {
-    if(cycles.size > MAX_CONTEXT_URLS) {
-      throw new JsonLdError(
-        'Maximum number of @context URLs exceeded.',
-        'jsonld.ContextUrlError',
-        {code: 'loading remote context failed', max: MAX_CONTEXT_URLS});
-    }
-
-    // find all URLs in the given document
-    const urls = new Map();
-    _findContextUrls(doc, urls, false, options.base);
-    if(urls.size === 0) {
-      return;
-    }
-
-    // queue all unretrieved URLs
-    const queue = [...urls.keys()].filter(u => urls.get(u) === false);
-
-    // retrieve URLs in queue
-    return Promise.all(queue.map(async url => {
-      // check for context URL cycle
-      if(cycles.has(url)) {
-        throw new JsonLdError(
-          'Cyclical @context URLs detected.',
-          'jsonld.ContextUrlError',
-          {code: 'recursive context inclusion', url});
-      }
-
-      const _cycles = new Set(cycles);
-      _cycles.add(url);
-      let remoteDoc;
-      let ctx;
-
-      try {
-        remoteDoc = await documentLoader(url);
-        ctx = remoteDoc.document || null;
-        // parse string context as JSON
-        if(_isString(ctx)) {
-          ctx = JSON.parse(ctx);
-        }
-      } catch(e) {
-        throw new JsonLdError(
-          'Dereferencing a URL did not result in a valid JSON-LD object. ' +
-          'Possible causes are an inaccessible URL perhaps due to ' +
-          'a same-origin policy (ensure the server uses CORS if you are ' +
-          'using client-side JavaScript), too many redirects, a ' +
-          'non-JSON response, or more than one HTTP Link Header was ' +
-          'provided for a remote context.',
-          'jsonld.InvalidUrl',
-          {code: 'loading remote context failed', url, cause: e});
-      }
-
-      // ensure ctx is an object
-      if(!_isObject(ctx)) {
-        throw new JsonLdError(
-          'Dereferencing a URL did not result in a JSON object. The ' +
-          'response was valid JSON, but it was not a JSON object.',
-          'jsonld.InvalidUrl',
-          {code: 'invalid remote context', url});
-      }
-
-      // use empty context if no @context key is present
-      if(!('@context' in ctx)) {
-        ctx = {'@context': {}};
-      } else {
-        ctx = {'@context': ctx['@context']};
-      }
-
-      // append @context URL to context if given
-      if(remoteDoc.contextUrl) {
-        if(!_isArray(ctx['@context'])) {
-          ctx['@context'] = [ctx['@context']];
-        }
-        ctx['@context'].push(remoteDoc.contextUrl);
-      }
-
-      // recurse
-      await retrieve(ctx, _cycles, documentLoader);
-
-      // store retrieved context w/replaced @context URLs
-      urls.set(url, ctx['@context']);
-
-      // replace all @context URLs in the document
-      _findContextUrls(doc, urls, true, options.base);
-    }));
-  }
-}
-
-/**
- * Finds all @context URLs in the given JSON-LD input.
- *
- * @param input the JSON-LD input.
- * @param urls a map of URLs (url => false/@contexts).
- * @param replace true to replace the URLs in the given input with the
- *           @contexts from the urls map, false not to.
- * @param base the base IRI to use to resolve relative IRIs.
- *
- * @return true if new URLs to retrieve were found, false if not.
- */
-function _findContextUrls(input, urls, replace, base) {
-  if(_isArray(input)) {
-    for(const element of input) {
-      _findContextUrls(element, urls, replace, base);
-    }
-    return;
-  }
-
-  if(!_isObject(input)) {
-    // no @context URLs can be found in non-object input
-    return;
-  }
-
-  // input is an object
-  for(const key in input) {
-    if(key !== '@context') {
-      _findContextUrls(input[key], urls, replace, base);
-      continue;
-    }
-
-    // get @context
-    const ctx = input[key];
-
-    if(_isArray(ctx)) {
-      // array @context
-      let length = ctx.length;
-      for(let i = 0; i < length; ++i) {
-        const _ctx = ctx[i];
-        if(_isString(_ctx)) {
-          const prepended = prependBase(base, _ctx);
-          const resolved = urls.get(prepended);
-          // replace w/@context if requested
-          if(replace) {
-            if(_isArray(resolved)) {
-              // add flattened context
-              Array.prototype.splice.apply(ctx, [i, 1].concat(resolved));
-              i += resolved.length - 1;
-              length = ctx.length;
-            } else if(resolved !== false) {
-              ctx[i] = resolved;
-            }
-          } else if(resolved === undefined) {
-            // @context URL found
-            urls.set(prepended, false);
-          }
-        } else {
-          // look for scoped context
-          for(const key in _ctx) {
-            if(_isObject(_ctx[key])) {
-              _findContextUrls(_ctx[key], urls, replace, base);
-            }
-          }
-        }
-      }
-    } else if(_isString(ctx)) {
-      // string @context
-      const prepended = prependBase(base, ctx);
-      const resolved = urls.get(prepended);
-      // replace w/@context if requested
-      if(replace) {
-        if(resolved !== false) {
-          input[key] = resolved;
-        }
-      } else if(resolved === undefined) {
-        // @context URL found
-        urls.set(prepended, false);
-      }
-    } else {
-      // look for scoped context
-      for(const key in ctx) {
-        if(_isObject(ctx[key])) {
-          _findContextUrls(ctx[key], urls, replace, base);
-        }
-      }
-    }
-  }
-}
 
 function _deepCompare(x1, x2) {
   // compare `null` or primitive types directly
@@ -2818,7 +4623,7 @@ function _deepCompare(x1, x2) {
   return true;
 }
 
-},{"./ActiveContextCache":2,"./JsonLdError":3,"./types":21,"./url":22,"./util":23}],11:[function(require,module,exports){
+},{"./JsonLdError":31,"./types":50,"./url":51,"./util":52}],40:[function(require,module,exports){
 /*
  * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
  */
@@ -2853,11 +4658,9 @@ module.exports = ({
   headers = {}
 } = {strictSSL: true, maxRedirects: -1, headers: {}}) => {
   headers = buildHeaders(headers);
-  // TODO: use `r2`
+  // TODO: use `axios`
   request = request || require('request');
   const http = require('http');
-  // TODO: disable cache until HTTP caching implemented
-  //const cache = new DocumentCache();
 
   const queue = new RequestQueue();
   return queue.wrapLoader(function(url) {
@@ -2906,7 +4709,7 @@ module.exports = ({
     const statusText = http.STATUS_CODES[res.statusCode];
     if(res.statusCode >= 400) {
       throw new JsonLdError(
-        'URL could not be dereferenced: ' + statusText,
+        `URL "${url}" could not be dereferenced: ${statusText}`,
         'jsonld.InvalidUrl', {
           code: 'loading document failed',
           url,
@@ -2984,7 +4787,7 @@ function _request(request, options) {
   });
 }
 
-},{"../JsonLdError":3,"../RequestQueue":7,"../constants":9,"../util":23,"http":1,"request":1}],12:[function(require,module,exports){
+},{"../JsonLdError":31,"../RequestQueue":35,"../constants":38,"../util":52,"http":28,"request":28}],41:[function(require,module,exports){
 /*
  * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
  */
@@ -3092,7 +4895,7 @@ function _get(xhr, url, headers) {
   });
 }
 
-},{"../JsonLdError":3,"../RequestQueue":7,"../constants":9,"../util":23}],13:[function(require,module,exports){
+},{"../JsonLdError":31,"../RequestQueue":35,"../constants":38,"../util":52}],42:[function(require,module,exports){
 /*
  * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
  */
@@ -3118,7 +4921,8 @@ const {
   expandIri: _expandIri,
   getContextValue: _getContextValue,
   isKeyword: _isKeyword,
-  process: _processContext
+  process: _processContext,
+  processingMode: _processingMode
 } = require('./context');
 
 const {
@@ -3157,7 +4961,7 @@ module.exports = api;
  *
  * @return a Promise that resolves to the expanded value.
  */
-api.expand = ({
+api.expand = async ({
   activeCtx,
   activeProperty = null,
   element,
@@ -3182,8 +4986,7 @@ api.expand = ({
     if(!insideList && (activeProperty === null ||
       _expandIri(activeCtx, activeProperty, {vocab: true},
         options) === '@graph')) {
-      // TODO: use `await` to support async
-      const mapped = expansionMap({
+      const mapped = await expansionMap({
         unmappedValue: element,
         activeCtx,
         activeProperty,
@@ -3208,7 +5011,7 @@ api.expand = ({
     insideList = insideList || container.includes('@list');
     for(let i = 0; i < element.length; ++i) {
       // expand element
-      let e = api.expand({
+      let e = await api.expand({
         activeCtx,
         activeProperty,
         element: element[i],
@@ -3217,16 +5020,12 @@ api.expand = ({
         insideIndex,
         typeScopedContext
       });
-      if(insideList && (_isArray(e) || _isList(e))) {
-        // lists of lists are illegal
-        throw new JsonLdError(
-          'Invalid JSON-LD syntax; lists of lists are not permitted.',
-          'jsonld.SyntaxError', {code: 'list of lists'});
+      if(insideList && _isArray(e)) {
+        e = {'@list': e};
       }
 
       if(e === null) {
-        // TODO: add `await` for async support
-        e = expansionMap({
+        e = await expansionMap({
           unmappedValue: element[i],
           activeCtx,
           activeProperty,
@@ -3255,6 +5054,10 @@ api.expand = ({
   // first, expand the active property
   const expandedActiveProperty = _expandIri(
     activeCtx, activeProperty, {vocab: true}, options);
+
+  // Get any property-scoped context for activeProperty
+  const propertyScopedCtx =
+    _getContextValue(activeCtx, activeProperty, '@context');
 
   // second, determine if any type-scoped context should be reverted; it
   // should only be reverted when the following are all true:
@@ -3285,14 +5088,28 @@ api.expand = ({
 
   if(mustRevert) {
     // revert type scoped context
-    activeCtx = activeCtx.revertTypeScopedContext();
+    activeCtx = activeCtx.revertToPreviousContext();
+  }
+
+  // apply property-scoped context after reverting term-scoped context
+  if(!_isUndefined(propertyScopedCtx)) {
+    activeCtx = await _processContext({
+      activeCtx,
+      localCtx: propertyScopedCtx,
+      propagate: true,
+      overrideProtected: true,
+      options
+    });
   }
 
   // if element has a context, process it
   if('@context' in element) {
-    activeCtx = _processContext(
+    activeCtx = await _processContext(
       {activeCtx, localCtx: element['@context'], options});
   }
+
+  // set the type-scoped context to the context on input, for use later
+  typeScopedContext = activeCtx;
 
   // look for scoped contexts on `@type`
   for(const key of keys) {
@@ -3305,14 +5122,13 @@ api.expand = ({
         Array.isArray(value) ?
           (value.length > 1 ? value.slice().sort() : value) : [value];
       for(const type of types) {
-        const ctx = _getContextValue(
-          activeCtx.previousContext || activeCtx, type, '@context');
+        const ctx = _getContextValue(typeScopedContext, type, '@context');
         if(!_isUndefined(ctx)) {
-          activeCtx = _processContext({
+          activeCtx = await _processContext({
             activeCtx,
             localCtx: ctx,
             options,
-            isTypeScopedContext: true
+            propagate: false
           });
         }
       }
@@ -3321,7 +5137,7 @@ api.expand = ({
 
   // process each key and value in element, ignoring @nest content
   let rval = {};
-  _expandObject({
+  await _expandObject({
     activeCtx,
     activeProperty,
     expandedActiveProperty,
@@ -3366,8 +5182,7 @@ api.expand = ({
 
     // drop null @values unless custom mapped
     if(values.length === 0) {
-      // TODO: use `await` to support async
-      const mapped = expansionMap({
+      const mapped = await expansionMap({
         unmappedValue: rval,
         activeCtx,
         activeProperty,
@@ -3387,6 +5202,9 @@ api.expand = ({
         'Invalid JSON-LD syntax; only strings may be language-tagged.',
         'jsonld.SyntaxError',
         {code: 'invalid language-tagged value', element: rval});
+    } else if(_processingMode(activeCtx, 1.1) && types.includes('@json') &&
+      types.length === 1) {
+      // Any value of @value is okay if @type: @json
     } else if(!types.every(t =>
       (_isAbsoluteIri(t) && !(_isString(t) && t.indexOf('_:') === 0) ||
       _isEmptyObject(t)))) {
@@ -3415,8 +5233,7 @@ api.expand = ({
     }
   } else if(count === 1 && '@language' in rval) {
     // drop objects with only @language unless custom mapped
-    // TODO: use `await` to support async
-    const mapped = expansionMap(rval, {
+    const mapped = await expansionMap(rval, {
       unmappedValue: rval,
       activeCtx,
       activeProperty,
@@ -3439,8 +5256,7 @@ api.expand = ({
     // drop empty object, top-level @value/@list, or object with only @id
     if(count === 0 || '@value' in rval || '@list' in rval ||
       (count === 1 && '@id' in rval)) {
-      // TODO: use `await` to support async
-      const mapped = expansionMap({
+      const mapped = await expansionMap({
         unmappedValue: rval,
         activeCtx,
         activeProperty,
@@ -3469,12 +5285,13 @@ api.expand = ({
  * @param expandedParent the expanded result into which to add values.
  * @param options the expansion options.
  * @param insideList true if the element is a list, false if not.
+ * @param typeScopedContext the context before reverting.
  * @param expansionMap(info) a function that can be used to custom map
  *          unmappable values (or to throw an error when they are detected);
  *          if this function returns `undefined` then the default behavior
  *          will be used.
  */
-function _expandObject({
+async function _expandObject({
   activeCtx,
   activeProperty,
   expandedActiveProperty,
@@ -3482,10 +5299,12 @@ function _expandObject({
   expandedParent,
   options = {},
   insideList,
+  typeScopedContext,
   expansionMap
 }) {
   const keys = Object.keys(element).sort();
   const nests = [];
+  let unexpandedValue;
   for(const key of keys) {
     let value = element[key];
     let expandedValue;
@@ -3577,7 +5396,7 @@ function _expandObject({
         expandedParent, '@type',
         _asArray(value).map(v =>
           _isString(v) ?
-            _expandIri(activeCtx.previousContext || activeCtx, v,
+            _expandIri(typeScopedContext, v,
               {base: true, vocab: true}, options) : v),
         {propertyIsArray: options.isFrame});
       continue;
@@ -3592,16 +5411,10 @@ function _expandObject({
         'jsonld.SyntaxError', {code: 'invalid @graph value', value});
     }
 
-    // @value must not be an object or an array (unless framing)
     if(expandedProperty === '@value') {
-      if((_isObject(value) || _isArray(value)) && !options.isFrame) {
-        throw new JsonLdError(
-          'Invalid JSON-LD syntax; "@value" value must not be an ' +
-          'object or an array.',
-          'jsonld.SyntaxError',
-          {code: 'invalid value object value', value});
-      }
-
+      // capture value for later
+      // "colliding keywords" check prevents this from being set twice
+      unexpandedValue = value;
       _addValue(
         expandedParent, '@value', value, {propertyIsArray: options.isFrame});
       continue;
@@ -3647,7 +5460,7 @@ function _expandObject({
           'jsonld.SyntaxError', {code: 'invalid @reverse value', value});
       }
 
-      expandedValue = api.expand({
+      expandedValue = await api.expand({
         activeCtx,
         activeProperty:
         '@reverse',
@@ -3701,11 +5514,11 @@ function _expandObject({
     let termCtx = activeCtx;
     const ctx = _getContextValue(activeCtx, key, '@context');
     if(!_isUndefined(ctx)) {
-      // Note: spec's `from term` var is named `isPropertyTermScopedContext`
-      termCtx = _processContext({
+      termCtx = await _processContext({
         activeCtx,
         localCtx: ctx,
-        isPropertyTermScopedContext: true,
+        propagate: true,
+        overrideProtected: true,
         options
       });
     }
@@ -3718,19 +5531,24 @@ function _expandObject({
     } else if(container.includes('@index') && _isObject(value)) {
       // handle index container (skip if value is not an object)
       const asGraph = container.includes('@graph');
-      expandedValue = _expandIndexMap({
+      const indexKey = _getContextValue(termCtx, key, '@index') || '@index';
+      const propertyIndex = indexKey !== '@index' &&
+        _expandIri(activeCtx, indexKey, {vocab: true}, options);
+
+      expandedValue = await _expandIndexMap({
         activeCtx: termCtx,
         options,
         activeProperty: key,
         value,
         expansionMap,
         asGraph,
-        indexKey: '@index'
+        indexKey,
+        propertyIndex
       });
     } else if(container.includes('@id') && _isObject(value)) {
       // handle id container (skip if value is not an object)
       const asGraph = container.includes('@graph');
-      expandedValue = _expandIndexMap({
+      expandedValue = await _expandIndexMap({
         activeCtx: termCtx,
         options,
         activeProperty: key,
@@ -3741,9 +5559,9 @@ function _expandObject({
       });
     } else if(container.includes('@type') && _isObject(value)) {
       // handle type container (skip if value is not an object)
-      expandedValue = _expandIndexMap({
+      expandedValue = await _expandIndexMap({
         // since container is `@type`, revert type scoped context when expanding
-        activeCtx: termCtx.revertTypeScopedContext(),
+        activeCtx: termCtx.revertToPreviousContext(),
         options,
         activeProperty: key,
         value,
@@ -3759,7 +5577,7 @@ function _expandObject({
         if(isList && expandedActiveProperty === '@graph') {
           nextActiveProperty = null;
         }
-        expandedValue = api.expand({
+        expandedValue = await api.expand({
           activeCtx: termCtx,
           activeProperty: nextActiveProperty,
           element: value,
@@ -3767,14 +5585,15 @@ function _expandObject({
           insideList: isList,
           expansionMap
         });
-        if(isList && _isList(expandedValue)) {
-          throw new JsonLdError(
-            'Invalid JSON-LD syntax; lists of lists are not permitted.',
-            'jsonld.SyntaxError', {code: 'list of lists'});
-        }
+      } else if(
+        _getContextValue(activeCtx, key, '@type') === '@json') {
+        expandedValue = {
+          '@type': '@json',
+          '@value': value
+        };
       } else {
         // recursively expand value with key as new active property
-        expandedValue = api.expand({
+        expandedValue = await api.expand({
           activeCtx: termCtx,
           activeProperty: key,
           element: value,
@@ -3818,7 +5637,7 @@ function _expandObject({
       !container.some(key => key === '@id' || key === '@index')) {
       // ensure expanded values are arrays
       expandedValue = _asArray(expandedValue)
-        .map(v => _isGraph(v) ? v : {'@graph': _asArray(v)});
+        .map(v => ({'@graph': _asArray(v)}));
     }
 
     // FIXME: can this be merged with code above to simplify?
@@ -3841,13 +5660,26 @@ function _expandObject({
     }
 
     // add value for property
-    // use an array except for certain keywords
-    const useArray =
-      !['@index', '@id', '@type', '@value', '@language']
-        .includes(expandedProperty);
+    // special keywords handled above
     _addValue(expandedParent, expandedProperty, expandedValue, {
-      propertyIsArray: useArray
+      propertyIsArray: true
     });
+  }
+
+  // @value must not be an object or an array (unless framing) or if @type is
+  // @json
+  if('@value' in expandedParent) {
+    if(expandedParent['@type'] === '@json' && _processingMode(activeCtx, 1.1)) {
+      // allow any value, to be verified when the object is fully expanded and
+      // the @type is @json.
+    } else if((_isObject(unexpandedValue) || _isArray(unexpandedValue)) &&
+      !options.isFrame) {
+      throw new JsonLdError(
+        'Invalid JSON-LD syntax; "@value" value must not be an ' +
+        'object or an array.',
+        'jsonld.SyntaxError',
+        {code: 'invalid value object value', value: unexpandedValue});
+    }
   }
 
   // expand each nested key
@@ -3861,7 +5693,7 @@ function _expandObject({
           'jsonld.SyntaxError',
           {code: 'invalid @nest value', value: nv});
       }
-      _expandObject({
+      await _expandObject({
         activeCtx,
         activeProperty,
         expandedActiveProperty,
@@ -3979,9 +5811,9 @@ function _expandLanguageMap(activeCtx, languageMap, options) {
   return rval;
 }
 
-function _expandIndexMap(
+async function _expandIndexMap(
   {activeCtx, options, activeProperty, value, expansionMap, asGraph,
-    indexKey}) {
+    indexKey, propertyIndex}) {
   const rval = [];
   const keys = Object.keys(value).sort();
   const isTypeIndex = indexKey === '@type';
@@ -3990,10 +5822,10 @@ function _expandIndexMap(
     if(isTypeIndex) {
       const ctx = _getContextValue(activeCtx, key, '@context');
       if(!_isUndefined(ctx)) {
-        activeCtx = _processContext({
+        activeCtx = await _processContext({
           activeCtx,
           localCtx: ctx,
-          isTypeScopedContext: true,
+          propagate: false,
           options
         });
       }
@@ -4004,16 +5836,7 @@ function _expandIndexMap(
       val = [val];
     }
 
-    // expand for @type, but also for @none
-    const expandedKey = _expandIri(activeCtx, key, {vocab: true}, options);
-    if(indexKey === '@id') {
-      // expand document relative
-      key = _expandIri(activeCtx, key, {base: true}, options);
-    } else if(isTypeIndex) {
-      key = expandedKey;
-    }
-
-    val = api.expand({
+    val = await api.expand({
       activeCtx,
       activeProperty,
       element: val,
@@ -4022,6 +5845,27 @@ function _expandIndexMap(
       insideIndex: true,
       expansionMap
     });
+
+    // expand for @type, but also for @none
+    let expandedKey;
+    if(propertyIndex) {
+      if(key === '@none') {
+        expandedKey = '@none';
+      } else {
+        expandedKey = _expandValue(
+          {activeCtx, activeProperty: indexKey, value: key, options});
+      }
+    } else {
+      expandedKey = _expandIri(activeCtx, key, {vocab: true}, options);
+    }
+
+    if(indexKey === '@id') {
+      // expand document relative
+      key = _expandIri(activeCtx, key, {base: true}, options);
+    } else if(isTypeIndex) {
+      key = expandedKey;
+    }
+
     for(let item of val) {
       // If this is also a @graph container, turn items into graphs
       if(asGraph && !_isGraph(item)) {
@@ -4035,6 +5879,23 @@ function _expandIndexMap(
         } else {
           item['@type'] = [key];
         }
+      } else if(_isValue(item) &&
+        !['@language', '@type', '@index'].includes(indexKey)) {
+        throw new JsonLdError(
+          'Invalid JSON-LD syntax; Attempt to add illegal key to value ' +
+          `object: "${indexKey}".`,
+          'jsonld.SyntaxError',
+          {code: 'invalid value object', value: item});
+      } else if(propertyIndex) {
+        // index is a property to be expanded, and values interpreted for that
+        // property
+        if(expandedKey !== '@none') {
+          // expand key as a value
+          _addValue(item, propertyIndex, expandedKey, {
+            propertyIsArray: true,
+            prependValue: true
+          });
+        }
       } else if(expandedKey !== '@none' && !(indexKey in item)) {
         item[indexKey] = key;
       }
@@ -4044,7 +5905,7 @@ function _expandIndexMap(
   return rval;
 }
 
-},{"./JsonLdError":3,"./context":10,"./graphTypes":17,"./types":21,"./url":22,"./util":23}],14:[function(require,module,exports){
+},{"./JsonLdError":31,"./context":39,"./graphTypes":46,"./types":50,"./url":51,"./util":52}],43:[function(require,module,exports){
 /*
  * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
  */
@@ -4084,7 +5945,7 @@ api.flatten = input => {
   return flattened;
 };
 
-},{"./graphTypes":17,"./nodeMap":19}],15:[function(require,module,exports){
+},{"./graphTypes":46,"./nodeMap":48}],44:[function(require,module,exports){
 /*
  * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
  */
@@ -4741,12 +6602,13 @@ function _valueMatch(pattern, value) {
   return true;
 }
 
-},{"./JsonLdError":3,"./context":10,"./graphTypes":17,"./nodeMap":19,"./types":21,"./util":23}],16:[function(require,module,exports){
+},{"./JsonLdError":31,"./context":39,"./graphTypes":46,"./nodeMap":48,"./types":50,"./util":52}],45:[function(require,module,exports){
 /*
  * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
  */
 'use strict';
 
+const JsonLdError = require('./JsonLdError');
 const graphTypes = require('./graphTypes');
 const types = require('./types');
 const util = require('./util');
@@ -4761,6 +6623,7 @@ const {
   RDF_TYPE,
   // RDF_PLAIN_LITERAL,
   // RDF_XML_LITERAL,
+  RDF_JSON_LITERAL,
   // RDF_OBJECT,
   // RDF_LANGSTRING,
 
@@ -4968,24 +6831,6 @@ api.fromRDF = async (
         }
       }
 
-      // the list is nested in another list
-      if(property === RDF_FIRST) {
-        // empty list
-        if(node['@id'] === RDF_NIL) {
-          // can't convert rdf:nil to a @list object because it would
-          // result in a list of lists which isn't supported
-          continue;
-        }
-
-        // preserve list head
-        if(RDF_REST in graphObject[head['@id']]) {
-          head = graphObject[head['@id']][RDF_REST][0];
-        }
-
-        list.pop();
-        listNodes.pop();
-      }
-
       // transform list into @list object
       delete head['@id'];
       head['@list'] = list.reverse();
@@ -5047,6 +6892,17 @@ function _RDFToObject(o, useNativeTypes) {
     if(!type) {
       type = XSD_STRING;
     }
+    if(type === RDF_JSON_LITERAL) {
+      type = '@json';
+      try {
+        rval['@value'] = JSON.parse(rval['@value']);
+      } catch(e) {
+        throw new JsonLdError(
+          'JSON literal could not be parsed.',
+          'jsonld.InvalidJsonLiteral',
+          {code: 'invalid JSON literal', value: rval['@value'], cause: e});
+      }
+    }
     // use native types for certain xsd types
     if(useNativeTypes) {
       if(type === XSD_BOOLEAN) {
@@ -5077,7 +6933,7 @@ function _RDFToObject(o, useNativeTypes) {
   return rval;
 }
 
-},{"./constants":9,"./graphTypes":17,"./types":21,"./util":23}],17:[function(require,module,exports){
+},{"./JsonLdError":31,"./constants":38,"./graphTypes":46,"./types":50,"./util":52}],46:[function(require,module,exports){
 /*
  * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
  */
@@ -5198,7 +7054,7 @@ api.isBlankNode = v => {
   return false;
 };
 
-},{"./types":21}],18:[function(require,module,exports){
+},{"./types":50}],47:[function(require,module,exports){
 (function (process,global){
 /**
  * A JavaScript implementation of the JSON-LD API.
@@ -5206,7 +7062,7 @@ api.isBlankNode = v => {
  * @author Dave Longley
  *
  * @license BSD 3-Clause License
- * Copyright (c) 2011-2017 Digital Bazaar, Inc.
+ * Copyright (c) 2011-2019 Digital Bazaar, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -5237,8 +7093,10 @@ api.isBlankNode = v => {
  */
 const canonize = require('rdf-canonize');
 const util = require('./util');
+const ContextResolver = require('./ContextResolver');
 const IdentifierIssuer = util.IdentifierIssuer;
 const JsonLdError = require('./JsonLdError');
+const LRU = require('lru-cache');
 const NQuads = require('./NQuads');
 const Rdfa = require('./Rdfa');
 
@@ -5263,8 +7121,7 @@ const {
 
 const {
   getInitialContext: _getInitialContext,
-  process: _processContext,
-  getAllContexts: _getAllContexts
+  process: _processContext
 } = require('./context');
 
 const {
@@ -5289,6 +7146,14 @@ const _browser = !_nodejs &&
 // attaches jsonld API to the given object
 const wrapper = function(jsonld) {
 
+/** Registered RDF dataset parsers hashed by content-type. */
+const _rdfParsers = {};
+
+// resolved context cache
+// TODO: consider basing max on context size rather than number
+const RESOLVED_CONTEXT_CACHE_MAX_SIZE = 100;
+const _resolvedContextCache = new LRU({max: RESOLVED_CONTEXT_CACHE_MAX_SIZE});
+
 /* Core API */
 
 /**
@@ -5306,7 +7171,7 @@ const wrapper = function(jsonld) {
  *          [expandContext] a context to expand with.
  *          [skipExpansion] true to assume the input is expanded and skip
  *            expansion, false not to, defaults to false.
- *          [documentLoader(url, callback(err, remoteDoc))] the document loader.
+ *          [documentLoader(url, options)] the document loader.
  *          [expansionMap(info)] a function that can be used to custom map
  *            unmappable values (or to throw an error when they are detected);
  *            if this function returns `undefined` then the default behavior
@@ -5316,11 +7181,11 @@ const wrapper = function(jsonld) {
  *            unmappable values (or to throw an error when they are detected);
  *            if this function returns `undefined` then the default behavior
  *            will be used.
- * @param [callback(err, compacted)] called once the operation completes.
+ *          [contextResolver] internal use only.
  *
  * @return a Promise that resolves to the compacted output.
  */
-jsonld.compact = util.callbackify(async function(input, ctx, options) {
+jsonld.compact = async function(input, ctx, options) {
   if(arguments.length < 2) {
     throw new TypeError('Could not compact, too few arguments.');
   }
@@ -5344,7 +7209,9 @@ jsonld.compact = util.callbackify(async function(input, ctx, options) {
     graph: false,
     skipExpansion: false,
     link: false,
-    issuer: new IdentifierIssuer('_:b')
+    issuer: new IdentifierIssuer('_:b'),
+    contextResolver: new ContextResolver(
+      {sharedCache: _resolvedContextCache})
   });
   if(options.link) {
     // force skip expansion when linking, "link" is not part of the public
@@ -5368,7 +7235,7 @@ jsonld.compact = util.callbackify(async function(input, ctx, options) {
     _getInitialContext(options), ctx, options);
 
   // do compaction
-  let compacted = _compact({
+  let compacted = await _compact({
     activeCtx,
     element: expanded,
     options,
@@ -5446,7 +7313,7 @@ jsonld.compact = util.callbackify(async function(input, ctx, options) {
   }
 
   return compacted;
-});
+};
 
 /**
  * Performs JSON-LD expansion.
@@ -5457,23 +7324,25 @@ jsonld.compact = util.callbackify(async function(input, ctx, options) {
  *          [expandContext] a context to expand with.
  *          [keepFreeFloatingNodes] true to keep free-floating nodes,
  *            false not to, defaults to false.
- *          [documentLoader(url, callback(err, remoteDoc))] the document loader.
+ *          [documentLoader(url, options)] the document loader.
  *          [expansionMap(info)] a function that can be used to custom map
  *            unmappable values (or to throw an error when they are detected);
  *            if this function returns `undefined` then the default behavior
  *            will be used.
- * @param [callback(err, expanded)] called once the operation completes.
+ *          [contextResolver] internal use only.
  *
  * @return a Promise that resolves to the expanded output.
  */
-jsonld.expand = util.callbackify(async function(input, options) {
+jsonld.expand = async function(input, options) {
   if(arguments.length < 1) {
     throw new TypeError('Could not expand, too few arguments.');
   }
 
   // set default options
   options = _setDefaults(options, {
-    keepFreeFloatingNodes: false
+    keepFreeFloatingNodes: false,
+    contextResolver: new ContextResolver(
+      {sharedCache: _resolvedContextCache})
   });
   if(options.expansionMap === false) {
     options.expansionMap = undefined;
@@ -5518,17 +7387,14 @@ jsonld.expand = util.callbackify(async function(input, options) {
     options.base = defaultBase || '';
   }
 
-  // get all contexts in `toResolve`
-  await _getAllContexts(toResolve, options);
-
   // process any additional contexts
   let activeCtx = _getInitialContext(options);
-  contextsToProcess.forEach(localCtx => {
-    activeCtx = _processContext({activeCtx, localCtx, options});
-  });
+  for(const localCtx of contextsToProcess) {
+    activeCtx = await _processContext({activeCtx, localCtx, options});
+  }
 
   // expand resolved input
-  let expanded = _expand({
+  let expanded = await _expand({
     activeCtx,
     element: toResolve.input,
     options,
@@ -5549,7 +7415,7 @@ jsonld.expand = util.callbackify(async function(input, options) {
   }
 
   return expanded;
-});
+};
 
 /**
  * Performs JSON-LD flattening.
@@ -5559,12 +7425,12 @@ jsonld.expand = util.callbackify(async function(input, options) {
  * @param [options] the options to use:
  *          [base] the base IRI to use.
  *          [expandContext] a context to expand with.
- *          [documentLoader(url, callback(err, remoteDoc))] the document loader.
- * @param [callback(err, flattened)] called once the operation completes.
+ *          [documentLoader(url, options)] the document loader.
+ *          [contextResolver] internal use only.
  *
  * @return a Promise that resolves to the flattened output.
  */
-jsonld.flatten = util.callbackify(async function(input, ctx, options) {
+jsonld.flatten = async function(input, ctx, options) {
   if(arguments.length < 1) {
     return new TypeError('Could not flatten, too few arguments.');
   }
@@ -5577,7 +7443,9 @@ jsonld.flatten = util.callbackify(async function(input, ctx, options) {
 
   // set default options
   options = _setDefaults(options, {
-    base: _isString(input) ? input : ''
+    base: _isString(input) ? input : '',
+    contextResolver: new ContextResolver(
+      {sharedCache: _resolvedContextCache})
   });
 
   // expand input
@@ -5597,7 +7465,7 @@ jsonld.flatten = util.callbackify(async function(input, ctx, options) {
   const compacted = await jsonld.compact(flattened, ctx, options);
 
   return compacted;
-});
+};
 
 /**
  * Performs JSON-LD framing.
@@ -5612,12 +7480,12 @@ jsonld.flatten = util.callbackify(async function(input, ctx, options) {
  *          [explicit] default @explicit flag (default: false).
  *          [requireAll] default @requireAll flag (default: true).
  *          [omitDefault] default @omitDefault flag (default: false).
- *          [documentLoader(url, callback(err, remoteDoc))] the document loader.
- * @param [callback(err, framed)] called once the operation completes.
+ *          [documentLoader(url, options)] the document loader.
+ *          [contextResolver] internal use only.
  *
  * @return a Promise that resolves to the framed output.
  */
-jsonld.frame = util.callbackify(async function(input, frame, options) {
+jsonld.frame = async function(input, frame, options) {
   if(arguments.length < 2) {
     throw new TypeError('Could not frame, too few arguments.');
   }
@@ -5630,7 +7498,9 @@ jsonld.frame = util.callbackify(async function(input, frame, options) {
     requireAll: true,
     omitDefault: false,
     pruneBlankNodeIdentifiers: true,
-    bnodesToClear: []
+    bnodesToClear: [],
+    contextResolver: new ContextResolver(
+      {sharedCache: _resolvedContextCache})
   });
 
   // if frame is a string, attempt to dereference remote document
@@ -5659,18 +7529,17 @@ jsonld.frame = util.callbackify(async function(input, frame, options) {
   const expanded = await jsonld.expand(input, options);
 
   // expand frame
-  const opts = util.clone(options);
+  const opts = {...options};
   opts.isFrame = true;
   opts.keepFreeFloatingNodes = true;
   const expandedFrame = await jsonld.expand(frame, opts);
 
   // if the unexpanded frame includes a key expanding to @graph, frame the
   // default graph, otherwise, the merged graph
-  let framed;
   // FIXME should look for aliases of @graph
   opts.merged = !('@graph' in frame);
   // do framing
-  framed = _frameMergedOrDefault(expanded, expandedFrame, opts);
+  const framed = _frameMergedOrDefault(expanded, expandedFrame, opts);
 
   // compact result (force @graph option to true, skip expansion,
   // check for linked embeds)
@@ -5681,7 +7550,7 @@ jsonld.frame = util.callbackify(async function(input, frame, options) {
   const compacted = await jsonld.compact(framed, frameContext, opts);
 
   return compacted;
-});
+};
 
 /**
  * **Experimental**
@@ -5693,12 +7562,12 @@ jsonld.frame = util.callbackify(async function(input, frame, options) {
  * @param [options] the options to use:
  *          [base] the base IRI to use.
  *          [expandContext] a context to expand with.
- *          [documentLoader(url, callback(err, remoteDoc))] the document loader.
- * @param [callback(err, linked)] called once the operation completes.
+ *          [documentLoader(url, options)] the document loader.
+ *          [contextResolver] internal use only.
  *
  * @return a Promise that resolves to the linked output.
  */
-jsonld.link = util.callbackify(async function(input, ctx, options) {
+jsonld.link = async function(input, ctx, options) {
   // API matches running frame with a wildcard frame and embed: '@link'
   // get arguments
   const frame = {};
@@ -5707,7 +7576,7 @@ jsonld.link = util.callbackify(async function(input, ctx, options) {
   }
   frame['@embed'] = '@link';
   return jsonld.frame(input, frame, options);
-});
+};
 
 /**
  * Performs RDF dataset normalization on the given input. The input is JSON-LD
@@ -5727,14 +7596,13 @@ jsonld.link = util.callbackify(async function(input, ctx, options) {
  *            'application/n-quads' for N-Quads.
  *          [format] the format if output is a string:
  *            'application/n-quads' for N-Quads.
- *          [documentLoader(url, callback(err, remoteDoc))] the document loader.
+ *          [documentLoader(url, options)] the document loader.
  *          [useNative] true to use a native canonize algorithm
- * @param [callback(err, normalized)] called once the operation completes.
+ *          [contextResolver] internal use only.
  *
  * @return a Promise that resolves to the normalized output.
  */
-jsonld.normalize = jsonld.canonize = util.callbackify(async function(
-  input, options) {
+jsonld.normalize = jsonld.canonize = async function(input, options) {
   if(arguments.length < 1) {
     throw new TypeError('Could not canonize, too few arguments.');
   }
@@ -5743,7 +7611,9 @@ jsonld.normalize = jsonld.canonize = util.callbackify(async function(
   options = _setDefaults(options, {
     base: _isString(input) ? input : '',
     algorithm: 'URDNA2015',
-    skipExpansion: false
+    skipExpansion: false,
+    contextResolver: new ContextResolver(
+      {sharedCache: _resolvedContextCache})
   });
   if('inputFormat' in options) {
     if(options.inputFormat !== 'application/n-quads' &&
@@ -5760,14 +7630,14 @@ jsonld.normalize = jsonld.canonize = util.callbackify(async function(
   }
 
   // convert to RDF dataset then do normalization
-  const opts = util.clone(options);
+  const opts = {...options};
   delete opts.format;
   opts.produceGeneralizedRdf = false;
   const dataset = await jsonld.toRDF(input, opts);
 
   // do canonicalization
   return canonize.canonize(dataset, options);
-});
+};
 
 /**
  * Converts an RDF dataset to JSON-LD.
@@ -5782,11 +7652,10 @@ jsonld.normalize = jsonld.canonize = util.callbackify(async function(
  *            (default: false).
  *          [useNativeTypes] true to convert XSD types into native types
  *            (boolean, integer, double), false not to (default: false).
- * @param [callback(err, output)] called once the operation completes.
  *
  * @return a Promise that resolves to the JSON-LD document.
  */
-jsonld.fromRDF = util.callbackify(async function(dataset, options) {
+jsonld.fromRDF = async function(dataset, options) {
   if(arguments.length < 1) {
     throw new TypeError('Could not convert from RDF, too few arguments.');
   }
@@ -5796,7 +7665,8 @@ jsonld.fromRDF = util.callbackify(async function(dataset, options) {
     format: _isString(dataset) ? 'application/n-quads' : undefined
   });
 
-  let {format, rdfParser} = options;
+  const {format} = options;
+  let {rdfParser} = options;
 
   // handle special format
   if(format) {
@@ -5812,34 +7682,10 @@ jsonld.fromRDF = util.callbackify(async function(dataset, options) {
     rdfParser = () => dataset;
   }
 
-  // TODO: call `normalizeAsyncFn` on parser fn
-
-  // rdfParser can be callback, promise-based, or synchronous
-  let parsedDataset;
-  if(rdfParser.length > 1) {
-    // convert callback-based rdf parser to promise-based
-    parsedDataset = new Promise((resolve, reject) => {
-      rdfParser(dataset, (err, dataset) => {
-        if(err) {
-          reject(err);
-        } else {
-          resolve(dataset);
-        }
-      });
-    });
-  } else {
-    parsedDataset = Promise.resolve(rdfParser(dataset));
-  }
-
-  parsedDataset = await parsedDataset;
-
-  // back-compat with old parsers that produced legacy dataset format
-  if(!Array.isArray(parsedDataset)) {
-    parsedDataset = NQuads.legacyDatasetToQuads(parsedDataset);
-  }
-
+  // rdfParser must be synchronous or return a promise, no callback support
+  const parsedDataset = await rdfParser(dataset);
   return _fromRDF(parsedDataset, options);
-});
+};
 
 /**
  * Outputs the RDF dataset found in the given JSON-LD object.
@@ -5854,12 +7700,12 @@ jsonld.fromRDF = util.callbackify(async function(dataset, options) {
  *            'application/n-quads' for N-Quads.
  *          [produceGeneralizedRdf] true to output generalized RDF, false
  *            to produce only standard RDF (default: false).
- *          [documentLoader(url, callback(err, remoteDoc))] the document loader.
- * @param [callback(err, dataset)] called once the operation completes.
+ *          [documentLoader(url, options)] the document loader.
+ *          [contextResolver] internal use only.
  *
  * @return a Promise that resolves to the RDF dataset.
  */
-jsonld.toRDF = util.callbackify(async function(input, options) {
+jsonld.toRDF = async function(input, options) {
   if(arguments.length < 1) {
     throw new TypeError('Could not convert to RDF, too few arguments.');
   }
@@ -5867,7 +7713,9 @@ jsonld.toRDF = util.callbackify(async function(input, options) {
   // set default options
   options = _setDefaults(options, {
     base: _isString(input) ? input : '',
-    skipExpansion: false
+    skipExpansion: false,
+    contextResolver: new ContextResolver(
+      {sharedCache: _resolvedContextCache})
   });
 
   // TODO: support toRDF custom map?
@@ -5892,7 +7740,7 @@ jsonld.toRDF = util.callbackify(async function(input, options) {
   }
 
   return dataset;
-});
+};
 
 /**
  * **Experimental**
@@ -5905,26 +7753,28 @@ jsonld.toRDF = util.callbackify(async function(input, options) {
  *          [base] the base IRI to use.
  *          [expandContext] a context to expand with.
  *          [issuer] a jsonld.IdentifierIssuer to use to label blank nodes.
- *          [documentLoader(url, callback(err, remoteDoc))] the document loader.
- * @param [callback(err, nodeMap)] called once the operation completes.
+ *          [documentLoader(url, options)] the document loader.
+ *          [contextResolver] internal use only.
  *
  * @return a Promise that resolves to the merged node map.
  */
-jsonld.createNodeMap = util.callbackify(async function(input, options) {
+jsonld.createNodeMap = async function(input, options) {
   if(arguments.length < 1) {
     throw new TypeError('Could not create node map, too few arguments.');
   }
 
   // set default options
   options = _setDefaults(options, {
-    base: _isString(input) ? input : ''
+    base: _isString(input) ? input : '',
+    contextResolver: new ContextResolver(
+      {sharedCache: _resolvedContextCache})
   });
 
   // expand input
   const expanded = await jsonld.expand(input, options);
 
   return _createMergedNodeMap(expanded, options);
-});
+};
 
 /**
  * **Experimental**
@@ -5942,12 +7792,12 @@ jsonld.createNodeMap = util.callbackify(async function(input, options) {
  *            the ID has been defined; note that this may not prevent merging
  *            new properties where a node is in the `object` position
  *            (default: true).
- *          [documentLoader(url, callback(err, remoteDoc))] the document loader.
- * @param [callback(err, merged)] called once the operation completes.
+ *          [documentLoader(url, options)] the document loader.
+ *          [contextResolver] internal use only.
  *
  * @return a Promise that resolves to the merged output.
  */
-jsonld.merge = util.callbackify(async function(docs, ctx, options) {
+jsonld.merge = async function(docs, ctx, options) {
   if(arguments.length < 1) {
     throw new TypeError('Could not merge, too few arguments.');
   }
@@ -5962,11 +7812,14 @@ jsonld.merge = util.callbackify(async function(docs, ctx, options) {
   }
 
   // set default options
-  options = _setDefaults(options, {});
+  options = _setDefaults(options, {
+    contextResolver: new ContextResolver(
+      {sharedCache: _resolvedContextCache})
+  });
 
   // expand all documents
   const expanded = await Promise.all(docs.map(doc => {
-    const opts = Object.assign({}, options);
+    const opts = {...options};
     return jsonld.expand(doc, opts);
   }));
 
@@ -6031,22 +7884,18 @@ jsonld.merge = util.callbackify(async function(docs, ctx, options) {
   const compacted = await jsonld.compact(flattened, ctx, options);
 
   return compacted;
-});
+};
 
 /**
- * The default document loader for external documents. If the environment
- * is node.js, a callback-continuation-style document loader is used; otherwise,
- * a promises-style document loader is used.
+ * The default document loader for external documents.
  *
  * @param url the URL to load.
- * @param callback(err, remoteDoc) called once the operation completes,
- *          if using a non-promises API.
  *
- * @return a promise, if using a promises API.
+ * @return a promise that resolves to the remote document.
  */
 Object.defineProperty(jsonld, 'documentLoader', {
   get: () => jsonld._documentLoader,
-  set: v => jsonld._documentLoader = util.normalizeDocumentLoader(v)
+  set: v => jsonld._documentLoader = v
 });
 // default document loader not implemented
 jsonld.documentLoader = async url => {
@@ -6057,34 +7906,25 @@ jsonld.documentLoader = async url => {
 };
 
 /**
- * Deprecated default document loader. Do not use or override.
- */
-jsonld.loadDocument = util.callbackify(async function() {
-  return jsonld.documentLoader.apply(null, arguments);
-});
-
-/**
  * Gets a remote JSON-LD document using the default document loader or
  * one given in the passed options.
  *
  * @param url the URL to fetch.
  * @param [options] the options to use:
  *          [documentLoader] the document loader to use.
- * @param [callback(err, remoteDoc)] called once the operation completes.
  *
  * @return a Promise that resolves to the retrieved remote document.
  */
-jsonld.get = util.callbackify(async function(url, options) {
+jsonld.get = async function(url, options) {
   let load;
   if(typeof options.documentLoader === 'function') {
-    load = util.normalizeDocumentLoader(options.documentLoader);
+    load = options.documentLoader;
   } else {
     load = jsonld.documentLoader;
   }
 
   const remoteDoc = await load(url);
 
-  // TODO: can this be moved into `normalizeDocumentLoader`?
   try {
     if(!remoteDoc.document) {
       throw new JsonLdError(
@@ -6105,25 +7945,27 @@ jsonld.get = util.callbackify(async function(url, options) {
   }
 
   return remoteDoc;
-});
+};
 
 /**
  * Processes a local context, resolving any URLs as necessary, and returns a
- * new active context in its callback.
+ * new active context.
  *
  * @param activeCtx the current active context.
  * @param localCtx the local context to process.
  * @param [options] the options to use:
- *          [documentLoader(url, callback(err, remoteDoc))] the document loader.
- * @param [callback(err, activeCtx)] called once the operation completes.
+ *          [documentLoader(url, options)] the document loader.
+ *          [contextResolver] internal use only.
  *
  * @return a Promise that resolves to the new active context.
  */
-jsonld.processContext = util.callbackify(async function(
+jsonld.processContext = async function(
   activeCtx, localCtx, options) {
   // set default options
   options = _setDefaults(options, {
-    base: ''
+    base: '',
+    contextResolver: new ContextResolver(
+      {sharedCache: _resolvedContextCache})
   });
 
   // return initial context early for null context
@@ -6136,10 +7978,9 @@ jsonld.processContext = util.callbackify(async function(
   if(!(_isObject(localCtx) && '@context' in localCtx)) {
     localCtx = {'@context': localCtx};
   }
-  const ctx = await _getAllContexts(localCtx, options);
 
-  return _processContext({activeCtx, localCtx: ctx, options});
-});
+  return _processContext({activeCtx, localCtx, options});
+};
 
 // backwards compatibility
 jsonld.getContextValue = require('./context').getContextValue;
@@ -6171,29 +8012,15 @@ jsonld.useDocumentLoader = function(type) {
     jsonld, Array.prototype.slice.call(arguments, 1));
 };
 
-/** Registered RDF dataset parsers hashed by content-type. */
-const _rdfParsers = {};
-
 /**
  * Registers an RDF dataset parser by content-type, for use with
- * jsonld.fromRDF. An RDF dataset parser will always be given two parameters,
- * a string of input and a callback. An RDF dataset parser can be synchronous
- * or asynchronous.
- *
- * If the parser function returns undefined or null then it will be assumed to
- * be asynchronous w/a continuation-passing style and the callback parameter
- * given to the parser MUST be invoked.
- *
- * If it returns a Promise, then it will be assumed to be asynchronous, but the
- * callback parameter MUST NOT be invoked. It should instead be ignored.
- *
- * If it returns an RDF dataset, it will be assumed to be synchronous and the
- * callback parameter MUST NOT be invoked. It should instead be ignored.
+ * jsonld.fromRDF. An RDF dataset parser will always be given one parameter,
+ * a string of input. An RDF dataset parser can be synchronous or
+ * asynchronous (by returning a promise).
  *
  * @param contentType the content-type for the parser.
- * @param parser(input, callback(err, dataset)) the parser function (takes a
- *          string as a parameter and either returns null/undefined and uses
- *          the given callback, returns a Promise, or returns an RDF dataset).
+ * @param parser(input) the parser function (takes a string as a parameter
+ *          and either returns an RDF dataset or a Promise that resolves to one.
  */
 jsonld.registerRDFParser = function(contentType, parser) {
   _rdfParsers[contentType] = parser;
@@ -6277,7 +8104,7 @@ wrapper(factory);
 module.exports = factory;
 
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./JsonLdError":3,"./JsonLdProcessor":4,"./NQuads":5,"./Rdfa":6,"./RequestQueue":7,"./compact":8,"./context":10,"./documentLoaders/node":11,"./documentLoaders/xhr":12,"./expand":13,"./flatten":14,"./frame":15,"./fromRdf":16,"./graphTypes":17,"./nodeMap":19,"./toRdf":20,"./types":21,"./url":22,"./util":23,"_process":31,"rdf-canonize":41}],19:[function(require,module,exports){
+},{"./ContextResolver":30,"./JsonLdError":31,"./JsonLdProcessor":32,"./NQuads":33,"./Rdfa":34,"./RequestQueue":35,"./compact":37,"./context":39,"./documentLoaders/node":40,"./documentLoaders/xhr":41,"./expand":42,"./flatten":43,"./frame":44,"./fromRdf":45,"./graphTypes":46,"./nodeMap":48,"./toRdf":49,"./types":50,"./url":51,"./util":52,"_process":60,"lru-cache":53,"rdf-canonize":70}],48:[function(require,module,exports){
 /*
  * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
  */
@@ -6327,8 +8154,8 @@ api.createMergedNodeMap = (input, options) => {
 api.createNodeMap = (input, graphs, graph, issuer, name, list) => {
   // recurse through array
   if(types.isArray(input)) {
-    for(let i = 0; i < input.length; ++i) {
-      api.createNodeMap(input[i], graphs, graph, issuer, undefined, list);
+    for(const node of input) {
+      api.createNodeMap(node, graphs, graph, issuer, undefined, list);
     }
     return;
   }
@@ -6354,6 +8181,11 @@ api.createNodeMap = (input, graphs, graph, issuer, name, list) => {
       list.push(input);
     }
     return;
+  } else if(list && graphTypes.isList(input)) {
+    const _list = [];
+    api.createNodeMap(input['@list'], graphs, graph, issuer, name, _list);
+    list.push({'@list': _list});
+    return;
   }
 
   // Note: At this point, input must be a subject.
@@ -6361,8 +8193,7 @@ api.createNodeMap = (input, graphs, graph, issuer, name, list) => {
   // spec requires @type to be named first, so assign names early
   if('@type' in input) {
     const types = input['@type'];
-    for(let i = 0; i < types.length; ++i) {
-      const type = types[i];
+    for(const type of types) {
       if(type.indexOf('_:') === 0) {
         issuer.getId(type);
       }
@@ -6385,9 +8216,7 @@ api.createNodeMap = (input, graphs, graph, issuer, name, list) => {
   const subject = subjects[name] = subjects[name] || {};
   subject['@id'] = name;
   const properties = Object.keys(input).sort();
-  for(let pi = 0; pi < properties.length; ++pi) {
-    let property = properties[pi];
-
+  for(let property of properties) {
     // skip @id
     if(property === '@id') {
       continue;
@@ -6399,8 +8228,7 @@ api.createNodeMap = (input, graphs, graph, issuer, name, list) => {
       const reverseMap = input['@reverse'];
       for(const reverseProperty in reverseMap) {
         const items = reverseMap[reverseProperty];
-        for(let ii = 0; ii < items.length; ++ii) {
-          const item = items[ii];
+        for(const item of items) {
           let itemName = item['@id'];
           if(graphTypes.isBlankNode(item)) {
             itemName = issuer.getId(itemName);
@@ -6451,9 +8279,7 @@ api.createNodeMap = (input, graphs, graph, issuer, name, list) => {
       util.addValue(subject, property, [], {propertyIsArray: true});
       continue;
     }
-    for(let oi = 0; oi < objects.length; ++oi) {
-      let o = objects[oi];
-
+    for(let o of objects) {
       if(property === '@type') {
         // rename @type blank nodes
         o = (o.indexOf('_:') === 0) ? issuer.getId(o) : o;
@@ -6470,6 +8296,10 @@ api.createNodeMap = (input, graphs, graph, issuer, name, list) => {
           subject, property, {'@id': id},
           {propertyIsArray: true, allowDuplicate: false});
         api.createNodeMap(o, graphs, graph, issuer, id);
+      } else if(graphTypes.isValue(o)) {
+        util.addValue(
+          subject, property, o,
+          {propertyIsArray: true, allowDuplicate: false});
       } else if(graphTypes.isList(o)) {
         // handle @list
         const _list = [];
@@ -6529,8 +8359,7 @@ api.mergeNodeMaps = graphs => {
   // add all non-default graphs to default graph
   const defaultGraph = graphs['@default'];
   const graphNames = Object.keys(graphs).sort();
-  for(let i = 0; i < graphNames.length; ++i) {
-    const graphName = graphNames[i];
+  for(const graphName of graphNames) {
     if(graphName === '@default') {
       continue;
     }
@@ -6545,9 +8374,8 @@ api.mergeNodeMaps = graphs => {
       subject['@graph'] = [];
     }
     const graph = subject['@graph'];
-    const ids = Object.keys(nodeMap).sort();
-    for(let ii = 0; ii < ids.length; ++ii) {
-      const node = nodeMap[ids[ii]];
+    for(const id of Object.keys(nodeMap).sort()) {
+      const node = nodeMap[id];
       // only add full subjects
       if(!graphTypes.isSubjectReference(node)) {
         graph.push(node);
@@ -6557,7 +8385,7 @@ api.mergeNodeMaps = graphs => {
   return defaultGraph;
 };
 
-},{"./JsonLdError":3,"./context":10,"./graphTypes":17,"./types":21,"./util":23}],20:[function(require,module,exports){
+},{"./JsonLdError":31,"./context":39,"./graphTypes":46,"./types":50,"./util":52}],49:[function(require,module,exports){
 /*
  * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
  */
@@ -6566,6 +8394,7 @@ api.mergeNodeMaps = graphs => {
 const {createNodeMap} = require('./nodeMap');
 const {isKeyword} = require('./context');
 const graphTypes = require('./graphTypes');
+const jsonCanonicalize = require('canonicalize');
 const types = require('./types');
 const util = require('./util');
 
@@ -6578,6 +8407,7 @@ const {
   RDF_TYPE,
   // RDF_PLAIN_LITERAL,
   // RDF_XML_LITERAL,
+  RDF_JSON_LITERAL,
   // RDF_OBJECT,
   RDF_LANGSTRING,
 
@@ -6645,8 +8475,7 @@ api.toRDF = (input, options) => {
  */
 function _graphToRDF(dataset, graph, graphTerm, issuer, options) {
   const ids = Object.keys(graph).sort();
-  for(let i = 0; i < ids.length; ++i) {
-    const id = ids[i];
+  for(const id of ids) {
     const node = graph[id];
     const properties = Object.keys(node).sort();
     for(let property of properties) {
@@ -6686,22 +8515,16 @@ function _graphToRDF(dataset, graph, graphTerm, issuer, options) {
           continue;
         }
 
-        // convert @list to triples
-        if(graphTypes.isList(item)) {
-          _listToRDF(
-            item['@list'], issuer, subject, predicate, dataset, graphTerm);
-        } else {
-          // convert value or node object to triple
-          const object = _objectToRDF(item);
-          // skip null objects (they are relative IRIs)
-          if(object) {
-            dataset.push({
-              subject,
-              predicate,
-              object,
-              graph: graphTerm
-            });
-          }
+        // convert list, value or node object to triple
+        const object = _objectToRDF(item, issuer, dataset, graphTerm);
+        // skip null objects (they are relative IRIs)
+        if(object) {
+          dataset.push({
+            subject,
+            predicate,
+            object,
+            graph: graphTerm
+          });
         }
       }
     }
@@ -6714,59 +8537,71 @@ function _graphToRDF(dataset, graph, graphTerm, issuer, options) {
  *
  * @param list the @list value.
  * @param issuer a IdentifierIssuer for assigning blank node names.
- * @param subject the subject for the head of the list.
- * @param predicate the predicate for the head of the list.
  * @param dataset the array of quads to append to.
  * @param graphTerm the graph term for each quad.
+ *
+ * @return the head of the list.
  */
-function _listToRDF(list, issuer, subject, predicate, dataset, graphTerm) {
+function _listToRDF(list, issuer, dataset, graphTerm) {
   const first = {termType: 'NamedNode', value: RDF_FIRST};
   const rest = {termType: 'NamedNode', value: RDF_REST};
   const nil = {termType: 'NamedNode', value: RDF_NIL};
 
+  const last = list.pop();
+  // Result is the head of the list
+  const result = last ? {termType: 'BlankNode', value: issuer.getId()} : nil;
+  let subject = result;
+
   for(const item of list) {
-    const blankNode = {termType: 'BlankNode', value: issuer.getId()};
+    const object = _objectToRDF(item, issuer, dataset, graphTerm);
+    const next = {termType: 'BlankNode', value: issuer.getId()};
     dataset.push({
       subject,
-      predicate,
-      object: blankNode,
+      predicate: first,
+      object,
       graph: graphTerm
     });
-
-    subject = blankNode;
-    predicate = first;
-    const object = _objectToRDF(item);
-
-    // skip null objects (they are relative IRIs)
-    if(object) {
-      dataset.push({
-        subject,
-        predicate,
-        object,
-        graph: graphTerm
-      });
-    }
-
-    predicate = rest;
+    dataset.push({
+      subject,
+      predicate: rest,
+      object: next,
+      graph: graphTerm
+    });
+    subject = next;
   }
 
-  dataset.push({
-    subject,
-    predicate,
-    object: nil,
-    graph: graphTerm
-  });
+  // Tail of list
+  if(last) {
+    const object = _objectToRDF(last, issuer, dataset, graphTerm);
+    dataset.push({
+      subject,
+      predicate: first,
+      object,
+      graph: graphTerm
+    });
+    dataset.push({
+      subject,
+      predicate: rest,
+      object: nil,
+      graph: graphTerm
+    });
+  }
+
+  return result;
 }
 
 /**
- * Converts a JSON-LD value object to an RDF literal or a JSON-LD string or
- * node object to an RDF resource.
+ * Converts a JSON-LD value object to an RDF literal or a JSON-LD string,
+ * node object to an RDF resource, or adds a list.
  *
  * @param item the JSON-LD value or node object.
+ * @param issuer a IdentifierIssuer for assigning blank node names.
+ * @param dataset the dataset to append RDF quads to.
+ * @param graphTerm the graph term for each quad.
  *
  * @return the RDF literal or RDF resource.
  */
-function _objectToRDF(item) {
+function _objectToRDF(item, issuer, dataset, graphTerm) {
   const object = {};
 
   // convert value object to RDF
@@ -6779,8 +8614,11 @@ function _objectToRDF(item) {
     let value = item['@value'];
     const datatype = item['@type'] || null;
 
-    // convert to XSD datatypes as appropriate
-    if(types.isBoolean(value)) {
+    // convert to XSD/JSON datatypes as appropriate
+    if(datatype === '@json') {
+      object.value = jsonCanonicalize(value);
+      object.datatype.value = RDF_JSON_LITERAL;
+    } else if(types.isBoolean(value)) {
       object.value = value.toString();
       object.datatype.value = datatype || XSD_BOOLEAN;
     } else if(types.isDouble(value) || datatype === XSD_DOUBLE) {
@@ -6801,6 +8639,10 @@ function _objectToRDF(item) {
       object.value = value;
       object.datatype.value = datatype || XSD_STRING;
     }
+  } else if(graphTypes.isList(item)) {
+    const _list = _listToRDF(item['@list'], issuer, dataset, graphTerm);
+    object.termType = _list.termType;
+    object.value = _list.value;
   } else {
     // convert string/node object to RDF
     const id = types.isObject(item) ? item['@id'] : item;
@@ -6816,7 +8658,7 @@ function _objectToRDF(item) {
   return object;
 }
 
-},{"./constants":9,"./context":10,"./graphTypes":17,"./nodeMap":19,"./types":21,"./url":22,"./util":23}],21:[function(require,module,exports){
+},{"./constants":38,"./context":39,"./graphTypes":46,"./nodeMap":48,"./types":50,"./url":51,"./util":52,"canonicalize":29}],50:[function(require,module,exports){
 /*
  * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
  */
@@ -6909,7 +8751,7 @@ api.isString = v => (typeof v === 'string' ||
  */
 api.isUndefined = v => typeof v === 'undefined';
 
-},{}],22:[function(require,module,exports){
+},{}],51:[function(require,module,exports){
 /*
  * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
  */
@@ -6931,6 +8773,7 @@ api.parsers = {
     keys: [
       'href', 'scheme', 'authority', 'path', 'query', 'fragment'
     ],
+    /* eslint-disable-next-line max-len */
     regex: /^(?:([^:\/?#]+):)?(?:\/\/([^\/?#]*))?([^?#]*)(?:\?([^#]*))?(?:#(.*))?/
   },
   full: {
@@ -6938,6 +8781,7 @@ api.parsers = {
       'href', 'protocol', 'scheme', 'authority', 'auth', 'user', 'password',
       'hostname', 'port', 'path', 'directory', 'file', 'query', 'fragment'
     ],
+    /* eslint-disable-next-line max-len */
     regex: /^(([^:\/?#]+):)?(?:\/\/((?:(([^:@]*)(?::([^:@]*))?)?@)?([^:\/?#]*)(?::(\d*))?))?(?:(((?:[^?#\/]*\/)*)([^?#]*))(?:\?([^#]*))?(?:#(.*))?)/
   }
 };
@@ -6976,7 +8820,7 @@ api.prependBase = (base, iri) => {
     return iri;
   }
   // already an absolute IRI
-  if(iri.indexOf(':') !== -1) {
+  if(api.isAbsolute(iri)) {
     return iri;
   }
 
@@ -7210,10 +9054,9 @@ api.isAbsolute = v => types.isString(v) && isAbsoluteRegex.test(v);
  */
 api.isRelative = v => types.isString(v);
 
-},{"./types":21}],23:[function(require,module,exports){
-(function (process,setImmediate){
+},{"./types":50}],52:[function(require,module,exports){
 /*
- * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
+ * Copyright (c) 2017-2019 Digital Bazaar, Inc. All rights reserved.
  */
 'use strict';
 
@@ -7238,25 +9081,6 @@ const DEFAULTS = {
 const api = {};
 module.exports = api;
 api.IdentifierIssuer = IdentifierIssuer;
-
-// define setImmediate and nextTick
-// // nextTick implementation with browser-compatible fallback // //
-// from https://github.com/caolan/async/blob/master/lib/async.js
-
-// capture the global reference to guard against fakeTimer mocks
-const _setImmediate = typeof setImmediate === 'function' && setImmediate;
-
-const _delay = _setImmediate ?
-  // not a direct alias (for IE10 compatibility)
-  fn => _setImmediate(fn) :
-  fn => setTimeout(fn, 0);
-
-if(typeof process === 'object' && typeof process.nextTick === 'function') {
-  api.nextTick = process.nextTick;
-} else {
-  api.nextTick = _delay;
-}
-api.setImmediate = _setImmediate ? _delay : api.nextTick;
 
 /**
  * Clones an object, array, Map, Set, or string/number. If a typed JavaScript
@@ -7463,21 +9287,37 @@ api.hasValue = (subject, property, value) => {
  * @param [options] the options to use:
  *        [propertyIsArray] true if the property is always an array, false
  *          if not (default: false).
+ *        [valueIsArray] true if the value to be added should be preserved as
+ *          an array (lists) (default: false).
  *        [allowDuplicate] true to allow duplicates, false not to (uses a
  *          simple shallow comparison of subject ID or value) (default: true).
+ *        [prependValue] false to prepend value to any existing values.
+ *          (default: false)
  */
 api.addValue = (subject, property, value, options) => {
   options = options || {};
   if(!('propertyIsArray' in options)) {
     options.propertyIsArray = false;
   }
+  if(!('valueIsArray' in options)) {
+    options.valueIsArray = false;
+  }
   if(!('allowDuplicate' in options)) {
     options.allowDuplicate = true;
   }
+  if(!('prependValue' in options)) {
+    options.prependValue = false;
+  }
 
-  if(types.isArray(value)) {
+  if(options.valueIsArray) {
+    subject[property] = value;
+  } else if(types.isArray(value)) {
     if(value.length === 0 && options.propertyIsArray &&
       !subject.hasOwnProperty(property)) {
+      subject[property] = [];
+    }
+    if(options.prependValue) {
+      value = value.concat(subject[property]);
       subject[property] = [];
     }
     for(let i = 0; i < value.length; ++i) {
@@ -7496,7 +9336,11 @@ api.addValue = (subject, property, value, options) => {
 
     // add new value
     if(!hasValue) {
-      subject[property].push(value);
+      if(options.prependValue) {
+        subject[property].unshift(value);
+      } else {
+        subject[property].push(value);
+      }
     }
   } else {
     // add new value as set or single value
@@ -7627,65 +9471,6 @@ api.compareShortestLeast = (a, b) => {
   return (a < b) ? -1 : 1;
 };
 
-api.normalizeDocumentLoader = fn => {
-  if(fn.length < 2) {
-    return api.callbackify(fn);
-  }
-
-  return async function(url) {
-    const callback = arguments[1];
-    return new Promise((resolve, reject) => {
-      try {
-        fn(url, (err, remoteDoc) => {
-          if(typeof callback === 'function') {
-            return _invokeCallback(callback, err, remoteDoc);
-          } else if(err) {
-            reject(err);
-          } else {
-            resolve(remoteDoc);
-          }
-        });
-      } catch(e) {
-        if(typeof callback === 'function') {
-          return _invokeCallback(callback, e);
-        }
-        reject(e);
-      }
-    });
-  };
-};
-
-api.callbackify = fn => {
-  return async function(...args) {
-    const callback = args[args.length - 1];
-    if(typeof callback === 'function') {
-      args.pop();
-    }
-
-    let result;
-    try {
-      result = await fn.apply(null, args);
-    } catch(e) {
-      if(typeof callback === 'function') {
-        return _invokeCallback(callback, e);
-      }
-      throw e;
-    }
-
-    if(typeof callback === 'function') {
-      return _invokeCallback(callback, null, result);
-    }
-
-    return result;
-  };
-};
-
-function _invokeCallback(callback, err, result) {
-  // execute on next tick to prevent "unhandled rejected promise"
-  // and simulate what would have happened in a promiseless API
-  api.nextTick(() => callback(err, result));
-}
-
 /**
  * Labels the blank nodes in the given value using the given IdentifierIssuer.
  *
@@ -7720,34 +9505,343 @@ function _labelBlankNodes(issuer, element) {
   return element;
 }
 
-}).call(this,require('_process'),require("timers").setImmediate)
-},{"./JsonLdError":3,"./graphTypes":17,"./types":21,"_process":31,"rdf-canonize":41,"timers":43}],24:[function(require,module,exports){
-(function (global){
-"use strict";
+},{"./JsonLdError":31,"./graphTypes":46,"./types":50,"rdf-canonize":70}],53:[function(require,module,exports){
+'use strict'
 
-// ref: https://github.com/tc39/proposal-global
-var getGlobal = function () {
-	// the only reliable means to get the global object is
-	// `Function('return this')()`
-	// However, this causes CSP violations in Chrome apps.
-	if (typeof self !== 'undefined') { return self; }
-	if (typeof window !== 'undefined') { return window; }
-	if (typeof global !== 'undefined') { return global; }
-	throw new Error('unable to locate global object');
+// A linked list to keep track of recently-used-ness
+const Yallist = require('yallist')
+
+const MAX = Symbol('max')
+const LENGTH = Symbol('length')
+const LENGTH_CALCULATOR = Symbol('lengthCalculator')
+const ALLOW_STALE = Symbol('allowStale')
+const MAX_AGE = Symbol('maxAge')
+const DISPOSE = Symbol('dispose')
+const NO_DISPOSE_ON_SET = Symbol('noDisposeOnSet')
+const LRU_LIST = Symbol('lruList')
+const CACHE = Symbol('cache')
+const UPDATE_AGE_ON_GET = Symbol('updateAgeOnGet')
+
+const naiveLength = () => 1
+
+// lruList is a yallist where the head is the youngest
+// item, and the tail is the oldest.  the list contains the Hit
+// objects as the entries.
+// Each Hit object has a reference to its Yallist.Node.  This
+// never changes.
+//
+// cache is a Map (or PseudoMap) that matches the keys to
+// the Yallist.Node object.
+class LRUCache {
+  constructor (options) {
+    if (typeof options === 'number')
+      options = { max: options }
+
+    if (!options)
+      options = {}
+
+    if (options.max && (typeof options.max !== 'number' || options.max < 0))
+      throw new TypeError('max must be a non-negative number')
+    // Kind of weird to have a default max of Infinity, but oh well.
+    const max = this[MAX] = options.max || Infinity
+
+    const lc = options.length || naiveLength
+    this[LENGTH_CALCULATOR] = (typeof lc !== 'function') ? naiveLength : lc
+    this[ALLOW_STALE] = options.stale || false
+    if (options.maxAge && typeof options.maxAge !== 'number')
+      throw new TypeError('maxAge must be a number')
+    this[MAX_AGE] = options.maxAge || 0
+    this[DISPOSE] = options.dispose
+    this[NO_DISPOSE_ON_SET] = options.noDisposeOnSet || false
+    this[UPDATE_AGE_ON_GET] = options.updateAgeOnGet || false
+    this.reset()
+  }
+
+  // resize the cache when the max changes.
+  set max (mL) {
+    if (typeof mL !== 'number' || mL < 0)
+      throw new TypeError('max must be a non-negative number')
+
+    this[MAX] = mL || Infinity
+    trim(this)
+  }
+  get max () {
+    return this[MAX]
+  }
+
+  set allowStale (allowStale) {
+    this[ALLOW_STALE] = !!allowStale
+  }
+  get allowStale () {
+    return this[ALLOW_STALE]
+  }
+
+  set maxAge (mA) {
+    if (typeof mA !== 'number')
+      throw new TypeError('maxAge must be a non-negative number')
+
+    this[MAX_AGE] = mA
+    trim(this)
+  }
+  get maxAge () {
+    return this[MAX_AGE]
+  }
+
+  // resize the cache when the lengthCalculator changes.
+  set lengthCalculator (lC) {
+    if (typeof lC !== 'function')
+      lC = naiveLength
+
+    if (lC !== this[LENGTH_CALCULATOR]) {
+      this[LENGTH_CALCULATOR] = lC
+      this[LENGTH] = 0
+      this[LRU_LIST].forEach(hit => {
+        hit.length = this[LENGTH_CALCULATOR](hit.value, hit.key)
+        this[LENGTH] += hit.length
+      })
+    }
+    trim(this)
+  }
+  get lengthCalculator () { return this[LENGTH_CALCULATOR] }
+
+  get length () { return this[LENGTH] }
+  get itemCount () { return this[LRU_LIST].length }
+
+  rforEach (fn, thisp) {
+    thisp = thisp || this
+    for (let walker = this[LRU_LIST].tail; walker !== null;) {
+      const prev = walker.prev
+      forEachStep(this, fn, walker, thisp)
+      walker = prev
+    }
+  }
+
+  forEach (fn, thisp) {
+    thisp = thisp || this
+    for (let walker = this[LRU_LIST].head; walker !== null;) {
+      const next = walker.next
+      forEachStep(this, fn, walker, thisp)
+      walker = next
+    }
+  }
+
+  keys () {
+    return this[LRU_LIST].toArray().map(k => k.key)
+  }
+
+  values () {
+    return this[LRU_LIST].toArray().map(k => k.value)
+  }
+
+  reset () {
+    if (this[DISPOSE] &&
+        this[LRU_LIST] &&
+        this[LRU_LIST].length) {
+      this[LRU_LIST].forEach(hit => this[DISPOSE](hit.key, hit.value))
+    }
+
+    this[CACHE] = new Map() // hash of items by key
+    this[LRU_LIST] = new Yallist() // list of items in order of use recency
+    this[LENGTH] = 0 // length of items in the list
+  }
+
+  dump () {
+    return this[LRU_LIST].map(hit =>
+      isStale(this, hit) ? false : {
+        k: hit.key,
+        v: hit.value,
+        e: hit.now + (hit.maxAge || 0)
+      }).toArray().filter(h => h)
+  }
+
+  dumpLru () {
+    return this[LRU_LIST]
+  }
+
+  set (key, value, maxAge) {
+    maxAge = maxAge || this[MAX_AGE]
+
+    if (maxAge && typeof maxAge !== 'number')
+      throw new TypeError('maxAge must be a number')
+
+    const now = maxAge ? Date.now() : 0
+    const len = this[LENGTH_CALCULATOR](value, key)
+
+    if (this[CACHE].has(key)) {
+      if (len > this[MAX]) {
+        del(this, this[CACHE].get(key))
+        return false
+      }
+
+      const node = this[CACHE].get(key)
+      const item = node.value
+
+      // dispose of the old one before overwriting
+      // split out into 2 ifs for better coverage tracking
+      if (this[DISPOSE]) {
+        if (!this[NO_DISPOSE_ON_SET])
+          this[DISPOSE](key, item.value)
+      }
+
+      item.now = now
+      item.maxAge = maxAge
+      item.value = value
+      this[LENGTH] += len - item.length
+      item.length = len
+      this.get(key)
+      trim(this)
+      return true
+    }
+
+    const hit = new Entry(key, value, len, now, maxAge)
+
+    // oversized objects fall out of cache automatically.
+    if (hit.length > this[MAX]) {
+      if (this[DISPOSE])
+        this[DISPOSE](key, value)
+
+      return false
+    }
+
+    this[LENGTH] += hit.length
+    this[LRU_LIST].unshift(hit)
+    this[CACHE].set(key, this[LRU_LIST].head)
+    trim(this)
+    return true
+  }
+
+  has (key) {
+    if (!this[CACHE].has(key)) return false
+    const hit = this[CACHE].get(key).value
+    return !isStale(this, hit)
+  }
+
+  get (key) {
+    return get(this, key, true)
+  }
+
+  peek (key) {
+    return get(this, key, false)
+  }
+
+  pop () {
+    const node = this[LRU_LIST].tail
+    if (!node)
+      return null
+
+    del(this, node)
+    return node.value
+  }
+
+  del (key) {
+    del(this, this[CACHE].get(key))
+  }
+
+  load (arr) {
+    // reset the cache
+    this.reset()
+
+    const now = Date.now()
+    // A previous serialized cache has the most recent items first
+    for (let l = arr.length - 1; l >= 0; l--) {
+      const hit = arr[l]
+      const expiresAt = hit.e || 0
+      if (expiresAt === 0)
+        // the item was created without expiration in a non aged cache
+        this.set(hit.k, hit.v)
+      else {
+        const maxAge = expiresAt - now
+        // dont add already expired items
+        if (maxAge > 0) {
+          this.set(hit.k, hit.v, maxAge)
+        }
+      }
+    }
+  }
+
+  prune () {
+    this[CACHE].forEach((value, key) => get(this, key, false))
+  }
 }
 
-var global = getGlobal();
+const get = (self, key, doUse) => {
+  const node = self[CACHE].get(key)
+  if (node) {
+    const hit = node.value
+    if (isStale(self, hit)) {
+      del(self, node)
+      if (!self[ALLOW_STALE])
+        return undefined
+    } else {
+      if (doUse) {
+        if (self[UPDATE_AGE_ON_GET])
+          node.value.now = Date.now()
+        self[LRU_LIST].unshiftNode(node)
+      }
+    }
+    return hit.value
+  }
+}
 
-module.exports = exports = global.fetch;
+const isStale = (self, hit) => {
+  if (!hit || (!hit.maxAge && !self[MAX_AGE]))
+    return false
 
-// Needed for TypeScript and Webpack.
-exports.default = global.fetch.bind(global);
+  const diff = Date.now() - hit.now
+  return hit.maxAge ? diff > hit.maxAge
+    : self[MAX_AGE] && (diff > self[MAX_AGE])
+}
 
-exports.Headers = global.Headers;
-exports.Request = global.Request;
-exports.Response = global.Response;
-}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],25:[function(require,module,exports){
+const trim = self => {
+  if (self[LENGTH] > self[MAX]) {
+    for (let walker = self[LRU_LIST].tail;
+      self[LENGTH] > self[MAX] && walker !== null;) {
+      // We know that we're about to delete this one, and also
+      // what the next least recently used key will be, so just
+      // go ahead and set it now.
+      const prev = walker.prev
+      del(self, walker)
+      walker = prev
+    }
+  }
+}
+
+const del = (self, node) => {
+  if (node) {
+    const hit = node.value
+    if (self[DISPOSE])
+      self[DISPOSE](hit.key, hit.value)
+
+    self[LENGTH] -= hit.length
+    self[CACHE].delete(hit.key)
+    self[LRU_LIST].removeNode(node)
+  }
+}
+
+class Entry {
+  constructor (key, value, length, now, maxAge) {
+    this.key = key
+    this.value = value
+    this.length = length
+    this.now = now
+    this.maxAge = maxAge || 0
+  }
+}
+
+const forEachStep = (self, fn, node, thisp) => {
+  let hit = node.value
+  if (isStale(self, hit)) {
+    del(self, node)
+    if (!self[ALLOW_STALE])
+      hit = undefined
+  }
+  if (hit)
+    fn.call(thisp, hit.value, hit.key, self)
+}
+
+module.exports = LRUCache
+
+},{"yallist":74}],54:[function(require,module,exports){
 (function (Buffer){
 /**
  * Base-N/Base-X encoding/decoding functions.
@@ -7937,7 +10031,7 @@ function _encodeWithByteBuffer(input, alphabet) {
 }
 
 }).call(this,require("buffer").Buffer)
-},{"buffer":1}],26:[function(require,module,exports){
+},{"buffer":28}],55:[function(require,module,exports){
 /**
  * Node.js module for Forge.
  *
@@ -7952,7 +10046,7 @@ module.exports = {
   }
 };
 
-},{}],27:[function(require,module,exports){
+},{}],56:[function(require,module,exports){
 /**
  * Node.js module for Forge message digests.
  *
@@ -7965,7 +10059,7 @@ var forge = require('./forge');
 module.exports = forge.md = forge.md || {};
 forge.md.algorithms = forge.md.algorithms || {};
 
-},{"./forge":26}],28:[function(require,module,exports){
+},{"./forge":55}],57:[function(require,module,exports){
 /**
  * Secure Hash Algorithm with 160-bit digest (SHA-1) implementation.
  *
@@ -8286,7 +10380,7 @@ function _update(s, w, bytes) {
   }
 }
 
-},{"./forge":26,"./md":27,"./util":30}],29:[function(require,module,exports){
+},{"./forge":55,"./md":56,"./util":59}],58:[function(require,module,exports){
 /**
  * Secure Hash Algorithm with 256-bit digest (SHA-256) implementation.
  *
@@ -8615,7 +10709,7 @@ function _update(s, w, bytes) {
   }
 }
 
-},{"./forge":26,"./md":27,"./util":30}],30:[function(require,module,exports){
+},{"./forge":55,"./md":56,"./util":59}],59:[function(require,module,exports){
 (function (process,global,Buffer,__argument0,__argument1,__argument2,__argument3,setImmediate){
 /**
  * Utility functions for web applications.
@@ -11612,7 +13706,7 @@ util.estimateCores = function(options, callback) {
 };
 
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {},require("buffer").Buffer,arguments[3],arguments[4],arguments[5],arguments[6],require("timers").setImmediate)
-},{"./baseN":25,"./forge":26,"_process":31,"buffer":1,"timers":43}],31:[function(require,module,exports){
+},{"./baseN":54,"./forge":55,"_process":60,"buffer":28,"timers":72}],60:[function(require,module,exports){
 // shim for using process in browser
 var process = module.exports = {};
 
@@ -11798,7 +13892,7 @@ process.chdir = function (dir) {
 };
 process.umask = function() { return 0; };
 
-},{}],32:[function(require,module,exports){
+},{}],61:[function(require,module,exports){
 /**
  * Copyright (c) 2016-2017 Digital Bazaar, Inc. All rights reserved.
  */
@@ -11927,7 +14021,7 @@ module.exports = class AsyncAlgorithm {
   }
 };
 
-},{"./util":42}],33:[function(require,module,exports){
+},{"./util":71}],62:[function(require,module,exports){
 /*
  * Copyright (c) 2016-2017 Digital Bazaar, Inc. All rights reserved.
  */
@@ -12000,7 +14094,7 @@ module.exports = class IdentifierIssuer {
   }
 };
 
-},{"./util":42}],34:[function(require,module,exports){
+},{"./util":71}],63:[function(require,module,exports){
 /*
  * Copyright (c) 2016-2017 Digital Bazaar, Inc. All rights reserved.
  */
@@ -12030,7 +14124,7 @@ module.exports = class MessageDigest {
   }
 };
 
-},{"node-forge/lib/forge":26,"node-forge/lib/md":27,"node-forge/lib/sha1":28,"node-forge/lib/sha256":29}],35:[function(require,module,exports){
+},{"node-forge/lib/forge":55,"node-forge/lib/md":56,"node-forge/lib/sha1":57,"node-forge/lib/sha256":58}],64:[function(require,module,exports){
 /*
  * Copyright (c) 2016-2017 Digital Bazaar, Inc. All rights reserved.
  */
@@ -12411,7 +14505,7 @@ function _unescape(s) {
   });
 }
 
-},{}],36:[function(require,module,exports){
+},{}],65:[function(require,module,exports){
 /*
  * Copyright (c) 2016-2017 Digital Bazaar, Inc. All rights reserved.
  */
@@ -12498,7 +14592,7 @@ module.exports = class Permutator {
 };
 
 
-},{}],37:[function(require,module,exports){
+},{}],66:[function(require,module,exports){
 /*
  * Copyright (c) 2016-2017 Digital Bazaar, Inc. All rights reserved.
  */
@@ -13063,7 +15157,7 @@ module.exports = class URDNA2015 extends AsyncAlgorithm {
   }
 };
 
-},{"./AsyncAlgorithm":32,"./IdentifierIssuer":33,"./MessageDigest":34,"./NQuads":35,"./Permutator":36,"./util":42}],38:[function(require,module,exports){
+},{"./AsyncAlgorithm":61,"./IdentifierIssuer":62,"./MessageDigest":63,"./NQuads":64,"./Permutator":65,"./util":71}],67:[function(require,module,exports){
 /*
  * Copyright (c) 2016 Digital Bazaar, Inc. All rights reserved.
  */
@@ -13555,7 +15649,7 @@ module.exports = class URDNA2015Sync {
   }
 };
 
-},{"./IdentifierIssuer":33,"./MessageDigest":34,"./NQuads":35,"./Permutator":36,"./util":42}],39:[function(require,module,exports){
+},{"./IdentifierIssuer":62,"./MessageDigest":63,"./NQuads":64,"./Permutator":65,"./util":71}],68:[function(require,module,exports){
 /*
  * Copyright (c) 2016-2017 Digital Bazaar, Inc. All rights reserved.
  */
@@ -13644,7 +15738,7 @@ module.exports = class URDNA2012 extends URDNA2015 {
   }
 };
 
-},{"./URDNA2015":37,"./util":42}],40:[function(require,module,exports){
+},{"./URDNA2015":66,"./util":71}],69:[function(require,module,exports){
 /*
  * Copyright (c) 2016 Digital Bazaar, Inc. All rights reserved.
  */
@@ -13730,7 +15824,7 @@ module.exports = class URDNA2012Sync extends URDNA2015Sync {
   }
 };
 
-},{"./URDNA2015Sync":38,"./util":42}],41:[function(require,module,exports){
+},{"./URDNA2015Sync":67,"./util":71}],70:[function(require,module,exports){
 /**
  * An implementation of the RDF Dataset Normalization specification.
  * This library works in the browser and node.js.
@@ -13892,7 +15986,7 @@ api.canonizeSync = function(dataset, options) {
     'Invalid RDF Dataset Canonicalization algorithm: ' + options.algorithm);
 };
 
-},{"./IdentifierIssuer":33,"./NQuads":35,"./URDNA2015":37,"./URDNA2015Sync":38,"./URGNA2012":39,"./URGNA2012Sync":40,"./util":42,"rdf-canonize-native":1}],42:[function(require,module,exports){
+},{"./IdentifierIssuer":62,"./NQuads":64,"./URDNA2015":66,"./URDNA2015Sync":67,"./URGNA2012":68,"./URGNA2012Sync":69,"./util":71,"rdf-canonize-native":28}],71:[function(require,module,exports){
 (function (process,setImmediate){
 /*
  * Copyright (c) 2016-2017 Digital Bazaar, Inc. All rights reserved.
@@ -14006,7 +16100,7 @@ function _invokeCallback(callback, err, result) {
 }
 
 }).call(this,require('_process'),require("timers").setImmediate)
-},{"_process":31,"timers":43}],43:[function(require,module,exports){
+},{"_process":60,"timers":72}],72:[function(require,module,exports){
 (function (setImmediate,clearImmediate){
 var nextTick = require('process/browser.js').nextTick;
 var apply = Function.prototype.apply;
@@ -14085,3090 +16179,3577 @@ exports.clearImmediate = typeof clearImmediate === "function" ? clearImmediate :
   delete immediateIds[id];
 };
 }).call(this,require("timers").setImmediate,require("timers").clearImmediate)
-},{"process/browser.js":31,"timers":43}],44:[function(require,module,exports){
+},{"process/browser.js":60,"timers":72}],73:[function(require,module,exports){
+'use strict'
+module.exports = function (Yallist) {
+  Yallist.prototype[Symbol.iterator] = function* () {
+    for (let walker = this.head; walker; walker = walker.next) {
+      yield walker.value
+    }
+  }
+}
+
+},{}],74:[function(require,module,exports){
+'use strict'
+module.exports = Yallist
+
+Yallist.Node = Node
+Yallist.create = Yallist
+
+function Yallist (list) {
+  var self = this
+  if (!(self instanceof Yallist)) {
+    self = new Yallist()
+  }
+
+  self.tail = null
+  self.head = null
+  self.length = 0
+
+  if (list && typeof list.forEach === 'function') {
+    list.forEach(function (item) {
+      self.push(item)
+    })
+  } else if (arguments.length > 0) {
+    for (var i = 0, l = arguments.length; i < l; i++) {
+      self.push(arguments[i])
+    }
+  }
+
+  return self
+}
+
+Yallist.prototype.removeNode = function (node) {
+  if (node.list !== this) {
+    throw new Error('removing node which does not belong to this list')
+  }
+
+  var next = node.next
+  var prev = node.prev
+
+  if (next) {
+    next.prev = prev
+  }
+
+  if (prev) {
+    prev.next = next
+  }
+
+  if (node === this.head) {
+    this.head = next
+  }
+  if (node === this.tail) {
+    this.tail = prev
+  }
+
+  node.list.length--
+  node.next = null
+  node.prev = null
+  node.list = null
+
+  return next
+}
+
+Yallist.prototype.unshiftNode = function (node) {
+  if (node === this.head) {
+    return
+  }
+
+  if (node.list) {
+    node.list.removeNode(node)
+  }
+
+  var head = this.head
+  node.list = this
+  node.next = head
+  if (head) {
+    head.prev = node
+  }
+
+  this.head = node
+  if (!this.tail) {
+    this.tail = node
+  }
+  this.length++
+}
+
+Yallist.prototype.pushNode = function (node) {
+  if (node === this.tail) {
+    return
+  }
+
+  if (node.list) {
+    node.list.removeNode(node)
+  }
+
+  var tail = this.tail
+  node.list = this
+  node.prev = tail
+  if (tail) {
+    tail.next = node
+  }
+
+  this.tail = node
+  if (!this.head) {
+    this.head = node
+  }
+  this.length++
+}
+
+Yallist.prototype.push = function () {
+  for (var i = 0, l = arguments.length; i < l; i++) {
+    push(this, arguments[i])
+  }
+  return this.length
+}
+
+Yallist.prototype.unshift = function () {
+  for (var i = 0, l = arguments.length; i < l; i++) {
+    unshift(this, arguments[i])
+  }
+  return this.length
+}
+
+Yallist.prototype.pop = function () {
+  if (!this.tail) {
+    return undefined
+  }
+
+  var res = this.tail.value
+  this.tail = this.tail.prev
+  if (this.tail) {
+    this.tail.next = null
+  } else {
+    this.head = null
+  }
+  this.length--
+  return res
+}
+
+Yallist.prototype.shift = function () {
+  if (!this.head) {
+    return undefined
+  }
+
+  var res = this.head.value
+  this.head = this.head.next
+  if (this.head) {
+    this.head.prev = null
+  } else {
+    this.tail = null
+  }
+  this.length--
+  return res
+}
+
+Yallist.prototype.forEach = function (fn, thisp) {
+  thisp = thisp || this
+  for (var walker = this.head, i = 0; walker !== null; i++) {
+    fn.call(thisp, walker.value, i, this)
+    walker = walker.next
+  }
+}
+
+Yallist.prototype.forEachReverse = function (fn, thisp) {
+  thisp = thisp || this
+  for (var walker = this.tail, i = this.length - 1; walker !== null; i--) {
+    fn.call(thisp, walker.value, i, this)
+    walker = walker.prev
+  }
+}
+
+Yallist.prototype.get = function (n) {
+  for (var i = 0, walker = this.head; walker !== null && i < n; i++) {
+    // abort out of the list early if we hit a cycle
+    walker = walker.next
+  }
+  if (i === n && walker !== null) {
+    return walker.value
+  }
+}
+
+Yallist.prototype.getReverse = function (n) {
+  for (var i = 0, walker = this.tail; walker !== null && i < n; i++) {
+    // abort out of the list early if we hit a cycle
+    walker = walker.prev
+  }
+  if (i === n && walker !== null) {
+    return walker.value
+  }
+}
+
+Yallist.prototype.map = function (fn, thisp) {
+  thisp = thisp || this
+  var res = new Yallist()
+  for (var walker = this.head; walker !== null;) {
+    res.push(fn.call(thisp, walker.value, this))
+    walker = walker.next
+  }
+  return res
+}
+
+Yallist.prototype.mapReverse = function (fn, thisp) {
+  thisp = thisp || this
+  var res = new Yallist()
+  for (var walker = this.tail; walker !== null;) {
+    res.push(fn.call(thisp, walker.value, this))
+    walker = walker.prev
+  }
+  return res
+}
+
+Yallist.prototype.reduce = function (fn, initial) {
+  var acc
+  var walker = this.head
+  if (arguments.length > 1) {
+    acc = initial
+  } else if (this.head) {
+    walker = this.head.next
+    acc = this.head.value
+  } else {
+    throw new TypeError('Reduce of empty list with no initial value')
+  }
+
+  for (var i = 0; walker !== null; i++) {
+    acc = fn(acc, walker.value, i)
+    walker = walker.next
+  }
+
+  return acc
+}
+
+Yallist.prototype.reduceReverse = function (fn, initial) {
+  var acc
+  var walker = this.tail
+  if (arguments.length > 1) {
+    acc = initial
+  } else if (this.tail) {
+    walker = this.tail.prev
+    acc = this.tail.value
+  } else {
+    throw new TypeError('Reduce of empty list with no initial value')
+  }
+
+  for (var i = this.length - 1; walker !== null; i--) {
+    acc = fn(acc, walker.value, i)
+    walker = walker.prev
+  }
+
+  return acc
+}
+
+Yallist.prototype.toArray = function () {
+  var arr = new Array(this.length)
+  for (var i = 0, walker = this.head; walker !== null; i++) {
+    arr[i] = walker.value
+    walker = walker.next
+  }
+  return arr
+}
+
+Yallist.prototype.toArrayReverse = function () {
+  var arr = new Array(this.length)
+  for (var i = 0, walker = this.tail; walker !== null; i++) {
+    arr[i] = walker.value
+    walker = walker.prev
+  }
+  return arr
+}
+
+Yallist.prototype.slice = function (from, to) {
+  to = to || this.length
+  if (to < 0) {
+    to += this.length
+  }
+  from = from || 0
+  if (from < 0) {
+    from += this.length
+  }
+  var ret = new Yallist()
+  if (to < from || to < 0) {
+    return ret
+  }
+  if (from < 0) {
+    from = 0
+  }
+  if (to > this.length) {
+    to = this.length
+  }
+  for (var i = 0, walker = this.head; walker !== null && i < from; i++) {
+    walker = walker.next
+  }
+  for (; walker !== null && i < to; i++, walker = walker.next) {
+    ret.push(walker.value)
+  }
+  return ret
+}
+
+Yallist.prototype.sliceReverse = function (from, to) {
+  to = to || this.length
+  if (to < 0) {
+    to += this.length
+  }
+  from = from || 0
+  if (from < 0) {
+    from += this.length
+  }
+  var ret = new Yallist()
+  if (to < from || to < 0) {
+    return ret
+  }
+  if (from < 0) {
+    from = 0
+  }
+  if (to > this.length) {
+    to = this.length
+  }
+  for (var i = this.length, walker = this.tail; walker !== null && i > to; i--) {
+    walker = walker.prev
+  }
+  for (; walker !== null && i > from; i--, walker = walker.prev) {
+    ret.push(walker.value)
+  }
+  return ret
+}
+
+Yallist.prototype.splice = function (start, deleteCount /*, ...nodes */) {
+  if (start > this.length) {
+    start = this.length - 1
+  }
+  if (start < 0) {
+    start = this.length + start;
+  }
+
+  for (var i = 0, walker = this.head; walker !== null && i < start; i++) {
+    walker = walker.next
+  }
+
+  var ret = []
+  for (var i = 0; walker && i < deleteCount; i++) {
+    ret.push(walker.value)
+    walker = this.removeNode(walker)
+  }
+  if (walker === null) {
+    walker = this.tail
+  }
+
+  if (walker !== this.head && walker !== this.tail) {
+    walker = walker.prev
+  }
+
+  for (var i = 2; i < arguments.length; i++) {
+    walker = insert(this, walker, arguments[i])
+  }
+  return ret;
+}
+
+Yallist.prototype.reverse = function () {
+  var head = this.head
+  var tail = this.tail
+  for (var walker = head; walker !== null; walker = walker.prev) {
+    var p = walker.prev
+    walker.prev = walker.next
+    walker.next = p
+  }
+  this.head = tail
+  this.tail = head
+  return this
+}
+
+function insert (self, node, value) {
+  var inserted = node === self.head ?
+    new Node(value, null, node, self) :
+    new Node(value, node, node.next, self)
+
+  if (inserted.next === null) {
+    self.tail = inserted
+  }
+  if (inserted.prev === null) {
+    self.head = inserted
+  }
+
+  self.length++
+
+  return inserted
+}
+
+function push (self, item) {
+  self.tail = new Node(item, self.tail, null, self)
+  if (!self.head) {
+    self.head = self.tail
+  }
+  self.length++
+}
+
+function unshift (self, item) {
+  self.head = new Node(item, null, self.head, self)
+  if (!self.tail) {
+    self.tail = self.head
+  }
+  self.length++
+}
+
+function Node (value, prev, next, list) {
+  if (!(this instanceof Node)) {
+    return new Node(value, prev, next, list)
+  }
+
+  this.list = list
+  this.value = value
+
+  if (prev) {
+    prev.next = this
+    this.prev = prev
+  } else {
+    this.prev = null
+  }
+
+  if (next) {
+    next.prev = this
+    this.next = next
+  } else {
+    this.next = null
+  }
+}
+
+try {
+  // add if support for Symbol.iterator is present
+  require('./iterator.js')(Yallist)
+} catch (er) {}
+
+},{"./iterator.js":73}],75:[function(require,module,exports){
 "use strict";
-
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 //the functions for a class Object
 var util = require("./utilities");
 
-var Class = function () {
-    /**
-     * A Class represents an rdfs:Class. It is identified by its IRI
-     * @constructor
-     * @param {string} IRI - The compacted IRI of this Class, e.g. "schema:Book"
-     * @param {object} graph - The underlying data graph to enable the methods of this Class
-     */
-    function Class(IRI, graph) {
-        _classCallCheck(this, Class);
+class Class {
+  /**
+   * A Class represents an rdfs:Class. It is identified by its IRI
+   * @constructor
+   * @param {string} IRI - The compacted IRI of this Class, e.g. "schema:Book"
+   * @param {object} graph - The underlying data graph to enable the methods of this Class
+   */
+  constructor(IRI, graph) {
+    this.IRI = IRI;
+    this.graph = graph;
+  }
+  /**
+   * Retrieves the IRI (@id) of this Class in compact/absolute form
+   * @param {boolean} compactForm - (default = false), if true -> return compact IRI -> "schema:Book", if false -> return absolute IRI -> "http://schema.org/Book"
+   * @returns {string} The IRI (@id) of this Class
+   */
 
-        this.IRI = IRI;
-        this.graph = graph;
+
+  getIRI() {
+    var compactForm = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : false;
+
+    if (compactForm) {
+      return this.IRI;
+    } else {
+      return util.toAbsoluteIRI(this.IRI, this.graph.context);
+    }
+  }
+  /**
+   * Retrieves the term type (@type) of this Class (is always "rdfs:Class")
+   * @returns {string} The term type of this Class -> "rdfs:Class"
+   */
+
+
+  getTermType() {
+    return "rdfs:Class";
+  }
+  /**
+   * Retrieves the original vocabulary (schema:isPartOf) of this Class
+   * @returns {string|null} The vocabulary IRI given by the "schema:isPartOf" of this Class
+   */
+
+
+  getVocabulary() {
+    var classObj = this.graph.classes[this.IRI];
+
+    if (classObj["schema:isPartOf"] !== undefined) {
+      return classObj["schema:isPartOf"];
+    } else {
+      return null;
+    }
+  }
+  /**
+   * Retrieves the source (dc:source) of this Class
+   * @returns {string|null} The source IRI given by the "dc:source" of this Class (null if none)
+   */
+
+
+  getSource() {
+    var classObj = this.graph.classes[this.IRI];
+
+    if (classObj["dc:source"] !== undefined) {
+      return classObj["dc:source"];
+    } else {
+      return null;
+    }
+  }
+  /**
+   * Retrieves the class superseding (schema:supersededBy) this Class
+   * @returns {string|null} The Class superseding this Class (null if none)
+   */
+
+
+  isSupersededBy() {
+    var classObj = this.graph.classes[this.IRI];
+
+    if (util.isString(classObj["schema:supersededBy"])) {
+      return classObj["schema:supersededBy"];
+    } else {
+      return null;
+    }
+  }
+  /**
+   * Retrieves the name (rdfs:label) of this Class in a wished language (optional)
+   * @param {string} language - (default = "en") the wished language for the name
+   * @returns {string|null} The name of this Class (null if not given for specified language)
+   */
+
+
+  getName() {
+    var language = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : "en";
+    var nameObj = this.graph.classes[this.IRI]["rdfs:label"];
+
+    if (nameObj === null || nameObj[language] === undefined) {
+      return null;
     }
 
-    /**
-     * Retrieves the IRI (@id) of this Class in compact/absolute form
-     * @param {boolean} compactForm - (default = false), if true -> return compact IRI -> "schema:Book", if false -> return absolute IRI -> "http://schema.org/Book"
-     * @returns {string} The IRI (@id) of this Class
-     */
+    return nameObj[language];
+  }
+  /**
+   * Retrieves the description (rdfs:comment) of this Class in a wished language (optional)
+   * @param {string} language - (default = "en") the wished language for the description
+   * @returns {string|null} The description of this Class (null if not given for specified language)
+   */
 
 
-    _createClass(Class, [{
-        key: "getIRI",
-        value: function getIRI() {
-            var compactForm = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : false;
+  getDescription() {
+    var language = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : "en";
+    var descriptionObj = this.graph.classes[this.IRI]["rdfs:comment"];
 
-            if (compactForm) {
-                return this.IRI;
-            } else {
-                return util.toAbsoluteIRI(this.IRI, this.graph.context);
-            }
-        }
+    if (descriptionObj === null || descriptionObj[language] === undefined) {
+      return null;
+    }
 
-        /**
-         * Retrieves the term type (@type) of this Class (is always "rdfs:Class")
-         * @returns {string} The term type of this Class -> "rdfs:Class"
-         */
+    return descriptionObj[language];
+  }
+  /**
+   * Retrieves the explicit/implicit properties (soa:hasProperty) of this Class
+   * @param {boolean} implicit - (default = true) retrieves also implicit properties (inheritance from super-classes)
+   * @param {object|null} filter - (default = null) an optional filter for the properties
+   * @returns {array} The properties of this Class
+   */
 
-    }, {
-        key: "getTermType",
-        value: function getTermType() {
-            return "rdfs:Class";
-        }
 
-        /**
-         * Retrieves the original vocabulary (schema:isPartOf) of this Class
-         * @returns {string|null} The vocabulary IRI given by the "schema:isPartOf" of this Class
-         */
+  getProperties() {
+    var implicit = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : true;
+    var filter = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
+    var classObj = this.graph.classes[this.IRI];
+    var result = [];
+    result.push(...classObj["soa:hasProperty"]);
 
-    }, {
-        key: "getVocabulary",
-        value: function getVocabulary() {
-            var classObj = this.graph.classes[this.IRI];
-            if (classObj["schema:isPartOf"] !== undefined) {
-                return classObj["schema:isPartOf"];
-            } else {
-                return null;
-            }
-        }
+    if (implicit === true) {
+      //add properties from super-classes
+      result.push(...this.graph.reasoner.inferPropertiesFromSuperClasses(classObj["rdfs:subClassOf"])); //add sub-properties ?
+      // for (let p = 0; p < result.length; p++) {
+      //     result.push(... this.graph.reasoner.inferSubProperties(result[p]));
+      // }
+    }
 
-        /**
-         * Retrieves the source (dc:source) of this Class
-         * @returns {string|null} The source IRI given by the "dc:source" of this Class (null if none)
-         */
+    return util.applyFilter(util.uniquifyArray(result), filter, this.graph);
+  }
+  /**
+   * Retrieves the explicit/implicit super-classes (rdfs:subClassOf) of this Class
+   * @param {boolean} implicit - (default = true) retrieves also implicit super-classes (recursive from super-classes)
+   * @param {object|null} filter - (default = null) an optional filter for the super-classes
+   * @returns {array} The super-classes of this Class
+   */
 
-    }, {
-        key: "getSource",
-        value: function getSource() {
-            var classObj = this.graph.classes[this.IRI];
-            if (classObj["dc:source"] !== undefined) {
-                return classObj["dc:source"];
-            } else {
-                return null;
-            }
-        }
 
-        /**
-         * Retrieves the class superseding (schema:supersededBy) this Class
-         * @returns {string|null} The Class superseding this Class (null if none)
-         */
+  getSuperClasses() {
+    var implicit = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : true;
+    var filter = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
+    var classObj = this.graph.classes[this.IRI];
+    var result = [];
 
-    }, {
-        key: "isSupersededBy",
-        value: function isSupersededBy() {
-            var classObj = this.graph.classes[this.IRI];
-            if (util.isString(classObj["schema:supersededBy"])) {
-                return classObj["schema:supersededBy"];
-            } else {
-                return null;
-            }
-        }
+    if (implicit === true) {
+      result.push(...this.graph.reasoner.inferImplicitSuperClasses(this.IRI));
+    } else {
+      result.push(...classObj["rdfs:subClassOf"]);
+    }
 
-        /**
-         * Retrieves the name (rdfs:label) of this Class in a wished language (optional)
-         * @param {string} language - (default = "en") the wished language for the name
-         * @returns {string|null} The name of this Class (null if not given for specified language)
-         */
+    return util.applyFilter(util.uniquifyArray(result), filter, this.graph);
+  }
+  /**
+   * Retrieves the explicit/implicit sub-classes (soa:superClassOf) of this Class
+   * @param {boolean} implicit - (default = true) retrieves also implicit sub-classes (recursive from sub-classes)
+   * @param {object|null} filter - (default = null) an optional filter for the sub-classes
+   * @returns {array} The sub-classes of this Class
+   */
 
-    }, {
-        key: "getName",
-        value: function getName() {
-            var language = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : "en";
 
-            var nameObj = this.graph.classes[this.IRI]["rdfs:label"];
-            if (nameObj === null || nameObj[language] === undefined) {
-                return null;
-            }
-            return nameObj[language];
-        }
+  getSubClasses() {
+    var implicit = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : true;
+    var filter = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
+    var classObj = this.graph.classes[this.IRI];
+    var result = [];
 
-        /**
-         * Retrieves the description (rdfs:comment) of this Class in a wished language (optional)
-         * @param {string} language - (default = "en") the wished language for the description
-         * @returns {string|null} The description of this Class (null if not given for specified language)
-         */
+    if (implicit === true) {
+      result.push(...this.graph.reasoner.inferImplicitSubClasses(this.IRI));
+    } else {
+      result.push(...classObj["soa:superClassOf"]);
+    }
 
-    }, {
-        key: "getDescription",
-        value: function getDescription() {
-            var language = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : "en";
+    return util.applyFilter(util.uniquifyArray(result), filter, this.graph);
+  }
+  /**
+   * Generates a string representation of this Class (Based on its JSON representation)
+   * @returns {string} The string representation of this Class
+   */
 
-            var descriptionObj = this.graph.classes[this.IRI]["rdfs:comment"];
-            if (descriptionObj === null || descriptionObj[language] === undefined) {
-                return null;
-            }
-            return descriptionObj[language];
-        }
 
-        /**
-         * Retrieves the explicit/implicit properties (soa:hasProperty) of this Class
-         * @param {boolean} implicit - (default = true) retrieves also implicit properties (inheritance from super-classes)
-         * @param {object|null} filter - (default = null) an optional filter for the properties
-         * @returns {array} The properties of this Class
-         */
+  toString() {
+    return JSON.stringify(this.toJSON(false, null), null, 2);
+  }
+  /**
+   * Generates an explicit/implicit JSON representation of this Class.
+   * @param {boolean} implicit - (default = true) includes also implicit data (e.g. sub-Classes, super-Classes, properties, etc.)
+   * @param {object|null} filter - (default = null) an optional filter for the generated data
+   * @returns {object} The JSON representation of this Class
+   */
 
-    }, {
-        key: "getProperties",
-        value: function getProperties() {
-            var implicit = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : true;
-            var filter = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
 
-            var classObj = this.graph.classes[this.IRI];
-            var result = [];
-            result.push.apply(result, _toConsumableArray(classObj["soa:hasProperty"]));
-            if (implicit === true) {
-                //add properties from super-classes
-                result.push.apply(result, _toConsumableArray(this.graph.reasoner.inferPropertiesFromSuperClasses(classObj["rdfs:subClassOf"])));
-                //add sub-properties ?
-                // for (let p = 0; p < result.length; p++) {
-                //     result.push(... this.graph.reasoner.inferSubProperties(result[p]));
-                // }
-            }
-            return util.applyFilter(util.uniquifyArray(result), filter, this.graph);
-        }
+  toJSON() {
+    var implicit = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : true;
+    var filter = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
+    // (implicit === true) ->
+    // properties of all parent classes
+    // sub-properties of all properties ??
+    // sub-classes and their subclasses
+    // super-classes and their superclasses
+    var result = {};
+    result["id"] = this.getIRI(true);
+    result["IRI"] = this.getIRI();
+    result["type"] = this.getTermType();
+    result["vocabulary"] = this.getVocabulary();
+    result["source"] = this.getSource();
+    result["supersededBy"] = this.isSupersededBy();
+    result["name"] = this.getName();
+    result["description"] = this.getDescription();
+    result["superClasses"] = this.getSuperClasses(implicit, filter);
+    result["subClasses"] = this.getSubClasses(implicit, filter);
+    result["properties"] = this.getProperties(implicit, filter);
+    return result;
+  }
 
-        /**
-         * Retrieves the explicit/implicit super-classes (rdfs:subClassOf) of this Class
-         * @param {boolean} implicit - (default = true) retrieves also implicit super-classes (recursive from super-classes)
-         * @param {object|null} filter - (default = null) an optional filter for the super-classes
-         * @returns {array} The super-classes of this Class
-         */
-
-    }, {
-        key: "getSuperClasses",
-        value: function getSuperClasses() {
-            var implicit = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : true;
-            var filter = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
-
-            var classObj = this.graph.classes[this.IRI];
-            var result = [];
-
-            if (implicit === true) {
-                result.push.apply(result, _toConsumableArray(this.graph.reasoner.inferImplicitSuperClasses(this.IRI)));
-            } else {
-                result.push.apply(result, _toConsumableArray(classObj["rdfs:subClassOf"]));
-            }
-            return util.applyFilter(util.uniquifyArray(result), filter, this.graph);
-        }
-
-        /**
-         * Retrieves the explicit/implicit sub-classes (soa:superClassOf) of this Class
-         * @param {boolean} implicit - (default = true) retrieves also implicit sub-classes (recursive from sub-classes)
-         * @param {object|null} filter - (default = null) an optional filter for the sub-classes
-         * @returns {array} The sub-classes of this Class
-         */
-
-    }, {
-        key: "getSubClasses",
-        value: function getSubClasses() {
-            var implicit = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : true;
-            var filter = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
-
-            var classObj = this.graph.classes[this.IRI];
-            var result = [];
-            if (implicit === true) {
-                result.push.apply(result, _toConsumableArray(this.graph.reasoner.inferImplicitSubClasses(this.IRI)));
-            } else {
-                result.push.apply(result, _toConsumableArray(classObj["soa:superClassOf"]));
-            }
-            return util.applyFilter(util.uniquifyArray(result), filter, this.graph);
-        }
-
-        /**
-         * Generates a string representation of this Class (Based on its JSON representation)
-         * @returns {string} The string representation of this Class
-         */
-
-    }, {
-        key: "toString",
-        value: function toString() {
-            return JSON.stringify(this.toJSON(false, null), null, 2);
-        }
-
-        /**
-         * Generates an explicit/implicit JSON representation of this Class.
-         * @param {boolean} implicit - (default = true) includes also implicit data (e.g. sub-Classes, super-Classes, properties, etc.)
-         * @param {object|null} filter - (default = null) an optional filter for the generated data
-         * @returns {object} The JSON representation of this Class
-         */
-
-    }, {
-        key: "toJSON",
-        value: function toJSON() {
-            var implicit = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : true;
-            var filter = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
-
-            // (implicit === true) ->
-            // properties of all parent classes
-            // sub-properties of all properties ??
-            // sub-classes and their subclasses
-            // super-classes and their superclasses
-            var result = {};
-            result["id"] = this.getIRI(true);
-            result["IRI"] = this.getIRI();
-            result["type"] = this.getTermType();
-            result["vocabulary"] = this.getVocabulary();
-            result["source"] = this.getSource();
-            result["supersededBy"] = this.isSupersededBy();
-            result["name"] = this.getName();
-            result["description"] = this.getDescription();
-            result["superClasses"] = this.getSuperClasses(implicit, filter);
-            result["subClasses"] = this.getSubClasses(implicit, filter);
-            result["properties"] = this.getProperties(implicit, filter);
-            return result;
-        }
-    }]);
-
-    return Class;
-}();
+}
 
 module.exports = Class;
 
-},{"./utilities":52}],45:[function(require,module,exports){
+},{"./utilities":83}],76:[function(require,module,exports){
 "use strict";
-
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 //the functions for a data type Object
 var util = require("./utilities");
 
-var DataType = function () {
-    /**
-     * A DataType represents an schema:DataType. It is identified by its IRI
-     * @constructor
-     * @param {string} IRI - The compacted IRI of this DataType, e.g. "schema:Number"
-     * @param {object} graph - The underlying data graph to enable the methods of this DataType
-     */
-    function DataType(IRI, graph) {
-        _classCallCheck(this, DataType);
+class DataType {
+  /**
+   * A DataType represents an schema:DataType. It is identified by its IRI
+   * @constructor
+   * @param {string} IRI - The compacted IRI of this DataType, e.g. "schema:Number"
+   * @param {object} graph - The underlying data graph to enable the methods of this DataType
+   */
+  constructor(IRI, graph) {
+    this.IRI = IRI;
+    this.graph = graph;
+  }
+  /**
+   * Retrieves the IRI (@id) of this DataType in compact/absolute form
+   * @param {boolean} compactForm - (default = false), if true -> return compact IRI -> "schema:Number", if false -> return absolute IRI -> "http://schema.org/Number"
+   * @returns {string} The IRI (@id) of this DataType
+   */
 
-        this.IRI = IRI;
-        this.graph = graph;
+
+  getIRI() {
+    var compactForm = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : false;
+
+    if (compactForm) {
+      return this.IRI;
+    } else {
+      return util.toAbsoluteIRI(this.IRI, this.graph.context);
+    }
+  }
+  /**
+   * Retrieves the term type (@type) of this DataType (is always "schema:DataType")
+   * @returns {string} The term type of this DataType -> "schema:DataType"
+   */
+
+
+  getTermType() {
+    return "schema:DataType";
+  }
+  /**
+   * Retrieves the original vocabulary (schema:isPartOf) of this DataType
+   * @returns {string|null} The vocabulary IRI given by the "schema:isPartOf" of this DataType
+   */
+
+
+  getVocabulary() {
+    var dataTypeObj = this.graph.dataTypes[this.IRI];
+
+    if (dataTypeObj["schema:isPartOf"] !== undefined) {
+      return dataTypeObj["schema:isPartOf"];
+    } else {
+      return null;
+    }
+  }
+  /**
+   * Retrieves the source (dc:source) of this DataType
+   * @returns {string|null} The source IRI given by the "dc:source" of this DataType (null if none)
+   */
+
+
+  getSource() {
+    var dataTypeObj = this.graph.dataTypes[this.IRI];
+
+    if (dataTypeObj["dc:source"] !== undefined) {
+      return dataTypeObj["dc:source"];
+    } else {
+      return null;
+    }
+  }
+  /**
+   * Retrieves the DataType superseding (schema:supersededBy) this DataType
+   * @returns {string|null} The DataType superseding this DataType (null if none)
+   */
+
+
+  isSupersededBy() {
+    var dataTypeObj = this.graph.dataTypes[this.IRI];
+
+    if (util.isString(dataTypeObj["schema:supersededBy"])) {
+      return dataTypeObj["schema:supersededBy"];
+    } else {
+      return null;
+    }
+  }
+  /**
+   * Retrieves the name (rdfs:label) of this DataType in a wished language (optional)
+   * @param {string} language - (default = "en") the wished language for the name
+   * @returns {string|null} The name of this DataType (null if not given for specified language)
+   */
+
+
+  getName() {
+    var language = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : "en";
+    var nameObj = this.graph.dataTypes[this.IRI]["rdfs:label"];
+
+    if (nameObj === null || nameObj[language] === undefined) {
+      return null;
     }
 
-    /**
-     * Retrieves the IRI (@id) of this DataType in compact/absolute form
-     * @param {boolean} compactForm - (default = false), if true -> return compact IRI -> "schema:Number", if false -> return absolute IRI -> "http://schema.org/Number"
-     * @returns {string} The IRI (@id) of this DataType
-     */
+    return nameObj[language];
+  }
+  /**
+   * Retrieves the description (rdfs:comment) of this DataType in a wished language (optional)
+   * @param {string} language - (default = "en") the wished language for the description
+   * @returns {string|null} The description of this DataType (null if not given for specified language)
+   */
 
 
-    _createClass(DataType, [{
-        key: "getIRI",
-        value: function getIRI() {
-            var compactForm = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : false;
+  getDescription() {
+    var language = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : "en";
+    var descriptionObj = this.graph.dataTypes[this.IRI]["rdfs:comment"];
 
-            if (compactForm) {
-                return this.IRI;
-            } else {
-                return util.toAbsoluteIRI(this.IRI, this.graph.context);
-            }
-        }
+    if (descriptionObj === null || descriptionObj[language] === undefined) {
+      return null;
+    }
 
-        /**
-         * Retrieves the term type (@type) of this DataType (is always "schema:DataType")
-         * @returns {string} The term type of this DataType -> "schema:DataType"
-         */
+    return descriptionObj[language];
+  }
+  /**
+   * Retrieves the explicit/implicit super-DataTypes (rdfs:subClassOf) of this DataType
+   * @param {boolean} implicit - (default = true) retrieves also implicit super-DataTypes (recursive from super-DataTypes)
+   * @param {object|null} filter - (default = null) an optional filter for the super-DataTypes
+   * @returns {array} The super-DataTypes of this DataType
+   */
 
-    }, {
-        key: "getTermType",
-        value: function getTermType() {
-            return "schema:DataType";
-        }
 
-        /**
-         * Retrieves the original vocabulary (schema:isPartOf) of this DataType
-         * @returns {string|null} The vocabulary IRI given by the "schema:isPartOf" of this DataType
-         */
+  getSuperDataTypes() {
+    var implicit = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : true;
+    var filter = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
+    var dataTypeObj = this.graph.dataTypes[this.IRI];
+    var result = [];
 
-    }, {
-        key: "getVocabulary",
-        value: function getVocabulary() {
-            var dataTypeObj = this.graph.dataTypes[this.IRI];
-            if (dataTypeObj["schema:isPartOf"] !== undefined) {
-                return dataTypeObj["schema:isPartOf"];
-            } else {
-                return null;
-            }
-        }
+    if (implicit === true) {
+      result.push(...this.graph.reasoner.inferImplicitSuperDataTypes(this.IRI));
+    } else {
+      result.push(...dataTypeObj["rdfs:subClassOf"]);
+    }
 
-        /**
-         * Retrieves the source (dc:source) of this DataType
-         * @returns {string|null} The source IRI given by the "dc:source" of this DataType (null if none)
-         */
+    return util.applyFilter(util.uniquifyArray(result), filter, this.graph);
+  }
+  /**
+   * Retrieves the explicit/implicit sub-DataTypes (soa:superClassOf) of this DataType
+   * @param {boolean} implicit - (default = true) retrieves also implicit sub-DataTypes (recursive from sub-DataTypes)
+   * @param {object|null} filter - (default = null) an optional filter for the sub-DataTypes
+   * @returns {array} The sub-DataTypes of this DataType
+   */
 
-    }, {
-        key: "getSource",
-        value: function getSource() {
-            var dataTypeObj = this.graph.dataTypes[this.IRI];
-            if (dataTypeObj["dc:source"] !== undefined) {
-                return dataTypeObj["dc:source"];
-            } else {
-                return null;
-            }
-        }
 
-        /**
-         * Retrieves the DataType superseding (schema:supersededBy) this DataType
-         * @returns {string|null} The DataType superseding this DataType (null if none)
-         */
+  getSubDataTypes() {
+    var implicit = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : true;
+    var filter = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
+    var dataTypeObj = this.graph.dataTypes[this.IRI];
+    var result = [];
 
-    }, {
-        key: "isSupersededBy",
-        value: function isSupersededBy() {
-            var dataTypeObj = this.graph.dataTypes[this.IRI];
-            if (util.isString(dataTypeObj["schema:supersededBy"])) {
-                return dataTypeObj["schema:supersededBy"];
-            } else {
-                return null;
-            }
-        }
+    if (implicit === true) {
+      result.push(...this.graph.reasoner.inferImplicitSubDataTypes(this.IRI));
+    } else {
+      result.push(...dataTypeObj["soa:superClassOf"]);
+    }
 
-        /**
-         * Retrieves the name (rdfs:label) of this DataType in a wished language (optional)
-         * @param {string} language - (default = "en") the wished language for the name
-         * @returns {string|null} The name of this DataType (null if not given for specified language)
-         */
+    return util.applyFilter(util.uniquifyArray(result), filter, this.graph);
+  }
+  /**
+   * Generates a string representation of this DataType (Based on its JSON representation)
+   * @returns {string} The string representation of this DataType
+   */
 
-    }, {
-        key: "getName",
-        value: function getName() {
-            var language = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : "en";
 
-            var nameObj = this.graph.dataTypes[this.IRI]["rdfs:label"];
-            if (nameObj === null || nameObj[language] === undefined) {
-                return null;
-            }
-            return nameObj[language];
-        }
+  toString() {
+    return JSON.stringify(this.toJSON(false, null), null, 2);
+  }
+  /**
+   * Generates an explicit/implicit JSON representation of this DataType.
+   * @param {boolean} implicit - (default = true) includes also implicit data (e.g. sub-DataTypes, super-DataTypes)
+   * @param {object|null} filter - (default = null) an optional filter for the generated data
+   * @returns {object} The JSON representation of this DataType
+   */
 
-        /**
-         * Retrieves the description (rdfs:comment) of this DataType in a wished language (optional)
-         * @param {string} language - (default = "en") the wished language for the description
-         * @returns {string|null} The description of this DataType (null if not given for specified language)
-         */
 
-    }, {
-        key: "getDescription",
-        value: function getDescription() {
-            var language = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : "en";
+  toJSON() {
+    var implicit = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : true;
+    var filter = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
+    var result = {};
+    result["id"] = this.getIRI(true);
+    result["IRI"] = this.getIRI();
+    result["type"] = this.getTermType();
+    result["vocabulary"] = this.getVocabulary();
+    result["source"] = this.getSource();
+    result["supersededBy"] = this.isSupersededBy();
+    result["name"] = this.getName();
+    result["description"] = this.getDescription();
+    result["superDataTypes"] = this.getSuperDataTypes(implicit, filter);
+    result["subDataTypes"] = this.getSubDataTypes(implicit, filter);
+    return result;
+  }
 
-            var descriptionObj = this.graph.dataTypes[this.IRI]["rdfs:comment"];
-            if (descriptionObj === null || descriptionObj[language] === undefined) {
-                return null;
-            }
-            return descriptionObj[language];
-        }
-
-        /**
-         * Retrieves the explicit/implicit super-DataTypes (rdfs:subClassOf) of this DataType
-         * @param {boolean} implicit - (default = true) retrieves also implicit super-DataTypes (recursive from super-DataTypes)
-         * @param {object|null} filter - (default = null) an optional filter for the super-DataTypes
-         * @returns {array} The super-DataTypes of this DataType
-         */
-
-    }, {
-        key: "getSuperDataTypes",
-        value: function getSuperDataTypes() {
-            var implicit = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : true;
-            var filter = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
-
-            var dataTypeObj = this.graph.dataTypes[this.IRI];
-            var result = [];
-            if (implicit === true) {
-                result.push.apply(result, _toConsumableArray(this.graph.reasoner.inferImplicitSuperDataTypes(this.IRI)));
-            } else {
-                result.push.apply(result, _toConsumableArray(dataTypeObj["rdfs:subClassOf"]));
-            }
-            return util.applyFilter(util.uniquifyArray(result), filter, this.graph);
-        }
-
-        /**
-         * Retrieves the explicit/implicit sub-DataTypes (soa:superClassOf) of this DataType
-         * @param {boolean} implicit - (default = true) retrieves also implicit sub-DataTypes (recursive from sub-DataTypes)
-         * @param {object|null} filter - (default = null) an optional filter for the sub-DataTypes
-         * @returns {array} The sub-DataTypes of this DataType
-         */
-
-    }, {
-        key: "getSubDataTypes",
-        value: function getSubDataTypes() {
-            var implicit = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : true;
-            var filter = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
-
-            var dataTypeObj = this.graph.dataTypes[this.IRI];
-            var result = [];
-            if (implicit === true) {
-                result.push.apply(result, _toConsumableArray(this.graph.reasoner.inferImplicitSubDataTypes(this.IRI)));
-            } else {
-                result.push.apply(result, _toConsumableArray(dataTypeObj["soa:superClassOf"]));
-            }
-            return util.applyFilter(util.uniquifyArray(result), filter, this.graph);
-        }
-
-        /**
-         * Generates a string representation of this DataType (Based on its JSON representation)
-         * @returns {string} The string representation of this DataType
-         */
-
-    }, {
-        key: "toString",
-        value: function toString() {
-            return JSON.stringify(this.toJSON(false, null), null, 2);
-        }
-
-        /**
-         * Generates an explicit/implicit JSON representation of this DataType.
-         * @param {boolean} implicit - (default = true) includes also implicit data (e.g. sub-DataTypes, super-DataTypes)
-         * @param {object|null} filter - (default = null) an optional filter for the generated data
-         * @returns {object} The JSON representation of this DataType
-         */
-
-    }, {
-        key: "toJSON",
-        value: function toJSON() {
-            var implicit = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : true;
-            var filter = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
-
-            var result = {};
-            result["id"] = this.getIRI(true);
-            result["IRI"] = this.getIRI();
-            result["type"] = this.getTermType();
-            result["vocabulary"] = this.getVocabulary();
-            result["source"] = this.getSource();
-            result["supersededBy"] = this.isSupersededBy();
-            result["name"] = this.getName();
-            result["description"] = this.getDescription();
-            result["superDataTypes"] = this.getSuperDataTypes(implicit, filter);
-            result["subDataTypes"] = this.getSubDataTypes(implicit, filter);
-            return result;
-        }
-    }]);
-
-    return DataType;
-}();
+}
 
 module.exports = DataType;
 
-},{"./utilities":52}],46:[function(require,module,exports){
+},{"./utilities":83}],77:[function(require,module,exports){
 "use strict";
-
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 //the functions for a enumeration Object
 var util = require("./utilities");
 
-var Enumeration = function () {
-    /**
-     * An Enumeration represents a schema:Enumeration, which is also a sub-type of an rdfs:Class. It is identified by its IRI
-     * @constructor
-     * @param {string} IRI - The compacted IRI of this Enumeration, e.g. "schema:DayOfWeek"
-     * @param {object} graph - The underlying data graph to enable the methods of this Enumeration
-     */
-    function Enumeration(IRI, graph) {
-        _classCallCheck(this, Enumeration);
+class Enumeration {
+  /**
+   * An Enumeration represents a schema:Enumeration, which is also a sub-type of an rdfs:Class. It is identified by its IRI
+   * @constructor
+   * @param {string} IRI - The compacted IRI of this Enumeration, e.g. "schema:DayOfWeek"
+   * @param {object} graph - The underlying data graph to enable the methods of this Enumeration
+   */
+  constructor(IRI, graph) {
+    this.IRI = IRI;
+    this.graph = graph;
+  }
+  /**
+   * Retrieves the IRI (@id) of this Enumeration in compact/absolute form
+   * @param {boolean} compactForm - (default = false), if true -> return compact IRI -> "schema:DayOfWeek", if false -> return absolute IRI -> "http://schema.org/DayOfWeek"
+   * @returns {string} The IRI (@id) of this Enumeration
+   */
 
-        this.IRI = IRI;
-        this.graph = graph;
+
+  getIRI() {
+    var compactForm = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : false;
+
+    if (compactForm) {
+      return this.IRI;
+    } else {
+      return util.toAbsoluteIRI(this.IRI, this.graph.context);
+    }
+  }
+  /**
+   * Retrieves the term type (@type) of this Enumeration (is always "schema:Enumeration")
+   * @returns {string} The term type of this Enumeration -> "schema:Enumeration"
+   */
+
+
+  getTermType() {
+    return "schema:Enumeration";
+  }
+  /**
+   * Retrieves the original vocabulary (schema:isPartOf) of this Enumeration
+   * @returns {string|null} The vocabulary IRI given by the "schema:isPartOf" of this Enumeration
+   */
+
+
+  getVocabulary() {
+    var enumObj = this.graph.enumerations[this.IRI];
+
+    if (enumObj["schema:isPartOf"] !== undefined) {
+      return enumObj["schema:isPartOf"];
+    } else {
+      return null;
+    }
+  }
+  /**
+   * Retrieves the source (dc:source) of this Enumeration
+   * @returns {string|null} The source IRI given by the "dc:source" of this Enumeration (null if none)
+   */
+
+
+  getSource() {
+    var enumObj = this.graph.enumerations[this.IRI];
+
+    if (enumObj["dc:source"] !== undefined) {
+      return enumObj["dc:source"];
+    } else {
+      return null;
+    }
+  }
+  /**
+   * Retrieves the Enumeration superseding (schema:supersededBy) this Enumeration
+   * @returns {string|null} The Enumeration superseding this Enumeration (null if none)
+   */
+
+
+  isSupersededBy() {
+    var enumObj = this.graph.enumerations[this.IRI];
+
+    if (util.isString(enumObj["schema:supersededBy"])) {
+      return enumObj["schema:supersededBy"];
+    } else {
+      return null;
+    }
+  }
+  /**
+   * Retrieves the name (rdfs:label) of this Enumeration in a wished language (optional)
+   * @param {string} language - (default = "en") the wished language for the name
+   * @returns {string|null} The name of this Enumeration (null if not given for specified language)
+   */
+
+
+  getName() {
+    var language = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : "en";
+    var nameObj = this.graph.enumerations[this.IRI]["rdfs:label"];
+
+    if (nameObj === null || nameObj[language] === undefined) {
+      return null;
     }
 
-    /**
-     * Retrieves the IRI (@id) of this Enumeration in compact/absolute form
-     * @param {boolean} compactForm - (default = false), if true -> return compact IRI -> "schema:DayOfWeek", if false -> return absolute IRI -> "http://schema.org/DayOfWeek"
-     * @returns {string} The IRI (@id) of this Enumeration
-     */
+    return nameObj[language];
+  }
+  /**
+   * Retrieves the description (rdfs:comment) of this Enumeration in a wished language (optional)
+   * @param {string} language - (default = "en") the wished language for the description
+   * @returns {string|null} The description of this Enumeration (null if not given for specified language)
+   */
 
 
-    _createClass(Enumeration, [{
-        key: "getIRI",
-        value: function getIRI() {
-            var compactForm = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : false;
+  getDescription() {
+    var language = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : "en";
+    var descriptionObj = this.graph.enumerations[this.IRI]["rdfs:comment"];
 
-            if (compactForm) {
-                return this.IRI;
-            } else {
-                return util.toAbsoluteIRI(this.IRI, this.graph.context);
-            }
-        }
+    if (descriptionObj === null || descriptionObj[language] === undefined) {
+      return null;
+    }
 
-        /**
-         * Retrieves the term type (@type) of this Enumeration (is always "schema:Enumeration")
-         * @returns {string} The term type of this Enumeration -> "schema:Enumeration"
-         */
+    return descriptionObj[language];
+  }
+  /**
+   * Retrieves the enumeration members (soa:hasEnumerationMember) of this Enumeration
+    * @returns {array} The enumeration members of this Enumeration
+   */
 
-    }, {
-        key: "getTermType",
-        value: function getTermType() {
-            return "schema:Enumeration";
-        }
 
-        /**
-         * Retrieves the original vocabulary (schema:isPartOf) of this Enumeration
-         * @returns {string|null} The vocabulary IRI given by the "schema:isPartOf" of this Enumeration
-         */
+  getEnumerationMembers() {
+    var filter = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : null;
+    var enumObj = this.graph.enumerations[this.IRI];
+    var result = enumObj["soa:hasEnumerationMember"];
+    return util.applyFilter(util.uniquifyArray(result), filter, this.graph);
+  }
+  /**
+   * Retrieves the explicit/implicit properties (soa:hasProperty) of this Enumeration
+   * @param {boolean} implicit - (default = true) retrieves also implicit properties (inheritance from super-classes)
+   * @param {object|null} filter - (default = null) an optional filter for the properties
+   * @returns {array} The properties of this Enumeration
+   */
 
-    }, {
-        key: "getVocabulary",
-        value: function getVocabulary() {
-            var enumObj = this.graph.enumerations[this.IRI];
-            if (enumObj["schema:isPartOf"] !== undefined) {
-                return enumObj["schema:isPartOf"];
-            } else {
-                return null;
-            }
-        }
 
-        /**
-         * Retrieves the source (dc:source) of this Enumeration
-         * @returns {string|null} The source IRI given by the "dc:source" of this Enumeration (null if none)
-         */
+  getProperties() {
+    var implicit = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : true;
+    var filter = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
+    var enumObj = this.graph.enumerations[this.IRI];
+    var result = [];
+    result.push(...enumObj["soa:hasProperty"]);
 
-    }, {
-        key: "getSource",
-        value: function getSource() {
-            var enumObj = this.graph.enumerations[this.IRI];
-            if (enumObj["dc:source"] !== undefined) {
-                return enumObj["dc:source"];
-            } else {
-                return null;
-            }
-        }
+    if (implicit === true) {
+      //add properties from super-classes
+      result.push(...this.graph.reasoner.inferPropertiesFromSuperClasses(enumObj["rdfs:subClassOf"])); //add sub-properties ?
+      // for (let p = 0; p < result.length; p++) {
+      //     result.push(... this.graph.reasoner.inferSubProperties(result[p]));
+      // }
+    }
 
-        /**
-         * Retrieves the Enumeration superseding (schema:supersededBy) this Enumeration
-         * @returns {string|null} The Enumeration superseding this Enumeration (null if none)
-         */
+    return util.applyFilter(util.uniquifyArray(result), filter, this.graph);
+  }
+  /**
+   * Retrieves the explicit/implicit super-classes (rdfs:subClassOf) of this Enumeration
+   * @param {boolean} implicit - (default = true) retrieves also implicit super-classes (recursive from super-classes)
+   * @param {object|null} filter - (default = null) an optional filter for the super-classes
+   * @returns {array} The super-classes of this Enumeration
+   */
 
-    }, {
-        key: "isSupersededBy",
-        value: function isSupersededBy() {
-            var enumObj = this.graph.enumerations[this.IRI];
-            if (util.isString(enumObj["schema:supersededBy"])) {
-                return enumObj["schema:supersededBy"];
-            } else {
-                return null;
-            }
-        }
 
-        /**
-         * Retrieves the name (rdfs:label) of this Enumeration in a wished language (optional)
-         * @param {string} language - (default = "en") the wished language for the name
-         * @returns {string|null} The name of this Enumeration (null if not given for specified language)
-         */
+  getSuperClasses() {
+    var implicit = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : true;
+    var filter = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
+    var enumObj = this.graph.enumerations[this.IRI];
+    var result = [];
 
-    }, {
-        key: "getName",
-        value: function getName() {
-            var language = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : "en";
+    if (implicit === true) {
+      result.push(...this.graph.reasoner.inferImplicitSuperClasses(this.IRI));
+    } else {
+      result.push(...enumObj["rdfs:subClassOf"]);
+    }
 
-            var nameObj = this.graph.enumerations[this.IRI]["rdfs:label"];
-            if (nameObj === null || nameObj[language] === undefined) {
-                return null;
-            }
-            return nameObj[language];
-        }
+    return util.applyFilter(util.uniquifyArray(result), filter, this.graph);
+  }
+  /**
+   * Retrieves the explicit/implicit sub-classes (soa:superClassOf) of this Enumeration
+   * @param {boolean} implicit - (default = true) retrieves also implicit sub-classes (recursive from sub-classes)
+   * @param {object|null} filter - (default = null) an optional filter for the sub-classes
+   * @returns {array} The sub-classes of this Enumeration
+   */
 
-        /**
-         * Retrieves the description (rdfs:comment) of this Enumeration in a wished language (optional)
-         * @param {string} language - (default = "en") the wished language for the description
-         * @returns {string|null} The description of this Enumeration (null if not given for specified language)
-         */
 
-    }, {
-        key: "getDescription",
-        value: function getDescription() {
-            var language = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : "en";
+  getSubClasses() {
+    var implicit = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : true;
+    var filter = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
+    var enumObj = this.graph.enumerations[this.IRI];
+    var result = [];
 
-            var descriptionObj = this.graph.enumerations[this.IRI]["rdfs:comment"];
-            if (descriptionObj === null || descriptionObj[language] === undefined) {
-                return null;
-            }
-            return descriptionObj[language];
-        }
+    if (implicit === true) {
+      result.push(...this.graph.reasoner.inferImplicitSubClasses(this.IRI));
+    } else {
+      result.push(...enumObj["soa:superClassOf"]);
+    }
 
-        /**
-         * Retrieves the enumeration members (soa:hasEnumerationMember) of this Enumeration
-          * @returns {array} The enumeration members of this Enumeration
-         */
+    return util.applyFilter(util.uniquifyArray(result), filter, this.graph);
+  }
+  /**
+   * Generates a string representation of this Enumeration (Based on its JSON representation)
+   * @returns {string} The string representation of this Enumeration
+   */
 
-    }, {
-        key: "getEnumerationMembers",
-        value: function getEnumerationMembers() {
-            var filter = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : null;
 
-            var enumObj = this.graph.enumerations[this.IRI];
-            var result = enumObj["soa:hasEnumerationMember"];
-            return util.applyFilter(util.uniquifyArray(result), filter, this.graph);
-        }
+  toString() {
+    return JSON.stringify(this.toJSON(false, null), null, 2);
+  }
+  /**
+   * Generates an explicit/implicit JSON representation of this Enumeration
+   * @param {boolean} implicit - (default = true) includes also implicit data
+   * @param {object|null} filter - (default = null) an optional filter for the generated data
+   * @returns {object} The JSON representation of this Enumeration
+   */
 
-        /**
-         * Retrieves the explicit/implicit properties (soa:hasProperty) of this Enumeration
-         * @param {boolean} implicit - (default = true) retrieves also implicit properties (inheritance from super-classes)
-         * @param {object|null} filter - (default = null) an optional filter for the properties
-         * @returns {array} The properties of this Enumeration
-         */
 
-    }, {
-        key: "getProperties",
-        value: function getProperties() {
-            var implicit = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : true;
-            var filter = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
+  toJSON() {
+    var implicit = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : true;
+    var filter = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
+    var result = {};
+    result["id"] = this.getIRI(true);
+    result["IRI"] = this.getIRI();
+    result["type"] = this.getTermType();
+    result["vocabulary"] = this.getVocabulary();
+    result["source"] = this.getSource();
+    result["supersededBy"] = this.isSupersededBy();
+    result["name"] = this.getName();
+    result["description"] = this.getDescription();
+    result["enumerationMembers"] = this.getEnumerationMembers(filter);
+    result["superClasses"] = this.getSuperClasses(implicit, filter);
+    result["subClasses"] = this.getSubClasses(implicit, filter);
+    result["properties"] = this.getProperties(implicit, filter);
+    return result;
+  }
 
-            var enumObj = this.graph.enumerations[this.IRI];
-            var result = [];
-            result.push.apply(result, _toConsumableArray(enumObj["soa:hasProperty"]));
-            if (implicit === true) {
-                //add properties from super-classes
-                result.push.apply(result, _toConsumableArray(this.graph.reasoner.inferPropertiesFromSuperClasses(enumObj["rdfs:subClassOf"])));
-                //add sub-properties ?
-                // for (let p = 0; p < result.length; p++) {
-                //     result.push(... this.graph.reasoner.inferSubProperties(result[p]));
-                // }
-            }
-            return util.applyFilter(util.uniquifyArray(result), filter, this.graph);
-        }
-
-        /**
-         * Retrieves the explicit/implicit super-classes (rdfs:subClassOf) of this Enumeration
-         * @param {boolean} implicit - (default = true) retrieves also implicit super-classes (recursive from super-classes)
-         * @param {object|null} filter - (default = null) an optional filter for the super-classes
-         * @returns {array} The super-classes of this Enumeration
-         */
-
-    }, {
-        key: "getSuperClasses",
-        value: function getSuperClasses() {
-            var implicit = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : true;
-            var filter = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
-
-            var enumObj = this.graph.enumerations[this.IRI];
-            var result = [];
-            if (implicit === true) {
-                result.push.apply(result, _toConsumableArray(this.graph.reasoner.inferImplicitSuperClasses(this.IRI)));
-            } else {
-                result.push.apply(result, _toConsumableArray(enumObj["rdfs:subClassOf"]));
-            }
-            return util.applyFilter(util.uniquifyArray(result), filter, this.graph);
-        }
-
-        /**
-         * Retrieves the explicit/implicit sub-classes (soa:superClassOf) of this Enumeration
-         * @param {boolean} implicit - (default = true) retrieves also implicit sub-classes (recursive from sub-classes)
-         * @param {object|null} filter - (default = null) an optional filter for the sub-classes
-         * @returns {array} The sub-classes of this Enumeration
-         */
-
-    }, {
-        key: "getSubClasses",
-        value: function getSubClasses() {
-            var implicit = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : true;
-            var filter = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
-
-            var enumObj = this.graph.enumerations[this.IRI];
-            var result = [];
-            if (implicit === true) {
-                result.push.apply(result, _toConsumableArray(this.graph.reasoner.inferImplicitSubClasses(this.IRI)));
-            } else {
-                result.push.apply(result, _toConsumableArray(enumObj["soa:superClassOf"]));
-            }
-            return util.applyFilter(util.uniquifyArray(result), filter, this.graph);
-        }
-
-        /**
-         * Generates a string representation of this Enumeration (Based on its JSON representation)
-         * @returns {string} The string representation of this Enumeration
-         */
-
-    }, {
-        key: "toString",
-        value: function toString() {
-            return JSON.stringify(this.toJSON(false, null), null, 2);
-        }
-
-        /**
-         * Generates an explicit/implicit JSON representation of this Enumeration
-         * @param {boolean} implicit - (default = true) includes also implicit data
-         * @param {object|null} filter - (default = null) an optional filter for the generated data
-         * @returns {object} The JSON representation of this Enumeration
-         */
-
-    }, {
-        key: "toJSON",
-        value: function toJSON() {
-            var implicit = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : true;
-            var filter = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
-
-            var result = {};
-            result["id"] = this.getIRI(true);
-            result["IRI"] = this.getIRI();
-            result["type"] = this.getTermType();
-            result["vocabulary"] = this.getVocabulary();
-            result["source"] = this.getSource();
-            result["supersededBy"] = this.isSupersededBy();
-            result["name"] = this.getName();
-            result["description"] = this.getDescription();
-            result["enumerationMembers"] = this.getEnumerationMembers(filter);
-            result["superClasses"] = this.getSuperClasses(implicit, filter);
-            result["subClasses"] = this.getSubClasses(implicit, filter);
-            result["properties"] = this.getProperties(implicit, filter);
-            return result;
-        }
-    }]);
-
-    return Enumeration;
-}();
+}
 
 module.exports = Enumeration;
 
-},{"./utilities":52}],47:[function(require,module,exports){
+},{"./utilities":83}],78:[function(require,module,exports){
 "use strict";
-
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 //the functions for a enumeration member Object
 var util = require("./utilities");
 
-var EnumerationMember = function () {
-    /**
-     * An EnumerationMember represents a possible value for a schema:Enumeration. It is identified by its IRI
-     * @constructor
-     * @param {string} IRI - The compacted IRI of this EnumerationMember, e.g. "schema:Friday"
-     * @param {object} graph - The underlying data graph to enable the methods of this EnumerationMember
-     */
-    function EnumerationMember(IRI, graph) {
-        _classCallCheck(this, EnumerationMember);
+class EnumerationMember {
+  /**
+   * An EnumerationMember represents a possible value for a schema:Enumeration. It is identified by its IRI
+   * @constructor
+   * @param {string} IRI - The compacted IRI of this EnumerationMember, e.g. "schema:Friday"
+   * @param {object} graph - The underlying data graph to enable the methods of this EnumerationMember
+   */
+  constructor(IRI, graph) {
+    this.IRI = IRI;
+    this.graph = graph;
+  }
+  /**
+   * Retrieves the IRI (@id) of this EnumerationMember in compact/absolute form
+   * @param {boolean} compactForm - (default = false), if true -> return compact IRI -> "schema:Friday", if false -> return absolute IRI -> "http://schema.org/Friday"
+   * @returns {string} The IRI (@id) of this EnumerationMember
+   */
 
-        this.IRI = IRI;
-        this.graph = graph;
+
+  getIRI() {
+    var compactForm = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : false;
+
+    if (compactForm) {
+      return this.IRI;
+    } else {
+      return util.toAbsoluteIRI(this.IRI, this.graph.context);
+    }
+  }
+  /**
+   * Retrieves the term type (@type) of this EnumerationMember (is always "schema:Enumeration")
+   * @returns {string} The term type of this EnumerationMember -> "soa:EnumerationMember" //there is no explicit type for enumeration members in the Schema.org Meta, so we use our own definition
+   */
+
+
+  getTermType() {
+    return "soa:EnumerationMember";
+  }
+  /**
+   * Retrieves the original vocabulary (schema:isPartOf) of this EnumerationMember
+   * @returns {string|null} The vocabulary IRI given by the "schema:isPartOf" of this EnumerationMember
+   */
+
+
+  getVocabulary() {
+    var enumObj = this.graph.enumerationMembers[this.IRI];
+
+    if (enumObj["schema:isPartOf"] !== undefined) {
+      return enumObj["schema:isPartOf"];
+    } else {
+      return null;
+    }
+  }
+  /**
+   * Retrieves the source (dc:source) of this EnumerationMember
+   * @returns {string|Array|null} The source IRI given by the "dc:source" of this EnumerationMember (null if none)
+   */
+
+
+  getSource() {
+    var enumObj = this.graph.enumerationMembers[this.IRI];
+
+    if (enumObj["dc:source"] !== undefined) {
+      return enumObj["dc:source"];
+    } else {
+      return null;
+    }
+  }
+  /**
+   * Retrieves the EnumerationMember superseding (schema:supersededBy) this EnumerationMember
+   * @returns {string|null} The EnumerationMember superseding this EnumerationMember (null if none)
+   */
+
+
+  isSupersededBy() {
+    var enumObj = this.graph.enumerationMembers[this.IRI];
+
+    if (util.isString(enumObj["schema:supersededBy"])) {
+      return enumObj["schema:supersededBy"];
+    } else {
+      return null;
+    }
+  }
+  /**
+   * Retrieves the name (rdfs:label) of this EnumerationMember in a wished language (optional)
+   * @param {string} language - (default = "en") the wished language for the name
+   * @returns {string|null} The name of this EnumerationMember (null if not given for specified language)
+   */
+
+
+  getName() {
+    var language = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : "en";
+    var nameObj = this.graph.enumerationMembers[this.IRI]["rdfs:label"];
+
+    if (nameObj === null || nameObj[language] === undefined) {
+      return null;
     }
 
-    /**
-     * Retrieves the IRI (@id) of this EnumerationMember in compact/absolute form
-     * @param {boolean} compactForm - (default = false), if true -> return compact IRI -> "schema:Friday", if false -> return absolute IRI -> "http://schema.org/Friday"
-     * @returns {string} The IRI (@id) of this EnumerationMember
-     */
+    return nameObj[language];
+  }
+  /**
+   * Retrieves the description (rdfs:comment) of this EnumerationMember in a wished language (optional)
+   * @param {string} language - (default = "en") the wished language for the description
+   * @returns {string|null} The description of this EnumerationMember (null if not given for specified language)
+   */
 
 
-    _createClass(EnumerationMember, [{
-        key: "getIRI",
-        value: function getIRI() {
-            var compactForm = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : false;
+  getDescription() {
+    var language = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : "en";
+    var descriptionObj = this.graph.enumerationMembers[this.IRI]["rdfs:comment"];
 
-            if (compactForm) {
-                return this.IRI;
-            } else {
-                return util.toAbsoluteIRI(this.IRI, this.graph.context);
-            }
-        }
+    if (descriptionObj === null || descriptionObj[language] === undefined) {
+      return null;
+    }
 
-        /**
-         * Retrieves the term type (@type) of this EnumerationMember (is always "schema:Enumeration")
-         * @returns {string} The term type of this EnumerationMember -> "soa:EnumerationMember" //there is no explicit type for enumeration members in the Schema.org Meta, so we use our own definition
-         */
+    return descriptionObj[language];
+  }
+  /**
+   * Retrieves the domain enumerations (soa:enumerationDomainIncludes) of this EnumerationMember
+   * @param {object|null} filter - (default = null) an optional filter for the domain enumerations
+   * @returns {array} The domain enumerations of this EnumerationMember
+   */
 
-    }, {
-        key: "getTermType",
-        value: function getTermType() {
-            return "soa:EnumerationMember";
-        }
 
-        /**
-         * Retrieves the original vocabulary (schema:isPartOf) of this EnumerationMember
-         * @returns {string|null} The vocabulary IRI given by the "schema:isPartOf" of this EnumerationMember
-         */
+  getDomainEnumerations() {
+    var filter = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : null;
+    var enumObj = this.graph.enumerationMembers[this.IRI];
+    var result = enumObj["soa:enumerationDomainIncludes"];
+    return util.applyFilter(util.uniquifyArray(result), filter, this.graph);
+  }
+  /**
+   * Generates a string representation of this EnumerationMember (Based on its JSON representation)
+   * @returns {string} The string representation of this EnumerationMember
+   */
 
-    }, {
-        key: "getVocabulary",
-        value: function getVocabulary() {
-            var enumObj = this.graph.enumerationMembers[this.IRI];
-            if (enumObj["schema:isPartOf"] !== undefined) {
-                return enumObj["schema:isPartOf"];
-            } else {
-                return null;
-            }
-        }
 
-        /**
-         * Retrieves the source (dc:source) of this EnumerationMember
-         * @returns {string|Array|null} The source IRI given by the "dc:source" of this EnumerationMember (null if none)
-         */
+  toString() {
+    return JSON.stringify(this.toJSON(false, null), null, 2);
+  }
+  /**
+   * Generates a JSON representation of this EnumerationMember
+   * @param {object|null} filter - (default = null) an optional filter for the generated data
+   * @returns {object} The JSON representation of this EnumerationMember
+   */
 
-    }, {
-        key: "getSource",
-        value: function getSource() {
-            var enumObj = this.graph.enumerationMembers[this.IRI];
-            if (enumObj["dc:source"] !== undefined) {
-                return enumObj["dc:source"];
-            } else {
-                return null;
-            }
-        }
 
-        /**
-         * Retrieves the EnumerationMember superseding (schema:supersededBy) this EnumerationMember
-         * @returns {string|null} The EnumerationMember superseding this EnumerationMember (null if none)
-         */
+  toJSON() {
+    var filter = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : null;
+    var result = {};
+    result["id"] = this.getIRI(true);
+    result["IRI"] = this.getIRI();
+    result["type"] = this.getTermType();
+    result["vocabulary"] = this.getVocabulary();
+    result["source"] = this.getSource();
+    result["supersededBy"] = this.isSupersededBy();
+    result["name"] = this.getName();
+    result["description"] = this.getDescription();
+    result["domainEnumerations"] = this.getDomainEnumerations(filter);
+    return result;
+  }
 
-    }, {
-        key: "isSupersededBy",
-        value: function isSupersededBy() {
-            var enumObj = this.graph.enumerationMembers[this.IRI];
-            if (util.isString(enumObj["schema:supersededBy"])) {
-                return enumObj["schema:supersededBy"];
-            } else {
-                return null;
-            }
-        }
-
-        /**
-         * Retrieves the name (rdfs:label) of this EnumerationMember in a wished language (optional)
-         * @param {string} language - (default = "en") the wished language for the name
-         * @returns {string|null} The name of this EnumerationMember (null if not given for specified language)
-         */
-
-    }, {
-        key: "getName",
-        value: function getName() {
-            var language = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : "en";
-
-            var nameObj = this.graph.enumerationMembers[this.IRI]["rdfs:label"];
-            if (nameObj === null || nameObj[language] === undefined) {
-                return null;
-            }
-            return nameObj[language];
-        }
-
-        /**
-         * Retrieves the description (rdfs:comment) of this EnumerationMember in a wished language (optional)
-         * @param {string} language - (default = "en") the wished language for the description
-         * @returns {string|null} The description of this EnumerationMember (null if not given for specified language)
-         */
-
-    }, {
-        key: "getDescription",
-        value: function getDescription() {
-            var language = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : "en";
-
-            var descriptionObj = this.graph.enumerationMembers[this.IRI]["rdfs:comment"];
-            if (descriptionObj === null || descriptionObj[language] === undefined) {
-                return null;
-            }
-            return descriptionObj[language];
-        }
-
-        /**
-         * Retrieves the domain enumerations (soa:enumerationDomainIncludes) of this EnumerationMember
-         * @param {object|null} filter - (default = null) an optional filter for the domain enumerations
-         * @returns {array} The domain enumerations of this EnumerationMember
-         */
-
-    }, {
-        key: "getDomainEnumerations",
-        value: function getDomainEnumerations() {
-            var filter = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : null;
-
-            var enumObj = this.graph.enumerationMembers[this.IRI];
-            var result = enumObj["soa:enumerationDomainIncludes"];
-            return util.applyFilter(util.uniquifyArray(result), filter, this.graph);
-        }
-
-        /**
-         * Generates a string representation of this EnumerationMember (Based on its JSON representation)
-         * @returns {string} The string representation of this EnumerationMember
-         */
-
-    }, {
-        key: "toString",
-        value: function toString() {
-            return JSON.stringify(this.toJSON(false, null), null, 2);
-        }
-
-        /**
-         * Generates a JSON representation of this EnumerationMember
-         * @param {object|null} filter - (default = null) an optional filter for the generated data
-         * @returns {object} The JSON representation of this EnumerationMember
-         */
-
-    }, {
-        key: "toJSON",
-        value: function toJSON() {
-            var filter = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : null;
-
-            var result = {};
-            result["id"] = this.getIRI(true);
-            result["IRI"] = this.getIRI();
-            result["type"] = this.getTermType();
-            result["vocabulary"] = this.getVocabulary();
-            result["source"] = this.getSource();
-            result["supersededBy"] = this.isSupersededBy();
-            result["name"] = this.getName();
-            result["description"] = this.getDescription();
-            result["domainEnumerations"] = this.getDomainEnumerations(filter);
-            return result;
-        }
-    }]);
-
-    return EnumerationMember;
-}();
+}
 
 module.exports = EnumerationMember;
 
-},{"./utilities":52}],48:[function(require,module,exports){
+},{"./utilities":83}],79:[function(require,module,exports){
 "use strict";
 
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { Promise.resolve(value).then(_next, _throw); } }
 
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+function _asyncToGenerator(fn) { return function () { var self = this, args = arguments; return new Promise(function (resolve, reject) { var gen = fn.apply(self, args); function _next(value) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value); } function _throw(err) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err); } _next(undefined); }); }; }
 
 var util = require("./utilities");
+
 var Class = require("./Class");
+
 var Property = require("./Property");
+
 var Enumeration = require("./Enumeration");
+
 var EnumerationMember = require("./EnumerationMember");
+
 var DataType = require("./DataType");
+
 var ReasoningEngine = require("./ReasoningEngine");
 
-var Graph = function () {
-    /**
-     * @constructor
-     * @param {object} sdoAdapter - The parent sdoAdapter-class to which this Graph belongs
-     */
-    function Graph(sdoAdapter) {
-        _classCallCheck(this, Graph);
+class Graph {
+  /**
+   * @constructor
+   * @param {object} sdoAdapter - The parent sdoAdapter-class to which this Graph belongs
+   */
+  constructor(sdoAdapter) {
+    this.sdoAdapter = sdoAdapter;
+    this.reasoner = new ReasoningEngine(this); // Simply speaking, a context is used to map terms to IRIs. Terms are case sensitive and any valid string that is not a reserved JSON-LD keyword can be used as a term.
+    // soa:superClassOf is an inverse of rdfs:subClassOf that should help us
+    // soa:superPropertyOf is an inverse of rdfs:subPropertyOf that should help us
+    // soa:hasProperty is an inverse of schema:domainIncludes
+    // soa:isRangeOf is an inverse of schema:rangeIncludes
+    // soa:hasEnumerationMember is used for enumerations to list all its enumeration members (their @type includes the @id of the enumeration)
+    // soa:enumerationDomainIncludes is an inverse of soa:hasEnumerationMember
+    // soa:EnumerationMember is introduced as meta type for the members of an schema:Enumeration
 
-        this.sdoAdapter = sdoAdapter;
-        this.reasoner = new ReasoningEngine(this);
-        // Simply speaking, a context is used to map terms to IRIs. Terms are case sensitive and any valid string that is not a reserved JSON-LD keyword can be used as a term.
-        // soa:superClassOf is an inverse of rdfs:subClassOf that should help us
-        // soa:superPropertyOf is an inverse of rdfs:subPropertyOf that should help us
-        // soa:hasProperty is an inverse of schema:domainIncludes
-        // soa:isRangeOf is an inverse of schema:rangeIncludes
-        // soa:hasEnumerationMember is used for enumerations to list all its enumeration members (their @type includes the @id of the enumeration)
-        // soa:enumerationDomainIncludes is an inverse of soa:hasEnumerationMember
-        // soa:EnumerationMember is introduced as meta type for the members of an schema:Enumeration
-        this.context = {
-            "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
-            "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
-            "xsd": "http://www.w3.org/2001/XMLSchema#",
-            "dc": "http://purl.org/dc/terms/",
-            "schema": "http://schema.org/",
-            "soa": "http://schema-org-adapter.at/vocabTerms/",
-            "soa:superClassOf": {
-                "@id": "soa:superClassOf",
-                "@type": "@id"
-            },
-            "soa:superPropertyOf": {
-                "@id": "soa:superPropertyOf",
-                "@type": "@id"
-            },
-            "soa:hasProperty": {
-                "@id": "soa:hasProperty",
-                "@type": "@id"
-            },
-            "soa:isRangeOf": {
-                "@id": "soa:isRangeOf",
-                "@type": "@id"
-            },
-            "soa:hasEnumerationMember": {
-                "@id": "soa:hasEnumerationMember",
-                "@type": "@id"
-            },
-            "soa:enumerationDomainIncludes": {
-                "@id": "soa:enumerationDomainIncludes",
-                "@type": "@id"
-            },
-            "rdfs:subClassOf": {
-                "@id": "rdfs:subClassOf",
-                "@type": "@id"
-            },
-            "rdfs:subPropertyOf": {
-                "@id": "rdfs:subPropertyOf",
-                "@type": "@id"
-            },
-            "schema:isPartOf": {
-                "@id": "schema:isPartOf",
-                "@type": "@id"
-            },
-            "schema:domainIncludes": {
-                "@id": "schema:domainIncludes",
-                "@type": "@id"
-            },
-            "schema:rangeIncludes": {
-                "@id": "schema:rangeIncludes",
-                "@type": "@id"
-            },
-            "schema:supersededBy": {
-                "@id": "schema:supersededBy",
-                "@type": "@id"
-            },
-            "schema:inverseOf": {
-                "@id": "schema:inverseOf",
-                "@type": "@id"
-            },
-            "dc:source": {
-                "@id": "dc:source",
-                "@type": "@id"
+    this.context = {
+      "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+      "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+      "xsd": "http://www.w3.org/2001/XMLSchema#",
+      "dc": "http://purl.org/dc/terms/",
+      "schema": "http://schema.org/",
+      "soa": "http://schema-org-adapter.at/vocabTerms/",
+      "soa:superClassOf": {
+        "@id": "soa:superClassOf",
+        "@type": "@id"
+      },
+      "soa:superPropertyOf": {
+        "@id": "soa:superPropertyOf",
+        "@type": "@id"
+      },
+      "soa:hasProperty": {
+        "@id": "soa:hasProperty",
+        "@type": "@id"
+      },
+      "soa:isRangeOf": {
+        "@id": "soa:isRangeOf",
+        "@type": "@id"
+      },
+      "soa:hasEnumerationMember": {
+        "@id": "soa:hasEnumerationMember",
+        "@type": "@id"
+      },
+      "soa:enumerationDomainIncludes": {
+        "@id": "soa:enumerationDomainIncludes",
+        "@type": "@id"
+      },
+      "rdfs:subClassOf": {
+        "@id": "rdfs:subClassOf",
+        "@type": "@id"
+      },
+      "rdfs:subPropertyOf": {
+        "@id": "rdfs:subPropertyOf",
+        "@type": "@id"
+      },
+      "schema:isPartOf": {
+        "@id": "schema:isPartOf",
+        "@type": "@id"
+      },
+      "schema:domainIncludes": {
+        "@id": "schema:domainIncludes",
+        "@type": "@id"
+      },
+      "schema:rangeIncludes": {
+        "@id": "schema:rangeIncludes",
+        "@type": "@id"
+      },
+      "schema:supersededBy": {
+        "@id": "schema:supersededBy",
+        "@type": "@id"
+      },
+      "schema:inverseOf": {
+        "@id": "schema:inverseOf",
+        "@type": "@id"
+      },
+      "dc:source": {
+        "@id": "dc:source",
+        "@type": "@id"
+      }
+    };
+    this.classes = {}; //keys are the compacted IRI
+
+    this.properties = {}; //keys are the compacted IRI
+
+    this.dataTypes = {}; //keys are the compacted IRI
+
+    this.enumerations = {}; //keys are the compacted IRI
+
+    this.enumerationMembers = {}; //keys are the compacted IRI
+  }
+  /**
+   * Adds a new vocabulary (in JSON-LD format) to the graph data
+   * @param {object} vocab - The vocabulary to add the graph, in JSON-LD format
+   * @return {boolean} returns true on success
+   */
+
+
+  addVocabulary(vocab) {
+    var _this = this;
+
+    return _asyncToGenerator(function* () {
+      //this algorithm is well-documented in /docu/algorithm.md
+      try {
+        //A) Pre-process Vocabulary
+        //create new context
+        _this.context = util.generateContext(_this.context, vocab["@context"]); //pre-process new vocab
+
+        vocab = yield util.preProcessVocab(vocab, _this.context); //adapt @graph to new context
+
+        var vocabularies = _this.sdoAdapter.getVocabularies();
+
+        for (var i = 0; i < vocab["@graph"].length; i++) {
+          vocab["@graph"][i] = util.curateNode(vocab["@graph"][i], vocabularies); //curate nodes
+        } //B) Classify Input
+
+        /**
+         Classify every @graph node based on its @type. The node is transformed to another data-model based on the @type and stored in a new memory storage for an easier further usage. This is the first of two steps for an exact classification of the node, since the @type is not enough for a correct classification. The mapping of our data model and the @type(s) of the corresponding @graph nodes are as follows:
+         classes ("@type" = "rdfs:Class")
+         properties ("@type" = "rdf:Property")
+         dataTypes ("@type" = "rdfs:Class" + "http://schema.org/DataType")
+         enumerations ("@type" = "rdfs:Class", has "http://schema.org/Enumeration" as implicit super-class)
+         enumerationMembers ("@type" = @id(s) of enumeration(s))
+         */
+
+
+        for (var _i = 0; _i < vocab["@graph"].length; _i++) {
+          var curNode = JSON.parse(JSON.stringify(vocab["@graph"][_i]));
+
+          if (util.isString(curNode["@type"])) {
+            switch (curNode["@type"]) {
+              case "rdfs:Class":
+                _this.addGraphNode(_this.classes, curNode);
+
+                break;
+
+              case "rdf:Property":
+                _this.addGraphNode(_this.properties, curNode);
+
+                break;
+
+              default:
+                //@type is not something expected -> enumerationMember
+                _this.addGraphNode(_this.enumerationMembers, curNode);
+
+                break;
             }
-        };
-        this.classes = {}; //keys are the compacted IRI
-        this.properties = {}; //keys are the compacted IRI
-        this.dataTypes = {}; //keys are the compacted IRI
-        this.enumerations = {}; //keys are the compacted IRI
-        this.enumerationMembers = {}; //keys are the compacted IRI
+          } else if (util.isArray(curNode["@type"])) {
+            //@type is not a string -> datatype or enumeration
+            // [
+            //     "rdfs:Class",
+            //     "schema:DataType"
+            // ]
+            //[
+            //   "schema:MedicalImagingTechnique",
+            //   "schema:MedicalSpecialty"
+            // ]
+            if (curNode["@type"].indexOf("rdfs:Class") !== -1 && curNode["@type"].indexOf("schema:DataType") !== -1) {
+              //datatype
+              _this.addGraphNode(_this.dataTypes, curNode);
+            } else {
+              //enumeration member
+              _this.addGraphNode(_this.enumerationMembers, curNode);
+            }
+          } else {
+            console.log("unexpected @type format for the following node:");
+            console.log(JSON.stringify(curNode, null, 2));
+          }
+        } //C) Classification cleaning
+
+        /* To have a correct classification for our data model it is needed to clean the data generated in the previous step. Inaccurate records include:
+         Enumerations which are handled as Classes.
+         DataTypes which are handled as Classes.
+         */
+        //C.1)  Extract enumerations from classes memory
+        // For each entry in the classes memory check if its superClasses contain Enumeration or another Enumeration. If this is the case, it is known that this class is an enumeration.
+
+
+        var newEnum;
+
+        do {
+          newEnum = false;
+
+          var _classesKeys = Object.keys(_this.classes);
+
+          var _enumKeys = Object.keys(_this.enumerations);
+
+          for (var _i2 = 0; _i2 < _classesKeys.length; _i2++) {
+            if (_this.classes[_classesKeys[_i2]]["rdfs:subClassOf"] !== undefined) {
+              var subClassArray = _this.classes[_classesKeys[_i2]]["rdfs:subClassOf"];
+
+              for (var j = 0; j < subClassArray.length; j++) {
+                if (_enumKeys.indexOf(subClassArray[j]) !== -1 || subClassArray[j] === "schema:Enumeration") {
+                  if (_this.classes[_classesKeys[_i2]] !== undefined && _this.enumerations[_classesKeys[_i2]] === undefined) {
+                    newEnum = true;
+                    _this.enumerations[_classesKeys[_i2]] = JSON.parse(JSON.stringify(_this.classes[_classesKeys[_i2]]));
+                    delete _this.classes[_classesKeys[_i2]];
+                  }
+                }
+              }
+            }
+          }
+        } while (newEnum); //C.2) check if there are subclasses of dataTypes which are in the classes data, put them in dataType data
+
+
+        var newDatatype;
+
+        do {
+          newDatatype = false;
+
+          var _classesKeys2 = Object.keys(_this.classes);
+
+          var _dtKeys = Object.keys(_this.dataTypes);
+
+          for (var _i3 = 0; _i3 < _classesKeys2.length; _i3++) {
+            if (_this.classes[_classesKeys2[_i3]]["rdfs:subClassOf"] !== undefined) {
+              var _subClassArray = _this.classes[_classesKeys2[_i3]]["rdfs:subClassOf"];
+
+              for (var _j = 0; _j < _subClassArray.length; _j++) {
+                if (_dtKeys.indexOf(_subClassArray[_j]) !== -1 || _subClassArray[_j] === "schema:DataType") {
+                  if (_this.classes[_classesKeys2[_i3]] !== undefined && _this.dataTypes[_classesKeys2[_i3]] === undefined) {
+                    newDatatype = true;
+                    _this.dataTypes[_classesKeys2[_i3]] = JSON.parse(JSON.stringify(_this.classes[_classesKeys2[_i3]]));
+                    delete _this.classes[_classesKeys2[_i3]];
+                  }
+                }
+              }
+            }
+          }
+        } while (newDatatype); //C.3) change the @type of data-types to a single value, which is "schema:DataType"
+
+
+        var dtKeys = Object.keys(_this.dataTypes);
+
+        for (var _i4 = 0; _i4 < dtKeys.length; _i4++) {
+          _this.dataTypes[dtKeys[_i4]]["@type"] = "schema:DataType";
+        } //D) Inheritance
+
+        /*    Schema.org's Inheritance design states if an entity is the superClass/superProperty of another entity. In our data model design we also hold the information if an entity is the subClass/subProperty of another entity. In this step this inheritance information is generated.*/
+        // D.1) Add subClasses for Classes and Enumerations
+        //check superclasses for all classes and enumerations. Add these classes/enumerations as subclasses (soa:superClassOf) for the parent class/enumeration
+
+
+        var classesKeys = Object.keys(_this.classes);
+
+        for (var c = 0; c < classesKeys.length; c++) {
+          var superClasses = _this.classes[classesKeys[c]]["rdfs:subClassOf"]; //add empty superClassOf if not defined
+
+          if (_this.classes[classesKeys[c]]["soa:superClassOf"] === undefined) {
+            _this.classes[classesKeys[c]]["soa:superClassOf"] = [];
+          }
+
+          for (var s = 0; s < superClasses.length; s++) {
+            var superClass = _this.classes[superClasses[s]];
+
+            if (superClass === undefined) {
+              superClass = _this.enumerations[superClasses[s]];
+            }
+
+            if (superClass !== undefined) {
+              if (superClass["soa:superClassOf"] !== undefined) {
+                if (superClass["soa:superClassOf"].indexOf(classesKeys[c]) === -1) {
+                  superClass["soa:superClassOf"].push(classesKeys[c]);
+                }
+              } else {
+                superClass["soa:superClassOf"] = [classesKeys[c]];
+              }
+            }
+          }
+        }
+
+        var enumKeys = Object.keys(_this.enumerations);
+
+        for (var e = 0; e < enumKeys.length; e++) {
+          var _superClasses = _this.enumerations[enumKeys[e]]["rdfs:subClassOf"]; //add empty superClassOf if not defined
+
+          if (_this.enumerations[enumKeys[e]]["soa:superClassOf"] === undefined) {
+            _this.enumerations[enumKeys[e]]["soa:superClassOf"] = [];
+          }
+
+          for (var _s = 0; _s < _superClasses.length; _s++) {
+            var _superClass = _this.classes[_superClasses[_s]];
+
+            if (_superClass === undefined) {
+              _superClass = _this.enumerations[_superClasses[_s]];
+            }
+
+            if (_superClass !== undefined) {
+              if (_superClass["soa:superClassOf"] !== undefined) {
+                if (_superClass["soa:superClassOf"].indexOf(enumKeys[e]) === -1) {
+                  _superClass["soa:superClassOf"].push(enumKeys[e]);
+                }
+              } else {
+                _superClass["soa:superClassOf"] = [enumKeys[e]];
+              }
+            }
+          }
+        } // D.2) Add subClasses for DataTypes
+        //For each entry in the dataTypes memory the superClasses are checked (if they are in dataTypes memory) and those super types add the actual entry in their subClasses.
+
+
+        var dataTypeKeys = Object.keys(_this.dataTypes);
+
+        for (var d = 0; d < dataTypeKeys.length; d++) {
+          var _superClasses2 = _this.dataTypes[dataTypeKeys[d]]["rdfs:subClassOf"]; //add empty superClassOf if not defined
+
+          if (_this.dataTypes[dataTypeKeys[d]]["soa:superClassOf"] === undefined) {
+            _this.dataTypes[dataTypeKeys[d]]["soa:superClassOf"] = [];
+          } //add empty subClassOf if not defined
+
+
+          if (_superClasses2 === undefined) {
+            _this.dataTypes[dataTypeKeys[d]]["rdfs:subClassOf"] = [];
+          } else {
+            for (var _s2 = 0; _s2 < _superClasses2.length; _s2++) {
+              var _superClass2 = _this.dataTypes[_superClasses2[_s2]];
+
+              if (_superClass2 !== undefined) {
+                if (_superClass2["soa:superClassOf"] !== undefined) {
+                  if (_superClass2["soa:superClassOf"].indexOf(dataTypeKeys[d]) === -1) {
+                    _superClass2["soa:superClassOf"].push(dataTypeKeys[d]);
+                  }
+                } else {
+                  _superClass2["soa:superClassOf"] = [dataTypeKeys[d]];
+                }
+              }
+            }
+          }
+        } // D.3) Add subProperties for Properties
+        //For each entry in the properties memory the superProperties are checked (if they are in properties memory) and those super properties add the actual entry in their subProperties. (soa:superPropertyOf)
+
+
+        var propertyKeys = Object.keys(_this.properties);
+
+        for (var p = 0; p < propertyKeys.length; p++) {
+          var superProperties = _this.properties[propertyKeys[p]]["rdfs:subPropertyOf"]; //add empty superPropertyOf if not defined
+
+          if (_this.properties[propertyKeys[p]]["soa:superPropertyOf"] === undefined) {
+            _this.properties[propertyKeys[p]]["soa:superPropertyOf"] = [];
+          } //add empty subPropertyOf if not defined
+
+
+          if (superProperties === undefined) {
+            _this.properties[propertyKeys[p]]["rdfs:subPropertyOf"] = [];
+          } else {
+            for (var _s3 = 0; _s3 < superProperties.length; _s3++) {
+              var _superClass3 = _this.properties[superProperties[_s3]];
+
+              if (_superClass3 !== undefined) {
+                if (_superClass3["soa:superPropertyOf"] !== undefined) {
+                  if (_superClass3["soa:superPropertyOf"].indexOf(propertyKeys[p]) === -1) {
+                    _superClass3["soa:superPropertyOf"].push(propertyKeys[p]);
+                  }
+                } else {
+                  _superClass3["soa:superPropertyOf"] = [propertyKeys[p]];
+                }
+              }
+            }
+          }
+        } //E) Relationships
+
+        /*  In this step additional fields are added to certain data entries to add links to other data entries, which should make it easier to use the generated data set.#
+        soa:hasProperty is an inverse of schema:domainIncludes
+        soa:isRangeOf is an inverse of schema:rangeIncludes
+        soa:hasEnumerationMember is used for enumerations to list all its enumeration members (their @type includes the @id of the enumeration)
+        soa:enumerationDomainIncludes is an inverse of soa:hasEnumerationMember */
+        //E.0) add empty arrays for the relationships
+
+
+        classesKeys = Object.keys(_this.classes);
+
+        for (var _c = 0; _c < classesKeys.length; _c++) {
+          if (_this.classes[classesKeys[_c]]["soa:hasProperty"] === undefined) {
+            _this.classes[classesKeys[_c]]["soa:hasProperty"] = [];
+          }
+
+          if (_this.classes[classesKeys[_c]]["soa:isRangeOf"] === undefined) {
+            _this.classes[classesKeys[_c]]["soa:isRangeOf"] = [];
+          }
+        }
+
+        enumKeys = Object.keys(_this.enumerations);
+
+        for (var _e = 0; _e < enumKeys.length; _e++) {
+          if (_this.enumerations[enumKeys[_e]]["soa:hasEnumerationMember"] === undefined) {
+            _this.enumerations[enumKeys[_e]]["soa:hasEnumerationMember"] = [];
+          }
+
+          if (_this.enumerations[enumKeys[_e]]["soa:isRangeOf"] === undefined) {
+            _this.enumerations[enumKeys[_e]]["soa:isRangeOf"] = [];
+          }
+
+          if (_this.enumerations[enumKeys[_e]]["soa:hasProperty"] === undefined) {
+            _this.enumerations[enumKeys[_e]]["soa:hasProperty"] = [];
+          }
+        }
+
+        var enumMemKeys = Object.keys(_this.enumerationMembers);
+
+        for (var _e2 = 0; _e2 < enumMemKeys.length; _e2++) {
+          if (_this.enumerationMembers[enumMemKeys[_e2]]["soa:enumerationDomainIncludes"] === undefined) {
+            _this.enumerationMembers[enumMemKeys[_e2]]["soa:enumerationDomainIncludes"] = [];
+          }
+        }
+        /* E.1) Add explicit hasProperty and isRangeOf to classes and enumerations
+        For each entry in the classes/enumeration memory, the properties field is added. This data field holds all properties which belong to this class (class/enumeration is domain for property). */
+
+
+        propertyKeys = Object.keys(_this.properties);
+
+        for (var _p = 0; _p < propertyKeys.length; _p++) {
+          var domainIncludesArray = _this.properties[propertyKeys[_p]]["schema:domainIncludes"];
+
+          if (util.isArray(domainIncludesArray)) {
+            for (var di = 0; di < domainIncludesArray.length; di++) {
+              var target = _this.classes[domainIncludesArray[di]];
+
+              if (target === undefined) {
+                target = _this.enumerations[domainIncludesArray[di]];
+              }
+
+              if (target !== undefined && util.isArray(target["soa:hasProperty"]) && target["soa:hasProperty"].indexOf(propertyKeys[_p]) === -1) {
+                target["soa:hasProperty"].push(propertyKeys[_p]);
+              }
+            }
+          }
+
+          var rangeIncludesArray = _this.properties[propertyKeys[_p]]["schema:rangeIncludes"];
+
+          if (util.isArray(rangeIncludesArray)) {
+            for (var ri = 0; ri < rangeIncludesArray.length; ri++) {
+              var _target = _this.classes[rangeIncludesArray[ri]];
+
+              if (_target === undefined) {
+                _target = _this.enumerations[rangeIncludesArray[ri]];
+              }
+
+              if (_target !== undefined && util.isArray(_target["soa:isRangeOf"]) && _target["soa:isRangeOf"].indexOf(propertyKeys[_p]) === -1) {
+                _target["soa:isRangeOf"].push(propertyKeys[_p]);
+              }
+            }
+          }
+        }
+        /* E.2) Add soa:hasEnumerationMember to enumerations and soa:enumerationDomainIncludes to enumerationMembers
+        For each entry in the enumeration memory the soa:hasEnumerationMember field is added, this data field holds all enumeration members which belong to this enumeration.
+        For each entry in the enumerationMembers memory the soa:enumerationDomainIncludes field is added, this data field holds all enumerations that are a domain for this enumerationMember
+        */
+
+
+        enumMemKeys = Object.keys(_this.enumerationMembers);
+
+        for (var _e3 = 0; _e3 < enumMemKeys.length; _e3++) {
+          var enumMem = _this.enumerationMembers[enumMemKeys[_e3]];
+          var enumMemTypeArray = enumMem["@type"];
+
+          if (!util.isArray(enumMemTypeArray)) {
+            enumMemTypeArray = [enumMemTypeArray];
+          }
+
+          for (var t = 0; t < enumMemTypeArray.length; t++) {
+            var _target2 = _this.enumerations[enumMemTypeArray[t]];
+
+            if (_target2 !== undefined && util.isArray(_target2["soa:hasEnumerationMember"]) && _target2["soa:hasEnumerationMember"].indexOf(enumMemKeys[_e3]) === -1) {
+              _target2["soa:hasEnumerationMember"].push(enumMemKeys[_e3]);
+
+              if (util.isArray(enumMem["soa:enumerationDomainIncludes"])) {
+                enumMem["soa:enumerationDomainIncludes"].push(enumMemTypeArray[t]);
+              } else {
+                enumMem["soa:enumerationDomainIncludes"] = [enumMemTypeArray[t]];
+              }
+            }
+          }
+        }
+
+        return true;
+      } catch (e) {
+        console.log(e);
+        return false;
+      }
+    })();
+  }
+  /**
+   * Creates/Updates a node in the graph
+   * @param {object} memory - The memory object where the new node should be added (Classes, Properties, Enumerations, EnumerationMembers, DataTypes)
+   * @param {object} newNode - The node in JSON-LD format to be added
+   * @return {boolean} returns true on success
+   */
+
+
+  addGraphNode(memory, newNode) {
+    try {
+      if (memory[newNode["@id"]] === undefined) {
+        memory[newNode["@id"]] = newNode;
+      } else {
+        //merging algorithm
+        var oldNode = memory[newNode["@id"]]; //@id stays the same
+        //@type should stay the same (we already defined the memory to save it)
+        //schema:isPartOf -> overwrite
+
+        if (newNode["schema:isPartOf"] !== undefined && newNode["schema:isPartOf"] !== null) {
+          oldNode["schema:isPartOf"] = newNode["schema:isPartOf"];
+        } //dc:source -> overwrite
+
+
+        if (newNode["dc:source"] !== undefined && newNode["dc:source"] !== null) {
+          oldNode["dc:source"] = newNode["dc:source"];
+        } //schema:category -> overwrite
+
+
+        if (newNode["schema:category"] !== undefined && newNode["schema:category"] !== null) {
+          oldNode["schema:category"] = newNode["schema:category"];
+        } //schema:supersededBy -> overwrite
+
+
+        if (newNode["schema:supersededBy"] !== undefined && newNode["schema:supersededBy"] !== null) {
+          oldNode["schema:supersededBy"] = newNode["schema:supersededBy"];
+        } //rdfs:label -> add new languages, overwrite old ones if needed
+
+
+        if (newNode["rdfs:label"] !== undefined && newNode["rdfs:label"] !== null) {
+          var labelKeysNew = Object.keys(newNode["rdfs:label"]);
+
+          for (var i = 0; i < labelKeysNew.length; i++) {
+            oldNode["rdfs:label"][labelKeysNew[i]] = newNode["rdfs:label"][labelKeysNew[i]];
+          }
+        } //rdfs:comment -> add new languages, overwrite old ones if needed
+
+
+        if (newNode["rdfs:comment"] !== undefined && newNode["rdfs:comment"] !== null) {
+          var commentKeysNew = Object.keys(newNode["rdfs:comment"]);
+
+          for (var _i5 = 0; _i5 < commentKeysNew.length; _i5++) {
+            oldNode["rdfs:comment"][commentKeysNew[_i5]] = newNode["rdfs:comment"][commentKeysNew[_i5]];
+          }
+        } //rdfs:subClassOf -> add new ids
+
+
+        if (newNode["rdfs:subClassOf"] !== undefined && newNode["rdfs:subClassOf"] !== null) {
+          for (var _i6 = 0; _i6 < newNode["rdfs:subClassOf"].length; _i6++) {
+            if (oldNode["rdfs:subClassOf"].indexOf(newNode["rdfs:subClassOf"][_i6]) === -1) {
+              //add new entry
+              oldNode["rdfs:subClassOf"].push(newNode["rdfs:subClassOf"][_i6]);
+            }
+          }
+        } //soa:superClassOf -> add new ids
+
+
+        if (newNode["soa:superClassOf"] !== undefined && newNode["soa:superClassOf"] !== null) {
+          for (var _i7 = 0; _i7 < newNode["soa:superClassOf"].length; _i7++) {
+            if (oldNode["soa:superClassOf"].indexOf(newNode["soa:superClassOf"][_i7]) === -1) {
+              //add new entry
+              oldNode["soa:superClassOf"].push(newNode["soa:superClassOf"][_i7]);
+            }
+          }
+        } //soa:hasProperty -> add new ids
+
+
+        if (newNode["soa:hasProperty"] !== undefined && newNode["soa:hasProperty"] !== null) {
+          for (var _i8 = 0; _i8 < newNode["soa:hasProperty"].length; _i8++) {
+            if (oldNode["soa:hasProperty"].indexOf(newNode["soa:hasProperty"][_i8]) === -1) {
+              //add new entry
+              oldNode["soa:hasProperty"].push(newNode["soa:hasProperty"][_i8]);
+            }
+          }
+        } //soa:isRangeOf -> add new ids
+
+
+        if (newNode["soa:isRangeOf"] !== undefined && newNode["soa:isRangeOf"] !== null) {
+          for (var _i9 = 0; _i9 < newNode["soa:isRangeOf"].length; _i9++) {
+            if (oldNode["soa:isRangeOf"].indexOf(newNode["soa:isRangeOf"][_i9]) === -1) {
+              //add new entry
+              oldNode["soa:isRangeOf"].push(newNode["soa:isRangeOf"][_i9]);
+            }
+          }
+        } //soa:enumerationDomainIncludes -> add new ids
+
+
+        if (newNode["soa:enumerationDomainIncludes"] !== undefined && newNode["soa:enumerationDomainIncludes"] !== null) {
+          for (var _i10 = 0; _i10 < newNode["soa:enumerationDomainIncludes"].length; _i10++) {
+            if (oldNode["soa:enumerationDomainIncludes"].indexOf(newNode["soa:enumerationDomainIncludes"][_i10]) === -1) {
+              //add new entry
+              oldNode["soa:enumerationDomainIncludes"].push(newNode["soa:enumerationDomainIncludes"][_i10]);
+            }
+          }
+        } //soa:hasEnumerationMember -> add new ids
+
+
+        if (newNode["soa:hasEnumerationMember"] !== undefined && newNode["soa:hasEnumerationMember"] !== null) {
+          for (var _i11 = 0; _i11 < newNode["soa:hasEnumerationMember"].length; _i11++) {
+            if (oldNode["soa:hasEnumerationMember"].indexOf(newNode["soa:hasEnumerationMember"][_i11]) === -1) {
+              //add new entry
+              oldNode["soa:hasEnumerationMember"].push(newNode["soa:hasEnumerationMember"][_i11]);
+            }
+          }
+        } //rdfs:subPropertyOf -> add new ids
+
+
+        if (newNode["rdfs:subPropertyOf"] !== undefined && newNode["rdfs:subPropertyOf"] !== null) {
+          for (var _i12 = 0; _i12 < newNode["rdfs:subPropertyOf"].length; _i12++) {
+            if (oldNode["rdfs:subPropertyOf"].indexOf(newNode["rdfs:subPropertyOf"][_i12]) === -1) {
+              //add new entry
+              oldNode["rdfs:subPropertyOf"].push(newNode["rdfs:subPropertyOf"][_i12]);
+            }
+          }
+        } //schema:domainIncludes -> add new ids
+
+
+        if (newNode["schema:domainIncludes"] !== undefined && newNode["schema:domainIncludes"] !== null) {
+          for (var _i13 = 0; _i13 < newNode["schema:domainIncludes"].length; _i13++) {
+            if (oldNode["schema:domainIncludes"].indexOf(newNode["schema:domainIncludes"][_i13]) === -1) {
+              //add new entry
+              oldNode["schema:domainIncludes"].push(newNode["schema:domainIncludes"][_i13]);
+            }
+          }
+        } //schema:rangeIncludes -> add new ids
+
+
+        if (newNode["schema:rangeIncludes"] !== undefined && newNode["schema:rangeIncludes"] !== null) {
+          for (var _i14 = 0; _i14 < newNode["schema:rangeIncludes"].length; _i14++) {
+            if (oldNode["schema:rangeIncludes"].indexOf(newNode["schema:rangeIncludes"][_i14]) === -1) {
+              //add new entry
+              oldNode["schema:rangeIncludes"].push(newNode["schema:rangeIncludes"][_i14]);
+            }
+          }
+        } //soa:superPropertyOf-> add new ids
+
+
+        if (newNode["schema:superPropertyOf"] !== undefined && newNode["schema:superPropertyOf"] !== null) {
+          for (var _i15 = 0; _i15 < newNode["schema:superPropertyOf"].length; _i15++) {
+            if (oldNode["schema:superPropertyOf"].indexOf(newNode["schema:superPropertyOf"][_i15]) === -1) {
+              //add new entry
+              oldNode["schema:superPropertyOf"].push(newNode["schema:superPropertyOf"][_i15]);
+            }
+          }
+        }
+      }
+
+      return true;
+    } catch (e) {
+      console.log(e);
+      console.log("memory[newNode[@id]]:");
+      console.log(JSON.stringify(memory[newNode["@id"]], null, 2));
+      console.log("newNode:");
+      console.log(JSON.stringify(newNode, null, 2));
+      return false;
+    }
+  }
+  /**
+   * Creates a corresponding JS-Class for the given IRI, depending on its category in the Graph
+   * @param {string} id - The id of the wished term, can be an IRI (absolute or compact) or a label
+   * @param {object} filter - (optional) The filter settings to be applied on the result
+   * @return {Class|Property|Enumeration|EnumerationMember|DataType} the JS-Class for the given IRI
+   */
+
+
+  getTerm(id) {
+    var filter = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
+    var compactIRI = this.discoverCompactIRI(id);
+    var targetObj;
+    var targetType;
+    var tryCounter = 0;
+
+    do {
+      switch (tryCounter) {
+        case 0:
+          targetObj = this.classes[compactIRI];
+          targetType = "Class";
+          break;
+
+        case 1:
+          targetObj = this.properties[compactIRI];
+          targetType = "Property";
+          break;
+
+        case 2:
+          targetObj = this.dataTypes[compactIRI];
+          targetType = "DataType";
+          break;
+
+        case 3:
+          targetObj = this.enumerations[compactIRI];
+          targetType = "Enumeration";
+          break;
+
+        case 4:
+          targetObj = this.enumerationMembers[compactIRI];
+          targetType = "EnumerationMember";
+          break;
+      }
+
+      tryCounter++;
+    } while (targetObj === undefined && tryCounter < 6);
+
+    if (targetObj !== undefined) {
+      targetObj = util.applyFilter([targetObj["@id"]], filter, this);
+
+      if (targetObj.length === 0) {
+        throw new Error("There is no term with that IRI and filter settings.");
+      } else {
+        switch (targetType) {
+          case "Class":
+            return new Class(compactIRI, this);
+
+          case "Property":
+            return new Property(compactIRI, this);
+
+          case "Enumeration":
+            return new Enumeration(compactIRI, this);
+
+          case "EnumerationMember":
+            return new EnumerationMember(compactIRI, this);
+
+          case "DataType":
+            return new DataType(compactIRI, this);
+        }
+      }
+    } else {
+      throw new Error("There is no term with the IRI " + id);
+    }
+  }
+  /**
+   * Creates a JS-Class for a Class of the Graph
+   * @param {string} id - The id of the wished Class-node, can be an IRI (absolute or compact) or a label
+   * @param {object} filter - (optional) The filter settings to be applied on the result
+   * @return {Class|Enumeration} the JS-Class for the given IRI
+   */
+
+
+  getClass(id) {
+    var filter = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
+    var compactIRI = this.discoverCompactIRI(id);
+
+    if (compactIRI !== null) {
+      var classObj = this.classes[compactIRI];
+
+      if (classObj !== undefined) {
+        classObj = util.applyFilter([compactIRI], filter, this);
+
+        if (classObj.length === 0) {
+          throw new Error("There is no class with that IRI and filter settings.");
+        } else {
+          return new Class(compactIRI, this);
+        }
+      } else {
+        //enumerations can also be counted as classes
+        classObj = this.enumerations[compactIRI];
+
+        if (classObj !== undefined) {
+          try {
+            return this.getEnumeration(compactIRI, filter);
+          } catch (e) {}
+        }
+      }
     }
 
-    /**
-     * Adds a new vocabulary (in JSON-LD format) to the graph data
-     * @param {object} vocab - The vocabulary to add the graph, in JSON-LD format
-     * @return {boolean} returns true on success
-     */
+    throw new Error("There is no class with the IRI " + id);
+  }
+  /**
+   * Creates a JS-Class for a Property of the Graph
+   * @param {string} id - The id of the wished Property-node, can be an IRI (absolute or compact) or a label
+   * @param {object} filter - (optional) The filter settings to be applied on the result
+   * @return {Property} the JS-Class for the given IRI
+   */
 
 
-    _createClass(Graph, [{
-        key: "addVocabulary",
-        value: async function addVocabulary(vocab) {
-            //this algorithm is well-documented in /docu/algorithm.md
-            try {
-                //A) Pre-process Vocabulary
-                //create new context
-                this.context = util.generateContext(this.context, vocab["@context"]);
-                //pre-process new vocab
-                vocab = await util.preProcessVocab(vocab, this.context); //adapt @graph to new context
-                var vocabularies = this.sdoAdapter.getVocabularies();
-                for (var i = 0; i < vocab["@graph"].length; i++) {
-                    vocab["@graph"][i] = util.curateNode(vocab["@graph"][i], vocabularies); //curate nodes
-                }
-                //B) Classify Input
-                /**
-                 Classify every @graph node based on its @type. The node is transformed to another data-model based on the @type and stored in a new memory storage for an easier further usage. This is the first of two steps for an exact classification of the node, since the @type is not enough for a correct classification. The mapping of our data model and the @type(s) of the corresponding @graph nodes are as follows:
-                 classes ("@type" = "rdfs:Class")
-                 properties ("@type" = "rdf:Property")
-                 dataTypes ("@type" = "rdfs:Class" + "http://schema.org/DataType")
-                 enumerations ("@type" = "rdfs:Class", has "http://schema.org/Enumeration" as implicit super-class)
-                 enumerationMembers ("@type" = @id(s) of enumeration(s))
-                 */
-                for (var _i = 0; _i < vocab["@graph"].length; _i++) {
-                    var curNode = JSON.parse(JSON.stringify(vocab["@graph"][_i]));
-                    if (util.isString(curNode["@type"])) {
-                        switch (curNode["@type"]) {
-                            case "rdfs:Class":
-                                this.addGraphNode(this.classes, curNode);
-                                break;
-                            case "rdf:Property":
-                                this.addGraphNode(this.properties, curNode);
-                                break;
-                            default:
-                                //@type is not something expected -> enumerationMember
-                                this.addGraphNode(this.enumerationMembers, curNode);
-                                break;
-                        }
-                    } else if (util.isArray(curNode["@type"])) {
-                        //@type is not a string -> datatype or enumeration
-                        // [
-                        //     "rdfs:Class",
-                        //     "schema:DataType"
-                        // ]
-                        //[
-                        //   "schema:MedicalImagingTechnique",
-                        //   "schema:MedicalSpecialty"
-                        // ]
-                        if (curNode["@type"].indexOf("rdfs:Class") !== -1 && curNode["@type"].indexOf("schema:DataType") !== -1) {
-                            //datatype
-                            this.addGraphNode(this.dataTypes, curNode);
-                        } else {
-                            //enumeration member
-                            this.addGraphNode(this.enumerationMembers, curNode);
-                        }
-                    } else {
-                        console.log("unexpected @type format for the following node:");
-                        console.log(JSON.stringify(curNode, null, 2));
-                    }
-                }
-                //C) Classification cleaning
-                /* To have a correct classification for our data model it is needed to clean the data generated in the previous step. Inaccurate records include:
-                 Enumerations which are handled as Classes.
-                 DataTypes which are handled as Classes.
-                 */
+  getProperty(id) {
+    var filter = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
+    var compactIRI = this.discoverCompactIRI(id);
 
-                //C.1)  Extract enumerations from classes memory
-                // For each entry in the classes memory check if its superClasses contain Enumeration or another Enumeration. If this is the case, it is known that this class is an enumeration.
-                var newEnum = void 0;
-                do {
-                    newEnum = false;
-                    var _classesKeys = Object.keys(this.classes);
-                    var _enumKeys = Object.keys(this.enumerations);
-                    for (var _i2 = 0; _i2 < _classesKeys.length; _i2++) {
-                        if (this.classes[_classesKeys[_i2]]["rdfs:subClassOf"] !== undefined) {
-                            var subClassArray = this.classes[_classesKeys[_i2]]["rdfs:subClassOf"];
-                            for (var j = 0; j < subClassArray.length; j++) {
-                                if (_enumKeys.indexOf(subClassArray[j]) !== -1 || subClassArray[j] === "schema:Enumeration") {
-                                    if (this.classes[_classesKeys[_i2]] !== undefined && this.enumerations[_classesKeys[_i2]] === undefined) {
-                                        newEnum = true;
-                                        this.enumerations[_classesKeys[_i2]] = JSON.parse(JSON.stringify(this.classes[_classesKeys[_i2]]));
-                                        delete this.classes[_classesKeys[_i2]];
-                                    }
-                                }
-                            }
-                        }
-                    }
-                } while (newEnum);
-                //C.2) check if there are subclasses of dataTypes which are in the classes data, put them in dataType data
-                var newDatatype = void 0;
-                do {
-                    newDatatype = false;
-                    var _classesKeys2 = Object.keys(this.classes);
-                    var _dtKeys = Object.keys(this.dataTypes);
-                    for (var _i3 = 0; _i3 < _classesKeys2.length; _i3++) {
-                        if (this.classes[_classesKeys2[_i3]]["rdfs:subClassOf"] !== undefined) {
-                            var _subClassArray = this.classes[_classesKeys2[_i3]]["rdfs:subClassOf"];
-                            for (var _j = 0; _j < _subClassArray.length; _j++) {
-                                if (_dtKeys.indexOf(_subClassArray[_j]) !== -1 || _subClassArray[_j] === "schema:DataType") {
-                                    if (this.classes[_classesKeys2[_i3]] !== undefined && this.dataTypes[_classesKeys2[_i3]] === undefined) {
-                                        newDatatype = true;
-                                        this.dataTypes[_classesKeys2[_i3]] = JSON.parse(JSON.stringify(this.classes[_classesKeys2[_i3]]));
-                                        delete this.classes[_classesKeys2[_i3]];
-                                    }
-                                }
-                            }
-                        }
-                    }
-                } while (newDatatype);
-                //C.3) change the @type of data-types to a single value, which is "schema:DataType"
-                var dtKeys = Object.keys(this.dataTypes);
-                for (var _i4 = 0; _i4 < dtKeys.length; _i4++) {
-                    this.dataTypes[dtKeys[_i4]]["@type"] = "schema:DataType";
-                }
+    if (compactIRI !== null) {
+      var propertyObj = this.properties[compactIRI];
 
-                //D) Inheritance
-                /*    Schema.org's Inheritance design states if an entity is the superClass/superProperty of another entity. In our data model design we also hold the information if an entity is the subClass/subProperty of another entity. In this step this inheritance information is generated.*/
-                // D.1) Add subClasses for Classes and Enumerations
-                //check superclasses for all classes and enumerations. Add these classes/enumerations as subclasses (soa:superClassOf) for the parent class/enumeration
-                var classesKeys = Object.keys(this.classes);
-                for (var c = 0; c < classesKeys.length; c++) {
-                    var superClasses = this.classes[classesKeys[c]]["rdfs:subClassOf"];
-                    //add empty superClassOf if not defined
-                    if (this.classes[classesKeys[c]]["soa:superClassOf"] === undefined) {
-                        this.classes[classesKeys[c]]["soa:superClassOf"] = [];
-                    }
-                    for (var s = 0; s < superClasses.length; s++) {
-                        var superClass = this.classes[superClasses[s]];
-                        if (superClass === undefined) {
-                            superClass = this.enumerations[superClasses[s]];
-                        }
-                        if (superClass !== undefined) {
-                            if (superClass["soa:superClassOf"] !== undefined) {
-                                if (superClass["soa:superClassOf"].indexOf(classesKeys[c]) === -1) {
-                                    superClass["soa:superClassOf"].push(classesKeys[c]);
-                                }
-                            } else {
-                                superClass["soa:superClassOf"] = [classesKeys[c]];
-                            }
-                        }
-                    }
-                }
-                var enumKeys = Object.keys(this.enumerations);
-                for (var e = 0; e < enumKeys.length; e++) {
-                    var _superClasses = this.enumerations[enumKeys[e]]["rdfs:subClassOf"];
-                    //add empty superClassOf if not defined
-                    if (this.enumerations[enumKeys[e]]["soa:superClassOf"] === undefined) {
-                        this.enumerations[enumKeys[e]]["soa:superClassOf"] = [];
-                    }
-                    for (var _s = 0; _s < _superClasses.length; _s++) {
-                        var _superClass = this.classes[_superClasses[_s]];
-                        if (_superClass === undefined) {
-                            _superClass = this.enumerations[_superClasses[_s]];
-                        }
-                        if (_superClass !== undefined) {
-                            if (_superClass["soa:superClassOf"] !== undefined) {
-                                if (_superClass["soa:superClassOf"].indexOf(enumKeys[e]) === -1) {
-                                    _superClass["soa:superClassOf"].push(enumKeys[e]);
-                                }
-                            } else {
-                                _superClass["soa:superClassOf"] = [enumKeys[e]];
-                            }
-                        }
-                    }
-                }
-                // D.2) Add subClasses for DataTypes
-                //For each entry in the dataTypes memory the superClasses are checked (if they are in dataTypes memory) and those super types add the actual entry in their subClasses.
-                var dataTypeKeys = Object.keys(this.dataTypes);
-                for (var d = 0; d < dataTypeKeys.length; d++) {
-                    var _superClasses2 = this.dataTypes[dataTypeKeys[d]]["rdfs:subClassOf"];
-                    //add empty superClassOf if not defined
-                    if (this.dataTypes[dataTypeKeys[d]]["soa:superClassOf"] === undefined) {
-                        this.dataTypes[dataTypeKeys[d]]["soa:superClassOf"] = [];
-                    }
-                    //add empty subClassOf if not defined
-                    if (_superClasses2 === undefined) {
-                        this.dataTypes[dataTypeKeys[d]]["rdfs:subClassOf"] = [];
-                    } else {
-                        for (var _s2 = 0; _s2 < _superClasses2.length; _s2++) {
-                            var _superClass2 = this.dataTypes[_superClasses2[_s2]];
-                            if (_superClass2 !== undefined) {
-                                if (_superClass2["soa:superClassOf"] !== undefined) {
-                                    if (_superClass2["soa:superClassOf"].indexOf(dataTypeKeys[d]) === -1) {
-                                        _superClass2["soa:superClassOf"].push(dataTypeKeys[d]);
-                                    }
-                                } else {
-                                    _superClass2["soa:superClassOf"] = [dataTypeKeys[d]];
-                                }
-                            }
-                        }
-                    }
-                }
-                // D.3) Add subProperties for Properties
-                //For each entry in the properties memory the superProperties are checked (if they are in properties memory) and those super properties add the actual entry in their subProperties. (soa:superPropertyOf)
-                var propertyKeys = Object.keys(this.properties);
-                for (var p = 0; p < propertyKeys.length; p++) {
-                    var superProperties = this.properties[propertyKeys[p]]["rdfs:subPropertyOf"];
-                    //add empty superPropertyOf if not defined
-                    if (this.properties[propertyKeys[p]]["soa:superPropertyOf"] === undefined) {
-                        this.properties[propertyKeys[p]]["soa:superPropertyOf"] = [];
-                    }
-                    //add empty subPropertyOf if not defined
-                    if (superProperties === undefined) {
-                        this.properties[propertyKeys[p]]["rdfs:subPropertyOf"] = [];
-                    } else {
-                        for (var _s3 = 0; _s3 < superProperties.length; _s3++) {
-                            var _superClass3 = this.properties[superProperties[_s3]];
-                            if (_superClass3 !== undefined) {
-                                if (_superClass3["soa:superPropertyOf"] !== undefined) {
-                                    if (_superClass3["soa:superPropertyOf"].indexOf(propertyKeys[p]) === -1) {
-                                        _superClass3["soa:superPropertyOf"].push(propertyKeys[p]);
-                                    }
-                                } else {
-                                    _superClass3["soa:superPropertyOf"] = [propertyKeys[p]];
-                                }
-                            }
-                        }
-                    }
-                }
-                //E) Relationships
-                /*  In this step additional fields are added to certain data entries to add links to other data entries, which should make it easier to use the generated data set.#
-                soa:hasProperty is an inverse of schema:domainIncludes
-                soa:isRangeOf is an inverse of schema:rangeIncludes
-                soa:hasEnumerationMember is used for enumerations to list all its enumeration members (their @type includes the @id of the enumeration)
-                soa:enumerationDomainIncludes is an inverse of soa:hasEnumerationMember */
-                //E.0) add empty arrays for the relationships
-                classesKeys = Object.keys(this.classes);
-                for (var _c = 0; _c < classesKeys.length; _c++) {
-                    if (this.classes[classesKeys[_c]]["soa:hasProperty"] === undefined) {
-                        this.classes[classesKeys[_c]]["soa:hasProperty"] = [];
-                    }
-                    if (this.classes[classesKeys[_c]]["soa:isRangeOf"] === undefined) {
-                        this.classes[classesKeys[_c]]["soa:isRangeOf"] = [];
-                    }
-                }
-                enumKeys = Object.keys(this.enumerations);
-                for (var _e = 0; _e < enumKeys.length; _e++) {
-                    if (this.enumerations[enumKeys[_e]]["soa:hasEnumerationMember"] === undefined) {
-                        this.enumerations[enumKeys[_e]]["soa:hasEnumerationMember"] = [];
-                    }
-                    if (this.enumerations[enumKeys[_e]]["soa:isRangeOf"] === undefined) {
-                        this.enumerations[enumKeys[_e]]["soa:isRangeOf"] = [];
-                    }
-                    if (this.enumerations[enumKeys[_e]]["soa:hasProperty"] === undefined) {
-                        this.enumerations[enumKeys[_e]]["soa:hasProperty"] = [];
-                    }
-                }
-                var enumMemKeys = Object.keys(this.enumerationMembers);
-                for (var _e2 = 0; _e2 < enumMemKeys.length; _e2++) {
-                    if (this.enumerationMembers[enumMemKeys[_e2]]["soa:enumerationDomainIncludes"] === undefined) {
-                        this.enumerationMembers[enumMemKeys[_e2]]["soa:enumerationDomainIncludes"] = [];
-                    }
-                }
-                /* E.1) Add explicit hasProperty and isRangeOf to classes and enumerations
-                For each entry in the classes/enumeration memory, the properties field is added. This data field holds all properties which belong to this class (class/enumeration is domain for property). */
-                propertyKeys = Object.keys(this.properties);
-                for (var _p = 0; _p < propertyKeys.length; _p++) {
-                    var domainIncludesArray = this.properties[propertyKeys[_p]]["schema:domainIncludes"];
-                    if (util.isArray(domainIncludesArray)) {
-                        for (var di = 0; di < domainIncludesArray.length; di++) {
-                            var target = this.classes[domainIncludesArray[di]];
-                            if (target === undefined) {
-                                target = this.enumerations[domainIncludesArray[di]];
-                            }
-                            if (target !== undefined && util.isArray(target["soa:hasProperty"]) && target["soa:hasProperty"].indexOf(propertyKeys[_p]) === -1) {
-                                target["soa:hasProperty"].push(propertyKeys[_p]);
-                            }
-                        }
-                    }
-                    var rangeIncludesArray = this.properties[propertyKeys[_p]]["schema:rangeIncludes"];
-                    if (util.isArray(rangeIncludesArray)) {
-                        for (var ri = 0; ri < rangeIncludesArray.length; ri++) {
-                            var _target = this.classes[rangeIncludesArray[ri]];
-                            if (_target === undefined) {
-                                _target = this.enumerations[rangeIncludesArray[ri]];
-                            }
-                            if (_target !== undefined && util.isArray(_target["soa:isRangeOf"]) && _target["soa:isRangeOf"].indexOf(propertyKeys[_p]) === -1) {
-                                _target["soa:isRangeOf"].push(propertyKeys[_p]);
-                            }
-                        }
-                    }
-                }
-                /* E.2) Add soa:hasEnumerationMember to enumerations and soa:enumerationDomainIncludes to enumerationMembers
-                For each entry in the enumeration memory the soa:hasEnumerationMember field is added, this data field holds all enumeration members which belong to this enumeration.
-                For each entry in the enumerationMembers memory the soa:enumerationDomainIncludes field is added, this data field holds all enumerations that are a domain for this enumerationMember
-                */
-                enumMemKeys = Object.keys(this.enumerationMembers);
-                for (var _e3 = 0; _e3 < enumMemKeys.length; _e3++) {
-                    var enumMem = this.enumerationMembers[enumMemKeys[_e3]];
-                    var enumMemTypeArray = enumMem["@type"];
-                    if (!util.isArray(enumMemTypeArray)) {
-                        enumMemTypeArray = [enumMemTypeArray];
-                    }
-                    for (var t = 0; t < enumMemTypeArray.length; t++) {
-                        var _target2 = this.enumerations[enumMemTypeArray[t]];
-                        if (_target2 !== undefined && util.isArray(_target2["soa:hasEnumerationMember"]) && _target2["soa:hasEnumerationMember"].indexOf(enumMemKeys[_e3]) === -1) {
-                            _target2["soa:hasEnumerationMember"].push(enumMemKeys[_e3]);
-                            if (util.isArray(enumMem["soa:enumerationDomainIncludes"])) {
-                                enumMem["soa:enumerationDomainIncludes"].push(enumMemTypeArray[t]);
-                            } else {
-                                enumMem["soa:enumerationDomainIncludes"] = [enumMemTypeArray[t]];
-                            }
-                        }
-                    }
-                }
-                return true;
-            } catch (e) {
-                console.log(e);
-                return false;
-            }
+      if (propertyObj !== undefined) {
+        propertyObj = util.applyFilter([compactIRI], filter, this);
+
+        if (propertyObj.length === 0) {
+          throw new Error("There is no property with that URI and filter settings.");
+        } else {
+          return new Property(compactIRI, this);
         }
+      }
+    }
 
-        /**
-         * Creates/Updates a node in the graph
-         * @param {object} memory - The memory object where the new node should be added (Classes, Properties, Enumerations, EnumerationMembers, DataTypes)
-         * @param {object} newNode - The node in JSON-LD format to be added
-         * @return {boolean} returns true on success
-         */
+    throw new Error("There is no property with that URI.");
+  }
+  /**
+   * Creates a JS-Class for a DataType of the Graph
+   * @param {string} id - The id of the wished DataType-node, can be an IRI (absolute or compact) or a label
+   * @param {object} filter - (optional) The filter settings to be applied on the result
+   * @return {DataType} the JS-Class for the given IRI
+   */
 
-    }, {
-        key: "addGraphNode",
-        value: function addGraphNode(memory, newNode) {
-            try {
-                if (memory[newNode["@id"]] === undefined) {
-                    memory[newNode["@id"]] = newNode;
-                } else {
-                    //merging algorithm
-                    var oldNode = memory[newNode["@id"]];
-                    //@id stays the same
-                    //@type should stay the same (we already defined the memory to save it)
-                    //schema:isPartOf -> overwrite
-                    if (newNode["schema:isPartOf"] !== undefined && newNode["schema:isPartOf"] !== null) {
-                        oldNode["schema:isPartOf"] = newNode["schema:isPartOf"];
-                    }
-                    //dc:source -> overwrite
-                    if (newNode["dc:source"] !== undefined && newNode["dc:source"] !== null) {
-                        oldNode["dc:source"] = newNode["dc:source"];
-                    }
-                    //schema:category -> overwrite
-                    if (newNode["schema:category"] !== undefined && newNode["schema:category"] !== null) {
-                        oldNode["schema:category"] = newNode["schema:category"];
-                    }
-                    //schema:supersededBy -> overwrite
-                    if (newNode["schema:supersededBy"] !== undefined && newNode["schema:supersededBy"] !== null) {
-                        oldNode["schema:supersededBy"] = newNode["schema:supersededBy"];
-                    }
-                    //rdfs:label -> add new languages, overwrite old ones if needed
-                    if (newNode["rdfs:label"] !== undefined && newNode["rdfs:label"] !== null) {
-                        var labelKeysNew = Object.keys(newNode["rdfs:label"]);
-                        for (var i = 0; i < labelKeysNew.length; i++) {
-                            oldNode["rdfs:label"][labelKeysNew[i]] = newNode["rdfs:label"][labelKeysNew[i]];
-                        }
-                    }
-                    //rdfs:comment -> add new languages, overwrite old ones if needed
-                    if (newNode["rdfs:comment"] !== undefined && newNode["rdfs:comment"] !== null) {
-                        var commentKeysNew = Object.keys(newNode["rdfs:comment"]);
-                        for (var _i5 = 0; _i5 < commentKeysNew.length; _i5++) {
-                            oldNode["rdfs:comment"][commentKeysNew[_i5]] = newNode["rdfs:comment"][commentKeysNew[_i5]];
-                        }
-                    }
-                    //rdfs:subClassOf -> add new ids
-                    if (newNode["rdfs:subClassOf"] !== undefined && newNode["rdfs:subClassOf"] !== null) {
-                        for (var _i6 = 0; _i6 < newNode["rdfs:subClassOf"].length; _i6++) {
-                            if (oldNode["rdfs:subClassOf"].indexOf(newNode["rdfs:subClassOf"][_i6]) === -1) {
-                                //add new entry
-                                oldNode["rdfs:subClassOf"].push(newNode["rdfs:subClassOf"][_i6]);
-                            }
-                        }
-                    }
-                    //soa:superClassOf -> add new ids
-                    if (newNode["soa:superClassOf"] !== undefined && newNode["soa:superClassOf"] !== null) {
-                        for (var _i7 = 0; _i7 < newNode["soa:superClassOf"].length; _i7++) {
-                            if (oldNode["soa:superClassOf"].indexOf(newNode["soa:superClassOf"][_i7]) === -1) {
-                                //add new entry
-                                oldNode["soa:superClassOf"].push(newNode["soa:superClassOf"][_i7]);
-                            }
-                        }
-                    }
-                    //soa:hasProperty -> add new ids
-                    if (newNode["soa:hasProperty"] !== undefined && newNode["soa:hasProperty"] !== null) {
-                        for (var _i8 = 0; _i8 < newNode["soa:hasProperty"].length; _i8++) {
-                            if (oldNode["soa:hasProperty"].indexOf(newNode["soa:hasProperty"][_i8]) === -1) {
-                                //add new entry
-                                oldNode["soa:hasProperty"].push(newNode["soa:hasProperty"][_i8]);
-                            }
-                        }
-                    }
-                    //soa:isRangeOf -> add new ids
-                    if (newNode["soa:isRangeOf"] !== undefined && newNode["soa:isRangeOf"] !== null) {
-                        for (var _i9 = 0; _i9 < newNode["soa:isRangeOf"].length; _i9++) {
-                            if (oldNode["soa:isRangeOf"].indexOf(newNode["soa:isRangeOf"][_i9]) === -1) {
-                                //add new entry
-                                oldNode["soa:isRangeOf"].push(newNode["soa:isRangeOf"][_i9]);
-                            }
-                        }
-                    }
-                    //soa:enumerationDomainIncludes -> add new ids
-                    if (newNode["soa:enumerationDomainIncludes"] !== undefined && newNode["soa:enumerationDomainIncludes"] !== null) {
-                        for (var _i10 = 0; _i10 < newNode["soa:enumerationDomainIncludes"].length; _i10++) {
-                            if (oldNode["soa:enumerationDomainIncludes"].indexOf(newNode["soa:enumerationDomainIncludes"][_i10]) === -1) {
-                                //add new entry
-                                oldNode["soa:enumerationDomainIncludes"].push(newNode["soa:enumerationDomainIncludes"][_i10]);
-                            }
-                        }
-                    }
-                    //soa:hasEnumerationMember -> add new ids
-                    if (newNode["soa:hasEnumerationMember"] !== undefined && newNode["soa:hasEnumerationMember"] !== null) {
-                        for (var _i11 = 0; _i11 < newNode["soa:hasEnumerationMember"].length; _i11++) {
-                            if (oldNode["soa:hasEnumerationMember"].indexOf(newNode["soa:hasEnumerationMember"][_i11]) === -1) {
-                                //add new entry
-                                oldNode["soa:hasEnumerationMember"].push(newNode["soa:hasEnumerationMember"][_i11]);
-                            }
-                        }
-                    }
-                    //rdfs:subPropertyOf -> add new ids
-                    if (newNode["rdfs:subPropertyOf"] !== undefined && newNode["rdfs:subPropertyOf"] !== null) {
-                        for (var _i12 = 0; _i12 < newNode["rdfs:subPropertyOf"].length; _i12++) {
-                            if (oldNode["rdfs:subPropertyOf"].indexOf(newNode["rdfs:subPropertyOf"][_i12]) === -1) {
-                                //add new entry
-                                oldNode["rdfs:subPropertyOf"].push(newNode["rdfs:subPropertyOf"][_i12]);
-                            }
-                        }
-                    }
-                    //schema:domainIncludes -> add new ids
-                    if (newNode["schema:domainIncludes"] !== undefined && newNode["schema:domainIncludes"] !== null) {
-                        for (var _i13 = 0; _i13 < newNode["schema:domainIncludes"].length; _i13++) {
-                            if (oldNode["schema:domainIncludes"].indexOf(newNode["schema:domainIncludes"][_i13]) === -1) {
-                                //add new entry
-                                oldNode["schema:domainIncludes"].push(newNode["schema:domainIncludes"][_i13]);
-                            }
-                        }
-                    }
-                    //schema:rangeIncludes -> add new ids
-                    if (newNode["schema:rangeIncludes"] !== undefined && newNode["schema:rangeIncludes"] !== null) {
-                        for (var _i14 = 0; _i14 < newNode["schema:rangeIncludes"].length; _i14++) {
-                            if (oldNode["schema:rangeIncludes"].indexOf(newNode["schema:rangeIncludes"][_i14]) === -1) {
-                                //add new entry
-                                oldNode["schema:rangeIncludes"].push(newNode["schema:rangeIncludes"][_i14]);
-                            }
-                        }
-                    }
-                    //soa:superPropertyOf-> add new ids
-                    if (newNode["schema:superPropertyOf"] !== undefined && newNode["schema:superPropertyOf"] !== null) {
-                        for (var _i15 = 0; _i15 < newNode["schema:superPropertyOf"].length; _i15++) {
-                            if (oldNode["schema:superPropertyOf"].indexOf(newNode["schema:superPropertyOf"][_i15]) === -1) {
-                                //add new entry
-                                oldNode["schema:superPropertyOf"].push(newNode["schema:superPropertyOf"][_i15]);
-                            }
-                        }
-                    }
-                }
-                return true;
-            } catch (e) {
-                console.log(e);
-                console.log("memory[newNode[@id]]:");
-                console.log(JSON.stringify(memory[newNode["@id"]], null, 2));
-                console.log("newNode:");
-                console.log(JSON.stringify(newNode, null, 2));
-                return false;
-            }
+
+  getDataType(id) {
+    var filter = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
+    var compactIRI = this.discoverCompactIRI(id);
+
+    if (compactIRI !== null) {
+      var dataTypeObj = this.dataTypes[compactIRI];
+
+      if (dataTypeObj !== undefined) {
+        dataTypeObj = util.applyFilter([compactIRI], filter, this);
+
+        if (dataTypeObj.length === 0) {
+          throw new Error("There is no data-type with that IRI and filter settings.");
+        } else {
+          return new DataType(compactIRI, this);
         }
+      }
+    }
 
-        /**
-         * Creates a corresponding JS-Class for the given IRI, depending on its category in the Graph
-         * @param {string} id - The id of the wished term, can be an IRI (absolute or compact) or a label
-         * @param {object} filter - (optional) The filter settings to be applied on the result
-         * @return {Class|Property|Enumeration|EnumerationMember|DataType} the JS-Class for the given IRI
-         */
+    throw new Error("There is no data-type with the IRI " + id);
+  }
+  /**
+   * Creates a JS-Class for an Enumeration of the Graph
+   * @param {string} id - The id of the wished Enumeration-node, can be an IRI (absolute or compact) or a label
+   * @param {object} filter - (optional) The filter settings to be applied on the result
+   * @return {Enumeration} the JS-Class for the given IRI
+   */
 
-    }, {
-        key: "getTerm",
-        value: function getTerm(id) {
-            var filter = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
 
-            var compactIRI = this.discoverCompactIRI(id);
-            var targetObj = void 0;
-            var targetType = void 0;
-            var tryCounter = 0;
-            do {
-                switch (tryCounter) {
-                    case 0:
-                        targetObj = this.classes[compactIRI];
-                        targetType = "Class";
-                        break;
-                    case 1:
-                        targetObj = this.properties[compactIRI];
-                        targetType = "Property";
-                        break;
-                    case 2:
-                        targetObj = this.dataTypes[compactIRI];
-                        targetType = "DataType";
-                        break;
-                    case 3:
-                        targetObj = this.enumerations[compactIRI];
-                        targetType = "Enumeration";
-                        break;
-                    case 4:
-                        targetObj = this.enumerationMembers[compactIRI];
-                        targetType = "EnumerationMember";
-                        break;
-                }
-                tryCounter++;
-            } while (targetObj === undefined && tryCounter < 6);
+  getEnumeration(id) {
+    var filter = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
+    var compactIRI = this.discoverCompactIRI(id);
 
-            if (targetObj !== undefined) {
-                targetObj = util.applyFilter([targetObj["@id"]], filter, this);
-                if (targetObj.length === 0) {
-                    throw new Error("There is no term with that IRI and filter settings.");
-                } else {
-                    switch (targetType) {
-                        case "Class":
-                            return new Class(compactIRI, this);
-                        case "Property":
-                            return new Property(compactIRI, this);
-                        case "Enumeration":
-                            return new Enumeration(compactIRI, this);
-                        case "EnumerationMember":
-                            return new EnumerationMember(compactIRI, this);
-                        case "DataType":
-                            return new DataType(compactIRI, this);
-                    }
-                }
-            } else {
-                throw new Error("There is no term with the IRI " + id);
-            }
+    if (compactIRI !== null) {
+      var enumObj = this.enumerations[compactIRI];
+
+      if (enumObj !== undefined) {
+        enumObj = util.applyFilter([compactIRI], filter, this);
+
+        if (enumObj.length === 0) {
+          throw new Error("There is no enumeration with that IRI and filter settings.");
+        } else {
+          return new Enumeration(compactIRI, this);
         }
+      }
+    }
 
-        /**
-         * Creates a JS-Class for a Class of the Graph
-         * @param {string} id - The id of the wished Class-node, can be an IRI (absolute or compact) or a label
-         * @param {object} filter - (optional) The filter settings to be applied on the result
-         * @return {Class|Enumeration} the JS-Class for the given IRI
-         */
+    throw new Error("There is no enumeration with the IRI " + id);
+  }
+  /**
+   * Creates a JS-Class for an EnumerationMember of the Graph
+   * @param {string} id - The id of the wished EnumerationMember-node, can be an IRI (absolute or compact) or a label
+   * @param {object} filter - (optional) The filter settings to be applied on the result
+   * @return {EnumerationMember} the JS-Class for the given IRI
+   */
 
-    }, {
-        key: "getClass",
-        value: function getClass(id) {
-            var filter = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
 
-            var compactIRI = this.discoverCompactIRI(id);
-            if (compactIRI !== null) {
-                var classObj = this.classes[compactIRI];
-                if (classObj !== undefined) {
-                    classObj = util.applyFilter([compactIRI], filter, this);
-                    if (classObj.length === 0) {
-                        throw new Error("There is no class with that IRI and filter settings.");
-                    } else {
-                        return new Class(compactIRI, this);
-                    }
-                } else {
-                    //enumerations can also be counted as classes
-                    classObj = this.enumerations[compactIRI];
-                    if (classObj !== undefined) {
-                        try {
-                            return this.getEnumeration(compactIRI);
-                        } catch (e) {}
-                    }
-                }
-            }
-            throw new Error("There is no class with the IRI " + id);
+  getEnumerationMember(id) {
+    var filter = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
+    var compactIRI = this.discoverCompactIRI(id);
+
+    if (compactIRI !== null) {
+      var enumObj = this.enumerationMembers[compactIRI];
+
+      if (enumObj !== undefined) {
+        enumObj = util.applyFilter([compactIRI], filter, this);
+
+        if (enumObj.length === 0) {
+          throw new Error("There is no EnumerationMember with that IRI and filter settings.");
+        } else {
+          return new EnumerationMember(compactIRI, this);
         }
+      }
+    }
 
-        /**
-         * Creates a JS-Class for a Property of the Graph
-         * @param {string} id - The id of the wished Property-node, can be an IRI (absolute or compact) or a label
-         * @param {object} filter - (optional) The filter settings to be applied on the result
-         * @return {Property} the JS-Class for the given IRI
-         */
+    throw new Error("There is no EnumerationMember with the IRI " + id);
+  }
+  /**
+   * Transforms/Discovers the right compact IRI for a given input, which may be a already a compact IRI, or an absolute IRI, or a term label for a vocabulary member
+   * @param {string} input - The input string to discover (if label) or transform (if absolute IRI)
+   * @return {string|null} the corresponding compact IRI (null if input is not valid)
+   */
 
-    }, {
-        key: "getProperty",
-        value: function getProperty(id) {
-            var filter = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
 
-            var compactIRI = this.discoverCompactIRI(id);
-            if (compactIRI !== null) {
-                var propertyObj = this.properties[compactIRI];
-                if (propertyObj !== undefined) {
-                    propertyObj = util.applyFilter([compactIRI], filter, this);
-                    if (propertyObj.length === 0) {
-                        throw new Error("There is no property with that URI and filter settings.");
-                    } else {
-                        return new Property(compactIRI, this);
-                    }
-                }
-            }
-            throw new Error("There is no property with that URI.");
+  discoverCompactIRI(input) {
+    if (input.indexOf(":") !== -1) {
+      //is iri
+      var terms = Object.keys(this.context);
+
+      for (var i = 0; i < terms.length; i++) {
+        var absoluteIRI = this.context[terms[i]];
+
+        if (util.isString(absoluteIRI)) {
+          if (input.startsWith(terms[i])) {
+            //is compactIRI
+            return input;
+          } else if (input.startsWith(absoluteIRI)) {
+            //is absoluteIRI
+            return util.toCompactIRI(input, this.context);
+          }
         }
+      }
+    } else {
+      //is label
+      var classesKeys = Object.keys(this.classes);
 
-        /**
-         * Creates a JS-Class for a DataType of the Graph
-         * @param {string} id - The id of the wished DataType-node, can be an IRI (absolute or compact) or a label
-         * @param {object} filter - (optional) The filter settings to be applied on the result
-         * @return {DataType} the JS-Class for the given IRI
-         */
-
-    }, {
-        key: "getDataType",
-        value: function getDataType(id) {
-            var filter = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
-
-            var compactIRI = this.discoverCompactIRI(id);
-            if (compactIRI !== null) {
-                var dataTypeObj = this.dataTypes[compactIRI];
-                if (dataTypeObj !== undefined) {
-                    dataTypeObj = util.applyFilter([compactIRI], filter, this);
-                    if (dataTypeObj.length === 0) {
-                        throw new Error("There is no data-type with that IRI and filter settings.");
-                    } else {
-                        return new DataType(compactIRI, this);
-                    }
-                }
-            }
-            throw new Error("There is no data-type with the IRI " + id);
+      for (var _i16 = 0; _i16 < classesKeys.length; _i16++) {
+        if (this.containsLabel(this.classes[classesKeys[_i16]], input) === true) {
+          return classesKeys[_i16];
         }
+      }
 
-        /**
-         * Creates a JS-Class for an Enumeration of the Graph
-         * @param {string} id - The id of the wished Enumeration-node, can be an IRI (absolute or compact) or a label
-         * @param {object} filter - (optional) The filter settings to be applied on the result
-         * @return {Enumeration} the JS-Class for the given IRI
-         */
+      var propertiesKeys = Object.keys(this.properties);
 
-    }, {
-        key: "getEnumeration",
-        value: function getEnumeration(id) {
-            var filter = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
-
-            var compactIRI = this.discoverCompactIRI(id);
-            if (compactIRI !== null) {
-                var enumObj = this.enumerations[compactIRI];
-                if (enumObj !== undefined) {
-                    enumObj = util.applyFilter([compactIRI], filter, this);
-                    if (enumObj.length === 0) {
-                        throw new Error("There is no enumeration with that IRI and filter settings.");
-                    } else {
-                        return new Enumeration(compactIRI, this);
-                    }
-                }
-            }
-            throw new Error("There is no enumeration with the IRI " + id);
+      for (var _i17 = 0; _i17 < propertiesKeys.length; _i17++) {
+        if (this.containsLabel(this.properties[propertiesKeys[_i17]], input) === true) {
+          return propertiesKeys[_i17];
         }
+      }
 
-        /**
-         * Creates a JS-Class for an EnumerationMember of the Graph
-         * @param {string} id - The id of the wished EnumerationMember-node, can be an IRI (absolute or compact) or a label
-         * @param {object} filter - (optional) The filter settings to be applied on the result
-         * @return {EnumerationMember} the JS-Class for the given IRI
-         */
+      var dataTypeKeys = Object.keys(this.dataTypes);
 
-    }, {
-        key: "getEnumerationMember",
-        value: function getEnumerationMember(id) {
-            var filter = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
-
-            var compactIRI = this.discoverCompactIRI(id);
-            if (compactIRI !== null) {
-                var enumObj = this.enumerationMembers[compactIRI];
-                if (enumObj !== undefined) {
-                    enumObj = util.applyFilter([compactIRI], filter, this);
-                    if (enumObj.length === 0) {
-                        throw new Error("There is no EnumerationMember with that IRI and filter settings.");
-                    } else {
-                        return new EnumerationMember(compactIRI, this);
-                    }
-                }
-            }
-            throw new Error("There is no EnumerationMember with the IRI " + id);
+      for (var _i18 = 0; _i18 < dataTypeKeys.length; _i18++) {
+        if (this.containsLabel(this.dataTypes[dataTypeKeys[_i18]], input) === true) {
+          return dataTypeKeys[_i18];
         }
+      }
 
-        /**
-         * Transforms/Discovers the right compact IRI for a given input, which may be a already a compact IRI, or an absolute IRI, or a term label for a vocabulary member
-         * @param {string} input - The input string to discover (if label) or transform (if absolute IRI)
-         * @return {string|null} the corresponding compact IRI (null if input is not valid)
-         */
+      var enumerationKeys = Object.keys(this.enumerations);
 
-    }, {
-        key: "discoverCompactIRI",
-        value: function discoverCompactIRI(input) {
-            if (input.indexOf(":") !== -1) {
-                //is iri
-                var terms = Object.keys(this.context);
-                for (var i = 0; i < terms.length; i++) {
-                    var absoluteIRI = this.context[terms[i]];
-                    if (util.isString(absoluteIRI)) {
-                        if (input.startsWith(terms[i])) {
-                            //is compactIRI
-                            return input;
-                        } else if (input.startsWith(absoluteIRI)) {
-                            //is absoluteIRI
-                            return util.toCompactIRI(input, this.context);
-                        }
-                    }
-                }
-            } else {
-                //is label
-                var classesKeys = Object.keys(this.classes);
-                for (var _i16 = 0; _i16 < classesKeys.length; _i16++) {
-                    if (this.containsLabel(this.classes[classesKeys[_i16]], input) === true) {
-                        return classesKeys[_i16];
-                    }
-                }
-                var propertiesKeys = Object.keys(this.properties);
-                for (var _i17 = 0; _i17 < propertiesKeys.length; _i17++) {
-                    if (this.containsLabel(this.properties[propertiesKeys[_i17]], input) === true) {
-                        return propertiesKeys[_i17];
-                    }
-                }
-                var dataTypeKeys = Object.keys(this.dataTypes);
-                for (var _i18 = 0; _i18 < dataTypeKeys.length; _i18++) {
-                    if (this.containsLabel(this.dataTypes[dataTypeKeys[_i18]], input) === true) {
-                        return dataTypeKeys[_i18];
-                    }
-                }
-                var enumerationKeys = Object.keys(this.enumerations);
-                for (var _i19 = 0; _i19 < enumerationKeys.length; _i19++) {
-                    if (this.containsLabel(this.enumerations[enumerationKeys[_i19]], input) === true) {
-                        return enumerationKeys[_i19];
-                    }
-                }
-                var enumerationMemberKeys = Object.keys(this.enumerationMembers);
-                for (var _i20 = 0; _i20 < enumerationMemberKeys.length; _i20++) {
-                    if (this.containsLabel(this.enumerationMembers[enumerationMemberKeys[_i20]], input) === true) {
-                        return enumerationMemberKeys[_i20];
-                    }
-                }
-            }
-            //if nothing was found yet, the input is invalid
-            return null;
+      for (var _i19 = 0; _i19 < enumerationKeys.length; _i19++) {
+        if (this.containsLabel(this.enumerations[enumerationKeys[_i19]], input) === true) {
+          return enumerationKeys[_i19];
         }
+      }
 
-        //helper function for discoverCompactIRI()
-        //returns true, if the termObj uses the given label (in any language)
+      var enumerationMemberKeys = Object.keys(this.enumerationMembers);
 
-    }, {
-        key: "containsLabel",
-        value: function containsLabel(termObj, label) {
-            if (termObj !== undefined && util.isObject(termObj["rdfs:label"])) {
-                var langKeys = Object.keys(termObj["rdfs:label"]);
-                for (var i = 0; i < langKeys.length; i++) {
-                    if (termObj["rdfs:label"][langKeys[i]] === label) {
-                        return true;
-                    }
-                }
-            }
-            return false;
+      for (var _i20 = 0; _i20 < enumerationMemberKeys.length; _i20++) {
+        if (this.containsLabel(this.enumerationMembers[enumerationMemberKeys[_i20]], input) === true) {
+          return enumerationMemberKeys[_i20];
         }
-    }]);
+      }
+    } //if nothing was found yet, the input is invalid
 
-    return Graph;
-}();
+
+    return null;
+  } //helper function for discoverCompactIRI()
+  //returns true, if the termObj uses the given label (in any language)
+
+
+  containsLabel(termObj, label) {
+    if (termObj !== undefined && util.isObject(termObj["rdfs:label"])) {
+      var langKeys = Object.keys(termObj["rdfs:label"]);
+
+      for (var i = 0; i < langKeys.length; i++) {
+        if (termObj["rdfs:label"][langKeys[i]] === label) {
+          return true;
+        }
+      }
+    }
+
+    return false;
+  }
+
+}
 
 module.exports = Graph;
 
-},{"./Class":44,"./DataType":45,"./Enumeration":46,"./EnumerationMember":47,"./Property":49,"./ReasoningEngine":50,"./utilities":52}],49:[function(require,module,exports){
+},{"./Class":75,"./DataType":76,"./Enumeration":77,"./EnumerationMember":78,"./Property":80,"./ReasoningEngine":81,"./utilities":83}],80:[function(require,module,exports){
 "use strict";
-
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 //the functions for a property Object
 var util = require("./utilities");
 
-var Property = function () {
-    /**
-     * A Property represents an rdf:Property. It is identified by its IRI
-     * @constructor
-     * @param {string} IRI - The compacted IRI of this Property, e.g. "schema:address"
-     * @param {object} graph - The underlying data graph to enable the methods of this Property
-     */
-    function Property(IRI, graph) {
-        _classCallCheck(this, Property);
+class Property {
+  /**
+   * A Property represents an rdf:Property. It is identified by its IRI
+   * @constructor
+   * @param {string} IRI - The compacted IRI of this Property, e.g. "schema:address"
+   * @param {object} graph - The underlying data graph to enable the methods of this Property
+   */
+  constructor(IRI, graph) {
+    this.IRI = IRI;
+    this.graph = graph;
+  }
+  /**
+   * Retrieves the IRI (@id) of this Property in compact/absolute form
+   * @param {boolean} compactForm - (default = false), if true -> return compact IRI -> "schema:address", if false -> return absolute IRI -> "http://schema.org/address"
+   * @returns {string} The IRI (@id) of this Property
+   */
 
-        this.IRI = IRI;
-        this.graph = graph;
+
+  getIRI() {
+    var compactForm = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : false;
+
+    if (compactForm) {
+      return this.IRI;
+    } else {
+      return util.toAbsoluteIRI(this.IRI, this.graph.context);
+    }
+  }
+  /**
+   * Retrieves the term type of this Property (is always "rdf:Property")
+   * @returns {string} The term type of this Property -> "rdf:Property"
+   */
+
+
+  getTermType() {
+    return "rdf:Property";
+  }
+  /**
+   * Retrieves the original vocabulary (schema:isPartOf) of this Property
+   * @returns {string|null} The vocabulary IRI given by the "schema:isPartOf" of this Property
+   */
+
+
+  getVocabulary() {
+    var propertyObj = this.graph.properties[this.IRI];
+
+    if (propertyObj["schema:isPartOf"] !== undefined) {
+      return propertyObj["schema:isPartOf"];
+    } else {
+      return null;
+    }
+  }
+  /**
+   * Retrieves the source (dc:source) of this Property
+   * @returns {string|null} The source IRI given by the "dc:source" of this Property (null if none)
+   */
+
+
+  getSource() {
+    var propertyObj = this.graph.properties[this.IRI];
+
+    if (propertyObj["dc:source"] !== undefined) {
+      return propertyObj["dc:source"];
+    } else {
+      return null;
+    }
+  }
+  /**
+   * Retrieves the Property superseding (schema:supersededBy) this Property
+   * @returns {string|null} The Property superseding this Property (null if none)
+   */
+
+
+  isSupersededBy() {
+    var propertyObj = this.graph.properties[this.IRI];
+
+    if (util.isString(propertyObj["schema:supersededBy"])) {
+      return propertyObj["schema:supersededBy"];
+    } else {
+      return null;
+    }
+  }
+  /**
+   * Retrieves the name (rdfs:label) of this Property in a wished language (optional)
+   * @param {string} language - (default = "en") the wished language for the name
+   * @returns {string|null} The name of this Property (null if not given for specified language)
+   */
+
+
+  getName() {
+    var language = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : "en";
+    var nameObj = this.graph.properties[this.IRI]["rdfs:label"];
+
+    if (nameObj === null || nameObj[language] === undefined) {
+      return null;
     }
 
-    /**
-     * Retrieves the IRI (@id) of this Property in compact/absolute form
-     * @param {boolean} compactForm - (default = false), if true -> return compact IRI -> "schema:address", if false -> return absolute IRI -> "http://schema.org/address"
-     * @returns {string} The IRI (@id) of this Property
-     */
+    return nameObj[language];
+  }
+  /**
+   * Retrieves the description (rdfs:comment) of this Property in a wished language (optional)
+   * @param {string} language - (default = "en") the wished language for the description
+   * @returns {string|null} The description of this Property (null if not given for specified language)
+   */
 
 
-    _createClass(Property, [{
-        key: "getIRI",
-        value: function getIRI() {
-            var compactForm = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : false;
+  getDescription() {
+    var language = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : "en";
+    var descriptionObj = this.graph.properties[this.IRI]["rdfs:comment"];
 
-            if (compactForm) {
-                return this.IRI;
-            } else {
-                return util.toAbsoluteIRI(this.IRI, this.graph.context);
-            }
-        }
+    if (descriptionObj === null || descriptionObj[language] === undefined) {
+      return null;
+    }
 
-        /**
-         * Retrieves the term type of this Property (is always "rdf:Property")
-         * @returns {string} The term type of this Property -> "rdf:Property"
-         */
+    return descriptionObj[language];
+  }
+  /**
+   * Retrieves the explicit/implicit ranges (schema:rangeIncludes) of this Property
+   * @param {boolean} implicit - (default = true) retrieves also implicit ranges (inheritance from sub-classes of the ranges)
+   * @param {object|null} filter - (default = null) an optional filter for the ranges
+   * @returns {array} The ranges of this Property
+   */
 
-    }, {
-        key: "getTermType",
-        value: function getTermType() {
-            return "rdf:Property";
-        }
 
-        /**
-         * Retrieves the original vocabulary (schema:isPartOf) of this Property
-         * @returns {string|null} The vocabulary IRI given by the "schema:isPartOf" of this Property
-         */
+  getRanges() {
+    var implicit = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : true;
+    var filter = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
+    var propertyObj = this.graph.properties[this.IRI];
+    var result = [];
+    result.push(...propertyObj["schema:rangeIncludes"]);
 
-    }, {
-        key: "getVocabulary",
-        value: function getVocabulary() {
-            var propertyObj = this.graph.properties[this.IRI];
-            if (propertyObj["schema:isPartOf"] !== undefined) {
-                return propertyObj["schema:isPartOf"];
-            } else {
-                return null;
-            }
-        }
+    if (implicit === true) {
+      //add sub-classes from ranges
+      var inferredSubClasses = [];
 
-        /**
-         * Retrieves the source (dc:source) of this Property
-         * @returns {string|null} The source IRI given by the "dc:source" of this Property (null if none)
-         */
+      for (var i = 0; i < result.length; i++) {
+        inferredSubClasses.push(...this.graph.reasoner.inferImplicitSubClasses(result[i]));
+      }
 
-    }, {
-        key: "getSource",
-        value: function getSource() {
-            var propertyObj = this.graph.properties[this.IRI];
-            if (propertyObj["dc:source"] !== undefined) {
-                return propertyObj["dc:source"];
-            } else {
-                return null;
-            }
-        }
+      result.push(...inferredSubClasses); //remove "null" values from array (if range included data types)
 
-        /**
-         * Retrieves the Property superseding (schema:supersededBy) this Property
-         * @returns {string|null} The Property superseding this Property (null if none)
-         */
+      result = result.filter(function (el) {
+        return el !== null;
+      });
+    }
 
-    }, {
-        key: "isSupersededBy",
-        value: function isSupersededBy() {
-            var propertyObj = this.graph.properties[this.IRI];
-            if (util.isString(propertyObj["schema:supersededBy"])) {
-                return propertyObj["schema:supersededBy"];
-            } else {
-                return null;
-            }
-        }
+    return util.applyFilter(util.uniquifyArray(result), filter, this.graph);
+  }
+  /**
+   * Retrieves the explicit/implicit domains (schema:domainIncludes) of this Property
+   * @param {boolean} implicit - (default = true) retrieves also implicit domains (inheritance from sub-classes of the domains)
+   * @param {object|null} filter - (default = null) an optional filter for the domains
+   * @returns {array} The domains of this Property
+   */
 
-        /**
-         * Retrieves the name (rdfs:label) of this Property in a wished language (optional)
-         * @param {string} language - (default = "en") the wished language for the name
-         * @returns {string|null} The name of this Property (null if not given for specified language)
-         */
 
-    }, {
-        key: "getName",
-        value: function getName() {
-            var language = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : "en";
+  getDomains() {
+    var implicit = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : true;
+    var filter = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
+    var propertyObj = this.graph.properties[this.IRI];
+    var result = [];
+    result.push(...propertyObj["schema:domainIncludes"]);
 
-            var nameObj = this.graph.properties[this.IRI]["rdfs:label"];
-            if (nameObj === null || nameObj[language] === undefined) {
-                return null;
-            }
-            return nameObj[language];
-        }
+    if (implicit === true) {
+      //add sub-classes from ranges
+      var inferredSubClasses = [];
 
-        /**
-         * Retrieves the description (rdfs:comment) of this Property in a wished language (optional)
-         * @param {string} language - (default = "en") the wished language for the description
-         * @returns {string|null} The description of this Property (null if not given for specified language)
-         */
+      for (var i = 0; i < result.length; i++) {
+        inferredSubClasses.push(...this.graph.reasoner.inferImplicitSubClasses(result[i]));
+      }
 
-    }, {
-        key: "getDescription",
-        value: function getDescription() {
-            var language = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : "en";
+      result.push(...inferredSubClasses);
+    }
 
-            var descriptionObj = this.graph.properties[this.IRI]["rdfs:comment"];
-            if (descriptionObj === null || descriptionObj[language] === undefined) {
-                return null;
-            }
-            return descriptionObj[language];
-        }
+    return util.applyFilter(util.uniquifyArray(result), filter, this.graph);
+  }
+  /**
+   * Retrieves the explicit/implicit super-properties (rdfs:subPropertyOf) of this Property
+   * @param {boolean} implicit - (default = true) retrieves also implicit super-properties (recursive from super-properties)
+   * @param {object|null} filter - (default = null) an optional filter for the super-properties
+   * @returns {array} The super-properties of this Property
+   */
 
-        /**
-         * Retrieves the explicit/implicit ranges (schema:rangeIncludes) of this Property
-         * @param {boolean} implicit - (default = true) retrieves also implicit ranges (inheritance from sub-classes of the ranges)
-         * @param {object|null} filter - (default = null) an optional filter for the ranges
-         * @returns {array} The ranges of this Property
-         */
 
-    }, {
-        key: "getRanges",
-        value: function getRanges() {
-            var _result;
+  getSuperProperties() {
+    var implicit = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : true;
+    var filter = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
+    var propertyObj = this.graph.properties[this.IRI];
+    var result = [];
 
-            var implicit = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : true;
-            var filter = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
+    if (implicit === true) {
+      result.push(...this.graph.reasoner.inferSuperProperties(this.IRI));
+    } else {
+      result.push(...propertyObj["rdfs:subPropertyOf"]);
+    }
 
-            var propertyObj = this.graph.properties[this.IRI];
-            var result = [];
-            (_result = result).push.apply(_result, _toConsumableArray(propertyObj["schema:rangeIncludes"]));
-            if (implicit === true) {
-                var _result2;
+    return util.applyFilter(util.uniquifyArray(result), filter, this.graph);
+  }
+  /**
+   * Retrieves the explicit/implicit sub-properties (soa:superPropertyOf) of this Property
+   * @param {boolean} implicit - (default = true) retrieves also implicit sub-properties (recursive from sub-properties)
+   * @param {object|null} filter - (default = null) an optional filter for the sub-properties
+   * @returns {array} The sub-properties of this Property
+   */
 
-                //add sub-classes from ranges
-                (_result2 = result).push.apply(_result2, _toConsumableArray(this.graph.reasoner.inferImplicitSubClasses(result)));
-                //remove "null" values from array (if range included data types)
-                result = result.filter(function (el) {
-                    return el !== null;
-                });
-            }
-            return util.applyFilter(util.uniquifyArray(result), filter, this.graph);
-        }
 
-        /**
-         * Retrieves the explicit/implicit domains (schema:domainIncludes) of this Property
-         * @param {boolean} implicit - (default = true) retrieves also implicit domains (inheritance from sub-classes of the domains)
-         * @param {object|null} filter - (default = null) an optional filter for the domains
-         * @returns {array} The domains of this Property
-         */
+  getSubProperties() {
+    var implicit = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : true;
+    var filter = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
+    var propertyObj = this.graph.properties[this.IRI];
+    var result = [];
 
-    }, {
-        key: "getDomains",
-        value: function getDomains() {
-            var implicit = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : true;
-            var filter = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
+    if (implicit === true) {
+      result.push(...this.graph.reasoner.inferSubProperties(this.IRI));
+    } else {
+      result.push(...propertyObj["soa:superPropertyOf"]);
+    }
 
-            var propertyObj = this.graph.properties[this.IRI];
-            var result = [];
-            result.push.apply(result, _toConsumableArray(propertyObj["schema:domainIncludes"]));
-            if (implicit === true) {
-                //add sub-classes from ranges
-                result.push.apply(result, _toConsumableArray(this.graph.reasoner.inferImplicitSubClasses(result)));
-            }
-            return util.applyFilter(util.uniquifyArray(result), filter, this.graph);
-        }
+    return util.applyFilter(util.uniquifyArray(result), filter, this.graph);
+  }
+  /**
+   * Generates a string representation of this Property (Based on its JSON representation)
+   * @returns {string} The string representation of this Property
+   */
 
-        /**
-         * Retrieves the explicit/implicit super-properties (rdfs:subPropertyOf) of this Property
-         * @param {boolean} implicit - (default = true) retrieves also implicit super-properties (recursive from super-properties)
-         * @param {object|null} filter - (default = null) an optional filter for the super-properties
-         * @returns {array} The super-properties of this Property
-         */
 
-    }, {
-        key: "getSuperProperties",
-        value: function getSuperProperties() {
-            var implicit = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : true;
-            var filter = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
+  toString() {
+    return JSON.stringify(this.toJSON(false, null), null, 2);
+  }
+  /**
+   * Generates an explicit/implicit JSON representation of this Property.
+   * @param {boolean} implicit - (default = true) includes also implicit data (e.g. domains, ranges, etc.)
+   * @param {object|null} filter - (default = null) an optional filter for the generated data
+   * @returns {object} The JSON representation of this Class
+   */
 
-            var propertyObj = this.graph.properties[this.IRI];
-            var result = [];
 
-            if (implicit === true) {
-                result.push.apply(result, _toConsumableArray(this.graph.reasoner.inferSuperProperties(this.IRI)));
-            } else {
-                result.push.apply(result, _toConsumableArray(propertyObj["rdfs:subPropertyOf"]));
-            }
-            return util.applyFilter(util.uniquifyArray(result), filter, this.graph);
-        }
+  toJSON() {
+    var implicit = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : true;
+    var filter = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
+    var result = {};
+    result["id"] = this.getIRI(true);
+    result["IRI"] = this.getIRI();
+    result["type"] = this.getTermType();
+    result["vocabulary"] = this.getVocabulary();
+    result["source"] = this.getSource();
+    result["supersededBy"] = this.isSupersededBy();
+    result["name"] = this.getName();
+    result["description"] = this.getDescription();
+    result["ranges"] = this.getRanges(implicit, filter);
+    result["domains"] = this.getDomains(implicit, filter);
+    result["superProperties"] = this.getSuperProperties(implicit, filter);
+    result["subProperties"] = this.getSubProperties(implicit, filter);
+    return result;
+  }
 
-        /**
-         * Retrieves the explicit/implicit sub-properties (soa:superPropertyOf) of this Property
-         * @param {boolean} implicit - (default = true) retrieves also implicit sub-properties (recursive from sub-properties)
-         * @param {object|null} filter - (default = null) an optional filter for the sub-properties
-         * @returns {array} The sub-properties of this Property
-         */
-
-    }, {
-        key: "getSubProperties",
-        value: function getSubProperties() {
-            var implicit = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : true;
-            var filter = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
-
-            var propertyObj = this.graph.properties[this.IRI];
-            var result = [];
-
-            if (implicit === true) {
-                result.push.apply(result, _toConsumableArray(this.graph.reasoner.inferSubProperties(this.IRI)));
-            } else {
-                result.push.apply(result, _toConsumableArray(propertyObj["soa:superPropertyOf"]));
-            }
-            return util.applyFilter(util.uniquifyArray(result), filter, this.graph);
-        }
-
-        /**
-         * Generates a string representation of this Property (Based on its JSON representation)
-         * @returns {string} The string representation of this Property
-         */
-
-    }, {
-        key: "toString",
-        value: function toString() {
-            return JSON.stringify(this.toJSON(false, null), null, 2);
-        }
-
-        /**
-         * Generates an explicit/implicit JSON representation of this Property.
-         * @param {boolean} implicit - (default = true) includes also implicit data (e.g. domains, ranges, etc.)
-         * @param {object|null} filter - (default = null) an optional filter for the generated data
-         * @returns {object} The JSON representation of this Class
-         */
-
-    }, {
-        key: "toJSON",
-        value: function toJSON() {
-            var implicit = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : true;
-            var filter = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
-
-            var result = {};
-            result["id"] = this.getIRI(true);
-            result["IRI"] = this.getIRI();
-            result["type"] = this.getTermType();
-            result["vocabulary"] = this.getVocabulary();
-            result["source"] = this.getSource();
-            result["supersededBy"] = this.isSupersededBy();
-            result["name"] = this.getName();
-            result["description"] = this.getDescription();
-            result["ranges"] = this.getRanges(implicit, filter);
-            result["domains"] = this.getDomains(implicit, filter);
-            result["superProperties"] = this.getSuperProperties(implicit, filter);
-            result["subProperties"] = this.getSubProperties(implicit, filter);
-            return result;
-        }
-    }]);
-
-    return Property;
-}();
+}
 
 module.exports = Property;
 
-},{"./utilities":52}],50:[function(require,module,exports){
+},{"./utilities":83}],81:[function(require,module,exports){
 "use strict";
-
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 var util = require('./utilities');
 
-var ReasoningEngine = function () {
-    /**
-     * @constructor
-     * @param {object} graph The parent Graph-class to which this ReasoningEngine belongs
-     */
-    function ReasoningEngine(graph) {
-        _classCallCheck(this, ReasoningEngine);
+class ReasoningEngine {
+  /**
+   * @constructor
+   * @param {object} graph The parent Graph-class to which this ReasoningEngine belongs
+   */
+  constructor(graph) {
+    this.graph = graph;
+  }
 
-        this.graph = graph;
+  inferPropertiesFromSuperClasses(superClasses) {
+    var result = [];
+
+    for (var s = 0; s < superClasses.length; s++) {
+      var superClassObj = this.graph.classes[superClasses[s]];
+
+      if (superClassObj === undefined) {
+        superClassObj = this.graph.enumerations[superClasses[s]];
+      }
+
+      if (superClassObj !== undefined) {
+        result.push(...superClassObj["soa:hasProperty"]);
+
+        if (superClassObj["rdfs:subClassOf"].length !== 0) {
+          result.push(...this.inferPropertiesFromSuperClasses(superClassObj["rdfs:subClassOf"]));
+        }
+      }
     }
 
-    _createClass(ReasoningEngine, [{
-        key: "inferPropertiesFromSuperClasses",
-        value: function inferPropertiesFromSuperClasses(superClasses) {
-            var result = [];
-            for (var s = 0; s < superClasses.length; s++) {
-                var superClassObj = this.graph.classes[superClasses[s]];
-                if (superClassObj === undefined) {
-                    superClassObj = this.graph.enumerations[superClasses[s]];
-                }
-                if (superClassObj !== undefined) {
-                    result.push.apply(result, _toConsumableArray(superClassObj["soa:hasProperty"]));
-                    if (superClassObj["rdfs:subClassOf"].length !== 0) {
-                        result.push.apply(result, _toConsumableArray(this.inferPropertiesFromSuperClasses(superClassObj["rdfs:subClassOf"])));
-                    }
-                }
-            }
-            return util.uniquifyArray(result);
+    return util.uniquifyArray(result);
+  }
+
+  inferImplicitSuperClasses(classIRI) {
+    var classObj = this.graph.classes[classIRI];
+    var result = [];
+
+    if (classObj === undefined) {
+      classObj = this.graph.enumerations[classIRI];
+    }
+
+    if (classObj !== undefined) {
+      result.push(...classObj["rdfs:subClassOf"]);
+      var addition = util.copByVal(result); //make a copy
+
+      do {
+        var newAddition = [];
+
+        for (var i = 0; i < addition.length; i++) {
+          var parentClassObj = this.graph.classes[addition[i]];
+
+          if (parentClassObj === undefined) {
+            parentClassObj = this.graph.enumerations[addition[i]];
+          }
+
+          if (parentClassObj !== undefined) {
+            newAddition.push(...parentClassObj["rdfs:subClassOf"]);
+          }
         }
-    }, {
-        key: "inferImplicitSuperClasses",
-        value: function inferImplicitSuperClasses(classIRI) {
-            var classObj = this.graph.classes[classIRI];
-            var result = [];
-            if (classObj === undefined) {
-                classObj = this.graph.enumerations[classIRI];
-            }
-            if (classObj !== undefined) {
-                var _result;
 
-                (_result = result).push.apply(_result, _toConsumableArray(classObj["rdfs:subClassOf"]));
-                var addition = util.copByVal(result); //make a copy
-                do {
-                    var _result2;
+        newAddition = util.uniquifyArray(newAddition);
+        addition = util.copByVal(newAddition);
+        result.push(...newAddition);
+      } while (addition.length !== 0);
 
-                    var newAddition = [];
-                    for (var i = 0; i < addition.length; i++) {
-                        var parentClassObj = this.graph.classes[addition[i]];
-                        if (parentClassObj === undefined) {
-                            parentClassObj = this.graph.enumerations[addition[i]];
-                        }
-                        if (parentClassObj !== undefined) {
-                            var _newAddition;
+      result = util.uniquifyArray(result);
+    }
 
-                            (_newAddition = newAddition).push.apply(_newAddition, _toConsumableArray(parentClassObj["rdfs:subClassOf"]));
-                        }
-                    }
-                    newAddition = util.uniquifyArray(newAddition);
-                    addition = util.copByVal(newAddition);
-                    (_result2 = result).push.apply(_result2, _toConsumableArray(newAddition));
-                } while (addition.length !== 0);
-                result = util.uniquifyArray(result);
-            }
-            return result;
+    return result;
+  }
+
+  inferImplicitSubClasses(classIRI) {
+    var classObj = this.graph.classes[classIRI];
+    var result = [];
+
+    if (classObj === undefined) {
+      classObj = this.graph.enumerations[classIRI];
+    }
+
+    if (classObj !== undefined) {
+      result.push(...classObj["soa:superClassOf"]);
+      var addition = util.copByVal(result); //make a copy
+
+      do {
+        var newAddition = [];
+
+        for (var i = 0; i < addition.length; i++) {
+          var parentClassObj = this.graph.classes[addition[i]];
+
+          if (parentClassObj === undefined) {
+            parentClassObj = this.graph.enumerations[addition[i]];
+          }
+
+          if (parentClassObj !== undefined) {
+            newAddition.push(...parentClassObj["soa:superClassOf"]);
+          }
         }
-    }, {
-        key: "inferImplicitSubClasses",
-        value: function inferImplicitSubClasses(classIRI) {
-            var classObj = this.graph.classes[classIRI];
-            var result = [];
-            if (classObj === undefined) {
-                classObj = this.graph.enumerations[classIRI];
-            }
-            if (classObj !== undefined) {
-                var _result3;
 
-                (_result3 = result).push.apply(_result3, _toConsumableArray(classObj["soa:superClassOf"]));
-                var addition = util.copByVal(result); //make a copy
-                do {
-                    var _result4;
+        newAddition = util.uniquifyArray(newAddition);
+        addition = util.copByVal(newAddition);
+        result.push(...newAddition);
+      } while (addition.length !== 0);
 
-                    var newAddition = [];
-                    for (var i = 0; i < addition.length; i++) {
-                        var parentClassObj = this.graph.classes[addition[i]];
-                        if (parentClassObj === undefined) {
-                            parentClassObj = this.graph.enumerations[addition[i]];
-                        }
-                        if (parentClassObj !== undefined) {
-                            var _newAddition2;
+      result = util.uniquifyArray(result);
+      return result;
+    }
 
-                            (_newAddition2 = newAddition).push.apply(_newAddition2, _toConsumableArray(parentClassObj["soa:superClassOf"]));
-                        }
-                    }
-                    newAddition = util.uniquifyArray(newAddition);
-                    addition = util.copByVal(newAddition);
-                    (_result4 = result).push.apply(_result4, _toConsumableArray(newAddition));
-                } while (addition.length !== 0);
-                result = util.uniquifyArray(result);
-                return result;
-            }
-            return result;
+    return result;
+  }
+
+  inferImplicitSuperDataTypes(dataTypeIRI) {
+    var dataTypeObj = this.graph.dataTypes[dataTypeIRI];
+    var result = [];
+
+    if (dataTypeObj !== undefined) {
+      result.push(...dataTypeObj["rdfs:subClassOf"]);
+      var addition = util.copByVal(result); //make a copy
+
+      do {
+        var newAddition = [];
+
+        for (var i = 0; i < addition.length; i++) {
+          var parentDataTypeObj = this.graph.dataTypes[addition[i]];
+
+          if (parentDataTypeObj !== undefined) {
+            newAddition.push(...parentDataTypeObj["rdfs:subClassOf"]);
+          }
         }
-    }, {
-        key: "inferImplicitSuperDataTypes",
-        value: function inferImplicitSuperDataTypes(dataTypeIRI) {
-            var dataTypeObj = this.graph.dataTypes[dataTypeIRI];
-            var result = [];
-            if (dataTypeObj !== undefined) {
-                var _result5;
 
-                (_result5 = result).push.apply(_result5, _toConsumableArray(dataTypeObj["rdfs:subClassOf"]));
-                var addition = util.copByVal(result); //make a copy
-                do {
-                    var _result6;
+        newAddition = util.uniquifyArray(newAddition);
+        addition = util.copByVal(newAddition);
+        result.push(...newAddition);
+      } while (addition.length !== 0);
 
-                    var newAddition = [];
-                    for (var i = 0; i < addition.length; i++) {
-                        var parentDataTypeObj = this.graph.dataTypes[addition[i]];
-                        if (parentDataTypeObj !== undefined) {
-                            var _newAddition3;
+      result = util.uniquifyArray(result);
+    }
 
-                            (_newAddition3 = newAddition).push.apply(_newAddition3, _toConsumableArray(parentDataTypeObj["rdfs:subClassOf"]));
-                        }
-                    }
-                    newAddition = util.uniquifyArray(newAddition);
-                    addition = util.copByVal(newAddition);
-                    (_result6 = result).push.apply(_result6, _toConsumableArray(newAddition));
-                } while (addition.length !== 0);
-                result = util.uniquifyArray(result);
-            }
-            return result;
+    return result;
+  }
+
+  inferImplicitSubDataTypes(dataTypeIRI) {
+    var dataTypeObj = this.graph.dataTypes[dataTypeIRI];
+    var result = [];
+
+    if (dataTypeObj !== undefined) {
+      result.push(...dataTypeObj["soa:superClassOf"]);
+      var addition = util.copByVal(result); //make a copy
+
+      do {
+        var newAddition = [];
+
+        for (var i = 0; i < addition.length; i++) {
+          var childDataTypeObj = this.graph.dataTypes[addition[i]];
+
+          if (childDataTypeObj !== undefined) {
+            newAddition.push(...childDataTypeObj["soa:superClassOf"]);
+          }
         }
-    }, {
-        key: "inferImplicitSubDataTypes",
-        value: function inferImplicitSubDataTypes(dataTypeIRI) {
-            var dataTypeObj = this.graph.dataTypes[dataTypeIRI];
-            var result = [];
-            if (dataTypeObj !== undefined) {
-                var _result7;
 
-                (_result7 = result).push.apply(_result7, _toConsumableArray(dataTypeObj["soa:superClassOf"]));
-                var addition = util.copByVal(result); //make a copy
-                do {
-                    var _result8;
+        newAddition = util.uniquifyArray(newAddition);
+        addition = util.copByVal(newAddition);
+        result.push(...newAddition);
+      } while (addition.length !== 0);
 
-                    var newAddition = [];
-                    for (var i = 0; i < addition.length; i++) {
-                        var childDataTypeObj = this.graph.dataTypes[addition[i]];
-                        if (childDataTypeObj !== undefined) {
-                            var _newAddition4;
+      result = util.uniquifyArray(result);
+    }
 
-                            (_newAddition4 = newAddition).push.apply(_newAddition4, _toConsumableArray(childDataTypeObj["soa:superClassOf"]));
-                        }
-                    }
-                    newAddition = util.uniquifyArray(newAddition);
-                    addition = util.copByVal(newAddition);
-                    (_result8 = result).push.apply(_result8, _toConsumableArray(newAddition));
-                } while (addition.length !== 0);
-                result = util.uniquifyArray(result);
-            }
-            return result;
+    return result;
+  }
+
+  inferSubProperties(propertyIRI) {
+    var propertyObj = this.graph.properties[propertyIRI];
+    var result = [];
+
+    if (propertyObj !== undefined) {
+      result.push(...propertyObj["soa:superPropertyOf"]);
+      var addition = util.copByVal(result); //make a copy
+
+      do {
+        var newAddition = [];
+
+        for (var i = 0; i < addition.length; i++) {
+          var parentPropertyObj = this.graph.properties[addition[i]];
+
+          if (parentPropertyObj !== undefined) {
+            newAddition.push(...parentPropertyObj["soa:superPropertyOf"]);
+          }
         }
-    }, {
-        key: "inferSubProperties",
-        value: function inferSubProperties(propertyIRI) {
-            var propertyObj = this.graph.properties[propertyIRI];
-            var result = [];
-            if (propertyObj !== undefined) {
-                var _result9;
 
-                (_result9 = result).push.apply(_result9, _toConsumableArray(propertyObj["soa:superPropertyOf"]));
-                var addition = util.copByVal(result); //make a copy
-                do {
-                    var _result10;
+        newAddition = util.uniquifyArray(newAddition);
+        addition = util.copByVal(newAddition);
+        result.push(...newAddition);
+      } while (addition.length !== 0);
 
-                    var newAddition = [];
-                    for (var i = 0; i < addition.length; i++) {
-                        var parentPropertyObj = this.graph.properties[addition[i]];
-                        if (parentPropertyObj !== undefined) {
-                            var _newAddition5;
+      result = util.uniquifyArray(result);
+    }
 
-                            (_newAddition5 = newAddition).push.apply(_newAddition5, _toConsumableArray(parentPropertyObj["soa:superPropertyOf"]));
-                        }
-                    }
-                    newAddition = util.uniquifyArray(newAddition);
-                    addition = util.copByVal(newAddition);
-                    (_result10 = result).push.apply(_result10, _toConsumableArray(newAddition));
-                } while (addition.length !== 0);
-                result = util.uniquifyArray(result);
-            }
-            return result;
+    return result;
+  }
+
+  inferSuperProperties(propertyIRI) {
+    var propertyObj = this.graph.properties[propertyIRI];
+    var result = [];
+
+    if (propertyObj !== undefined) {
+      result.push(...propertyObj["rdfs:subPropertyOf"]);
+      var addition = util.copByVal(result); //make a copy
+
+      do {
+        var newAddition = [];
+
+        for (var i = 0; i < addition.length; i++) {
+          var parentPropertyObj = this.graph.properties[addition[i]];
+
+          if (parentPropertyObj !== undefined) {
+            newAddition.push(...parentPropertyObj["rdfs:subPropertyOf"]);
+          }
         }
-    }, {
-        key: "inferSuperProperties",
-        value: function inferSuperProperties(propertyIRI) {
-            var propertyObj = this.graph.properties[propertyIRI];
-            var result = [];
-            if (propertyObj !== undefined) {
-                var _result11;
 
-                (_result11 = result).push.apply(_result11, _toConsumableArray(propertyObj["rdfs:subPropertyOf"]));
-                var addition = util.copByVal(result); //make a copy
-                do {
-                    var _result12;
+        newAddition = util.uniquifyArray(newAddition);
+        addition = util.copByVal(newAddition);
+        result.push(...newAddition);
+      } while (addition.length !== 0);
 
-                    var newAddition = [];
-                    for (var i = 0; i < addition.length; i++) {
-                        var parentPropertyObj = this.graph.properties[addition[i]];
-                        if (parentPropertyObj !== undefined) {
-                            var _newAddition6;
+      result = util.uniquifyArray(result);
+    }
 
-                            (_newAddition6 = newAddition).push.apply(_newAddition6, _toConsumableArray(parentPropertyObj["rdfs:subPropertyOf"]));
-                        }
-                    }
-                    newAddition = util.uniquifyArray(newAddition);
-                    addition = util.copByVal(newAddition);
-                    (_result12 = result).push.apply(_result12, _toConsumableArray(newAddition));
-                } while (addition.length !== 0);
-                result = util.uniquifyArray(result);
-            }
-            return result;
-        }
-    }]);
+    return result;
+  }
 
-    return ReasoningEngine;
-}();
+}
 
 module.exports = ReasoningEngine;
 
-},{"./utilities":52}],51:[function(require,module,exports){
+},{"./utilities":83}],82:[function(require,module,exports){
 "use strict";
 
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { Promise.resolve(value).then(_next, _throw); } }
 
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+function _asyncToGenerator(fn) { return function () { var self = this, args = arguments; return new Promise(function (resolve, reject) { var gen = fn.apply(self, args); function _next(value) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value); } function _throw(err) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err); } _next(undefined); }); }; }
 
 var Graph = require("./Graph");
+
 var util = require("./utilities");
-var nodeFetch = require("node-fetch");
 
-var SDOAdapter = function () {
-    /**
-     * The SDOAdapter is a JS-Class that represents the interface between the user and this library. Its methods enable to add vocabularies to its memory as well as retrieving vocabulary items. It is possible to create multiple instances of this JS-Class which use different vocabularies.
-     * @constructor
-     */
-    function SDOAdapter() {
-        _classCallCheck(this, SDOAdapter);
+var axios = require("axios");
 
-        this.graph = new Graph(this);
+class SDOAdapter {
+  /**
+   * The SDOAdapter is a JS-Class that represents the interface between the user and this library. Its methods enable to add vocabularies to its memory as well as retrieving vocabulary items. It is possible to create multiple instances of this JS-Class which use different vocabularies.
+   * @constructor
+   */
+  constructor() {
+    this.graph = new Graph(this);
+  }
+  /**
+   * Adds vocabularies (in JSON-LD format or as URL) to the memory of this SDOAdapter
+   * @param {object} vocabArray - The vocabularies to add the graph, in JSON-LD format
+   */
+
+
+  addVocabularies(vocabArray) {
+    var _this = this;
+
+    return _asyncToGenerator(function* () {
+      if (util.isArray(vocabArray)) {
+        //check every vocab if it is a valid JSON-LD. If string -> try to JSON.parse()
+        for (var i = 0; i < vocabArray.length; i++) {
+          if (util.isString(vocabArray[i])) {
+            if (vocabArray[i].startsWith("www") || vocabArray[i].startsWith("http")) {
+              //assume it is a URL
+              var fetchedVocab = yield _this.fetchVocabularyFromURL(vocabArray[i]);
+
+              try {
+                yield _this.graph.addVocabulary(fetchedVocab);
+              } catch (e) {
+                console.log("The given URL " + vocabArray[i] + " did not contain a valid JSON-LD vocabulary.");
+              }
+            } else {
+              //assume it is a string-version of a JSON-LD
+              try {
+                yield _this.graph.addVocabulary(JSON.parse(vocabArray[i]));
+              } catch (e) {
+                console.log("Parsing of vocabulary string produced an invalid JSON-LD.");
+              }
+            }
+          } else if (util.isObject(vocabArray[i])) {
+            yield _this.graph.addVocabulary(vocabArray[i]);
+          } else {
+            //invalid argument type!
+            throw new Error("The first argument of the function must be an Array of vocabularies (JSON-LD as Object/String)");
+          }
+        }
+      } else {
+        throw new Error("The first argument of the function must be an Array of vocabularies (JSON-LD)");
+      }
+    })();
+  }
+
+  fetchVocabularyFromURL(url) {
+    return _asyncToGenerator(function* () {
+      try {
+        return new Promise(function (resolve, reject) {
+          axios.get(url).then(function (res) {
+            resolve(res.data);
+          }).catch(function (err) {
+            reject(console.log(err));
+          });
+        });
+      } catch (e) {
+        console.log(e);
+        return "";
+      }
+    })();
+  }
+  /**
+   * Creates a JS-Class for a vocabulary Class by the given identifier (@id) or name
+   * @param {string} id - The identifier of the wished Class. It can be either a compact IRI -> "schema:Hotel", an absolute IRI -> "http://schema.org/Hotel", or the name (rdfs:label) -> "name" of the class (which may be ambiguous if multiple vocabularies/languages are used).
+   * @param {object|null} filter - (default = null) an optional filter for the Class creation
+   * @returns {Class|Enumeration} The JS-Class representing a Class of an Enumeration (depending on the given id)
+   */
+
+
+  getClass(id) {
+    var filter = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
+    //returns also enumerations
+    return this.graph.getClass(id, filter);
+  }
+  /**
+   * Creates an array of JS-Classes for all vocabulary Classes
+   * @param {object|null} filter - (default = null) an optional filter for the Class creation
+   * @returns {array} An array of JS-Classes representing all vocabulary Classes, does not include Enumerations
+   */
+
+
+  getAllClasses() {
+    var filter = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : null;
+    var classesIRIList = this.getListOfClasses(filter);
+    var result = [];
+
+    for (var i = 0; i < classesIRIList.length; i++) {
+      try {
+        result.push(this.getClass(classesIRIList[i]));
+      } catch (e) {}
     }
 
-    /**
-     * Adds vocabularies (in JSON-LD format or as URL) to the memory of this SDOAdapter
-     * @param {object} vocabArray - The vocabularies to add the graph, in JSON-LD format
-     * @param {function|null} callback - The callback function executed at the end of the loading process
-     */
+    return result;
+  }
+  /**
+   * Creates an array of IRIs for all vocabulary Classes
+   * @param {object|null} filter - (default = null) an optional filter for the List creation
+   * @returns {array} An array of IRIs representing all vocabulary Classes, does not include Enumerations
+   */
 
 
-    _createClass(SDOAdapter, [{
-        key: "addVocabularies",
-        value: async function addVocabularies(vocabArray, callback) {
-            if (util.isArray(vocabArray)) {
-                //check every vocab if it is a valid JSON-LD. If string -> try to JSON.parse()
-                for (var i = 0; i < vocabArray.length; i++) {
-                    if (util.isString(vocabArray[i])) {
-                        if (vocabArray[i].startsWith("www") || vocabArray[i].startsWith("http")) {
-                            //assume it is a URL
-                            var fetchedVocab = await this.fetchVocabularyFromURL(vocabArray[i]);
-                            try {
-                                await this.graph.addVocabulary(fetchedVocab);
-                            } catch (e) {
-                                console.log("The given URL " + vocabArray[i] + " did not contain a valid JSON-LD vocabulary.");
-                            }
-                        } else {
-                            //assume it is a string-version of a JSON-LD
-                            try {
-                                await this.graph.addVocabulary(JSON.parse(vocabArray[i]));
-                            } catch (e) {
-                                console.log("Parsing of vocabulary string produced an invalid JSON-LD.");
-                            }
-                        }
-                    } else if (util.isObject(vocabArray[i])) {
-                        await this.graph.addVocabulary(vocabArray[i]);
-                    } else {
-                        //invalid argument type!
-                        throw new Error("The first argument of the function must be an Array of vocabularies (JSON-LD as Object/String)");
-                    }
-                }
-                if (callback !== null) {
-                    callback();
-                }
-            } else {
-                throw new Error("The first argument of the function must be an Array of vocabularies (JSON-LD)");
-            }
+  getListOfClasses() {
+    var filter = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : null;
+    //do not include enumerations
+    return util.applyFilter(Object.keys(this.graph.classes), filter, this.graph);
+  }
+  /**
+   * Creates a JS-Class for a vocabulary Property by the given identifier (@id) or name
+   * @param {string} id - The identifier of the wished Property. It can be either a compact IRI -> "schema:address", an absolute IRI -> "http://schema.org/address", or the name (rdfs:label) -> "address" of the Property (which may be ambiguous if multiple vocabularies/languages are used).
+   * @param {object|null} filter - (default = null) an optional filter for the Property creation
+   * @returns {Property} The JS-Class representing a Property
+   */
+
+
+  getProperty(id) {
+    var filter = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
+    return this.graph.getProperty(id, filter);
+  }
+  /**
+   * Creates an array of JS-Classes for all vocabulary Properties
+   * @param {object|null} filter - (default = null) an optional filter for the Property creation
+   * @returns {array} An array of JS-Classes representing all vocabulary Properties
+   */
+
+
+  getAllProperties() {
+    var filter = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : null;
+    var propertiesIRIList = this.getListOfProperties(filter);
+    var result = [];
+
+    for (var i = 0; i < propertiesIRIList.length; i++) {
+      try {
+        result.push(this.getProperty(propertiesIRIList[i]));
+      } catch (e) {}
+    }
+
+    return result;
+  }
+  /**
+   * Creates an array of IRIs for all vocabulary Properties
+   * @param {object|null} filter - (default = null) an optional filter for the List creation
+   * @returns {array} An array of IRIs representing all vocabulary Properties
+   */
+
+
+  getListOfProperties() {
+    var filter = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : null;
+    return util.applyFilter(Object.keys(this.graph.properties), filter, this.graph);
+  }
+  /**
+   * Creates a JS-Class for a vocabulary DataType by the given identifier (@id) or name
+   * @param {string} id - The identifier of the wished DataType. It can be either a compact IRI -> "schema:Number", an absolute IRI -> "http://schema.org/Number", or the name (rdfs:label) -> "Number" of the DataType (which may be ambiguous if multiple vocabularies/languages are used).
+   * @param {object|null} filter - (default = null) an optional filter for the DataType creation
+   * @returns {DataType} The JS-Class representing a DataType
+   */
+
+
+  getDataType(id) {
+    var filter = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
+    return this.graph.getDataType(id, filter);
+  }
+  /**
+   * Creates an array of JS-Classes for all vocabulary DataTypes
+   * @param {object|null} filter - (default = null) an optional filter for the DataType creation
+   * @returns {array} An array of JS-Classes representing all vocabulary DataTypes
+   */
+
+
+  getAllDataTypes() {
+    var filter = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : null;
+    var dataTypesIRIList = this.getListOfDataTypes(filter);
+    var result = [];
+
+    for (var i = 0; i < dataTypesIRIList.length; i++) {
+      try {
+        result.push(this.getDataType(dataTypesIRIList[i]));
+      } catch (e) {}
+    }
+
+    return result;
+  }
+  /**
+   * Creates an array of IRIs for all vocabulary DataTypes
+   * @param {object|null} filter - (default = null) an optional filter for the List creation
+   * @returns {array} An array of IRIs representing all vocabulary DataTypes
+   */
+
+
+  getListOfDataTypes() {
+    var filter = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : null;
+    return util.applyFilter(Object.keys(this.graph.dataTypes), filter, this.graph);
+  }
+  /**
+   * Creates a JS-Class for a vocabulary Enumeration by the given identifier (@id) or name
+   * @param {string} id - The identifier of the wished Enumeration. It can be either a compact IRI -> "schema:DayOfWeek", an absolute IRI -> "http://schema.org/DayOfWeek", or the name (rdfs:label) -> "DayOfWeek" of the Enumeration (which may be ambiguous if multiple vocabularies/languages are used).
+   * @param {object|null} filter - (default = null) an optional filter for the Enumeration creation
+   * @returns {Enumeration} The JS-Class representing an Enumeration
+   */
+
+
+  getEnumeration(id) {
+    var filter = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
+    return this.graph.getEnumeration(id, filter);
+  }
+  /**
+   * Creates an array of JS-Classes for all vocabulary Enumerations
+   * @param {object|null} filter - (default = null) an optional filter for the Enumeration creation
+   * @returns {array} An array of JS-Classes representing all vocabulary Enumerations
+   */
+
+
+  getAllEnumerations() {
+    var filter = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : null;
+    var enumerationsIRIList = this.getListOfEnumerations(filter);
+    var result = [];
+
+    for (var i = 0; i < enumerationsIRIList.length; i++) {
+      try {
+        result.push(this.getEnumeration(enumerationsIRIList[i]));
+      } catch (e) {}
+    }
+
+    return result;
+  }
+  /**
+   * Creates an array of IRIs for all vocabulary Enumerations
+   * @param {object|null} filter - (default = null) an optional filter for the List creation
+   * @returns {array} An array of IRIs representing all vocabulary Enumerations
+   */
+
+
+  getListOfEnumerations() {
+    var filter = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : null;
+    return util.applyFilter(Object.keys(this.graph.enumerations), filter, this.graph);
+  }
+  /**
+   * Creates a JS-Class for a vocabulary EnumerationMember by the given identifier (@id) or name
+   * @param {string} id - The identifier of the wished EnumerationMember. It can be either a compact IRI -> "schema:Friday", an absolute IRI -> "http://schema.org/Friday", or the name (rdfs:label) -> "Friday" of the EnumerationMember (which may be ambiguous if multiple vocabularies/languages are used).
+   * @param {object|null} filter - (default = null) an optional filter for the EnumerationMember creation
+   * @returns {EnumerationMember} The JS-Class representing an EnumerationMember
+   */
+
+
+  getEnumerationMember(id) {
+    var filter = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
+    return this.graph.getEnumerationMember(id, filter);
+  }
+  /**
+   * Creates an array of JS-Classes for all vocabulary EnumerationMember
+   * @param {object|null} filter - (default = null) an optional filter for the EnumerationMember creation
+   * @returns {array} An array of JS-Classes representing all vocabulary EnumerationMember
+   */
+
+
+  getAllEnumerationMembers() {
+    var filter = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : null;
+    var enumerationMembersIRIList = this.getListOfEnumerationMembers(filter);
+    var result = [];
+
+    for (var i = 0; i < enumerationMembersIRIList.length; i++) {
+      try {
+        result.push(this.getEnumerationMember(enumerationMembersIRIList[i]));
+      } catch (e) {}
+    }
+
+    return result;
+  }
+  /**
+   * Creates an array of IRIs for all vocabulary EnumerationMember
+   * @param {object|null} filter - (default = null) an optional filter for the List creation
+   * @returns {array} An array of IRIs representing all vocabulary EnumerationMember
+   */
+
+
+  getListOfEnumerationMembers() {
+    var filter = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : null;
+    return util.applyFilter(Object.keys(this.graph.enumerationMembers), filter, this.graph);
+  }
+  /**
+   * Returns key-value pairs of the vocabularies used in this SDOAdapter
+   * @returns {object} An object containing the key-value pairs representing the used vocabularies
+   */
+
+
+  getVocabularies() {
+    var vocabKeys = Object.keys(this.graph.context);
+    var result = {};
+    var blacklist = ["soa", "xsd", "rdf", "rdfa", "rdfs", "dc"]; //standard vocabs that should not be exposed
+
+    for (var i = 0; i < vocabKeys.length; i++) {
+      if (util.isString(this.graph.context[vocabKeys[i]])) {
+        if (blacklist.indexOf(vocabKeys[i]) === -1) {
+          result[vocabKeys[i]] = this.graph.context[vocabKeys[i]];
         }
-    }, {
-        key: "fetchVocabularyFromURL",
-        value: async function fetchVocabularyFromURL(url) {
-            var response = await nodeFetch(url, {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded'
-                }
-            });
-            var json = await response.json();
-            //console.log(json);
-            return json;
+      }
+    }
+
+    return result;
+  }
+  /**
+   * Creates a URL pointing to the Schema.org vocabulary (the wished version/extension can be specified). This URL can then be added to the SDOAdapter to retrieve the Schema.org vocabulary. Invalid version or vocabularyPart arguments will result in errors, check https://schema.org/docs/developers.html for more information
+   * To achieve this, the Schema.org version listing on https://raw.githubusercontent.com/schemaorg/schemaorg/master/versions.json is used.
+   * @param {?string} version - the wished Schema.org vocabulary version for the resulting URL (e.g. "5.0", "3.7", or "latest"). default: "latest"
+   * @param {?string} vocabularyPart - the wished part of the Schema.org vocabulary (schema.org has a core vocabulary and some extensions, check https://schema.org/docs/developers.html for more information). default: "schema" (the core vocabulary)
+   * @returns {string} The URL to the Schema.org vocabulary
+   */
+
+
+  getSDOVocabularyURL() {
+    var _arguments = arguments;
+    return _asyncToGenerator(function* () {
+      var version = _arguments.length > 0 && _arguments[0] !== undefined ? _arguments[0] : "latest";
+      var vocabularyPart = _arguments.length > 1 && _arguments[1] !== undefined ? _arguments[1] : "schema";
+      //"https://raw.githubusercontent.com/schemaorg/schemaorg/master/data/releases/3.9/all-layers.jsonld";
+      return new Promise(function (resolve, reject) {
+        if (version === "latest") {
+          axios.get("https://raw.githubusercontent.com/schemaorg/schemaorg/master/versions.json").then(function (res) {
+            version = res.data.schemaversion;
+            resolve("https://raw.githubusercontent.com/schemaorg/schemaorg/master/data/releases/" + version + "/" + vocabularyPart + ".jsonld");
+          }).catch(function (err) {
+            reject(console.log(err));
+          });
+        } else {
+          resolve("https://raw.githubusercontent.com/schemaorg/schemaorg/master/data/releases/" + version + "/" + vocabularyPart + ".jsonld");
         }
+      });
+    })();
+  }
 
-        /**
-         * Creates a JS-Class for a vocabulary Class by the given identifier (@id) or name
-         * @param {string} id - The identifier of the wished Class. It can be either a compact IRI -> "schema:Hotel", an absolute IRI -> "http://schema.org/Hotel", or the name (rdfs:label) -> "name" of the class (which may be ambiguous if multiple vocabularies/languages are used).
-         * @param {object|null} filter - (default = null) an optional filter for the Class creation
-         * @returns {Class|Enumeration} The JS-Class representing a Class of an Enumeration (depending on the given id)
-         */
-
-    }, {
-        key: "getClass",
-        value: function getClass(id) {
-            var filter = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
-
-            //returns also enumerations
-            return this.graph.getClass(id, filter);
-        }
-
-        /**
-         * Creates an array of JS-Classes for all vocabulary Classes
-         * @param {object|null} filter - (default = null) an optional filter for the Class creation
-         * @returns {array} An array of JS-Classes representing all vocabulary Classes, does not include Enumerations
-         */
-
-    }, {
-        key: "getAllClasses",
-        value: function getAllClasses() {
-            var filter = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : null;
-
-            var classesIRIList = this.getListOfClasses(filter);
-            var result = [];
-            for (var i = 0; i < classesIRIList.length; i++) {
-                try {
-                    result.push(this.getClass(classesIRIList[i]));
-                } catch (e) {}
-            }
-            return result;
-        }
-
-        /**
-         * Creates an array of IRIs for all vocabulary Classes
-         * @param {object|null} filter - (default = null) an optional filter for the List creation
-         * @returns {array} An array of IRIs representing all vocabulary Classes, does not include Enumerations
-         */
-
-    }, {
-        key: "getListOfClasses",
-        value: function getListOfClasses() {
-            var filter = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : null;
-
-            //do not include enumerations
-            return util.applyFilter(Object.keys(this.graph.classes), filter, this.graph);
-        }
-
-        /**
-         * Creates a JS-Class for a vocabulary Property by the given identifier (@id) or name
-         * @param {string} id - The identifier of the wished Property. It can be either a compact IRI -> "schema:address", an absolute IRI -> "http://schema.org/address", or the name (rdfs:label) -> "address" of the Property (which may be ambiguous if multiple vocabularies/languages are used).
-         * @param {object|null} filter - (default = null) an optional filter for the Property creation
-         * @returns {Property} The JS-Class representing a Property
-         */
-
-    }, {
-        key: "getProperty",
-        value: function getProperty(id) {
-            var filter = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
-
-            return this.graph.getProperty(id, filter);
-        }
-
-        /**
-         * Creates an array of JS-Classes for all vocabulary Properties
-         * @param {object|null} filter - (default = null) an optional filter for the Property creation
-         * @returns {array} An array of JS-Classes representing all vocabulary Properties
-         */
-
-    }, {
-        key: "getAllProperties",
-        value: function getAllProperties() {
-            var filter = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : null;
-
-            var propertiesIRIList = this.getListOfProperties(filter);
-            var result = [];
-            for (var i = 0; i < propertiesIRIList.length; i++) {
-                try {
-                    result.push(this.getProperty(propertiesIRIList[i]));
-                } catch (e) {}
-            }
-            return result;
-        }
-
-        /**
-         * Creates an array of IRIs for all vocabulary Properties
-         * @param {object|null} filter - (default = null) an optional filter for the List creation
-         * @returns {array} An array of IRIs representing all vocabulary Properties
-         */
-
-    }, {
-        key: "getListOfProperties",
-        value: function getListOfProperties() {
-            var filter = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : null;
-
-            return util.applyFilter(Object.keys(this.graph.properties), filter, this.graph);
-        }
-
-        /**
-         * Creates a JS-Class for a vocabulary DataType by the given identifier (@id) or name
-         * @param {string} id - The identifier of the wished DataType. It can be either a compact IRI -> "schema:Number", an absolute IRI -> "http://schema.org/Number", or the name (rdfs:label) -> "Number" of the DataType (which may be ambiguous if multiple vocabularies/languages are used).
-         * @param {object|null} filter - (default = null) an optional filter for the DataType creation
-         * @returns {DataType} The JS-Class representing a DataType
-         */
-
-    }, {
-        key: "getDataType",
-        value: function getDataType(id) {
-            var filter = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
-
-            return this.graph.getDataType(id, filter);
-        }
-
-        /**
-         * Creates an array of JS-Classes for all vocabulary DataTypes
-         * @param {object|null} filter - (default = null) an optional filter for the DataType creation
-         * @returns {array} An array of JS-Classes representing all vocabulary DataTypes
-         */
-
-    }, {
-        key: "getAllDataTypes",
-        value: function getAllDataTypes() {
-            var filter = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : null;
-
-            var dataTypesIRIList = this.getListOfDataTypes(filter);
-            var result = [];
-            for (var i = 0; i < dataTypesIRIList.length; i++) {
-                try {
-                    result.push(this.getDataType(dataTypesIRIList[i]));
-                } catch (e) {}
-            }
-            return result;
-        }
-
-        /**
-         * Creates an array of IRIs for all vocabulary DataTypes
-         * @param {object|null} filter - (default = null) an optional filter for the List creation
-         * @returns {array} An array of IRIs representing all vocabulary DataTypes
-         */
-
-    }, {
-        key: "getListOfDataTypes",
-        value: function getListOfDataTypes() {
-            var filter = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : null;
-
-            return util.applyFilter(Object.keys(this.graph.dataTypes), filter, this.graph);
-        }
-
-        /**
-         * Creates a JS-Class for a vocabulary Enumeration by the given identifier (@id) or name
-         * @param {string} id - The identifier of the wished Enumeration. It can be either a compact IRI -> "schema:DayOfWeek", an absolute IRI -> "http://schema.org/DayOfWeek", or the name (rdfs:label) -> "DayOfWeek" of the Enumeration (which may be ambiguous if multiple vocabularies/languages are used).
-         * @param {object|null} filter - (default = null) an optional filter for the Enumeration creation
-         * @returns {Enumeration} The JS-Class representing an Enumeration
-         */
-
-    }, {
-        key: "getEnumeration",
-        value: function getEnumeration(id) {
-            var filter = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
-
-            return this.graph.getEnumeration(id, filter);
-        }
-
-        /**
-         * Creates an array of JS-Classes for all vocabulary Enumerations
-         * @param {object|null} filter - (default = null) an optional filter for the Enumeration creation
-         * @returns {array} An array of JS-Classes representing all vocabulary Enumerations
-         */
-
-    }, {
-        key: "getAllEnumerations",
-        value: function getAllEnumerations() {
-            var filter = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : null;
-
-            var enumerationsIRIList = this.getListOfEnumerations(filter);
-            var result = [];
-            for (var i = 0; i < enumerationsIRIList.length; i++) {
-                try {
-                    result.push(this.getEnumeration(enumerationsIRIList[i]));
-                } catch (e) {}
-            }
-            return result;
-        }
-
-        /**
-         * Creates an array of IRIs for all vocabulary Enumerations
-         * @param {object|null} filter - (default = null) an optional filter for the List creation
-         * @returns {array} An array of IRIs representing all vocabulary Enumerations
-         */
-
-    }, {
-        key: "getListOfEnumerations",
-        value: function getListOfEnumerations() {
-            var filter = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : null;
-
-            return util.applyFilter(Object.keys(this.graph.enumerations), filter, this.graph);
-        }
-
-        /**
-         * Creates a JS-Class for a vocabulary EnumerationMember by the given identifier (@id) or name
-         * @param {string} id - The identifier of the wished EnumerationMember. It can be either a compact IRI -> "schema:Friday", an absolute IRI -> "http://schema.org/Friday", or the name (rdfs:label) -> "Friday" of the EnumerationMember (which may be ambiguous if multiple vocabularies/languages are used).
-         * @param {object|null} filter - (default = null) an optional filter for the EnumerationMember creation
-         * @returns {EnumerationMember} The JS-Class representing an EnumerationMember
-         */
-
-    }, {
-        key: "getEnumerationMember",
-        value: function getEnumerationMember(id) {
-            var filter = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
-
-            return this.graph.getEnumerationMember(id, filter);
-        }
-
-        /**
-         * Creates an array of JS-Classes for all vocabulary EnumerationMember
-         * @param {object|null} filter - (default = null) an optional filter for the EnumerationMember creation
-         * @returns {array} An array of JS-Classes representing all vocabulary EnumerationMember
-         */
-
-    }, {
-        key: "getAllEnumerationMembers",
-        value: function getAllEnumerationMembers() {
-            var filter = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : null;
-
-            var enumerationMembersIRIList = this.getListOfEnumerationMembers(filter);
-            var result = [];
-            for (var i = 0; i < enumerationMembersIRIList.length; i++) {
-                try {
-                    result.push(this.getEnumerationMember(enumerationMembersIRIList[i]));
-                } catch (e) {}
-            }
-            return result;
-        }
-
-        /**
-         * Creates an array of IRIs for all vocabulary EnumerationMember
-         * @param {object|null} filter - (default = null) an optional filter for the List creation
-         * @returns {array} An array of IRIs representing all vocabulary EnumerationMember
-         */
-
-    }, {
-        key: "getListOfEnumerationMembers",
-        value: function getListOfEnumerationMembers() {
-            var filter = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : null;
-
-            return util.applyFilter(Object.keys(this.graph.enumerationMembers), filter, this.graph);
-        }
-
-        /**
-         * Returns key-value pairs of the vocabularies used in this SDOAdapter
-         * @returns {object} An object containing the key-value pairs representing the used vocabularies
-         */
-
-    }, {
-        key: "getVocabularies",
-        value: function getVocabularies() {
-            var vocabKeys = Object.keys(this.graph.context);
-            var result = {};
-            var blacklist = ["soa", "xsd", "rdf", "rdfa", "rdfs", "dc"]; //standard vocabs that should not be exposed
-            for (var i = 0; i < vocabKeys.length; i++) {
-                if (util.isString(this.graph.context[vocabKeys[i]])) {
-                    if (blacklist.indexOf(vocabKeys[i]) === -1) {
-                        result[vocabKeys[i]] = this.graph.context[vocabKeys[i]];
-                    }
-                }
-            }
-            return result;
-        }
-    }]);
-
-    return SDOAdapter;
-}();
+}
 
 module.exports = SDOAdapter;
 
-},{"./Graph":48,"./utilities":52,"node-fetch":24}],52:[function(require,module,exports){
+},{"./Graph":79,"./utilities":83,"axios":1}],83:[function(require,module,exports){
 "use strict";
 
-var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
+function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { Promise.resolve(value).then(_next, _throw); } }
 
-function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
+function _asyncToGenerator(fn) { return function () { var self = this, args = arguments; return new Promise(function (resolve, reject) { var gen = fn.apply(self, args); function _next(value) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value); } function _throw(err) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err); } _next(undefined); }); }; }
 
 var jsonld = require("jsonld");
-
 /**
  * Applies a filter to the IRIs in the given Array
  * @param {array} dataArray - Array of IRIs that should be filtered
- * @param {object} filter - The filter options, which can be: "isSuperseded": T/F, "hasTermType": string/Array, "isFromVocabulary": string/Array
+ * @param {object} filter - The filter options, which can be: "isSuperseded": T/F, "termType": string/Array, "fromVocabulary": string/Array
  * @returns {array} Array of IRIs that are in compliance with the given filter options
  */
+
+
 function applyFilter(dataArray, filter, graph) {
-    if (!Array.isArray(dataArray) || dataArray.length === 0 || filter === null || Object.keys(filter).length === 0) {
-        return dataArray;
-    }
-    var result = [];
-    for (var i = 0; i < dataArray.length; i++) {
-        var actualTerm = graph.getTerm(dataArray[i]);
-        //superseded
-        if (filter.isSuperseded !== undefined) {
-            if (filter.isSuperseded === false && actualTerm.isSupersededBy() !== null) {
-                continue; //skip this element
-            } else if (filter.isSuperseded === true && actualTerm.isSupersededBy() === null) {
-                continue; //skip this element
-            }
+  if (!Array.isArray(dataArray) || dataArray.length === 0 || filter === null || Object.keys(filter).length === 0) {
+    return dataArray;
+  }
+
+  var result = [];
+
+  for (var i = 0; i < dataArray.length; i++) {
+    var actualTerm = graph.getTerm(dataArray[i]); //superseded
+
+    if (filter.isSuperseded !== undefined) {
+      if (filter.isSuperseded === false && actualTerm.isSupersededBy() !== null) {
+        continue; //skip this element
+      } else if (filter.isSuperseded === true && actualTerm.isSupersededBy() === null) {
+        continue; //skip this element
+      }
+    } //partOf - vocabularies are given as indicators (e.g. "schema")
+
+
+    if (filter.fromVocabulary !== undefined) {
+      var matchFound = false;
+
+      if (isString(filter.fromVocabulary)) {
+        if (actualTerm.getIRI(true).startsWith(filter.fromVocabulary)) {
+          matchFound = true;
         }
-        //partOf - vocabularies are given as indicators (e.g. "schema")
-        if (filter.fromVocabulary !== undefined) {
-            var matchFound = false;
-            if (isString(filter.fromVocabulary)) {
-                if (actualTerm.getIRI(true).startsWith(filter.fromVocabulary)) {
-                    matchFound = true;
-                }
-            } else if (isArray(filter.fromVocabulary)) {
-                for (var v = 0; v < filter.fromVocabulary.length; v++) {
-                    if (actualTerm.getIRI(true).startsWith(filter.fromVocabulary[v])) {
-                        matchFound = true;
-                    }
-                }
-            }
-            if (!matchFound) {
-                continue; //skip this element
-            }
+      } else if (isArray(filter.fromVocabulary)) {
+        for (var v = 0; v < filter.fromVocabulary.length; v++) {
+          if (actualTerm.getIRI(true).startsWith(filter.fromVocabulary[v])) {
+            matchFound = true;
+          }
         }
-        //termType
-        if (filter.termType !== undefined) {
-            var _matchFound = false;
-            var toCheck = [];
-            if (isString(filter.termType)) {
-                toCheck.push(filter.termType);
-            } else if (isArray(filter.termType)) {
-                toCheck = filter.termType;
-            }
-            for (var t = 0; t < toCheck.length; t++) {
-                var typeIRI = void 0;
-                switch (toCheck[t]) {
-                    case "Class":
-                        typeIRI = "rdfs:Class";
-                        break;
-                    case "Property":
-                        typeIRI = "rdf:Property";
-                        break;
-                    case "Enumeration":
-                        typeIRI = "schema:Enumeration";
-                        break;
-                    case "EnumerationMember":
-                        typeIRI = "soa:EnumerationMember";
-                        break;
-                    case "DataType":
-                        typeIRI = "schema:DataType";
-                        break;
-                    default:
-                        console.log("Invalid filter.termType " + toCheck[t]);
-                }
-                if (typeIRI === actualTerm.getTermType()) {
-                    _matchFound = true;
-                    break;
-                }
-            }
-            if (!_matchFound) {
-                continue; //skip this element
-            }
+      }
+
+      if (!matchFound) {
+        continue; //skip this element
+      }
+    } //termType
+
+
+    if (filter.termType !== undefined) {
+      var _matchFound = false;
+      var toCheck = [];
+
+      if (isString(filter.termType)) {
+        toCheck.push(filter.termType);
+      } else if (isArray(filter.termType)) {
+        toCheck = filter.termType;
+      }
+
+      for (var t = 0; t < toCheck.length; t++) {
+        var typeIRI = void 0;
+
+        switch (toCheck[t]) {
+          case "Class":
+            typeIRI = "rdfs:Class";
+            break;
+
+          case "Property":
+            typeIRI = "rdf:Property";
+            break;
+
+          case "Enumeration":
+            typeIRI = "schema:Enumeration";
+            break;
+
+          case "EnumerationMember":
+            typeIRI = "soa:EnumerationMember";
+            break;
+
+          case "DataType":
+            typeIRI = "schema:DataType";
+            break;
+
+          default:
+            console.log("Invalid filter.termType " + toCheck[t]);
         }
 
-        result.push(dataArray[i]);
+        if (typeIRI === actualTerm.getTermType()) {
+          _matchFound = true;
+          break;
+        }
+      }
+
+      if (!_matchFound) {
+        continue; //skip this element
+      }
     }
-    return result;
+
+    result.push(dataArray[i]);
+  }
+
+  return result;
 }
 
 function copByVal(obj) {
-    if (obj === undefined) {
-        return undefined; //causes error for JSON functions
-    }
-    return JSON.parse(JSON.stringify(obj));
+  if (obj === undefined) {
+    return undefined; //causes error for JSON functions
+  }
+
+  return JSON.parse(JSON.stringify(obj));
 }
 
 function isObject(value) {
-    if (Array.isArray(value)) {
-        return false;
-    }
-    if (value === undefined || value === null) {
-        return false;
-    }
-    return (typeof value === "undefined" ? "undefined" : _typeof(value)) === 'object';
+  if (Array.isArray(value)) {
+    return false;
+  }
+
+  if (value === undefined || value === null) {
+    return false;
+  }
+
+  return typeof value === 'object';
 }
 
 function isString(value) {
-    if (value === undefined || value === null) {
-        return false;
-    }
-    return typeof value === 'string' || value instanceof String;
+  if (value === undefined || value === null) {
+    return false;
+  }
+
+  return typeof value === 'string' || value instanceof String;
 }
 
 function isArray(value) {
-    return Array.isArray(value);
-}
+  return Array.isArray(value);
+} //make sure each string is only 1 time in the array
 
-//make sure each string is only 1 time in the array
+
 function uniquifyArray(array) {
-    var seen = {};
-    var result = [];
-    for (var i = 0; i < array.length; i++) {
-        var item = array[i];
-        if (seen[item] !== 1) {
-            seen[item] = 1;
-            result.push(item);
-        }
+  var seen = {};
+  var result = [];
+
+  for (var i = 0; i < array.length; i++) {
+    var item = array[i];
+
+    if (seen[item] !== 1) {
+      seen[item] = 1;
+      result.push(item);
     }
-    return result;
+  }
+
+  return result;
 }
 
 function generateContext(currentContext, newContext) {
-    var keysCurrentContext = Object.keys(currentContext);
-    var keysNewContext = Object.keys(newContext);
-    //add all of the old context
-    var resultContext = JSON.parse(JSON.stringify(currentContext));
-    //add vocabs of new context that are not already used (value is URI)
-    for (var i = 0; i < keysNewContext.length; i++) {
-        var actKey = keysNewContext[i];
-        if (isString(newContext[actKey])) {
-            //first: check if the URI is already used, with any indicator
-            var foundMatch = false;
-            for (var k = 0; k < keysCurrentContext.length; k++) {
-                if (isString(resultContext[keysCurrentContext[k]])) {
-                    if (resultContext[keysCurrentContext[k]] === newContext[actKey]) {
-                        //found match, the URI is already covered
-                        foundMatch = true;
-                        break;
-                    }
-                }
-            }
-            if (foundMatch) {
-                continue; //URI is already covered, continue with next
-            }
-            if (resultContext[actKey] === undefined) {
-                //add new vocab indicator
-                resultContext[actKey] = newContext[actKey];
-            } else {
-                //check if the URI is the same, if not: add new uri under new vocab indicator
-                if (resultContext[actKey] !== newContext[actKey]) {
-                    var foundFreeName = false;
-                    var counter = 1;
-                    while (foundFreeName === false) {
-                        var newVocabIndicator = actKey + counter++;
-                        if (resultContext[newVocabIndicator] === undefined) {
-                            foundFreeName = true;
-                            resultContext[newVocabIndicator] = newContext[actKey];
-                        }
-                    }
-                }
-            }
+  var keysCurrentContext = Object.keys(currentContext);
+  var keysNewContext = Object.keys(newContext); //add all of the old context
+
+  var resultContext = JSON.parse(JSON.stringify(currentContext)); //add vocabs of new context that are not already used (value is URI)
+
+  for (var i = 0; i < keysNewContext.length; i++) {
+    var actKey = keysNewContext[i];
+
+    if (isString(newContext[actKey])) {
+      //first: check if the URI is already used, with any indicator
+      var foundMatch = false;
+
+      for (var k = 0; k < keysCurrentContext.length; k++) {
+        if (isString(resultContext[keysCurrentContext[k]])) {
+          if (resultContext[keysCurrentContext[k]] === newContext[actKey]) {
+            //found match, the URI is already covered
+            foundMatch = true;
+            break;
+          }
         }
-    }
-    //sort vocab URIs by alphabet
-    var ordered = {};
-    Object.keys(resultContext).sort().forEach(function (key) {
-        ordered[key] = resultContext[key];
-    });
-    //reorder context: Vocab Indicators first (value = string), then term handlers (value = object)
-    resultContext = ordered;
-    var keysResultContext = Object.keys(resultContext);
-    var orderedResultContext = {};
-    //add the Vocab Indicators (value = string)
-    for (var _i = 0; _i < keysResultContext.length; _i++) {
-        if (isString(resultContext[keysResultContext[_i]])) {
-            orderedResultContext[keysResultContext[_i]] = resultContext[keysResultContext[_i]];
+      }
+
+      if (foundMatch) {
+        continue; //URI is already covered, continue with next
+      }
+
+      if (resultContext[actKey] === undefined) {
+        //add new vocab indicator
+        resultContext[actKey] = newContext[actKey];
+      } else {
+        //check if the URI is the same, if not: add new uri under new vocab indicator
+        if (resultContext[actKey] !== newContext[actKey]) {
+          var foundFreeName = false;
+          var counter = 1;
+
+          while (foundFreeName === false) {
+            var newVocabIndicator = actKey + counter++;
+
+            if (resultContext[newVocabIndicator] === undefined) {
+              foundFreeName = true;
+              resultContext[newVocabIndicator] = newContext[actKey];
+            }
+          }
         }
+      }
     }
-    //add the term handlers (value = object)
-    for (var _i2 = 0; _i2 < keysResultContext.length; _i2++) {
-        if (isObject(resultContext[keysResultContext[_i2]])) {
-            orderedResultContext[keysResultContext[_i2]] = resultContext[keysResultContext[_i2]];
-        }
+  } //sort vocab URIs by alphabet
+
+
+  var ordered = {};
+  Object.keys(resultContext).sort().forEach(function (key) {
+    ordered[key] = resultContext[key];
+  }); //reorder context: Vocab Indicators first (value = string), then term handlers (value = object)
+
+  resultContext = ordered;
+  var keysResultContext = Object.keys(resultContext);
+  var orderedResultContext = {}; //add the Vocab Indicators (value = string)
+
+  for (var _i = 0; _i < keysResultContext.length; _i++) {
+    if (isString(resultContext[keysResultContext[_i]])) {
+      orderedResultContext[keysResultContext[_i]] = resultContext[keysResultContext[_i]];
     }
-    return orderedResultContext;
+  } //add the term handlers (value = object)
+
+
+  for (var _i2 = 0; _i2 < keysResultContext.length; _i2++) {
+    if (isObject(resultContext[keysResultContext[_i2]])) {
+      orderedResultContext[keysResultContext[_i2]] = resultContext[keysResultContext[_i2]];
+    }
+  }
+
+  return orderedResultContext;
 }
 
-async function preProcessVocab(vocab, newContext) {
+function preProcessVocab(_x, _x2) {
+  return _preProcessVocab.apply(this, arguments);
+}
+
+function _preProcessVocab() {
+  _preProcessVocab = _asyncToGenerator(function* (vocab, newContext) {
     //recursively put all nodes from inner @graphs to the outermost @graph (is the case for older schema.jsonld versions)
     var foundInnerGraph = false;
+
     do {
-        var newGraph = [];
-        foundInnerGraph = false;
-        for (var i = 0; i < vocab["@graph"].length; i++) {
-            if (vocab["@graph"][i]["@graph"] !== undefined) {
-                newGraph.push.apply(newGraph, _toConsumableArray(copByVal(vocab["@graph"][i]["@graph"]))); //copy all elements of the inner @graph into the outer @graph
-                foundInnerGraph = true;
-            } else {
-                newGraph.push(copByVal(vocab["@graph"][i])); //copy this element to the outer @graph
-            }
+      var newGraph = [];
+      foundInnerGraph = false;
+
+      for (var i = 0; i < vocab["@graph"].length; i++) {
+        if (vocab["@graph"][i]["@graph"] !== undefined) {
+          newGraph.push(...copByVal(vocab["@graph"][i]["@graph"])); //copy all elements of the inner @graph into the outer @graph
+
+          foundInnerGraph = true;
+        } else {
+          newGraph.push(copByVal(vocab["@graph"][i])); //copy this element to the outer @graph
         }
-        vocab["@graph"] = copByVal(newGraph);
-    } while (foundInnerGraph === true);
-    //expand to remove the old context
-    //compact to apply the new context (which is supposed to have been merged before with the old context through the function generateContext())
-    return await jsonld.compact((await jsonld.expand(vocab)), newContext);
+      }
+
+      vocab["@graph"] = copByVal(newGraph);
+    } while (foundInnerGraph === true); //expand to remove the old context
+
+
+    var expandedVocab = yield jsonld.expand(vocab); //compact to apply the new context (which is supposed to have been merged before with the old context through the function generateContext())
+    //option "graph": true not feasible here, because then vocabs with "@id" result in inner @graphs again
+    //solution: edge case handling (see below)
+
+    var compactedVocab = yield jsonld.compact(expandedVocab, newContext); //edge case: @graph had only one node, so values of @graph are in outermost layer
+
+    if (compactedVocab["@graph"] === undefined) {
+      delete compactedVocab["@context"];
+      return {
+        "@context": newContext,
+        "@graph": [compactedVocab]
+      };
+    } else {
+      return compactedVocab;
+    }
+  });
+  return _preProcessVocab.apply(this, arguments);
 }
 
 function curateNode(vocabNode, vocabularies) {
-    if (vocabNode["rdfs:comment"] !== undefined) {
-        //make a vocab object with "en" as the standard value
-        if (isString(vocabNode["rdfs:comment"])) {
-            //standard -> "en"
-            vocabNode["rdfs:comment"] = {
-                "en": vocabNode["rdfs:comment"]
-            };
-        } else if (isObject(vocabNode["rdfs:comment"])) {
+  if (vocabNode["rdfs:comment"] !== undefined) {
+    //make a vocab object with "en" as the standard value
+    if (isString(vocabNode["rdfs:comment"])) {
+      //standard -> "en"
+      vocabNode["rdfs:comment"] = {
+        "en": vocabNode["rdfs:comment"]
+      };
+    } else if (isObject(vocabNode["rdfs:comment"])) {
+      var newVal = {};
+      newVal[vocabNode["rdfs:comment"]["@language"]] = vocabNode["rdfs:comment"]["@value"];
+      vocabNode["rdfs:comment"] = copByVal(newVal);
+    } else if (isArray(vocabNode["rdfs:comment"])) {
+      var _newVal = {};
 
-            var newVal = {};
-            newVal[vocabNode["rdfs:comment"]["@language"]] = vocabNode["rdfs:comment"]["@value"];
-            vocabNode["rdfs:comment"] = copByVal(newVal);
-        } else if (isArray(vocabNode["rdfs:comment"])) {
-            var _newVal = {};
-            for (var i = 0; i < vocabNode["rdfs:comment"].length; i++) {
-                if (isObject(vocabNode["rdfs:comment"][i])) {
-                    _newVal[vocabNode["rdfs:comment"][i]["@language"]] = vocabNode["rdfs:comment"][i]["@value"];
-                }
-            }
-            vocabNode["rdfs:comment"] = copByVal(_newVal);
+      for (var i = 0; i < vocabNode["rdfs:comment"].length; i++) {
+        if (isObject(vocabNode["rdfs:comment"][i])) {
+          _newVal[vocabNode["rdfs:comment"][i]["@language"]] = vocabNode["rdfs:comment"][i]["@value"];
         }
-    } else {
-        vocabNode["rdfs:comment"] = {};
+      }
+
+      vocabNode["rdfs:comment"] = copByVal(_newVal);
     }
-    if (vocabNode["rdfs:label"] !== undefined) {
-        //make a vocab object with "en" as the standard value
-        if (isString(vocabNode["rdfs:label"])) {
-            //"rdfs:label": "transcript"
-            //standard -> "en"
-            vocabNode["rdfs:label"] = {
-                "en": vocabNode["rdfs:label"]
-            };
-        } else if (isObject(vocabNode["rdfs:label"])) {
-            //"rdfs:label": {
-            //   "@language": "en",
-            //   "@value": "translationOfWork"
-            // }
-            var _newVal2 = {};
-            _newVal2[vocabNode["rdfs:label"]["@language"]] = vocabNode["rdfs:label"]["@value"];
-            vocabNode["rdfs:label"] = copByVal(_newVal2);
-        } else if (isArray(vocabNode["rdfs:label"])) {
-            //"rdfs:label": [{
-            //   "@language": "en",
-            //   "@value": "translationOfWork"
-            // },
-            // {
-            //   "@language": "de",
-            //   "@value": "UebersetzungsArbeit"
-            // }
-            // ]
-            var _newVal3 = {};
-            for (var _i3 = 0; _i3 < vocabNode["rdfs:label"].length; _i3++) {
-                if (isObject(vocabNode["rdfs:label"][_i3])) {
-                    _newVal3[vocabNode["rdfs:label"][_i3]["@language"]] = vocabNode["rdfs:label"][_i3]["@value"];
-                }
-            }
-            vocabNode["rdfs:label"] = copByVal(_newVal3);
+  } else {
+    vocabNode["rdfs:comment"] = {};
+  }
+
+  if (vocabNode["rdfs:label"] !== undefined) {
+    //make a vocab object with "en" as the standard value
+    if (isString(vocabNode["rdfs:label"])) {
+      //"rdfs:label": "transcript"
+      //standard -> "en"
+      vocabNode["rdfs:label"] = {
+        "en": vocabNode["rdfs:label"]
+      };
+    } else if (isObject(vocabNode["rdfs:label"])) {
+      //"rdfs:label": {
+      //   "@language": "en",
+      //   "@value": "translationOfWork"
+      // }
+      var _newVal2 = {};
+      _newVal2[vocabNode["rdfs:label"]["@language"]] = vocabNode["rdfs:label"]["@value"];
+      vocabNode["rdfs:label"] = copByVal(_newVal2);
+    } else if (isArray(vocabNode["rdfs:label"])) {
+      //"rdfs:label": [{
+      //   "@language": "en",
+      //   "@value": "translationOfWork"
+      // },
+      // {
+      //   "@language": "de",
+      //   "@value": "UebersetzungsArbeit"
+      // }
+      // ]
+      var _newVal3 = {};
+
+      for (var _i3 = 0; _i3 < vocabNode["rdfs:label"].length; _i3++) {
+        if (isObject(vocabNode["rdfs:label"][_i3])) {
+          _newVal3[vocabNode["rdfs:label"][_i3]["@language"]] = vocabNode["rdfs:label"][_i3]["@value"];
         }
-    } else {
-        vocabNode["rdfs:label"] = {};
+      }
+
+      vocabNode["rdfs:label"] = copByVal(_newVal3);
     }
-    //make arrays for some terms in any case
-    if (isString(vocabNode["rdfs:subClassOf"])) {
-        vocabNode["rdfs:subClassOf"] = [vocabNode["rdfs:subClassOf"]];
-    } else if (vocabNode["rdfs:subClassOf"] === undefined && vocabNode["@type"] === "rdfs:Class") {
-        vocabNode["rdfs:subClassOf"] = [];
+  } else {
+    vocabNode["rdfs:label"] = {};
+  } //make arrays for some terms in any case
+
+
+  if (isString(vocabNode["rdfs:subClassOf"])) {
+    vocabNode["rdfs:subClassOf"] = [vocabNode["rdfs:subClassOf"]];
+  } else if (vocabNode["rdfs:subClassOf"] === undefined && vocabNode["@type"] === "rdfs:Class") {
+    vocabNode["rdfs:subClassOf"] = [];
+  }
+
+  if (isString(vocabNode["rdfs:subPropertyOf"])) {
+    vocabNode["rdfs:subPropertyOf"] = [vocabNode["rdfs:subPropertyOf"]];
+  } else if (vocabNode["rdfs:subPropertyOf"] === undefined && vocabNode["@type"] === "rdf:Property") {
+    vocabNode["rdfs:subPropertyOf"] = [];
+  }
+
+  if (isString(vocabNode["schema:domainIncludes"])) {
+    vocabNode["schema:domainIncludes"] = [vocabNode["schema:domainIncludes"]];
+  } else if (vocabNode["schema:domainIncludes"] === undefined && vocabNode["@type"] === "rdf:Property") {
+    vocabNode["schema:domainIncludes"] = [];
+  }
+
+  if (isString(vocabNode["schema:rangeIncludes"])) {
+    vocabNode["schema:rangeIncludes"] = [vocabNode["schema:rangeIncludes"]];
+  } else if (vocabNode["schema:rangeIncludes"] === undefined && vocabNode["@type"] === "rdf:Property") {
+    vocabNode["schema:rangeIncludes"] = [];
+  }
+
+  if (!isString(vocabNode["schema:isPartOf"])) {
+    var vocabKeys = Object.keys(vocabularies);
+    var vocab;
+
+    for (var _i4 = 0; _i4 < vocabKeys.length; _i4++) {
+      if (vocabNode["@id"].substring(0, vocabNode["@id"].indexOf(":")) === vocabKeys[_i4]) {
+        vocab = vocabularies[vocabKeys[_i4]];
+        break;
+      }
     }
-    if (isString(vocabNode["rdfs:subPropertyOf"])) {
-        vocabNode["rdfs:subPropertyOf"] = [vocabNode["rdfs:subPropertyOf"]];
-    } else if (vocabNode["rdfs:subPropertyOf"] === undefined && vocabNode["@type"] === "rdf:Property") {
-        vocabNode["rdfs:subPropertyOf"] = [];
-    }
-    if (isString(vocabNode["schema:domainIncludes"])) {
-        vocabNode["schema:domainIncludes"] = [vocabNode["schema:domainIncludes"]];
-    } else if (vocabNode["schema:domainIncludes"] === undefined && vocabNode["@type"] === "rdf:Property") {
-        vocabNode["schema:domainIncludes"] = [];
-    }
-    if (isString(vocabNode["schema:rangeIncludes"])) {
-        vocabNode["schema:rangeIncludes"] = [vocabNode["schema:rangeIncludes"]];
-    } else if (vocabNode["schema:rangeIncludes"] === undefined && vocabNode["@type"] === "rdf:Property") {
-        vocabNode["schema:rangeIncludes"] = [];
-    }
-    if (!isString(vocabNode["schema:isPartOf"])) {
-        var vocabKeys = Object.keys(vocabularies);
-        var vocab = void 0;
-        for (var _i4 = 0; _i4 < vocabKeys.length; _i4++) {
-            if (vocabNode["@id"].substring(0, vocabNode["@id"].indexOf(":")) === vocabKeys[_i4]) {
-                vocab = vocabularies[vocabKeys[_i4]];
-                break;
-            }
+
+    if (vocab !== undefined) {
+      var newChange;
+
+      do {
+        newChange = false;
+
+        if (vocab.endsWith("/") || vocab.endsWith("#")) {
+          vocab = vocab.substring(0, vocab.length - 1);
+          newChange = true;
         }
-        if (vocab !== undefined) {
-            var newChange = void 0;
-            do {
-                newChange = false;
-                if (vocab.endsWith("/") || vocab.endsWith("#")) {
-                    vocab = vocab.substring(0, vocab.length - 1);
-                    newChange = true;
-                }
-            } while (newChange === true);
-            vocabNode["schema:isPartOf"] = vocab;
-        }
+      } while (newChange === true);
+
+      vocabNode["schema:isPartOf"] = vocab;
     }
-    return vocabNode;
+  }
+
+  return vocabNode;
 }
-
 /*
 term - A term is a short word defined in a context that MAY be expanded to an IRI
 compact IRI - A compact IRI is has the form of prefix:suffix and is used as a way of expressing an IRI without needing to define separate term definitions for each IRI contained within a common vocabulary identified by prefix.
 prefix - A prefix is the first component of a compact IRI which comes from a term that maps to a string that, when prepended to the suffix of the compact IRI results in an absolute IRI.*/
 
+
 function toCompactIRI(absoluteIRI, context) {
-    var terms = Object.keys(context);
-    for (var i = 0; i < terms.length; i++) {
-        var vocabIRI = context[terms[i]];
-        if (isString(vocabIRI) && absoluteIRI.startsWith(vocabIRI)) {
-            return terms[i] + ":" + absoluteIRI.substring(vocabIRI.length);
-        }
+  var terms = Object.keys(context);
+
+  for (var i = 0; i < terms.length; i++) {
+    var vocabIRI = context[terms[i]];
+
+    if (isString(vocabIRI) && absoluteIRI.startsWith(vocabIRI)) {
+      return terms[i] + ":" + absoluteIRI.substring(vocabIRI.length);
     }
-    return null;
+  }
+
+  return null;
 }
 
 function toAbsoluteIRI(compactIRI, context) {
-    var terms = Object.keys(context);
-    for (var i = 0; i < terms.length; i++) {
-        var vocabIRI = context[terms[i]];
-        if (compactIRI.substring(0, compactIRI.indexOf(":")) === terms[i]) {
-            return vocabIRI.concat(compactIRI.substring(compactIRI.indexOf(":") + 1));
-        }
+  var terms = Object.keys(context);
+
+  for (var i = 0; i < terms.length; i++) {
+    var vocabIRI = context[terms[i]];
+
+    if (compactIRI.substring(0, compactIRI.indexOf(":")) === terms[i]) {
+      return vocabIRI.concat(compactIRI.substring(compactIRI.indexOf(":") + 1));
     }
-    return null;
+  }
+
+  return null;
 }
 
 module.exports = {
-    applyFilter: applyFilter,
-    copByVal: copByVal,
-    isArray: isArray,
-    isString: isString,
-    isObject: isObject,
-    uniquifyArray: uniquifyArray,
-    preProcessVocab: preProcessVocab,
-    generateContext: generateContext,
-    curateNode: curateNode,
-    toCompactIRI: toCompactIRI,
-    toAbsoluteIRI: toAbsoluteIRI
+  applyFilter,
+  copByVal,
+  isArray,
+  isString,
+  isObject,
+  uniquifyArray,
+  preProcessVocab,
+  generateContext,
+  curateNode,
+  toCompactIRI,
+  toAbsoluteIRI
 };
 
-},{"jsonld":18}]},{},[51])(51)
+},{"jsonld":47}]},{},[82])(82)
 });

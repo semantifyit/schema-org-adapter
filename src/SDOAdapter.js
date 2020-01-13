@@ -1,6 +1,6 @@
-const Graph = require("./../Graph");
-const util = require("./../utilities");
-const superagent = require('superagent');
+const Graph = require("./Graph");
+const util = require("./utilities");
+const axios = require("axios");
 
 class SDOAdapter {
     /**
@@ -14,9 +14,8 @@ class SDOAdapter {
     /**
      * Adds vocabularies (in JSON-LD format or as URL) to the memory of this SDOAdapter
      * @param {object} vocabArray - The vocabularies to add the graph, in JSON-LD format
-     * @param {function|null} callback - The callback function executed at the end of the loading process
      */
-    async addVocabularies(vocabArray, callback) {
+    async addVocabularies(vocabArray) {
         if (util.isArray(vocabArray)) {
             //check every vocab if it is a valid JSON-LD. If string -> try to JSON.parse()
             for (let i = 0; i < vocabArray.length; i++) {
@@ -44,9 +43,6 @@ class SDOAdapter {
                     throw new Error("The first argument of the function must be an Array of vocabularies (JSON-LD as Object/String)");
                 }
             }
-            if (callback !== null) {
-                callback();
-            }
         } else {
             throw new Error("The first argument of the function must be an Array of vocabularies (JSON-LD)");
         }
@@ -55,18 +51,10 @@ class SDOAdapter {
     async fetchVocabularyFromURL(url) {
         try {
             return new Promise(function (resolve, reject) {
-                superagent.get(url).end((err, res) => {
-                    if (err) {
-                        reject(console.log(err));
-                    }
-                    let content;
-                    try {
-                        content = JSON.parse(res.text);
-                    } catch (e) {
-                        console.log(e);
-                        content = "";
-                    }
-                    resolve(content);
+                axios.get(url).then(function (res) {
+                    resolve(res.data);
+                }).catch(function (err) {
+                    reject(console.log(err));
                 });
             });
         } catch (e) {
@@ -278,6 +266,29 @@ class SDOAdapter {
             }
         }
         return result;
+    }
+
+    /**
+     * Creates a URL pointing to the Schema.org vocabulary (the wished version/extension can be specified). This URL can then be added to the SDOAdapter to retrieve the Schema.org vocabulary. Invalid version or vocabularyPart arguments will result in errors, check https://schema.org/docs/developers.html for more information
+     * To achieve this, the Schema.org version listing on https://raw.githubusercontent.com/schemaorg/schemaorg/master/versions.json is used.
+     * @param {?string} version - the wished Schema.org vocabulary version for the resulting URL (e.g. "5.0", "3.7", or "latest"). default: "latest"
+     * @param {?string} vocabularyPart - the wished part of the Schema.org vocabulary (schema.org has a core vocabulary and some extensions, check https://schema.org/docs/developers.html for more information). default: "schema" (the core vocabulary)
+     * @returns {string} The URL to the Schema.org vocabulary
+     */
+    async getSDOVocabularyURL(version = "latest", vocabularyPart = "schema") {
+        //"https://raw.githubusercontent.com/schemaorg/schemaorg/master/data/releases/3.9/all-layers.jsonld";
+        return new Promise(function (resolve, reject) {
+            if (version === "latest") {
+                axios.get("https://raw.githubusercontent.com/schemaorg/schemaorg/master/versions.json").then(function (res) {
+                    version = res.data.schemaversion;
+                    resolve("https://raw.githubusercontent.com/schemaorg/schemaorg/master/data/releases/" + version + "/" + vocabularyPart + ".jsonld");
+                }).catch(function (err) {
+                    reject(console.log(err));
+                });
+            } else {
+                resolve("https://raw.githubusercontent.com/schemaorg/schemaorg/master/data/releases/" + version + "/" + vocabularyPart + ".jsonld");
+            }
+        });
     }
 }
 
