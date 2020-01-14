@@ -9,7 +9,8 @@ const SDOAdapter = require('schema-org-adapter')
 
 const mySDOAdapter = new SDOAdapter()
 
-const urlLatestSDO = await mySDOAdapter.constructSDOVocabularyURL('latest', 'all-layers')
+const urlLatestSDO = await mySDOAdapter.constructSDOVocabularyURL('latest', 'all-layers') 
+// resolves to "https://raw.githubusercontent.com/schemaorg/schemaorg/master/data/releases/6.0/all-layers.jsonld" if 6.0 is the latest version
 await mySDOAdapter.addVocabularies([urlLatestSDO])
 
 let Hotel = mySDOAdapter.getClass('schema:Hotel')
@@ -61,7 +62,7 @@ Script-include the bundled package in **/dist** or load via a cdn:
 ## Acknowledgement
 
 <div align="center">
-<a href="https://semantify.it/" target="_blank"><img src="https://semantify.it/wp-content/themes/semantify-wordpress-theme/assets/img/logo.svg"></a>
+<a href="https://semantify.it/" target="_blank"><img src="https://semantify.it/wp-content/themes/semantify-wordpress-theme/assets/img/logo-white.svg" style="background-color: #B0191E !important; border: solid 5px #B0191E;"></a>
 
 Made with &#10084; in Tirol!
 </div>
