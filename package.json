@@ -8,6 +8,7 @@
     "buildMinified": "browserify src/SDOAdapter.js -s SDOAdapter -g [uglifyify] | derequire -cm --toplevel > dist/schema-org-adapter.min.js",
     "test": "jest",
     "genJsDoc": "jsdoc src/ --destination ./jsDoc",
+    "getJsDocMD": "jsdoc2md src/Class.js > docu/Class.md",
     "eslint check": "eslint src/*.js tests/*.js"
   },
   "author": {
@@ -47,6 +48,7 @@
     "eslint-plugin-node": "^11.0.0",
     "jest": "^24.9.0",
     "jsdoc": "^3.6.3",
+    "jsdoc-to-markdown": "^5.0.3",
     "standard": "^14.3.1",
     "uglifyify": "^5.0.2"
   },
