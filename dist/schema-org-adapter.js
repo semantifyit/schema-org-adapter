@@ -19050,6 +19050,7 @@ class SDOAdapter {
    * Adds vocabularies (in JSON-LD format or as URL) to the memory of this SDOAdapter
    *
    * @param {object} vocabArray - The vocabularies to add the graph, in JSON-LD format
+   * @returns {Promise.<void>} This is an async function
    */
 
 
@@ -19125,7 +19126,7 @@ class SDOAdapter {
    * Creates an array of JS-Classes for all vocabulary Classes
    *
    * @param {object|null} filter - (default = null) an optional filter for the Class creation
-   * @returns {Array} An array of JS-Classes representing all vocabulary Classes, does not include Enumerations
+   * @returns {Array.<Class|Enumeration>} An array of JS-Classes representing all vocabulary Classes, does not include Enumerations
    */
 
 
@@ -19148,7 +19149,7 @@ class SDOAdapter {
    * Creates an array of IRIs for all vocabulary Classes
    *
    * @param {object|null} filter - (default = null) an optional filter for the List creation
-   * @returns {Array} An array of IRIs representing all vocabulary Classes, does not include Enumerations
+   * @returns {Array.<string>} An array of IRIs representing all vocabulary Classes, does not include Enumerations
    */
 
 
@@ -19174,7 +19175,7 @@ class SDOAdapter {
    * Creates an array of JS-Classes for all vocabulary Properties
    *
    * @param {object|null} filter - (default = null) an optional filter for the Property creation
-   * @returns {Array} An array of JS-Classes representing all vocabulary Properties
+   * @returns {Array.<Property>} An array of JS-Classes representing all vocabulary Properties
    */
 
 
@@ -19197,7 +19198,7 @@ class SDOAdapter {
    * Creates an array of IRIs for all vocabulary Properties
    *
    * @param {object|null} filter - (default = null) an optional filter for the List creation
-   * @returns {Array} An array of IRIs representing all vocabulary Properties
+   * @returns {Array.<string>} An array of IRIs representing all vocabulary Properties
    */
 
 
@@ -19222,7 +19223,7 @@ class SDOAdapter {
    * Creates an array of JS-Classes for all vocabulary DataTypes
    *
    * @param {object|null} filter - (default = null) an optional filter for the DataType creation
-   * @returns {Array} An array of JS-Classes representing all vocabulary DataTypes
+   * @returns {Array.<DataType>} An array of JS-Classes representing all vocabulary DataTypes
    */
 
 
@@ -19245,7 +19246,7 @@ class SDOAdapter {
    * Creates an array of IRIs for all vocabulary DataTypes
    *
    * @param {object|null} filter - (default = null) an optional filter for the List creation
-   * @returns {Array} An array of IRIs representing all vocabulary DataTypes
+   * @returns {Array.<string>} An array of IRIs representing all vocabulary DataTypes
    */
 
 
@@ -19270,7 +19271,7 @@ class SDOAdapter {
    * Creates an array of JS-Classes for all vocabulary Enumerations
    *
    * @param {object|null} filter - (default = null) an optional filter for the Enumeration creation
-   * @returns {Array} An array of JS-Classes representing all vocabulary Enumerations
+   * @returns {Array.<Enumeration>} An array of JS-Classes representing all vocabulary Enumerations
    */
 
 
@@ -19293,7 +19294,7 @@ class SDOAdapter {
    * Creates an array of IRIs for all vocabulary Enumerations
    *
    * @param {object|null} filter - (default = null) an optional filter for the List creation
-   * @returns {Array} An array of IRIs representing all vocabulary Enumerations
+   * @returns {Array.<string>} An array of IRIs representing all vocabulary Enumerations
    */
 
 
@@ -19318,7 +19319,7 @@ class SDOAdapter {
    * Creates an array of JS-Classes for all vocabulary EnumerationMember
    *
    * @param {object|null} filter - (default = null) an optional filter for the EnumerationMember creation
-   * @returns {Array} An array of JS-Classes representing all vocabulary EnumerationMember
+   * @returns {Array.<EnumerationMember>} An array of JS-Classes representing all vocabulary EnumerationMember
    */
 
 
@@ -19341,7 +19342,7 @@ class SDOAdapter {
    * Creates an array of IRIs for all vocabulary EnumerationMember
    *
    * @param {object|null} filter - (default = null) an optional filter for the List creation
-   * @returns {Array} An array of IRIs representing all vocabulary EnumerationMember
+   * @returns {Array.<string>} An array of IRIs representing all vocabulary EnumerationMember
    */
 
 
@@ -19377,7 +19378,7 @@ class SDOAdapter {
    *
    * @param {?string} version - the wished Schema.org vocabulary version for the resulting URL (e.g. "5.0", "3.7", or "latest"). default: "latest"
    * @param {?string} vocabularyPart - the wished part of the Schema.org vocabulary (schema.org has a core vocabulary and some extensions, check https://schema.org/docs/developers.html for more information). default: "schema" (the core vocabulary)
-   * @returns {string} The URL to the Schema.org vocabulary
+   * @returns {Promise.<string>} The URL to the Schema.org vocabulary
    */
 
 

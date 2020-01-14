@@ -22,24 +22,24 @@
 
 * [SDOAdapter](#SDOAdapter)
     * [new SDOAdapter()](#new_SDOAdapter_new)
-    * [.addVocabularies(vocabArray)](#SDOAdapter+addVocabularies)
+    * [.addVocabularies(vocabArray)](#SDOAdapter+addVocabularies) ⇒ <code>Promise.&lt;void&gt;</code>
     * [.getClass(id, filter)](#SDOAdapter+getClass) ⇒ [<code>Class</code>](#Class) \| [<code>Enumeration</code>](#Enumeration)
-    * [.getAllClasses(filter)](#SDOAdapter+getAllClasses) ⇒ <code>Array</code>
-    * [.getListOfClasses(filter)](#SDOAdapter+getListOfClasses) ⇒ <code>Array</code>
+    * [.getAllClasses(filter)](#SDOAdapter+getAllClasses) ⇒ <code>Array.&lt;(Class\|Enumeration)&gt;</code>
+    * [.getListOfClasses(filter)](#SDOAdapter+getListOfClasses) ⇒ <code>Array.&lt;string&gt;</code>
     * [.getProperty(id, filter)](#SDOAdapter+getProperty) ⇒ [<code>Property</code>](#Property)
-    * [.getAllProperties(filter)](#SDOAdapter+getAllProperties) ⇒ <code>Array</code>
-    * [.getListOfProperties(filter)](#SDOAdapter+getListOfProperties) ⇒ <code>Array</code>
+    * [.getAllProperties(filter)](#SDOAdapter+getAllProperties) ⇒ [<code>Array.&lt;Property&gt;</code>](#Property)
+    * [.getListOfProperties(filter)](#SDOAdapter+getListOfProperties) ⇒ <code>Array.&lt;string&gt;</code>
     * [.getDataType(id, filter)](#SDOAdapter+getDataType) ⇒ [<code>DataType</code>](#DataType)
-    * [.getAllDataTypes(filter)](#SDOAdapter+getAllDataTypes) ⇒ <code>Array</code>
-    * [.getListOfDataTypes(filter)](#SDOAdapter+getListOfDataTypes) ⇒ <code>Array</code>
+    * [.getAllDataTypes(filter)](#SDOAdapter+getAllDataTypes) ⇒ [<code>Array.&lt;DataType&gt;</code>](#DataType)
+    * [.getListOfDataTypes(filter)](#SDOAdapter+getListOfDataTypes) ⇒ <code>Array.&lt;string&gt;</code>
     * [.getEnumeration(id, filter)](#SDOAdapter+getEnumeration) ⇒ [<code>Enumeration</code>](#Enumeration)
-    * [.getAllEnumerations(filter)](#SDOAdapter+getAllEnumerations) ⇒ <code>Array</code>
-    * [.getListOfEnumerations(filter)](#SDOAdapter+getListOfEnumerations) ⇒ <code>Array</code>
+    * [.getAllEnumerations(filter)](#SDOAdapter+getAllEnumerations) ⇒ [<code>Array.&lt;Enumeration&gt;</code>](#Enumeration)
+    * [.getListOfEnumerations(filter)](#SDOAdapter+getListOfEnumerations) ⇒ <code>Array.&lt;string&gt;</code>
     * [.getEnumerationMember(id, filter)](#SDOAdapter+getEnumerationMember) ⇒ [<code>EnumerationMember</code>](#EnumerationMember)
-    * [.getAllEnumerationMembers(filter)](#SDOAdapter+getAllEnumerationMembers) ⇒ <code>Array</code>
-    * [.getListOfEnumerationMembers(filter)](#SDOAdapter+getListOfEnumerationMembers) ⇒ <code>Array</code>
+    * [.getAllEnumerationMembers(filter)](#SDOAdapter+getAllEnumerationMembers) ⇒ [<code>Array.&lt;EnumerationMember&gt;</code>](#EnumerationMember)
+    * [.getListOfEnumerationMembers(filter)](#SDOAdapter+getListOfEnumerationMembers) ⇒ <code>Array.&lt;string&gt;</code>
     * [.getVocabularies()](#SDOAdapter+getVocabularies) ⇒ <code>object</code>
-    * [.constructSDOVocabularyURL(version, vocabularyPart)](#SDOAdapter+constructSDOVocabularyURL) ⇒ <code>string</code>
+    * [.constructSDOVocabularyURL(version, vocabularyPart)](#SDOAdapter+constructSDOVocabularyURL) ⇒ <code>Promise.&lt;string&gt;</code>
 
 <a name="new_SDOAdapter_new"></a>
 
@@ -48,10 +48,11 @@ The SDOAdapter is a JS-Class that represents the interface between the user and 
 
 <a name="SDOAdapter+addVocabularies"></a>
 
-### sdoAdapter.addVocabularies(vocabArray)
+### sdoAdapter.addVocabularies(vocabArray) ⇒ <code>Promise.&lt;void&gt;</code>
 Adds vocabularies (in JSON-LD format or as URL) to the memory of this SDOAdapter
 
 **Kind**: instance method of [<code>SDOAdapter</code>](#SDOAdapter)  
+**Returns**: <code>Promise.&lt;void&gt;</code> - This is an async function  
 
 | Param | Type | Description |
 | --- | --- | --- |
@@ -72,11 +73,11 @@ Creates a JS-Class for a vocabulary Class by the given identifier (@id) or name
 
 <a name="SDOAdapter+getAllClasses"></a>
 
-### sdoAdapter.getAllClasses(filter) ⇒ <code>Array</code>
+### sdoAdapter.getAllClasses(filter) ⇒ <code>Array.&lt;(Class\|Enumeration)&gt;</code>
 Creates an array of JS-Classes for all vocabulary Classes
 
 **Kind**: instance method of [<code>SDOAdapter</code>](#SDOAdapter)  
-**Returns**: <code>Array</code> - An array of JS-Classes representing all vocabulary Classes, does not include Enumerations  
+**Returns**: <code>Array.&lt;(Class\|Enumeration)&gt;</code> - An array of JS-Classes representing all vocabulary Classes, does not include Enumerations  
 
 | Param | Type | Default | Description |
 | --- | --- | --- | --- |
@@ -84,11 +85,11 @@ Creates an array of JS-Classes for all vocabulary Classes
 
 <a name="SDOAdapter+getListOfClasses"></a>
 
-### sdoAdapter.getListOfClasses(filter) ⇒ <code>Array</code>
+### sdoAdapter.getListOfClasses(filter) ⇒ <code>Array.&lt;string&gt;</code>
 Creates an array of IRIs for all vocabulary Classes
 
 **Kind**: instance method of [<code>SDOAdapter</code>](#SDOAdapter)  
-**Returns**: <code>Array</code> - An array of IRIs representing all vocabulary Classes, does not include Enumerations  
+**Returns**: <code>Array.&lt;string&gt;</code> - An array of IRIs representing all vocabulary Classes, does not include Enumerations  
 
 | Param | Type | Default | Description |
 | --- | --- | --- | --- |
@@ -109,11 +110,11 @@ Creates a JS-Class for a vocabulary Property by the given identifier (@id) or na
 
 <a name="SDOAdapter+getAllProperties"></a>
 
-### sdoAdapter.getAllProperties(filter) ⇒ <code>Array</code>
+### sdoAdapter.getAllProperties(filter) ⇒ [<code>Array.&lt;Property&gt;</code>](#Property)
 Creates an array of JS-Classes for all vocabulary Properties
 
 **Kind**: instance method of [<code>SDOAdapter</code>](#SDOAdapter)  
-**Returns**: <code>Array</code> - An array of JS-Classes representing all vocabulary Properties  
+**Returns**: [<code>Array.&lt;Property&gt;</code>](#Property) - An array of JS-Classes representing all vocabulary Properties  
 
 | Param | Type | Default | Description |
 | --- | --- | --- | --- |
@@ -121,11 +122,11 @@ Creates an array of JS-Classes for all vocabulary Properties
 
 <a name="SDOAdapter+getListOfProperties"></a>
 
-### sdoAdapter.getListOfProperties(filter) ⇒ <code>Array</code>
+### sdoAdapter.getListOfProperties(filter) ⇒ <code>Array.&lt;string&gt;</code>
 Creates an array of IRIs for all vocabulary Properties
 
 **Kind**: instance method of [<code>SDOAdapter</code>](#SDOAdapter)  
-**Returns**: <code>Array</code> - An array of IRIs representing all vocabulary Properties  
+**Returns**: <code>Array.&lt;string&gt;</code> - An array of IRIs representing all vocabulary Properties  
 
 | Param | Type | Default | Description |
 | --- | --- | --- | --- |
@@ -146,11 +147,11 @@ Creates a JS-Class for a vocabulary DataType by the given identifier (@id) or na
 
 <a name="SDOAdapter+getAllDataTypes"></a>
 
-### sdoAdapter.getAllDataTypes(filter) ⇒ <code>Array</code>
+### sdoAdapter.getAllDataTypes(filter) ⇒ [<code>Array.&lt;DataType&gt;</code>](#DataType)
 Creates an array of JS-Classes for all vocabulary DataTypes
 
 **Kind**: instance method of [<code>SDOAdapter</code>](#SDOAdapter)  
-**Returns**: <code>Array</code> - An array of JS-Classes representing all vocabulary DataTypes  
+**Returns**: [<code>Array.&lt;DataType&gt;</code>](#DataType) - An array of JS-Classes representing all vocabulary DataTypes  
 
 | Param | Type | Default | Description |
 | --- | --- | --- | --- |
@@ -158,11 +159,11 @@ Creates an array of JS-Classes for all vocabulary DataTypes
 
 <a name="SDOAdapter+getListOfDataTypes"></a>
 
-### sdoAdapter.getListOfDataTypes(filter) ⇒ <code>Array</code>
+### sdoAdapter.getListOfDataTypes(filter) ⇒ <code>Array.&lt;string&gt;</code>
 Creates an array of IRIs for all vocabulary DataTypes
 
 **Kind**: instance method of [<code>SDOAdapter</code>](#SDOAdapter)  
-**Returns**: <code>Array</code> - An array of IRIs representing all vocabulary DataTypes  
+**Returns**: <code>Array.&lt;string&gt;</code> - An array of IRIs representing all vocabulary DataTypes  
 
 | Param | Type | Default | Description |
 | --- | --- | --- | --- |
@@ -183,11 +184,11 @@ Creates a JS-Class for a vocabulary Enumeration by the given identifier (@id) or
 
 <a name="SDOAdapter+getAllEnumerations"></a>
 
-### sdoAdapter.getAllEnumerations(filter) ⇒ <code>Array</code>
+### sdoAdapter.getAllEnumerations(filter) ⇒ [<code>Array.&lt;Enumeration&gt;</code>](#Enumeration)
 Creates an array of JS-Classes for all vocabulary Enumerations
 
 **Kind**: instance method of [<code>SDOAdapter</code>](#SDOAdapter)  
-**Returns**: <code>Array</code> - An array of JS-Classes representing all vocabulary Enumerations  
+**Returns**: [<code>Array.&lt;Enumeration&gt;</code>](#Enumeration) - An array of JS-Classes representing all vocabulary Enumerations  
 
 | Param | Type | Default | Description |
 | --- | --- | --- | --- |
@@ -195,11 +196,11 @@ Creates an array of JS-Classes for all vocabulary Enumerations
 
 <a name="SDOAdapter+getListOfEnumerations"></a>
 
-### sdoAdapter.getListOfEnumerations(filter) ⇒ <code>Array</code>
+### sdoAdapter.getListOfEnumerations(filter) ⇒ <code>Array.&lt;string&gt;</code>
 Creates an array of IRIs for all vocabulary Enumerations
 
 **Kind**: instance method of [<code>SDOAdapter</code>](#SDOAdapter)  
-**Returns**: <code>Array</code> - An array of IRIs representing all vocabulary Enumerations  
+**Returns**: <code>Array.&lt;string&gt;</code> - An array of IRIs representing all vocabulary Enumerations  
 
 | Param | Type | Default | Description |
 | --- | --- | --- | --- |
@@ -220,11 +221,11 @@ Creates a JS-Class for a vocabulary EnumerationMember by the given identifier (@
 
 <a name="SDOAdapter+getAllEnumerationMembers"></a>
 
-### sdoAdapter.getAllEnumerationMembers(filter) ⇒ <code>Array</code>
+### sdoAdapter.getAllEnumerationMembers(filter) ⇒ [<code>Array.&lt;EnumerationMember&gt;</code>](#EnumerationMember)
 Creates an array of JS-Classes for all vocabulary EnumerationMember
 
 **Kind**: instance method of [<code>SDOAdapter</code>](#SDOAdapter)  
-**Returns**: <code>Array</code> - An array of JS-Classes representing all vocabulary EnumerationMember  
+**Returns**: [<code>Array.&lt;EnumerationMember&gt;</code>](#EnumerationMember) - An array of JS-Classes representing all vocabulary EnumerationMember  
 
 | Param | Type | Default | Description |
 | --- | --- | --- | --- |
@@ -232,11 +233,11 @@ Creates an array of JS-Classes for all vocabulary EnumerationMember
 
 <a name="SDOAdapter+getListOfEnumerationMembers"></a>
 
-### sdoAdapter.getListOfEnumerationMembers(filter) ⇒ <code>Array</code>
+### sdoAdapter.getListOfEnumerationMembers(filter) ⇒ <code>Array.&lt;string&gt;</code>
 Creates an array of IRIs for all vocabulary EnumerationMember
 
 **Kind**: instance method of [<code>SDOAdapter</code>](#SDOAdapter)  
-**Returns**: <code>Array</code> - An array of IRIs representing all vocabulary EnumerationMember  
+**Returns**: <code>Array.&lt;string&gt;</code> - An array of IRIs representing all vocabulary EnumerationMember  
 
 | Param | Type | Default | Description |
 | --- | --- | --- | --- |
@@ -251,12 +252,12 @@ Returns key-value pairs of the vocabularies used in this SDOAdapter
 **Returns**: <code>object</code> - An object containing the key-value pairs representing the used vocabularies  
 <a name="SDOAdapter+constructSDOVocabularyURL"></a>
 
-### sdoAdapter.constructSDOVocabularyURL(version, vocabularyPart) ⇒ <code>string</code>
+### sdoAdapter.constructSDOVocabularyURL(version, vocabularyPart) ⇒ <code>Promise.&lt;string&gt;</code>
 Creates a URL pointing to the Schema.org vocabulary (the wished version/extension can be specified). This URL can then be added to the SDOAdapter to retrieve the Schema.org vocabulary. Invalid version or vocabularyPart arguments will result in errors, check https://schema.org/docs/developers.html for more information
 To achieve this, the Schema.org version listing on https://raw.githubusercontent.com/schemaorg/schemaorg/master/versions.json is used.
 
 **Kind**: instance method of [<code>SDOAdapter</code>](#SDOAdapter)  
-**Returns**: <code>string</code> - The URL to the Schema.org vocabulary  
+**Returns**: <code>Promise.&lt;string&gt;</code> - The URL to the Schema.org vocabulary  
 
 | Param | Type | Default | Description |
 | --- | --- | --- | --- |
