@@ -19,7 +19,7 @@ Hotel.getSuperClasses() //5 -> ["schema:LodgingBusiness", "schema:LocalBusiness"
 
 let address = mySDOAdapter.getProperty("schema:address")
 address.getRanges() // 2 -> ["schema:PostalAddress", "schema:Text"]
-address.getDomains(false) // 5 -> ["schema:Place", "schema:GeoCoordinates", "schema:GeoShape", "schema:Person", "schema:Organization"]
+address.getDomains(false) // only direct domains: 5 -> ["schema:Place", "schema:GeoCoordinates", "schema:GeoShape", "schema:Person", "schema:Organization"]
 address.getDomains() // 229 -> ["schema:Place", "schema:Accommodation", "schema:TouristAttraction", ...]
 ```
 
@@ -45,10 +45,18 @@ Script-include the bundled package in **/dist** or load via cdn:
 <script src="TODO -> PUT REAL URL FROM CDN /schema-org-adapter.min.js"></script>
 ```
 
-
+## Features
 
 
 ## API
 
+
+## Acknowledgement
+
+<div align="center">
+<a href="https://semantify.it/" target="_blank"><img src="https://semantify.it/wp-content/themes/semantify-wordpress-theme/assets/img/logo-white.svg"></a>
+
+Made with &#10084; in Tirol!
+</div>
 
 
