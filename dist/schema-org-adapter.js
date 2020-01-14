@@ -19381,7 +19381,7 @@ class SDOAdapter {
    */
 
 
-  getSDOVocabularyURL() {
+  constructSDOVocabularyURL() {
     var _arguments = arguments;
     return _asyncToGenerator(function* () {
       var version = _arguments.length > 0 && _arguments[0] !== undefined ? _arguments[0] : 'latest';

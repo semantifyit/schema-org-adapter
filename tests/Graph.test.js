@@ -4,7 +4,7 @@ const VOC_OBJ_DACH = require('./data/dachkg_1')
 const VOC_OBJ_SDO3_7 = require('./data/schema_3.7')
 
 /**
- *
+ * starts a SDO Adapter for a test
  */
 async function initGraph () {
   const mySA = new SDOAdapter()

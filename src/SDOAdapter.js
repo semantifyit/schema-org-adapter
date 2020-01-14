@@ -332,7 +332,7 @@ class SDOAdapter {
    * @param {?string} vocabularyPart - the wished part of the Schema.org vocabulary (schema.org has a core vocabulary and some extensions, check https://schema.org/docs/developers.html for more information). default: "schema" (the core vocabulary)
    * @returns {string} The URL to the Schema.org vocabulary
    */
-  async getSDOVocabularyURL (version = 'latest', vocabularyPart = 'schema') {
+  async constructSDOVocabularyURL (version = 'latest', vocabularyPart = 'schema') {
     // "https://raw.githubusercontent.com/schemaorg/schemaorg/master/data/releases/3.9/all-layers.jsonld";
     return new Promise(function (resolve, reject) {
       if (version === 'latest') {

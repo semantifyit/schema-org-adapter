@@ -191,23 +191,23 @@ describe('SDO Adapter methods', () => {
 
   test('construct SDO URL', async () => {
     const mySA = new SDOAdapter()
-    const url = await mySA.getSDOVocabularyURL()
+    const url = await mySA.constructSDOVocabularyURL()
     const versionPosition = 'https://raw.githubusercontent.com/schemaorg/schemaorg/master/data/releases/'.length
     console.log(url)
     expect(Number(url.substring(versionPosition, versionPosition + 3)) > 5).toBe(true)
     expect(url.includes('schema.jsonld')).toBe(true)
-    const url2 = await mySA.getSDOVocabularyURL('latest')
+    const url2 = await mySA.constructSDOVocabularyURL('latest')
     console.log(url2)
     expect(Number(url2.substring(versionPosition, versionPosition + 3)) > 5).toBe(true)
     expect(url2.includes('schema.jsonld')).toBe(true)
-    const url3 = await mySA.getSDOVocabularyURL('latest', 'all-layers')
+    const url3 = await mySA.constructSDOVocabularyURL('latest', 'all-layers')
     console.log(url3)
     expect(Number(url3.substring(versionPosition, versionPosition + 3)) > 5).toBe(true)
     expect(url3.includes('all-layers.jsonld')).toBe(true)
-    const url4 = await mySA.getSDOVocabularyURL('3.9', 'all-layers')
+    const url4 = await mySA.constructSDOVocabularyURL('3.9', 'all-layers')
     console.log(url4)
     expect(url4).toBe('https://raw.githubusercontent.com/schemaorg/schemaorg/master/data/releases/3.9/all-layers.jsonld')
-    const url5 = await mySA.getSDOVocabularyURL('3.9', 'auto')
+    const url5 = await mySA.constructSDOVocabularyURL('3.9', 'auto')
     console.log(url5)
     expect(url5).toBe('https://raw.githubusercontent.com/schemaorg/schemaorg/master/data/releases/3.9/auto.jsonld')
   }

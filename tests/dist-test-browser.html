@@ -19,7 +19,7 @@
     // let sdoVocabURL = 'https://raw.githubusercontent.com/schemaorg/schemaorg/master/data/releases/3.9/all-layers.jsonld'
     let dachVocabURL = 'https://raw.githubusercontent.com/STIInnsbruck/dachkg-schema/master/schema/dachkg_trail.json'
 
-    mySA.getSDOVocabularyURL('latest', 'all-layers').then(function (sdoURL) {
+    mySA.constructSDOVocabularyURL('latest', 'all-layers').then(function (sdoURL) {
       mySA.addVocabularies([sdoURL, dachVocabURL]).then(function () {
         let testClass = mySA.getClass('Trail')
         console.log(testClass.getName())
