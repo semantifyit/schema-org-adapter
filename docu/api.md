@@ -49,14 +49,14 @@ The SDOAdapter is a JS-Class that represents the interface between the user and 
 <a name="SDOAdapter+addVocabularies"></a>
 
 ### sdoAdapter.addVocabularies(vocabArray) ⇒ <code>Promise.&lt;void&gt;</code>
-Adds vocabularies (in JSON-LD format or as URL) to the memory of this SDOAdapter
+Adds vocabularies (in JSON-LD format or as URL) to the memory of this SDOAdapter. The function "constructSDOVocabularyURL()" helps you to construct URLs for the schema.org vocabulary
 
 **Kind**: instance method of [<code>SDOAdapter</code>](#SDOAdapter)  
 **Returns**: <code>Promise.&lt;void&gt;</code> - This is an async function  
 
 | Param | Type | Description |
 | --- | --- | --- |
-| vocabArray | <code>object</code> | The vocabularies to add the graph, in JSON-LD format |
+| vocabArray | <code>Array.&lt;(string\|JSON)&gt;</code> | The vocabularies to add the graph, in JSON-LD format. Given directly as JSON or by a URL to fetch. |
 
 <a name="SDOAdapter+getClass"></a>
 
