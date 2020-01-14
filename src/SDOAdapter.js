@@ -13,9 +13,9 @@ class SDOAdapter {
   }
 
   /**
-   * Adds vocabularies (in JSON-LD format or as URL) to the memory of this SDOAdapter
+   * Adds vocabularies (in JSON-LD format or as URL) to the memory of this SDOAdapter. The function "constructSDOVocabularyURL()" helps you to construct URLs for the schema.org vocabulary
    *
-   * @param {object} vocabArray - The vocabularies to add the graph, in JSON-LD format
+   * @param {Array.<string|JSON>} vocabArray - The vocabularies to add the graph, in JSON-LD format. Given directly as JSON or by a URL to fetch.
    * @returns {Promise.<void>} This is an async function
    */
   async addVocabularies (vocabArray) {

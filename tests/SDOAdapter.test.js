@@ -37,6 +37,7 @@ describe('SDO Adapter methods', () => {
     await mySA.addVocabularies([VOC_OBJ_SDO3_7, VOC_OBJ_DACH])
     const allClassesList = mySA.getListOfClasses()
     expect(allClassesList.length).toBe(732)
+    expect(allClassesList.includes("schema:DayOfWeek")).toBe(false) //should NOT contain enumerations
   })
 
   test('getAllClasses()', async () => {
@@ -49,7 +50,7 @@ describe('SDO Adapter methods', () => {
     const allClassesSchema = mySA.getAllClasses({ fromVocabulary: 'schema' })
     expect(allClassesSchema.length).toBe(731)
     for (let i = 0; i < allClasses.length; i++) {
-      expect(allClasses[i].getTermType()).toBe('rdfs:Class')
+      expect(allClasses[i].getTermType()).toBe('rdfs:Class') //should NOT contain enumerations
     }
   })
 

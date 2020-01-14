@@ -67,7 +67,7 @@ Check the examples for <a href="https://github.com/semantifyit/schema-org-adapte
 
 ##### Use of filters
 
-It is possible to filter the result by passing a filter object - The filter options can be: 
+It is possible to filter the results of some functions by passing a filter object - The filter options can be: 
 * "isSuperseded": boolean
 * "termType": string/Array
 * "fromVocabulary": string/Array
