@@ -58,12 +58,12 @@ Script-include the bundled package in **/dist** or load via a cdn:
 
 ## API
 
+### SDOAdapter
 
 ## Acknowledgement
 
 <div align="center">
-<a href="https://semantify.it/" target="_blank"><img src="https://semantify.it/wp-content/themes/semantify-wordpress-theme/assets/img/logo-white.svg" style="background-color: #B0191E !important; border: solid 5px #B0191E;"></a>
-
+<a href="https://semantify.it/" target="_blank"><h4>semantify.it</h4></a>
 Made with &#10084; in Tirol!
 </div>
 
