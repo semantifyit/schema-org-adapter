@@ -88,7 +88,7 @@ let listOfClasses = mySdoAdapter.getAllClasses({
 ## Acknowledgement
 
 <div align="center">
-<a href="https://semantify.it/" target="_blank"><h4>semantify.it</h4></a>
+<h3><a href="https://semantify.it/" target="_blank">semantify.it</a></h3>
 Made with &#10084; in Tirol!
 </div>
 
