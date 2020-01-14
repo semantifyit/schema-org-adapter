@@ -39,14 +39,21 @@ const SDOAdapter = require('schema-org-adapter')
 
 #### Browser
 
-Script-include the bundled package in **/dist** or load via cdn:
+Script-include the bundled package in **/dist** or load via a cdn:
 
 ```html
-<script src="TODO -> PUT REAL URL FROM CDN /schema-org-adapter.min.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/semantifyit/schema-org-adapter/dist/schema-org-adapter.min.js"></script>
 ```
 
 ## Features
 
+**Empowers the semantic web:** <a href="http://schema.org/" target="_blank">Schema.org</a> has become the standard vocabulary for the semantic web. This **Schema.org Adapter** gives developers a clear API to access the schema.org vocabulary in a simple way. 
+
+**Supports external vocabularies:** The **Schema.org Adapter** is lightweight because it does NOT include the vocabulary data, instead it allows the user to input his needed local/remote vocabularies (JSON-LD or URL to JSON-LD). This gives the user the possibility to specify the that <a href="https://schema.org/docs/developers.html" target="_blank">version/part of Schema.org</a> he needs, and also to use <a href="https://github.com/semantifyit/schema-org-adapter/blob/master/docu/vocabulary.md" target="_blank">external vocabularies</a>.
+
+**Clear data model:** The data model of the rdf-based, machine-readable version Schema.org is slightly adapted (see <a href="https://github.com/semantifyit/schema-org-adapter/blob/master/docu/algorithm.md" target="_blank">documentation</a> for details) to create the <a href="https://github.com/semantifyit/schema-org-adapter/blob/master/docu/dataModel.md" target="_blank">clear and pragmatic data model</a> of this **Schema.org Adapter**.
+
+**Built-in reasoning:** The API of **Schema.org Adapter** offers functions and parameters to enable built-in reasoning on the used vocabulary-terms (e.g. resolution of properties, sub-classes, ranges, etc.)
 
 ## API
 
@@ -54,7 +61,7 @@ Script-include the bundled package in **/dist** or load via cdn:
 ## Acknowledgement
 
 <div align="center">
-<a href="https://semantify.it/" target="_blank"><img src="https://semantify.it/wp-content/themes/semantify-wordpress-theme/assets/img/logo-white.svg"></a>
+<a href="https://semantify.it/" target="_blank"><img src="https://semantify.it/wp-content/themes/semantify-wordpress-theme/assets/img/logo.svg"></a>
 
 Made with &#10084; in Tirol!
 </div>
