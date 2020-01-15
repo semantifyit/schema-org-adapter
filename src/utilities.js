@@ -13,6 +13,26 @@ function applyFilter (dataArray, filter, graph) {
     return dataArray
   }
   const result = []
+  //check if given value is absolute IRI, if yes, get the vocab indicator for it
+  const context = graph.context
+  if (isString(filter.fromVocabulary)) {
+    for (let v = 0; v < Object.keys(context).length; v++) {
+      if (context[Object.keys(context)[v]] === filter.fromVocabulary) {
+        filter.fromVocabulary = Object.keys(context)[v]
+        break
+      }
+    }
+  } else if (isArray(filter.fromVocabulary)) {
+    for (let v = 0; v < filter.fromVocabulary.length; v++) {
+      for (let vi = 0; vi < Object.keys(context).length; vi++) {
+        if (context[Object.keys(context)[vi]] === filter.fromVocabulary[v]) {
+          filter.fromVocabulary[v] = Object.keys(context)[vi]
+          break
+        }
+      }
+    }
+  }
+  //check for every term, if it passes the filter conditions
   for (let i = 0; i < dataArray.length; i++) {
     const actualTerm = graph.getTerm(dataArray[i])
     // superseded
@@ -27,9 +47,10 @@ function applyFilter (dataArray, filter, graph) {
     if (filter.fromVocabulary !== undefined) {
       let matchFound = false
       if (isString(filter.fromVocabulary)) {
-        if (actualTerm.getIRI(true).startsWith(filter.fromVocabulary)) {
-          matchFound = true
-        }
+        if (filter.fromVocabulary)
+          if (actualTerm.getIRI(true).startsWith(filter.fromVocabulary)) {
+            matchFound = true
+          }
       } else if (isArray(filter.fromVocabulary)) {
         for (let v = 0; v < filter.fromVocabulary.length; v++) {
           if (actualTerm.getIRI(true).startsWith(filter.fromVocabulary[v])) {

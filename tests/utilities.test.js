@@ -100,7 +100,7 @@ describe('util tools', () => {
     const filter6 = { isSuperseded: true }
     const filter7 = { termType: ['Property', 'Class'] }
     const filter8 = { termType: ['Enumeration', 'Class'] }
-    const filter9 = { termType: ['Property'], fromVocabulary: ['schema'] }
+    const filter9 = { termType: ['Property'], fromVocabulary: ['http://schema.org/'] }
     const filter10 = { termType: ['Property'], fromVocabulary: 'dachkg' }
     const filter11 = { termType: ['Property'], fromVocabulary: ['schema', 'dachkg'] }
     expect(MedicalWebPage.getProperties(true, filter1)).toContain('schema:aspect')

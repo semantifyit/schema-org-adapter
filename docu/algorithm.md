@@ -88,7 +88,7 @@ To have a correct classification for our data model it is needed to clean the da
   
 ### D.) Inheritance
  Schema.org's Inheritance design states if an entity is the superClass/superProperty of another entity. In our data model design we also hold the information if an entity is the subClass/subProperty of another entity. In this step this inheritance information is generated and saved though multiple terms introduced by this library.
- Terms introduced by this Library are:
+ Terms introduced by this library are:
  - "soa": "http://schema-org-adapter.at/vocabTerms/" is the "virtual" vocabulary used by this library
  - soa:superClassOf is an inverse of rdfs:subClassOf
  - soa:superPropertyOf is an inverse of rdfs:subPropertyOf

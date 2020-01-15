@@ -19047,9 +19047,9 @@ class SDOAdapter {
     this.graph = new Graph(this);
   }
   /**
-   * Adds vocabularies (in JSON-LD format or as URL) to the memory of this SDOAdapter
+   * Adds vocabularies (in JSON-LD format or as URL) to the memory of this SDOAdapter. The function "constructSDOVocabularyURL()" helps you to construct URLs for the schema.org vocabulary
    *
-   * @param {object} vocabArray - The vocabularies to add the graph, in JSON-LD format
+   * @param {Array.<string|JSON>} vocabArray - The vocabularies to add the graph, in JSON-LD format. Given directly as JSON or by a URL to fetch.
    * @returns {Promise.<void>} This is an async function
    */
 
@@ -19430,7 +19430,28 @@ function applyFilter(dataArray, filter, graph) {
     return dataArray;
   }
 
-  var result = [];
+  var result = []; //check if given value is absolute IRI, if yes, get the vocab indicator for it
+
+  var context = graph.context;
+
+  if (isString(filter.fromVocabulary)) {
+    for (var v = 0; v < Object.keys(context).length; v++) {
+      if (context[Object.keys(context)[v]] === filter.fromVocabulary) {
+        filter.fromVocabulary = Object.keys(context)[v];
+        break;
+      }
+    }
+  } else if (isArray(filter.fromVocabulary)) {
+    for (var _v = 0; _v < filter.fromVocabulary.length; _v++) {
+      for (var vi = 0; vi < Object.keys(context).length; vi++) {
+        if (context[Object.keys(context)[vi]] === filter.fromVocabulary[_v]) {
+          filter.fromVocabulary[_v] = Object.keys(context)[vi];
+          break;
+        }
+      }
+    }
+  } //check for every term, if it passes the filter conditions
+
 
   for (var i = 0; i < dataArray.length; i++) {
     var actualTerm = graph.getTerm(dataArray[i]); // superseded
@@ -19448,12 +19469,12 @@ function applyFilter(dataArray, filter, graph) {
       var matchFound = false;
 
       if (isString(filter.fromVocabulary)) {
-        if (actualTerm.getIRI(true).startsWith(filter.fromVocabulary)) {
+        if (filter.fromVocabulary) if (actualTerm.getIRI(true).startsWith(filter.fromVocabulary)) {
           matchFound = true;
         }
       } else if (isArray(filter.fromVocabulary)) {
-        for (var v = 0; v < filter.fromVocabulary.length; v++) {
-          if (actualTerm.getIRI(true).startsWith(filter.fromVocabulary[v])) {
+        for (var _v2 = 0; _v2 < filter.fromVocabulary.length; _v2++) {
+          if (actualTerm.getIRI(true).startsWith(filter.fromVocabulary[_v2])) {
             matchFound = true;
           }
         }

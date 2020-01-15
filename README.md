@@ -47,14 +47,13 @@ Script-include the bundled package in **/dist** or load via a cdn:
 ```
 
 ## Features
+&#8984; **Empowers the semantic web:** <a href="http://schema.org/" target="_blank">Schema.org</a> has become the standard vocabulary for the semantic web. This **Schema.org Adapter** gives developers a clear API to access the schema.org vocabulary in a simple way. 
 
-**Empowers the semantic web:** <a href="http://schema.org/" target="_blank">Schema.org</a> has become the standard vocabulary for the semantic web. This **Schema.org Adapter** gives developers a clear API to access the schema.org vocabulary in a simple way. 
+&#9733; **Clear data model:** The data model of the rdf-based, machine-readable version Schema.org is slightly adapted (see <a href="https://github.com/semantifyit/schema-org-adapter/blob/master/docu/algorithm.md" target="_blank">documentation</a> for details) to create the <a href="https://github.com/semantifyit/schema-org-adapter/blob/master/docu/dataModel.md" target="_blank">clear and pragmatic data model</a> of this **Schema.org Adapter**.
 
-**Supports external vocabularies:** The **Schema.org Adapter** is lightweight because it does NOT include the vocabulary data, instead it allows the user to input his needed local/remote vocabularies (JSON-LD or URL to JSON-LD). This gives the user the possibility to specify the that <a href="https://schema.org/docs/developers.html" target="_blank">version/part of Schema.org</a> he needs, and also to use <a href="https://github.com/semantifyit/schema-org-adapter/blob/master/docu/vocabulary.md" target="_blank">external vocabularies</a>.
+&#8633; **Supports external vocabularies:** The **Schema.org Adapter** is lightweight because it does NOT include the vocabulary data, instead it allows the user to input his needed local/remote vocabularies (JSON-LD or URL to JSON-LD). This gives the user the possibility to specify the <a href="https://schema.org/docs/developers.html" target="_blank">version/part of Schema.org</a> he needs, and also to use <a href="https://github.com/semantifyit/schema-org-adapter/blob/master/docu/vocabulary.md" target="_blank">external vocabularies</a>.
 
-**Clear data model:** The data model of the rdf-based, machine-readable version Schema.org is slightly adapted (see <a href="https://github.com/semantifyit/schema-org-adapter/blob/master/docu/algorithm.md" target="_blank">documentation</a> for details) to create the <a href="https://github.com/semantifyit/schema-org-adapter/blob/master/docu/dataModel.md" target="_blank">clear and pragmatic data model</a> of this **Schema.org Adapter**.
-
-**Built-in reasoning:** The API of **Schema.org Adapter** offers functions and parameters to enable built-in reasoning on the used vocabulary-terms (e.g. resolution of properties, sub-classes, ranges, etc.)
+&#9851; **Built-in reasoning:** The API of **Schema.org Adapter** offers functions and parameters to enable built-in reasoning on the used vocabulary-terms (e.g. resolution of properties, sub-classes, ranges, etc.)
 
 ## API
 
@@ -68,9 +67,9 @@ Check the examples for <a href="https://github.com/semantifyit/schema-org-adapte
 ##### Use of filters
 
 It is possible to filter the results of some functions by passing a filter object - The filter options can be: 
-* "isSuperseded": boolean
-* "termType": string/Array
-* "fromVocabulary": string/Array
+* "isSuperseded": boolean (e.g. `false` -> only vocabulary elements that are not superseded will be returned)
+* "termType": string/Array (e.g. `['Property', 'Class']` -> only vocabulary elements that are properties or classes will be returned)
+* "fromVocabulary": string/Array (e.g. `['http://schema.org/']` -> only vocabulary elements that come from a specific vocabulary will be returned (this may be interesting if you use additional <a href="https://github.com/semantifyit/schema-org-adapter/blob/master/docu/vocabulary.md" target="_blank">external vocabularies</a>))
 
 ```javascript
 const SDOAdapter = require('schema-org-adapter')
@@ -82,14 +81,11 @@ let listOfClasses = mySdoAdapter.getAllClasses({
 })
 ```
 
-
-
-
 ## Acknowledgement
 
 <div align="center">
 <h3><a href="https://semantify.it/" target="_blank">semantify.it</a></h3>
-Made with &#10084; in Tirol!
+Made with &#10084;	 in Tirol!
 </div>
 
 
