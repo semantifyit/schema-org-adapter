@@ -1,0 +1,54 @@
+{
+  "@context": {
+    "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "rdfa": "http://www.w3.org/ns/rdfa#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+    "xsd": "http://www.w3.org/2001/XMLSchema#",
+    "schema": "http://schema.org/",
+    "ex": "https://example-vocab.ex/1.0/",
+    "rdfs:subClassOf": {
+      "@id": "rdfs:subClassOf",
+      "@type": "@id"
+    },
+    "schema:domainIncludes": {
+      "@id": "schema:domainIncludes",
+      "@type": "@id"
+    },
+    "schema:rangeIncludes": {
+      "@id": "schema:rangeIncludes",
+      "@type": "@id"
+    }
+  },
+  "@graph": [
+    {
+      "@id": "ex:Animal",
+      "@type": "rdfs:Class",
+      "rdfs:comment": "Animals are multicellular eukaryotic organisms that form the biological kingdom Animalia. With few exceptions, animals consume organic material, breathe oxygen, are able to move, can reproduce sexually, and grow from a hollow sphere of cells, the blastula, during embryonic development.",
+      "rdfs:label": "Animal",
+      "rdfs:subClassOf": "schema:Thing"
+    },
+    {
+      "@id": "ex:numberOfLegs",
+      "@type": "rdf:Property",
+      "rdfs:comment": "The number of legs an animal has.",
+      "rdfs:label": "numberOfLegs",
+      "schema:domainIncludes": "ex:Animal",
+      "schema:rangeIncludes": "schema:Integer"
+    },
+    {
+      "@id": "ex:animalFamily",
+      "@type": "rdf:Property",
+      "rdfs:comment": "The animal family to which an animal belongs.",
+      "rdfs:label": "animalFamily",
+      "schema:domainIncludes": "ex:Animal",
+      "schema:rangeIncludes": "ex:AnimalFamily"
+    },
+    {
+      "@id": "ex:Tiger",
+      "@type": "rdfs:Class",
+      "rdfs:comment": "The tiger (Panthera tigris) is the largest species among the Felidae and classified in the genus Panthera. It is most recognisable for its dark vertical stripes on orangish-brown fur with a lighter underside.",
+      "rdfs:label": "Tiger",
+      "rdfs:subClassOf": "schema:Thing"
+    }
+  ]
+}

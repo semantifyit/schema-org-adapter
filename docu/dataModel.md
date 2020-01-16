@@ -44,7 +44,7 @@ Properties have following important attributes (for a complete list check the <a
 <a name="Enumeration"></a>
 ### Enumeration
 
-An Enumeration is a specific type of <a href="#Class">Class</a>, for which predefined instances (<a href="#EnumerationMember">Enumeration Members</a>) exist. In practise, instead of creating a new instance for an Enumeration, predefined instances referenced by their IRI are used (the property `dayOfWeek` has the Enumeration `DayOfWeek` as range. In this example the predefined instance `http://schema.org/Saturday` is used as value for the Enumeration):
+An Enumeration is a specific type of <a href="#Class">Class</a>, for which predefined instances (<a href="#EnumerationMember">Enumeration Members</a>) exist. In practise, instead of creating a new instance for an Enumeration, predefined instances referenced by their IRI are used (the property `dayOfWeek` has the Enumeration `DayOfWeek` as range. In this example the predefined instance with the @id `http://schema.org/Saturday` is used as value for the Enumeration):
 
 ```json
 {
@@ -55,7 +55,7 @@ An Enumeration is a specific type of <a href="#Class">Class</a>, for which prede
 }
 ```
 
-Unfortunately, the data model of schema.org does not specify exactly how Enumerations are supposed to be modeled, which has generated some uncertainty in their definition (especially in schema.org extensions) and usage, e.g. Enumerations without Enumeration Members, or Enumerations that have Properties. 
+Unfortunately, the data model of schema.org does not specify exactly how Enumerations are supposed to be modeled and used, which has generated some uncertainty around their definition (especially in schema.org extensions) and usage, e.g. Enumerations without Enumeration Members, Enumerations that have Properties, Enumeration Members that belong to multiple Enumerations, etc. 
 
 However, in the data model of **SDOAdapter** Enumerations are treated as <a href="#Class">Classes</a> with additional attributes (for a complete list check the <a href="https://github.com/semantifyit/schema-org-adapter/blob/master/docu/api.md#Enumeration" target="_blank">API</a>): 
 
