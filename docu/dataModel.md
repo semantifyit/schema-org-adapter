@@ -15,7 +15,7 @@ The algorithm that translates the data model of schema.org to the one used by th
 <a name="Class"></a>
 ### Class
 
-A Class is an abstract concept for entities like an "Hotel" or a "Person". Classes can have <a href="#Property">properties</a> that describe them. Classes are organized in a "multiple inheritance hierarchy" where each Class may be a sub-class of one or multiple Classes, where "Thing" is the most general Class.
+A Class (also known as <a href="http://schema.org/Class" target="_blank">Type</a> in schema.org) is a concept that describes entities like an "Hotel" or a "Person". Classes can have <a href="#Property">properties</a> that describe them. Classes are organized in a "multiple inheritance hierarchy" where each Class may be a sub-class of one or multiple Classes, where "Thing" is the most general Class.
 
 Classes have following important attributes (for a complete list check the <a href="https://github.com/semantifyit/schema-org-adapter/blob/master/docu/api.md#Class" target="_blank">API</a>):
 
@@ -57,9 +57,9 @@ An Enumeration is a specific type of <a href="#Class">Class</a>, for which prede
 
 Unfortunately, the data model of schema.org does not specify exactly how Enumerations are supposed to be modeled and used, which has generated some uncertainty around their definition (especially in schema.org extensions) and usage, e.g. Enumerations without Enumeration Members, Enumerations that have Properties, Enumeration Members that belong to multiple Enumerations, etc. 
 
-However, in the data model of **SDOAdapter** Enumerations are treated as <a href="#Class">Classes</a> with additional attributes (for a complete list check the <a href="https://github.com/semantifyit/schema-org-adapter/blob/master/docu/api.md#Enumeration" target="_blank">API</a>): 
+However, in the data model of **SDOAdapter** Enumerations are treated as <a href="#Class">Classes</a> with a set of predefined instances (for a complete list of attributes check the <a href="https://github.com/semantifyit/schema-org-adapter/blob/master/docu/api.md#Enumeration" target="_blank">API</a>): 
 
-* **enumeration members**: The <a href="#EnumerationMember">Enumeration Members</a> that are possible predefined instances (values) for this Enumeration . e.g. `http://schema.org/Saturday`
+* **enumeration members**: The <a href="#EnumerationMember">Enumeration Members</a> that are predefined instances (values) for this Enumeration . e.g. `http://schema.org/Saturday`
 
 **SDOAdapter** treats any Class that is directly or indirectly a sub-class of the Class `http://schema.org/Enumeration` as an Enumeration. For details, check  <a href="https://github.com/semantifyit/schema-org-adapter/blob/master/docu/algorithm.md" target="_blank">algorithm.md</a>. 
 
@@ -74,13 +74,13 @@ EnumerationMember have following important attributes (for a complete list check
 * **IRI**: The IRI of the EnumerationMember. e.g. `http://schema.org/Friday`
 * **name**: The name(s) (multilinguality) of the EnumerationMember. e.g. `Friday`
 * **description**: The description(s) about the EnumerationMember.
-* **domain enumeration**: The <a href="#Enumeration">enumerations</a> for which this EnumerationMember is a valid predefined instance (usually there is only 1 domain enumeration). e.g. `http://schema.org/DayOfWeek`
+* **domain enumeration**: The <a href="#Enumeration">Enumeration type(s)</a> for which this EnumerationMember is a valid predefined instance (usually there is only 1 Enumeration type to which an EnumerationMember belongs). e.g. `http://schema.org/DayOfWeek`
 * **superseded by**: A newer EnumerationMember that is meant to substitute this EnumerationMember, in general it is recommended to not use superseded EnumerationMember.
 
 <a name="DataType"></a>
 ### DataType
 
-A DataType represents a basic data types such as Integer or String.
+A DataType represents a basic data type such as Integer or String.
 
 DataType have following important attributes (for a complete list check the <a href="https://github.com/semantifyit/schema-org-adapter/blob/master/docu/api.md#DataType" target="_blank">API</a>):
 

@@ -76,7 +76,7 @@ To have a correct classification for our data model it is needed to clean the da
  
  The standard SDO approach and the GoodRelation approach of modelling enumerations are very different and there are arguments to defend any of the two design decisions. However, the fact that both enumeration design models are part of the SDO Core makes it difficult to create tools/algorithms which are aware and specialized around SDO enumerations.
  
- Our library handles enumerations as a "sub-type" or classes, which is suggested by the @type definition of enumerations. Enumerations have the same methods as classes, and additionally offer methods regarding their valid enumeration members.
+ Our library handles enumerations as a "sub-type" of classes (the @type of enumerations is rdfs:Class). Enumerations have the same methods as classes, and additionally offer methods regarding their valid enumeration members.
  
 #### C.2) Extract dataTypes from classes memory 
  For each entry in the classes memory it is checked if its _superClasses_ is included in the dataTypes memory. If this is the case, it is known that this class is a DataType, so this data entry is transformed and moved to the dataTypes memory.

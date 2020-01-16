@@ -5,7 +5,7 @@
     "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
     "xsd": "http://www.w3.org/2001/XMLSchema#",
     "schema": "http://schema.org/",
-    "ex": "https://example-vocab.ex/1.0/",
+    "ex": "https://example-vocab.ex/",
     "rdfs:subClassOf": {
       "@id": "rdfs:subClassOf",
       "@type": "@id"
@@ -36,19 +36,73 @@
       "schema:rangeIncludes": "schema:Integer"
     },
     {
-      "@id": "ex:animalFamily",
+      "@id": "ex:animalLivingEnvironment",
       "@type": "rdf:Property",
-      "rdfs:comment": "The animal family to which an animal belongs.",
-      "rdfs:label": "animalFamily",
+      "rdfs:comment": "The living environment of an animal. As values for this property you can write plain text of choose from the following: 'https://example-vocab.ex/AnimalLivingEnvironmentFreedom', 'https://example-vocab.ex/AnimalLivingEnvironmentZoo', 'https://example-vocab.ex/AnimalLivingEnvironmentDomestic' ",
+      "rdfs:label": "animalLivingEnvironment",
       "schema:domainIncludes": "ex:Animal",
-      "schema:rangeIncludes": "ex:AnimalFamily"
+      "schema:rangeIncludes": [
+        "ex:Text",
+        "ex:AnimalLivingEnvironment"
+      ]
+    },
+    {
+      "@id": "ex:AnimalLivingEnvironment",
+      "@type": "rdfs:Class",
+      "rdfs:comment": "An enumeration class that lists the possible living environments an animal can have.",
+      "rdfs:label": "Animal",
+      "rdfs:subClassOf": "schema:Enumeration"
+    },
+    {
+      "@id": "ex:AnimalLivingEnvironmentFreedom",
+      "@type": "ex:AnimalLivingEnvironment",
+      "rdfs:comment": "The animal lives in freedom.",
+      "rdfs:label": "AnimalLivingEnvironmentFreedom"
+    },
+    {
+      "@id": "ex:AnimalLivingEnvironmentZoo",
+      "@type": "ex:AnimalLivingEnvironment",
+      "rdfs:comment": "The animal lives in a public zoo.",
+      "rdfs:label": "AnimalLivingEnvironmentZoo"
+    },
+    {
+      "@id": "ex:AnimalLivingEnvironmentDomestic",
+      "@type": "ex:AnimalLivingEnvironment",
+      "rdfs:comment": "The animal lives in a private domestic environment.",
+      "rdfs:label": "AnimalLivingEnvironmentDomestic"
     },
     {
       "@id": "ex:Tiger",
       "@type": "rdfs:Class",
-      "rdfs:comment": "The tiger (Panthera tigris) is the largest species among the Felidae and classified in the genus Panthera. It is most recognisable for its dark vertical stripes on orangish-brown fur with a lighter underside.",
-      "rdfs:label": "Tiger",
-      "rdfs:subClassOf": "schema:Thing"
+      "rdfs:comment": [
+        {
+          "@language": "en",
+          "@value": "The tiger (Panthera tigris) is the largest species among the Felidae and classified in the genus Panthera. It is most recognisable for its dark vertical stripes on orangish-brown fur with a lighter underside."
+        },
+        {
+          "@language": "zh",
+          "@value": "虎（学名：Panthera tigris），俗称老虎、大虫，被人称为百獸之王，是現存体型最大的两种猫科动物之一（另一种是狮）。野外個體可長達3.38米（11.1英尺）、重388.7公斤（857英磅）（此为狩猎数据，实测数据的最大值为261kg）"
+        }
+      ],
+      "rdfs:label": [
+        {
+          "@language": "en",
+          "@value": "Tiger"
+        },
+        {
+          "@language": "de",
+          "@value": "Tiger"
+        },
+        {
+          "@language": "es",
+          "@value": "Tigre"
+        },
+        {
+          "@language": "zh",
+          "@value": "虎"
+        }
+      ],
+      "rdfs:subClassOf": "ex:Animal"
     }
   ]
 }
