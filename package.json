@@ -1,7 +1,7 @@
 {
   "name": "schema-org-adapter",
   "version": "1.0.0",
-  "description": "",
+  "description": "Fast, simple & flexible API for the Schema.org Vocabulary (and vocabulary extensions!) for Node and Browsers",
   "main": "src/SDOAdapter.js",
   "scripts": {
     "build": "browserify src/SDOAdapter.js -s SDOAdapter | derequire -cm --toplevel > dist/schema-org-adapter.js",

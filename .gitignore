@@ -95,6 +95,7 @@ cmake-build-release/
 
 # IntelliJ
 out/
+jsDoc/
 
 # mpeltonen/sbt-idea plugin
 .idea_modules/
