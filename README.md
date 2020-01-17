@@ -1,6 +1,6 @@
-<h1 align="center">Schema.org Adapter</h1>
+# Schema.org Adapter
 
-<h5 align="center">Fast, simple & flexible API for the Schema.org Vocabulary (and vocabulary extensions!) for Node and Browsers</h5>
+**Fast, simple & flexible API for the Schema.org Vocabulary (and vocabulary extensions!) for Node and Browsers**
 
 <div align="center"><a href="http://standardjs.com"><img src="https://img.shields.io/badge/code%20style-standard-brightgreen.svg" alt="Code style in StandardJS" /></a></div>
 
