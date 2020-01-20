@@ -24,7 +24,7 @@ The vocabulary consists of 2 main parts: the <a href="#context">@context</a> and
 
 The @context is used to map terms (e.g. `schema:Hotel`) to IRIs (e.g. `http://schema.org/Hotel`). For details check the <a href="https://www.w3.org/TR/json-ld11/#the-context" target="_blank">JSON-LD specification</a>.
 
-For **SDOAdapter** a vocabulary **MUST** have a @context, and the @context **MUST** include the IRI of the vocabulary itself and it **SHOULD** include the IRIs of the external vocabularies used within the vocabulary. In the following example `https://example-vocab.ex/1.0/ ` is the IRI of the vocabulary introduced):
+For **SDOAdapter** a vocabulary **MUST** have a @context, and the @context **MUST** include the IRI of the vocabulary itself and it **SHOULD** include the IRIs of the external vocabularies used within the vocabulary. In the following example `https://example-vocab.ex/` is the IRI of the vocabulary introduced):
 
 ```json
 "@context": {
