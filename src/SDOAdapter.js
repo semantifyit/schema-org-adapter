@@ -335,34 +335,41 @@ class SDOAdapter {
    */
   async constructSDOVocabularyURL (version = 'latest', vocabularyPart = 'schema') {
     // "https://raw.githubusercontent.com/schemaorg/schemaorg/master/data/releases/3.9/all-layers.jsonld";
+    if (version === 'latest') {
+      return 'https://raw.githubusercontent.com/schemaorg/schemaorg/master/data/releases/' +
+        await this.getLatestSDOVersion() +
+        '/' +
+        vocabularyPart +
+        '.jsonld'
+    } else {
+      return 'https://raw.githubusercontent.com/schemaorg/schemaorg/master/data/releases/' +
+        version +
+        '/' +
+        vocabularyPart +
+        '.jsonld'
+    }
+  }
+
+  /**
+   * Returns the latest version number of the schema.org vocabulary
+   * To achieve this, the Schema.org version listing on https://raw.githubusercontent.com/schemaorg/schemaorg/master/versions.json is used.
+   *
+   * @returns {Promise.<string>} The latest version of the schema.org vocabulary
+   */
+  async getLatestSDOVersion () {
     return new Promise(function (resolve, reject) {
-      if (version === 'latest') {
-        axios
-          .get(
-            'https://raw.githubusercontent.com/schemaorg/schemaorg/master/versions.json'
-          )
-          .then(function (res) {
-            version = res.data.schemaversion
-            resolve(
-              'https://raw.githubusercontent.com/schemaorg/schemaorg/master/data/releases/' +
-              version +
-              '/' +
-              vocabularyPart +
-              '.jsonld'
-            )
-          })
-          .catch(function (err) {
-            reject(console.log(err))
-          })
-      } else {
-        resolve(
-          'https://raw.githubusercontent.com/schemaorg/schemaorg/master/data/releases/' +
-          version +
-          '/' +
-          vocabularyPart +
-          '.jsonld'
+      axios
+        .get(
+          'https://raw.githubusercontent.com/schemaorg/schemaorg/master/versions.json'
         )
-      }
+        .then(function (res) {
+          resolve(
+            res.data.schemaversion
+          )
+        })
+        .catch(function (err) {
+          reject(console.log(err))
+        })
     })
   }
 }

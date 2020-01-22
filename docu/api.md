@@ -40,6 +40,7 @@
     * [.getListOfEnumerationMembers(filter)](#SDOAdapter+getListOfEnumerationMembers) ⇒ <code>Array.&lt;string&gt;</code>
     * [.getVocabularies()](#SDOAdapter+getVocabularies) ⇒ <code>object</code>
     * [.constructSDOVocabularyURL(version, vocabularyPart)](#SDOAdapter+constructSDOVocabularyURL) ⇒ <code>Promise.&lt;string&gt;</code>
+    * [.getLatestSDOVersion()](#SDOAdapter+getLatestSDOVersion) ⇒ <code>Promise.&lt;string&gt;</code>
 
 <a name="new_SDOAdapter_new"></a>
 
@@ -264,6 +265,14 @@ To achieve this, the Schema.org version listing on https://raw.githubusercontent
 | version | <code>string</code> | <code>&quot;latest&quot;</code> | the wished Schema.org vocabulary version for the resulting URL (e.g. "5.0", "3.7", or "latest"). default: "latest" |
 | vocabularyPart | <code>string</code> | <code>&quot;schema&quot;</code> | the wished part of the Schema.org vocabulary (schema.org has a core vocabulary and some extensions, check https://schema.org/docs/developers.html for more information). default: "schema" (the core vocabulary) |
 
+<a name="SDOAdapter+getLatestSDOVersion"></a>
+
+### sdoAdapter.getLatestSDOVersion() ⇒ <code>Promise.&lt;string&gt;</code>
+Returns the latest version number of the schema.org vocabulary
+To achieve this, the Schema.org version listing on https://raw.githubusercontent.com/schemaorg/schemaorg/master/versions.json is used.
+
+**Kind**: instance method of [<code>SDOAdapter</code>](#SDOAdapter)  
+**Returns**: <code>Promise.&lt;string&gt;</code> - The latest version of the schema.org vocabulary  
 <a name="Class"></a>
 
 ## Class

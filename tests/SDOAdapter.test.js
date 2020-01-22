@@ -37,7 +37,7 @@ describe('SDO Adapter methods', () => {
     await mySA.addVocabularies([VOC_OBJ_SDO3_7, VOC_OBJ_DACH])
     const allClassesList = mySA.getListOfClasses()
     expect(allClassesList.length).toBe(732)
-    expect(allClassesList.includes("schema:DayOfWeek")).toBe(false) //should NOT contain enumerations
+    expect(allClassesList.includes('schema:DayOfWeek')).toBe(false) //should NOT contain enumerations
   })
 
   test('getAllClasses()', async () => {
@@ -159,58 +159,65 @@ describe('SDO Adapter methods', () => {
   })
 
   test('fetch vocab by URL - https - dachkg', async () => {
-    const mySA = new SDOAdapter()
-    await mySA.addVocabularies([VOC_OBJ_SDO3_7, VOC_URL_DACH])
-    const data1a = mySA.getAllProperties({ fromVocabulary: 'dachkg' })
-    console.log(JSON.stringify(data1a, null, 2))
-    const mySAMerged = new SDOAdapter()
-    await mySAMerged.addVocabularies([VOC_OBJ_SDO3_7, VOC_URL_DACH])
-    const data1b = mySAMerged.getAllProperties({ fromVocabulary: 'dachkg' })
-    console.log(JSON.stringify(data1b, null, 2))
-    expect(data1a).toEqual(data1b)
-    console.log(JSON.stringify(mySAMerged.getClass('Hotel'), null, 2))
-    console.log(JSON.stringify(mySAMerged.getProperty('alcoholWarning'), null, 2))
-    console.log(JSON.stringify(mySAMerged.getClass('dachkg:Trail'), null, 2))
-  }
+      const mySA = new SDOAdapter()
+      await mySA.addVocabularies([VOC_OBJ_SDO3_7, VOC_URL_DACH])
+      const data1a = mySA.getAllProperties({ fromVocabulary: 'dachkg' })
+      console.log(JSON.stringify(data1a, null, 2))
+      const mySAMerged = new SDOAdapter()
+      await mySAMerged.addVocabularies([VOC_OBJ_SDO3_7, VOC_URL_DACH])
+      const data1b = mySAMerged.getAllProperties({ fromVocabulary: 'dachkg' })
+      console.log(JSON.stringify(data1b, null, 2))
+      expect(data1a).toEqual(data1b)
+      console.log(JSON.stringify(mySAMerged.getClass('Hotel'), null, 2))
+      console.log(JSON.stringify(mySAMerged.getProperty('alcoholWarning'), null, 2))
+      console.log(JSON.stringify(mySAMerged.getClass('dachkg:Trail'), null, 2))
+    }
   )
   test('fetch vocab by URL - direct URL', async () => {
-    const mySA = new SDOAdapter()
-    await mySA.addVocabularies([VOC_URL_SDO5_0_DIRECT])
-    const data1a = mySA.getAllProperties()
-    console.log(data1a.length)
-    expect(data1a.length > 1000).toEqual(true)
-  }
+      const mySA = new SDOAdapter()
+      await mySA.addVocabularies([VOC_URL_SDO5_0_DIRECT])
+      const data1a = mySA.getAllProperties()
+      console.log(data1a.length)
+      expect(data1a.length > 1000).toEqual(true)
+    }
   )
   test('fetch vocab by URL - sdo latest ', async () => {
-    const mySA2 = new SDOAdapter()
-    await mySA2.addVocabularies([VOC_URL_SDO_LATEST])
-    const data1b = mySA2.getAllProperties()
-    console.log(data1b.length)
-    expect(data1b.length > 1000).toBe(true)
-  }
+      const mySA2 = new SDOAdapter()
+      await mySA2.addVocabularies([VOC_URL_SDO_LATEST])
+      const data1b = mySA2.getAllProperties()
+      console.log(data1b.length)
+      expect(data1b.length > 1000).toBe(true)
+    }
   )
 
   test('construct SDO URL', async () => {
-    const mySA = new SDOAdapter()
-    const url = await mySA.constructSDOVocabularyURL()
-    const versionPosition = 'https://raw.githubusercontent.com/schemaorg/schemaorg/master/data/releases/'.length
-    console.log(url)
-    expect(Number(url.substring(versionPosition, versionPosition + 3)) > 5).toBe(true)
-    expect(url.includes('schema.jsonld')).toBe(true)
-    const url2 = await mySA.constructSDOVocabularyURL('latest')
-    console.log(url2)
-    expect(Number(url2.substring(versionPosition, versionPosition + 3)) > 5).toBe(true)
-    expect(url2.includes('schema.jsonld')).toBe(true)
-    const url3 = await mySA.constructSDOVocabularyURL('latest', 'all-layers')
-    console.log(url3)
-    expect(Number(url3.substring(versionPosition, versionPosition + 3)) > 5).toBe(true)
-    expect(url3.includes('all-layers.jsonld')).toBe(true)
-    const url4 = await mySA.constructSDOVocabularyURL('3.9', 'all-layers')
-    console.log(url4)
-    expect(url4).toBe('https://raw.githubusercontent.com/schemaorg/schemaorg/master/data/releases/3.9/all-layers.jsonld')
-    const url5 = await mySA.constructSDOVocabularyURL('3.9', 'auto')
-    console.log(url5)
-    expect(url5).toBe('https://raw.githubusercontent.com/schemaorg/schemaorg/master/data/releases/3.9/auto.jsonld')
-  }
+      const mySA = new SDOAdapter()
+      const url = await mySA.constructSDOVocabularyURL()
+      const versionPosition = 'https://raw.githubusercontent.com/schemaorg/schemaorg/master/data/releases/'.length
+      console.log(url)
+      expect(Number(url.substring(versionPosition, versionPosition + 3)) > 5).toBe(true)
+      expect(url.includes('schema.jsonld')).toBe(true)
+      const url2 = await mySA.constructSDOVocabularyURL('latest')
+      console.log(url2)
+      expect(Number(url2.substring(versionPosition, versionPosition + 3)) > 5).toBe(true)
+      expect(url2.includes('schema.jsonld')).toBe(true)
+      const url3 = await mySA.constructSDOVocabularyURL('latest', 'all-layers')
+      console.log(url3)
+      expect(Number(url3.substring(versionPosition, versionPosition + 3)) > 5).toBe(true)
+      expect(url3.includes('all-layers.jsonld')).toBe(true)
+      const url4 = await mySA.constructSDOVocabularyURL('3.9', 'all-layers')
+      console.log(url4)
+      expect(url4).toBe('https://raw.githubusercontent.com/schemaorg/schemaorg/master/data/releases/3.9/all-layers.jsonld')
+      const url5 = await mySA.constructSDOVocabularyURL('3.9', 'auto')
+      console.log(url5)
+      expect(url5).toBe('https://raw.githubusercontent.com/schemaorg/schemaorg/master/data/releases/3.9/auto.jsonld')
+    }
+  )
+  test('get lastest sdo version', async () => {
+      const mySA = new SDOAdapter()
+      const latestVersion = await mySA.getLatestSDOVersion()
+      console.log(latestVersion)
+      expect(Number(latestVersion) > 5).toBe(true)
+    }
   )
 })
