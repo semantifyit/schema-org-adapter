@@ -445,6 +445,7 @@ Generates an explicit/implicit JSON representation of this Class.
     * [.getDomains(implicit, filter)](#Property+getDomains) ⇒ <code>Array</code>
     * [.getSuperProperties(implicit, filter)](#Property+getSuperProperties) ⇒ <code>Array</code>
     * [.getSubProperties(implicit, filter)](#Property+getSubProperties) ⇒ <code>Array</code>
+    * [.getInverseOf()](#Property+getInverseOf) ⇒ <code>string</code>
     * [.toString()](#Property+toString) ⇒ <code>string</code>
     * [.toJSON(implicit, filter)](#Property+toJSON) ⇒ <code>object</code>
 
@@ -575,6 +576,13 @@ Retrieves the explicit/implicit sub-properties (soa:superPropertyOf) of this Pro
 | implicit | <code>boolean</code> | <code>true</code> | (default = true) retrieves also implicit sub-properties (recursive from sub-properties) |
 | filter | <code>object</code> \| <code>null</code> | <code></code> | (default = null) an optional filter for the sub-properties |
 
+<a name="Property+getInverseOf"></a>
+
+### property.getInverseOf() ⇒ <code>string</code>
+Retrieves the inverse Property (schema:inverseOf) of this Property
+
+**Kind**: instance method of [<code>Property</code>](#Property)  
+**Returns**: <code>string</code> - The IRI of the inverse Property of this Property  
 <a name="Property+toString"></a>
 
 ### property.toString() ⇒ <code>string</code>

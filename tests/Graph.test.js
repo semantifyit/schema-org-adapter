@@ -1,6 +1,6 @@
 const SDOAdapter = require('../src/SDOAdapter')
 const Graph = require('../src/Graph')
-const VOC_OBJ_DACH = require('./data/dachkg_1')
+const VOC_OBJ_ZOO = require('./data/exampleExternalVocabulary')
 const VOC_OBJ_SDO3_7 = require('./data/schema_3.7')
 
 /**
@@ -15,12 +15,12 @@ describe('Graph methods', () => {
   test('addVocabulary()', async () => {
     const myGraph = await initGraph()
     await myGraph.addVocabulary(VOC_OBJ_SDO3_7)
-    const Place = myGraph.getClass('schema:Place')
-    expect(Place.getSubClasses(false).length).toBe(9)
-    expect(Place.getSubClasses(false)).not.toContain('dachkg:Trail')
-    await myGraph.addVocabulary(VOC_OBJ_DACH)
+    const Place = myGraph.getClass('schema:Thing')
     expect(Place.getSubClasses(false).length).toBe(10)
-    expect(Place.getSubClasses(false)).toContain('dachkg:Trail')
+    expect(Place.getSubClasses(false)).not.toContain('ex:Tiger')
+    await myGraph.addVocabulary(VOC_OBJ_ZOO)
+    expect(Place.getSubClasses(false).length).toBe(11)
+    expect(Place.getSubClasses(false)).toContain('ex:Animal')
   })
 
   test('getTerm()', async () => {
@@ -53,49 +53,49 @@ describe('Graph methods', () => {
 
   test('containsLabel()', async () => {
     const myGraph = await initGraph()
-    await myGraph.addVocabulary(VOC_OBJ_DACH)
-    expect(myGraph.containsLabel(myGraph.classes['dachkg:Trail'], 'Trail')).toBe(true)
-    expect(myGraph.containsLabel(myGraph.classes['dachkg:Trail'], 'Auto')).toBe(false)
+    await myGraph.addVocabulary(VOC_OBJ_ZOO)
+    expect(myGraph.containsLabel(myGraph.classes['ex:Tiger'], 'Tiger')).toBe(true)
+    expect(myGraph.containsLabel(myGraph.classes['ex:Tiger'], 'Auto')).toBe(false)
   })
 
   test('addGraphNode()', async () => {
     const snowTrailObjEng = {
-      '@id': 'dachkg:SnowTrail',
+      '@id': 'ex:SnowTrail',
       '@type': 'rdfs:Class',
       'rdfs:comment': { en: 'A path, track or unpaved lane or road for sport activities or walking IN THE SNOW.' },
       'rdfs:label': { en: 'SnowTrail' },
       'rdfs:subClassOf': [
-        'dachkg:Trail'
+        'schema:Place'
       ]
     }
     const snowTrailObjDe = {
-      '@id': 'dachkg:SnowTrail',
+      '@id': 'ex:SnowTrail',
       '@type': 'rdfs:Class',
       'rdfs:label': { de: 'Schneeroute' },
       'rdfs:subClassOf': [
-        'dachkg:Trail',
-        'schema:Hotel'
+        'schema:Place',
+        'schema:Action'
       ]
     }
     const myGraph = await initGraph()
     await myGraph.addVocabulary(VOC_OBJ_SDO3_7)
-    await myGraph.addVocabulary(VOC_OBJ_DACH)
-    expect(myGraph.classes['dachkg:SnowTrail']).toBe(undefined)
+    await myGraph.addVocabulary(VOC_OBJ_ZOO)
+    expect(myGraph.classes['ex:SnowTrail']).toBe(undefined)
     await myGraph.addGraphNode(myGraph.classes, snowTrailObjEng)
-    expect(myGraph.classes['dachkg:SnowTrail']).not.toBe(undefined)
-    expect(myGraph.classes['dachkg:SnowTrail']['rdfs:label'].en).toBe('SnowTrail')
-    expect(myGraph.classes['dachkg:SnowTrail']['rdfs:label'].de).toBe(undefined)
-    expect(myGraph.classes['dachkg:SnowTrail']['@type']).toBe('rdfs:Class')
-    expect(myGraph.classes['dachkg:SnowTrail']['rdfs:subClassOf'].length).toBe(1)
+    expect(myGraph.classes['ex:SnowTrail']).not.toBe(undefined)
+    expect(myGraph.classes['ex:SnowTrail']['rdfs:label'].en).toBe('SnowTrail')
+    expect(myGraph.classes['ex:SnowTrail']['rdfs:label'].de).toBe(undefined)
+    expect(myGraph.classes['ex:SnowTrail']['@type']).toBe('rdfs:Class')
+    expect(myGraph.classes['ex:SnowTrail']['rdfs:subClassOf'].length).toBe(1)
     await myGraph.addGraphNode(myGraph.classes, snowTrailObjDe)
-    expect(myGraph.classes['dachkg:SnowTrail']['rdfs:label'].en).toBe('SnowTrail')
-    expect(myGraph.classes['dachkg:SnowTrail']['rdfs:label'].de).toBe('Schneeroute')
-    expect(myGraph.classes['dachkg:SnowTrail']['@type']).toBe('rdfs:Class')
-    expect(myGraph.classes['dachkg:SnowTrail']['rdfs:subClassOf'].length).toBe(2)
+    expect(myGraph.classes['ex:SnowTrail']['rdfs:label'].en).toBe('SnowTrail')
+    expect(myGraph.classes['ex:SnowTrail']['rdfs:label'].de).toBe('Schneeroute')
+    expect(myGraph.classes['ex:SnowTrail']['@type']).toBe('rdfs:Class')
+    expect(myGraph.classes['ex:SnowTrail']['rdfs:subClassOf'].length).toBe(2)
     await myGraph.addGraphNode(myGraph.classes, snowTrailObjDe)
-    expect(myGraph.classes['dachkg:SnowTrail']['rdfs:label'].en).toBe('SnowTrail')
-    expect(myGraph.classes['dachkg:SnowTrail']['rdfs:label'].de).toBe('Schneeroute')
-    expect(myGraph.classes['dachkg:SnowTrail']['@type']).toBe('rdfs:Class')
-    expect(myGraph.classes['dachkg:SnowTrail']['rdfs:subClassOf'].length).toBe(2)
+    expect(myGraph.classes['ex:SnowTrail']['rdfs:label'].en).toBe('SnowTrail')
+    expect(myGraph.classes['ex:SnowTrail']['rdfs:label'].de).toBe('Schneeroute')
+    expect(myGraph.classes['ex:SnowTrail']['@type']).toBe('rdfs:Class')
+    expect(myGraph.classes['ex:SnowTrail']['rdfs:subClassOf'].length).toBe(2)
   })
 })

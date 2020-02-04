@@ -1,5 +1,5 @@
 const SDOAdapter = require('../src/SDOAdapter')
-const VOC_OBJ_DACH = require('./data/dachkg_1')
+const VOC_OBJ_ZOO = require('./data/exampleExternalVocabulary')
 const VOC_OBJ_SDO3_7 = require('./data/schema_3.7')
 
 /**
@@ -7,7 +7,7 @@ const VOC_OBJ_SDO3_7 = require('./data/schema_3.7')
  */
 async function initAdapter () {
   const mySA = new SDOAdapter()
-  await mySA.addVocabularies([VOC_OBJ_SDO3_7, VOC_OBJ_DACH])
+  await mySA.addVocabularies([VOC_OBJ_SDO3_7, VOC_OBJ_ZOO])
   return mySA
 }
 
@@ -28,12 +28,12 @@ describe('Class methods', () => {
 
   test('getVocabulary()', async () => {
     const mySA = await initAdapter()
-    const hotel = mySA.getClass('schema:Hotel')
-    expect(hotel.getVocabulary()).toBe('http://schema.org')
+    const Hotel = mySA.getClass('schema:Hotel')
+    expect(Hotel.getVocabulary()).toBe('http://schema.org')
     const Class = mySA.getClass('schema:Class')
     expect(Class.getVocabulary()).toBe('http://meta.schema.org')
-    const trail = mySA.getClass('dachkg:Trail')
-    expect(trail.getVocabulary()).toBe('http://dachkg.org/ontology/1.0')
+    const Tiger = mySA.getClass('ex:Tiger')
+    expect(Tiger.getVocabulary()).toBe('https://example-vocab.ex')
   })
 
   test('getIRI()', async () => {
@@ -42,8 +42,8 @@ describe('Class methods', () => {
     expect(hospital.getIRI()).toBe('http://schema.org/Hospital')
     expect(hospital.getIRI(true)).toBe('schema:Hospital')
     expect(hospital.getIRI()).toBe(hospital.getIRI(false))
-    const trail = mySA.getClass('dachkg:Trail')
-    expect(trail.getIRI(false)).toBe('http://dachkg.org/ontology/1.0/Trail')
+    const Tiger = mySA.getClass('ex:Tiger')
+    expect(Tiger.getIRI(false)).toBe('https://example-vocab.ex/Tiger')
   })
 
   test('getName()', async () => {

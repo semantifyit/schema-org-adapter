@@ -1,6 +1,6 @@
 const SDOAdapter = require('../src/SDOAdapter')
-// const VOC_OBJ_DACH = require('./data/dachkg_1')
-const VOC_URL_DACH = 'https://raw.githubusercontent.com/STIInnsbruck/dachkg-schema/master/schema/dachkg_trail.json'
+const VOC_OBJ_ZOO = require('./data/exampleExternalVocabulary')
+//const VOC_URL_ZOO = 'https://raw.githubusercontent.com/semantifyit/schema-org-adapter/master/tests/data/exampleExternalVocabulary.json'
 const mySA = new SDOAdapter()
 main()
 
@@ -9,7 +9,7 @@ main()
  */
 async function main () {
   const mySDOUrl = await mySA.constructSDOVocabularyURL('latest', 'all-layers')
-  await mySA.addVocabularies([mySDOUrl, VOC_URL_DACH])
+  await mySA.addVocabularies([mySDOUrl, VOC_OBJ_ZOO])
   let testClass = mySA.getClass('http://schema.org/Person')
   console.log(mySA.getVocabularies())
   console.log('getIRI() ' + testClass.getIRI())
@@ -25,7 +25,7 @@ async function main () {
   const testProp = mySA.getProperty('schema:aspect')
   console.log('isSuperseededBy() ' + testProp.isSupersededBy())
 
-  const extVocClass = mySA.getClass('dachkg:Trail')
+  const extVocClass = mySA.getClass('ex:Tiger')
   console.log(JSON.stringify(extVocClass.toJSON(false, null), null, 2))
   testClass = mySA.getClass('schema:Person')
   console.log(JSON.stringify(testClass.toJSON(false, null), null, 2))

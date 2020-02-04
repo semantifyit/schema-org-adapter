@@ -17340,7 +17340,7 @@ module.exports = Enumeration;
 "use strict";
 
 //the functions for a enumeration member Object
-var util = require("./utilities");
+var util = require('./utilities');
 
 class EnumerationMember {
   /**
@@ -17379,7 +17379,7 @@ class EnumerationMember {
 
 
   getTermType() {
-    return "soa:EnumerationMember";
+    return 'soa:EnumerationMember';
   }
   /**
    * Retrieves the original vocabulary (schema:isPartOf) of this EnumerationMember
@@ -17391,8 +17391,8 @@ class EnumerationMember {
   getVocabulary() {
     var enumObj = this.graph.enumerationMembers[this.IRI];
 
-    if (enumObj["schema:isPartOf"] !== undefined) {
-      return enumObj["schema:isPartOf"];
+    if (enumObj['schema:isPartOf'] !== undefined) {
+      return enumObj['schema:isPartOf'];
     } else {
       return null;
     }
@@ -17407,8 +17407,8 @@ class EnumerationMember {
   getSource() {
     var enumObj = this.graph.enumerationMembers[this.IRI];
 
-    if (enumObj["dc:source"] !== undefined) {
-      return enumObj["dc:source"];
+    if (enumObj['dc:source'] !== undefined) {
+      return enumObj['dc:source'];
     } else {
       return null;
     }
@@ -17423,8 +17423,8 @@ class EnumerationMember {
   isSupersededBy() {
     var enumObj = this.graph.enumerationMembers[this.IRI];
 
-    if (util.isString(enumObj["schema:supersededBy"])) {
-      return enumObj["schema:supersededBy"];
+    if (util.isString(enumObj['schema:supersededBy'])) {
+      return enumObj['schema:supersededBy'];
     } else {
       return null;
     }
@@ -17438,8 +17438,8 @@ class EnumerationMember {
 
 
   getName() {
-    var language = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : "en";
-    var nameObj = this.graph.enumerationMembers[this.IRI]["rdfs:label"];
+    var language = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 'en';
+    var nameObj = this.graph.enumerationMembers[this.IRI]['rdfs:label'];
 
     if (nameObj === null || nameObj[language] === undefined) {
       return null;
@@ -17456,8 +17456,8 @@ class EnumerationMember {
 
 
   getDescription() {
-    var language = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : "en";
-    var descriptionObj = this.graph.enumerationMembers[this.IRI]["rdfs:comment"];
+    var language = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 'en';
+    var descriptionObj = this.graph.enumerationMembers[this.IRI]['rdfs:comment'];
 
     if (descriptionObj === null || descriptionObj[language] === undefined) {
       return null;
@@ -17476,7 +17476,7 @@ class EnumerationMember {
   getDomainEnumerations() {
     var filter = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : null;
     var enumObj = this.graph.enumerationMembers[this.IRI];
-    var result = enumObj["soa:enumerationDomainIncludes"];
+    var result = enumObj['soa:enumerationDomainIncludes'];
     return util.applyFilter(util.uniquifyArray(result), filter, this.graph);
   }
   /**
@@ -17500,15 +17500,15 @@ class EnumerationMember {
   toJSON() {
     var filter = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : null;
     var result = {};
-    result["id"] = this.getIRI(true);
-    result["IRI"] = this.getIRI();
-    result["type"] = this.getTermType();
-    result["vocabulary"] = this.getVocabulary();
-    result["source"] = this.getSource();
-    result["supersededBy"] = this.isSupersededBy();
-    result["name"] = this.getName();
-    result["description"] = this.getDescription();
-    result["domainEnumerations"] = this.getDomainEnumerations(filter);
+    result['id'] = this.getIRI(true);
+    result['IRI'] = this.getIRI();
+    result['type'] = this.getTermType();
+    result['vocabulary'] = this.getVocabulary();
+    result['source'] = this.getSource();
+    result['supersededBy'] = this.isSupersededBy();
+    result['name'] = this.getName();
+    result['description'] = this.getDescription();
+    result['domainEnumerations'] = this.getDomainEnumerations(filter);
     return result;
   }
 
@@ -18512,7 +18512,7 @@ module.exports = Graph;
 "use strict";
 
 //the functions for a property Object
-var util = require("./utilities");
+var util = require('./utilities');
 
 class Property {
   /**
@@ -18551,7 +18551,7 @@ class Property {
 
 
   getTermType() {
-    return "rdf:Property";
+    return 'rdf:Property';
   }
   /**
    * Retrieves the original vocabulary (schema:isPartOf) of this Property
@@ -18563,8 +18563,8 @@ class Property {
   getVocabulary() {
     var propertyObj = this.graph.properties[this.IRI];
 
-    if (propertyObj["schema:isPartOf"] !== undefined) {
-      return propertyObj["schema:isPartOf"];
+    if (propertyObj['schema:isPartOf'] !== undefined) {
+      return propertyObj['schema:isPartOf'];
     } else {
       return null;
     }
@@ -18579,8 +18579,8 @@ class Property {
   getSource() {
     var propertyObj = this.graph.properties[this.IRI];
 
-    if (propertyObj["dc:source"] !== undefined) {
-      return propertyObj["dc:source"];
+    if (propertyObj['dc:source'] !== undefined) {
+      return propertyObj['dc:source'];
     } else {
       return null;
     }
@@ -18595,8 +18595,8 @@ class Property {
   isSupersededBy() {
     var propertyObj = this.graph.properties[this.IRI];
 
-    if (util.isString(propertyObj["schema:supersededBy"])) {
-      return propertyObj["schema:supersededBy"];
+    if (util.isString(propertyObj['schema:supersededBy'])) {
+      return propertyObj['schema:supersededBy'];
     } else {
       return null;
     }
@@ -18610,8 +18610,8 @@ class Property {
 
 
   getName() {
-    var language = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : "en";
-    var nameObj = this.graph.properties[this.IRI]["rdfs:label"];
+    var language = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 'en';
+    var nameObj = this.graph.properties[this.IRI]['rdfs:label'];
 
     if (nameObj === null || nameObj[language] === undefined) {
       return null;
@@ -18628,8 +18628,8 @@ class Property {
 
 
   getDescription() {
-    var language = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : "en";
-    var descriptionObj = this.graph.properties[this.IRI]["rdfs:comment"];
+    var language = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 'en';
+    var descriptionObj = this.graph.properties[this.IRI]['rdfs:comment'];
 
     if (descriptionObj === null || descriptionObj[language] === undefined) {
       return null;
@@ -18651,7 +18651,7 @@ class Property {
     var filter = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
     var propertyObj = this.graph.properties[this.IRI];
     var result = [];
-    result.push(...propertyObj["schema:rangeIncludes"]);
+    result.push(...propertyObj['schema:rangeIncludes']);
 
     if (implicit === true) {
       //add sub-classes from ranges
@@ -18684,7 +18684,7 @@ class Property {
     var filter = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
     var propertyObj = this.graph.properties[this.IRI];
     var result = [];
-    result.push(...propertyObj["schema:domainIncludes"]);
+    result.push(...propertyObj['schema:domainIncludes']);
 
     if (implicit === true) {
       //add sub-classes from ranges
@@ -18717,7 +18717,7 @@ class Property {
     if (implicit === true) {
       result.push(...this.graph.reasoner.inferSuperProperties(this.IRI));
     } else {
-      result.push(...propertyObj["rdfs:subPropertyOf"]);
+      result.push(...propertyObj['rdfs:subPropertyOf']);
     }
 
     return util.applyFilter(util.uniquifyArray(result), filter, this.graph);
@@ -18740,10 +18740,21 @@ class Property {
     if (implicit === true) {
       result.push(...this.graph.reasoner.inferSubProperties(this.IRI));
     } else {
-      result.push(...propertyObj["soa:superPropertyOf"]);
+      result.push(...propertyObj['soa:superPropertyOf']);
     }
 
     return util.applyFilter(util.uniquifyArray(result), filter, this.graph);
+  }
+  /**
+   * Retrieves the inverse Property (schema:inverseOf) of this Property
+   *
+   * @returns {string} The IRI of the inverse Property of this Property
+   */
+
+
+  getInverseOf() {
+    var propertyObj = this.graph.properties[this.IRI];
+    return propertyObj['schema:inverseOf'];
   }
   /**
    * Generates a string representation of this Property (Based on its JSON representation)
@@ -18768,18 +18779,19 @@ class Property {
     var implicit = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : true;
     var filter = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
     var result = {};
-    result["id"] = this.getIRI(true);
-    result["IRI"] = this.getIRI();
-    result["type"] = this.getTermType();
-    result["vocabulary"] = this.getVocabulary();
-    result["source"] = this.getSource();
-    result["supersededBy"] = this.isSupersededBy();
-    result["name"] = this.getName();
-    result["description"] = this.getDescription();
-    result["ranges"] = this.getRanges(implicit, filter);
-    result["domains"] = this.getDomains(implicit, filter);
-    result["superProperties"] = this.getSuperProperties(implicit, filter);
-    result["subProperties"] = this.getSubProperties(implicit, filter);
+    result['id'] = this.getIRI(true);
+    result['IRI'] = this.getIRI();
+    result['type'] = this.getTermType();
+    result['vocabulary'] = this.getVocabulary();
+    result['source'] = this.getSource();
+    result['supersededBy'] = this.isSupersededBy();
+    result['name'] = this.getName();
+    result['description'] = this.getDescription();
+    result['ranges'] = this.getRanges(implicit, filter);
+    result['domains'] = this.getDomains(implicit, filter);
+    result['superProperties'] = this.getSuperProperties(implicit, filter);
+    result['subProperties'] = this.getSubProperties(implicit, filter);
+    result['inverseOf'] = this.getInverseOf();
     return result;
   }
 

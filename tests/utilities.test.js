@@ -1,6 +1,6 @@
 const util = require('./../src/utilities')
 const SDOAdapter = require('../src/SDOAdapter')
-const VOC_OBJ_DACH = require('./data/dachkg_1')
+const VOC_OBJ_ZOO = require('./data/exampleExternalVocabulary')
 const VOC_OBJ_SDO3_7 = require('./data/schema_3.7')
 
 /**
@@ -8,7 +8,7 @@ const VOC_OBJ_SDO3_7 = require('./data/schema_3.7')
  */
 async function initAdapter () {
   const mySA = new SDOAdapter()
-  await mySA.addVocabularies([VOC_OBJ_SDO3_7, VOC_OBJ_DACH])
+  await mySA.addVocabularies([VOC_OBJ_SDO3_7, VOC_OBJ_ZOO])
   return mySA
 }
 
@@ -18,7 +18,7 @@ const testContext = {
   xsd: 'http://www.w3.org/2001/XMLSchema#',
   dc: 'http://purl.org/dc/terms/',
   schema: 'http://schema.org/',
-  'dach-kg': 'http://http://dachkg.org/ontology/1.0/',
+  'ex': 'https://example-vocab.ex/',
   soa: 'http://schema-org-adapter.at/vocabTerms/',
   'soa:superClassOf': {
     '@id': 'soa:superClassOf',
@@ -85,8 +85,8 @@ describe('util tools', () => {
     expect(util.toCompactIRI(input, testContext)).toBe(expectedOutcome)
   })
   test('toAbsoluteIRI()', async () => {
-    const input = 'dach-kg:endLocation'
-    const expectedOutcome = 'http://http://dachkg.org/ontology/1.0/endLocation'
+    const input = 'schema:Hotel'
+    const expectedOutcome = 'http://schema.org/Hotel'
     expect(util.toAbsoluteIRI(input, testContext)).toBe(expectedOutcome)
   })
   test('applyFilter()', async () => {
@@ -101,8 +101,8 @@ describe('util tools', () => {
     const filter7 = { termType: ['Property', 'Class'] }
     const filter8 = { termType: ['Enumeration', 'Class'] }
     const filter9 = { termType: ['Property'], fromVocabulary: ['http://schema.org/'] }
-    const filter10 = { termType: ['Property'], fromVocabulary: 'dachkg' }
-    const filter11 = { termType: ['Property'], fromVocabulary: ['schema', 'dachkg'] }
+    const filter10 = { termType: ['Property'], fromVocabulary: 'ex' }
+    const filter11 = { termType: ['Property'], fromVocabulary: ['schema', 'ex'] }
     expect(MedicalWebPage.getProperties(true, filter1)).toContain('schema:aspect')
     expect(MedicalWebPage.getProperties(true, filter2)).toContain('schema:aspect')
     expect(MedicalWebPage.getProperties(true, filter3)).not.toContain('schema:aspect')
@@ -115,14 +115,14 @@ describe('util tools', () => {
     expect(mySA.getListOfProperties(filter6)).toContain('schema:aspect')
     expect(mySA.getListOfProperties(filter4)).toContain('schema:aspect')
     expect(mySA.getListOfProperties(filter4)).toContain('schema:name')
-    expect(mySA.getListOfProperties(filter1)).toContain('dachkg:endLocation')
-    expect(mySA.getListOfProperties(filter7)).toContain('dachkg:endLocation')
-    expect(mySA.getListOfProperties(filter8)).not.toContain('dachkg:endLocation')
-    expect(mySA.getListOfProperties(filter9)).not.toContain('dachkg:endLocation')
+    expect(mySA.getListOfProperties(filter1)).toContain('ex:animalLivingEnvironment')
+    expect(mySA.getListOfProperties(filter7)).toContain('ex:animalLivingEnvironment')
+    expect(mySA.getListOfProperties(filter8)).not.toContain('ex:animalLivingEnvironment')
+    expect(mySA.getListOfProperties(filter9)).not.toContain('ex:animalLivingEnvironment')
     expect(mySA.getListOfProperties(filter9)).toContain('schema:name')
-    expect(mySA.getListOfProperties(filter10)).toContain('dachkg:endLocation')
+    expect(mySA.getListOfProperties(filter10)).toContain('ex:animalLivingEnvironment')
     expect(mySA.getListOfProperties(filter10)).not.toContain('schema:name')
-    expect(mySA.getListOfProperties(filter11)).toContain('dachkg:endLocation')
+    expect(mySA.getListOfProperties(filter11)).toContain('ex:animalLivingEnvironment')
     expect(mySA.getListOfProperties(filter11)).toContain('schema:aspect')
   })
 })

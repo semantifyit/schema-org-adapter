@@ -1,8 +1,8 @@
 const SDOAdapter = require('../src/SDOAdapter')
-const VOC_OBJ_DACH = require('./data/dachkg_1')
+const VOC_OBJ_ZOO = require('./data/exampleExternalVocabulary')
 const VOC_OBJ_SDO3_7 = require('./data/schema_3.7')
 const VOC_OBJ_GWON = require('./data/graph_with_one_node')
-const VOC_URL_DACH = 'https://raw.githubusercontent.com/STIInnsbruck/dachkg-schema/master/schema/dachkg_trail.json'
+const VOC_URL_ZOO = 'https://raw.githubusercontent.com/semantifyit/schema-org-adapter/master/tests/data/exampleExternalVocabulary.json'
 const VOC_URL_SDO5_0 = 'https://raw.githubusercontent.com/schemaorg/schemaorg/master/data/releases/5.0/all-layers.jsonld'
 const VOC_URL_SDO_LATEST = 'https://schema.org/version/latest/all-layers.jsonld' // expected to work in node, but not in browser
 const VOC_URL_SDO5_0_DIRECT = 'https://schema.org/version/5.0/all-layers.jsonld' // expected to work in node, but not in browser
@@ -17,36 +17,36 @@ describe('SDO Adapter methods', () => {
 
   test('getVocabularies()', async () => {
     const mySA = new SDOAdapter()
-    await mySA.addVocabularies([VOC_OBJ_SDO3_7, VOC_OBJ_DACH])
+    await mySA.addVocabularies([VOC_OBJ_SDO3_7, VOC_OBJ_ZOO])
     const vocabs = mySA.getVocabularies()
     expect(Object.keys(vocabs).length).toBe(2)
     expect(vocabs.schema).not.toBe(undefined)
-    expect(vocabs.dachkg).not.toBe(undefined)
-    expect(vocabs.dachkg).toBe('http://dachkg.org/ontology/1.0/')
+    expect(vocabs.ex).not.toBe(undefined)
+    expect(vocabs.ex).toBe('https://example-vocab.ex/')
   })
 
   test('getClass()', async () => {
     const mySA = new SDOAdapter()
-    await mySA.addVocabularies([VOC_URL_SDO5_0, VOC_URL_DACH])
+    await mySA.addVocabularies([VOC_URL_SDO5_0, VOC_URL_ZOO])
     const Hotel = mySA.getClass('schema:Hotel')
     expect(Hotel.getTermType()).toBe('rdfs:Class')
   })
 
   test('getListOfClasses()', async () => {
     const mySA = new SDOAdapter()
-    await mySA.addVocabularies([VOC_OBJ_SDO3_7, VOC_OBJ_DACH])
+    await mySA.addVocabularies([VOC_OBJ_SDO3_7, VOC_OBJ_ZOO])
     const allClassesList = mySA.getListOfClasses()
-    expect(allClassesList.length).toBe(732)
+    expect(allClassesList.length).toBe(733)
     expect(allClassesList.includes('schema:DayOfWeek')).toBe(false) //should NOT contain enumerations
   })
 
   test('getAllClasses()', async () => {
     const mySA = new SDOAdapter()
-    await mySA.addVocabularies([VOC_OBJ_SDO3_7, VOC_OBJ_DACH])
+    await mySA.addVocabularies([VOC_OBJ_SDO3_7, VOC_OBJ_ZOO])
     const allClasses = mySA.getAllClasses()
-    expect(allClasses.length).toBe(732)
-    const allClassesDachKG = mySA.getAllClasses({ fromVocabulary: 'dachkg' })
-    expect(allClassesDachKG.length).toBe(1)
+    expect(allClasses.length).toBe(733)
+    const allClassesZoo = mySA.getAllClasses({ fromVocabulary: 'ex' })
+    expect(allClassesZoo.length).toBe(2)
     const allClassesSchema = mySA.getAllClasses({ fromVocabulary: 'schema' })
     expect(allClassesSchema.length).toBe(731)
     for (let i = 0; i < allClasses.length; i++) {
@@ -56,25 +56,25 @@ describe('SDO Adapter methods', () => {
 
   test('getProperty()', async () => {
     const mySA = new SDOAdapter()
-    await mySA.addVocabularies([VOC_OBJ_SDO3_7, VOC_OBJ_DACH])
+    await mySA.addVocabularies([VOC_OBJ_SDO3_7, VOC_OBJ_ZOO])
     const address = mySA.getProperty('schema:address')
     expect(address.getTermType()).toBe('rdf:Property')
   })
 
   test('getListOfProperties()', async () => {
     const mySA = new SDOAdapter()
-    await mySA.addVocabularies([VOC_OBJ_SDO3_7, VOC_OBJ_DACH])
+    await mySA.addVocabularies([VOC_OBJ_SDO3_7, VOC_OBJ_ZOO])
     const allPropertiesList = mySA.getListOfProperties()
     expect(allPropertiesList.length).toBe(1243)
   })
 
   test('getAllProperties()', async () => {
     const mySA = new SDOAdapter()
-    await mySA.addVocabularies([VOC_OBJ_SDO3_7, VOC_OBJ_DACH])
+    await mySA.addVocabularies([VOC_OBJ_SDO3_7, VOC_OBJ_ZOO])
     const allProperties = mySA.getAllProperties()
     expect(allProperties.length).toBe(1243)
-    const allPropertiesDachKG = mySA.getAllProperties({ fromVocabulary: 'dachkg' })
-    expect(allPropertiesDachKG.length).toBe(2)
+    const allPropertiesEx = mySA.getAllProperties({ fromVocabulary: 'ex' })
+    expect(allPropertiesEx.length).toBe(2)
     const allPropertiesSchema = mySA.getAllProperties({ fromVocabulary: 'schema' })
     expect(allPropertiesSchema.length).toBe(1241)
     for (let i = 0; i < allProperties.length; i++) {
@@ -84,25 +84,25 @@ describe('SDO Adapter methods', () => {
 
   test('getDataType()', async () => {
     const mySA = new SDOAdapter()
-    await mySA.addVocabularies([VOC_OBJ_SDO3_7, VOC_OBJ_DACH])
+    await mySA.addVocabularies([VOC_OBJ_SDO3_7, VOC_OBJ_ZOO])
     const Number = mySA.getDataType('schema:Number')
     expect(Number.getTermType()).toBe('schema:DataType')
   })
 
   test('getListOfDataTypes()', async () => {
     const mySA = new SDOAdapter()
-    await mySA.addVocabularies([VOC_OBJ_SDO3_7, VOC_OBJ_DACH])
+    await mySA.addVocabularies([VOC_OBJ_SDO3_7, VOC_OBJ_ZOO])
     const allDataTypesList = mySA.getListOfDataTypes()
     expect(allDataTypesList.length).toBe(11)
   })
 
   test('getAllDataTypes()', async () => {
     const mySA = new SDOAdapter()
-    await mySA.addVocabularies([VOC_OBJ_SDO3_7, VOC_OBJ_DACH])
+    await mySA.addVocabularies([VOC_OBJ_SDO3_7, VOC_OBJ_ZOO])
     const allDT = mySA.getAllDataTypes()
     expect(allDT.length).toBe(11)
-    const allDataTypesFromDK = mySA.getAllDataTypes({ fromVocabulary: 'dachkg' })
-    expect(allDataTypesFromDK.length).toBe(0)
+    const allDataTypesFromEx = mySA.getAllDataTypes({ fromVocabulary: 'ex' })
+    expect(allDataTypesFromEx.length).toBe(0)
     const allDataTypesFromSDO = mySA.getAllDataTypes({ fromVocabulary: 'schema' })
     expect(allDataTypesFromSDO.length).toBe(11)
     for (let i = 0; i < allDT.length; i++) {
@@ -112,23 +112,23 @@ describe('SDO Adapter methods', () => {
 
   test('getEnumeration()', async () => {
     const mySA = new SDOAdapter()
-    await mySA.addVocabularies([VOC_OBJ_SDO3_7, VOC_OBJ_DACH])
+    await mySA.addVocabularies([VOC_OBJ_SDO3_7, VOC_OBJ_ZOO])
     const DayOfWeek = mySA.getEnumeration('schema:DayOfWeek')
     expect(DayOfWeek.getTermType()).toBe('schema:Enumeration')
   })
 
   test('getListOfEnumerations()', async () => {
     const mySA = new SDOAdapter()
-    await mySA.addVocabularies([VOC_OBJ_SDO3_7, VOC_OBJ_DACH])
+    await mySA.addVocabularies([VOC_OBJ_SDO3_7, VOC_OBJ_ZOO])
     const allEnumList = mySA.getListOfEnumerations()
-    expect(allEnumList.length).toBe(59)
+    expect(allEnumList.length).toBe(60)
   })
 
   test('getAllEnumerations()', async () => {
     const mySA = new SDOAdapter()
-    await mySA.addVocabularies([VOC_OBJ_SDO3_7, VOC_OBJ_DACH])
+    await mySA.addVocabularies([VOC_OBJ_SDO3_7, VOC_OBJ_ZOO])
     const allDT = mySA.getAllEnumerations()
-    expect(allDT.length).toBe(59)
+    expect(allDT.length).toBe(60)
     for (let i = 0; i < allDT.length; i++) {
       expect(allDT[i].getTermType()).toBe('schema:Enumeration')
     }
@@ -136,43 +136,28 @@ describe('SDO Adapter methods', () => {
 
   test('getEnumerationMember()', async () => {
     const mySA = new SDOAdapter()
-    await mySA.addVocabularies([VOC_OBJ_SDO3_7, VOC_OBJ_DACH])
+    await mySA.addVocabularies([VOC_OBJ_SDO3_7, VOC_OBJ_ZOO])
     const Friday = mySA.getEnumerationMember('schema:Friday')
     expect(Friday.getTermType()).toBe('soa:EnumerationMember')
   })
 
   test('getListOfEnumerationMembers()', async () => {
     const mySA = new SDOAdapter()
-    await mySA.addVocabularies([VOC_OBJ_SDO3_7, VOC_OBJ_DACH])
+    await mySA.addVocabularies([VOC_OBJ_SDO3_7, VOC_OBJ_ZOO])
     const allEnumList = mySA.getListOfEnumerationMembers()
-    expect(allEnumList.length).toBe(253)
+    expect(allEnumList.length).toBe(256)
   })
 
   test('getAllEnumerationMembers()', async () => {
     const mySA = new SDOAdapter()
-    await mySA.addVocabularies([VOC_OBJ_SDO3_7, VOC_OBJ_DACH])
+    await mySA.addVocabularies([VOC_OBJ_SDO3_7, VOC_OBJ_ZOO])
     const allDT = mySA.getAllEnumerationMembers()
-    expect(allDT.length).toBe(253)
+    expect(allDT.length).toBe(256)
     for (let i = 0; i < allDT.length; i++) {
       expect(allDT[i].getTermType()).toBe('soa:EnumerationMember')
     }
   })
 
-  test('fetch vocab by URL - https - dachkg', async () => {
-      const mySA = new SDOAdapter()
-      await mySA.addVocabularies([VOC_OBJ_SDO3_7, VOC_URL_DACH])
-      const data1a = mySA.getAllProperties({ fromVocabulary: 'dachkg' })
-      console.log(JSON.stringify(data1a, null, 2))
-      const mySAMerged = new SDOAdapter()
-      await mySAMerged.addVocabularies([VOC_OBJ_SDO3_7, VOC_URL_DACH])
-      const data1b = mySAMerged.getAllProperties({ fromVocabulary: 'dachkg' })
-      console.log(JSON.stringify(data1b, null, 2))
-      expect(data1a).toEqual(data1b)
-      console.log(JSON.stringify(mySAMerged.getClass('Hotel'), null, 2))
-      console.log(JSON.stringify(mySAMerged.getProperty('alcoholWarning'), null, 2))
-      console.log(JSON.stringify(mySAMerged.getClass('dachkg:Trail'), null, 2))
-    }
-  )
   test('fetch vocab by URL - direct URL', async () => {
       const mySA = new SDOAdapter()
       await mySA.addVocabularies([VOC_URL_SDO5_0_DIRECT])
