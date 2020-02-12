@@ -7,7 +7,7 @@ class Enumeration {
    *
    * @class
    * @param {string} IRI - The compacted IRI of this Enumeration, e.g. "schema:DayOfWeek"
-   * @param {object} graph - The underlying data graph to enable the methods of this Enumeration
+   * @param {Graph} graph - The underlying data graph to enable the methods of this Enumeration
    */
   constructor (IRI, graph) {
     this.IRI = IRI
@@ -110,12 +110,23 @@ class Enumeration {
   /**
    * Retrieves the enumeration members (soa:hasEnumerationMember) of this Enumeration
    *
-   * @returns {Array} The enumeration members of this Enumeration
+   * @param {boolean} implicit - (default = false) retrieves also implicit enumeration members (inheritance from sub-enumerations)
    * @param {object|null} filter - (default = null) an optional filter for the enumeration members
+   * @returns {Array} The enumeration members of this Enumeration
    */
-  getEnumerationMembers (filter = null) {
+  getEnumerationMembers (implicit = false, filter = null) {
     const enumObj = this.graph.enumerations[this.IRI]
-    const result = enumObj['soa:hasEnumerationMember']
+    const result = []
+    result.push(...enumObj['soa:hasEnumerationMember'])
+    if (implicit === true) {
+      let subClasses = this.getSubClasses(true, null)
+      for (let i = 0; i < subClasses.length; i++) {
+        let actualEnumeration = this.graph.enumerations[subClasses[i]]
+        if (actualEnumeration) {
+          result.push(...actualEnumeration['soa:hasEnumerationMember'])
+        }
+      }
+    }
     return util.applyFilter(util.uniquifyArray(result), filter, this.graph)
   }
 
@@ -203,7 +214,7 @@ class Enumeration {
     result.supersededBy = this.isSupersededBy()
     result.name = this.getName()
     result.description = this.getDescription()
-    result.enumerationMembers = this.getEnumerationMembers(filter)
+    result.enumerationMembers = this.getEnumerationMembers(implicit, filter)
     result.superClasses = this.getSuperClasses(implicit, filter)
     result.subClasses = this.getSubClasses(implicit, filter)
     result.properties = this.getProperties(implicit, filter)

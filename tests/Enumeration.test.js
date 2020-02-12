@@ -77,6 +77,11 @@ describe('Enumeration methods', () => {
     expect(DayOfWeek.getEnumerationMembers()).toContain('schema:Monday')
     expect(DayOfWeek.getEnumerationMembers()).toContain('schema:Friday')
     expect(DayOfWeek.getEnumerationMembers()).not.toContain('schema:Thing')
+    expect(DayOfWeek.getEnumerationMembers().length).toBe(DayOfWeek.getEnumerationMembers(true).length) //DayOfWeek has no sub-Enumeration
+    const MedicalEnumeration = mySA.getEnumeration('schema:MedicalEnumeration')
+    expect(MedicalEnumeration.getEnumerationMembers().length).toBe(0);
+    expect(MedicalEnumeration.getEnumerationMembers()).not.toContain('schema:Radiography')
+    expect(MedicalEnumeration.getEnumerationMembers(true)).toContain('schema:Radiography')
   })
 
   test('getProperties()', async () => {

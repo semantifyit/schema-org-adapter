@@ -302,7 +302,7 @@ A Class represents an rdfs:Class. It is identified by its IRI
 | Param | Type | Description |
 | --- | --- | --- |
 | IRI | <code>string</code> | The compacted IRI of this Class, e.g. "schema:Book" |
-| graph | <code>object</code> | The underlying data graph to enable the methods of this Class |
+| graph | <code>Graph</code> | The underlying data graph to enable the methods of this Class |
 
 <a name="Class+getIRI"></a>
 
@@ -458,7 +458,7 @@ A Property represents an rdf:Property. It is identified by its IRI
 | Param | Type | Description |
 | --- | --- | --- |
 | IRI | <code>string</code> | The compacted IRI of this Property, e.g. "schema:address" |
-| graph | <code>object</code> | The underlying data graph to enable the methods of this Property |
+| graph | <code>Graph</code> | The underlying data graph to enable the methods of this Property |
 
 <a name="Property+getIRI"></a>
 
@@ -617,7 +617,7 @@ Generates an explicit/implicit JSON representation of this Property.
     * [.isSupersededBy()](#Enumeration+isSupersededBy) ⇒ <code>string</code> \| <code>null</code>
     * [.getName(language)](#Enumeration+getName) ⇒ <code>string</code> \| <code>null</code>
     * [.getDescription(language)](#Enumeration+getDescription) ⇒ <code>string</code> \| <code>null</code>
-    * [.getEnumerationMembers(filter)](#Enumeration+getEnumerationMembers) ⇒ <code>Array</code>
+    * [.getEnumerationMembers(implicit, filter)](#Enumeration+getEnumerationMembers) ⇒ <code>Array</code>
     * [.getProperties(implicit, filter)](#Enumeration+getProperties) ⇒ <code>Array</code>
     * [.getSuperClasses(implicit, filter)](#Enumeration+getSuperClasses) ⇒ <code>Array</code>
     * [.getSubClasses(implicit, filter)](#Enumeration+getSubClasses) ⇒ <code>Array</code>
@@ -633,7 +633,7 @@ An Enumeration represents a schema:Enumeration, which is also a sub-type of an r
 | Param | Type | Description |
 | --- | --- | --- |
 | IRI | <code>string</code> | The compacted IRI of this Enumeration, e.g. "schema:DayOfWeek" |
-| graph | <code>object</code> | The underlying data graph to enable the methods of this Enumeration |
+| graph | <code>Graph</code> | The underlying data graph to enable the methods of this Enumeration |
 
 <a name="Enumeration+getIRI"></a>
 
@@ -701,7 +701,7 @@ Retrieves the description (rdfs:comment) of this Enumeration in a wished languag
 
 <a name="Enumeration+getEnumerationMembers"></a>
 
-### enumeration.getEnumerationMembers(filter) ⇒ <code>Array</code>
+### enumeration.getEnumerationMembers(implicit, filter) ⇒ <code>Array</code>
 Retrieves the enumeration members (soa:hasEnumerationMember) of this Enumeration
 
 **Kind**: instance method of [<code>Enumeration</code>](#Enumeration)  
@@ -709,6 +709,7 @@ Retrieves the enumeration members (soa:hasEnumerationMember) of this Enumeration
 
 | Param | Type | Default | Description |
 | --- | --- | --- | --- |
+| implicit | <code>boolean</code> | <code>false</code> | (default = false) retrieves also implicit enumeration members (inheritance from sub-enumerations) |
 | filter | <code>object</code> \| <code>null</code> | <code></code> | (default = null) an optional filter for the enumeration members |
 
 <a name="Enumeration+getProperties"></a>
@@ -784,9 +785,9 @@ Generates an explicit/implicit JSON representation of this Enumeration
     * [.isSupersededBy()](#EnumerationMember+isSupersededBy) ⇒ <code>string</code> \| <code>null</code>
     * [.getName(language)](#EnumerationMember+getName) ⇒ <code>string</code> \| <code>null</code>
     * [.getDescription(language)](#EnumerationMember+getDescription) ⇒ <code>string</code> \| <code>null</code>
-    * [.getDomainEnumerations(filter)](#EnumerationMember+getDomainEnumerations) ⇒ <code>Array</code>
+    * [.getDomainEnumerations(implicit, filter)](#EnumerationMember+getDomainEnumerations) ⇒ <code>Array</code>
     * [.toString()](#EnumerationMember+toString) ⇒ <code>string</code>
-    * [.toJSON(filter)](#EnumerationMember+toJSON) ⇒ <code>object</code>
+    * [.toJSON(implicit, filter)](#EnumerationMember+toJSON) ⇒ <code>object</code>
 
 <a name="new_EnumerationMember_new"></a>
 
@@ -797,7 +798,7 @@ An EnumerationMember represents a possible value for a schema:Enumeration. It is
 | Param | Type | Description |
 | --- | --- | --- |
 | IRI | <code>string</code> | The compacted IRI of this EnumerationMember, e.g. "schema:Friday" |
-| graph | <code>object</code> | The underlying data graph to enable the methods of this EnumerationMember |
+| graph | <code>Graph</code> | The underlying data graph to enable the methods of this EnumerationMember |
 
 <a name="EnumerationMember+getIRI"></a>
 
@@ -865,7 +866,7 @@ Retrieves the description (rdfs:comment) of this EnumerationMember in a wished l
 
 <a name="EnumerationMember+getDomainEnumerations"></a>
 
-### enumerationMember.getDomainEnumerations(filter) ⇒ <code>Array</code>
+### enumerationMember.getDomainEnumerations(implicit, filter) ⇒ <code>Array</code>
 Retrieves the domain enumerations (soa:enumerationDomainIncludes) of this EnumerationMember
 
 **Kind**: instance method of [<code>EnumerationMember</code>](#EnumerationMember)  
@@ -873,6 +874,7 @@ Retrieves the domain enumerations (soa:enumerationDomainIncludes) of this Enumer
 
 | Param | Type | Default | Description |
 | --- | --- | --- | --- |
+| implicit | <code>boolean</code> | <code>false</code> | (default = false) retrieves also implicit domain enumerations (inheritance from super-enumerations) |
 | filter | <code>object</code> \| <code>null</code> | <code></code> | (default = null) an optional filter for the domain enumerations |
 
 <a name="EnumerationMember+toString"></a>
@@ -884,7 +886,7 @@ Generates a string representation of this EnumerationMember (Based on its JSON r
 **Returns**: <code>string</code> - The string representation of this EnumerationMember  
 <a name="EnumerationMember+toJSON"></a>
 
-### enumerationMember.toJSON(filter) ⇒ <code>object</code>
+### enumerationMember.toJSON(implicit, filter) ⇒ <code>object</code>
 Generates a JSON representation of this EnumerationMember
 
 **Kind**: instance method of [<code>EnumerationMember</code>](#EnumerationMember)  
@@ -892,6 +894,7 @@ Generates a JSON representation of this EnumerationMember
 
 | Param | Type | Default | Description |
 | --- | --- | --- | --- |
+| implicit | <code>boolean</code> | <code>false</code> | (default = false) includes also implicit data |
 | filter | <code>object</code> \| <code>null</code> | <code></code> | (default = null) an optional filter for the generated data |
 
 <a name="DataType"></a>
@@ -922,7 +925,7 @@ A DataType represents an schema:DataType. It is identified by its IRI
 | Param | Type | Description |
 | --- | --- | --- |
 | IRI | <code>string</code> | The compacted IRI of this DataType, e.g. "schema:Number" |
-| graph | <code>object</code> | The underlying data graph to enable the methods of this DataType |
+| graph | <code>Graph</code> | The underlying data graph to enable the methods of this DataType |
 
 <a name="DataType+getIRI"></a>
 

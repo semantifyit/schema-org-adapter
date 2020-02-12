@@ -7,7 +7,7 @@ class EnumerationMember {
    *
    * @class
    * @param {string} IRI - The compacted IRI of this EnumerationMember, e.g. "schema:Friday"
-   * @param {object} graph - The underlying data graph to enable the methods of this EnumerationMember
+   * @param {Graph} graph - The underlying data graph to enable the methods of this EnumerationMember
    */
   constructor (IRI, graph) {
     this.IRI = IRI
@@ -110,12 +110,21 @@ class EnumerationMember {
   /**
    * Retrieves the domain enumerations (soa:enumerationDomainIncludes) of this EnumerationMember
    *
+   * @param {boolean} implicit - (default = false) retrieves also implicit domain enumerations (inheritance from super-enumerations)
    * @param {object|null} filter - (default = null) an optional filter for the domain enumerations
    * @returns {Array} The domain enumerations of this EnumerationMember
    */
-  getDomainEnumerations (filter = null) {
+  getDomainEnumerations (implicit = false, filter = null) {
     let enumObj = this.graph.enumerationMembers[this.IRI]
-    let result = enumObj['soa:enumerationDomainIncludes']
+    let result = []
+    result.push(...enumObj['soa:enumerationDomainIncludes'])
+    if (implicit === true) {
+      let domainEnumerationsToCheck = JSON.parse(JSON.stringify(result))
+      for (let i = 0; i < domainEnumerationsToCheck.length; i++) {
+        result.push(...this.graph.reasoner.inferImplicitSuperClasses(domainEnumerationsToCheck[i]))
+      }
+      result = util.applyFilter(util.uniquifyArray(result), { 'termType': 'Enumeration' }, this.graph)
+    }
     return util.applyFilter(util.uniquifyArray(result), filter, this.graph)
   }
 
@@ -131,10 +140,11 @@ class EnumerationMember {
   /**
    * Generates a JSON representation of this EnumerationMember
    *
+   * @param {boolean} implicit - (default = false) includes also implicit data
    * @param {object|null} filter - (default = null) an optional filter for the generated data
    * @returns {object} The JSON representation of this EnumerationMember
    */
-  toJSON (filter = null) {
+  toJSON (implicit = false, filter = null) {
     let result = {}
     result['id'] = this.getIRI(true)
     result['IRI'] = this.getIRI()
@@ -144,7 +154,7 @@ class EnumerationMember {
     result['supersededBy'] = this.isSupersededBy()
     result['name'] = this.getName()
     result['description'] = this.getDescription()
-    result['domainEnumerations'] = this.getDomainEnumerations(filter)
+    result['domainEnumerations'] = this.getDomainEnumerations(implicit, filter)
     return result
   }
 }

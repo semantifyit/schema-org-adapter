@@ -7,7 +7,7 @@ class Class {
    *
    * @class
    * @param {string} IRI - The compacted IRI of this Class, e.g. "schema:Book"
-   * @param {object} graph - The underlying data graph to enable the methods of this Class
+   * @param {Graph} graph - The underlying data graph to enable the methods of this Class
    */
   constructor (IRI, graph) {
     this.IRI = IRI

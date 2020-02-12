@@ -7,7 +7,7 @@ class DataType {
    *
    * @class
    * @param {string} IRI - The compacted IRI of this DataType, e.g. "schema:Number"
-   * @param {object} graph - The underlying data graph to enable the methods of this DataType
+   * @param {Graph} graph - The underlying data graph to enable the methods of this DataType
    */
   constructor (IRI, graph) {
     this.IRI = IRI

@@ -7,7 +7,7 @@ class Property {
    *
    * @class
    * @param {string} IRI - The compacted IRI of this Property, e.g. "schema:address"
-   * @param {object} graph - The underlying data graph to enable the methods of this Property
+   * @param {Graph} graph - The underlying data graph to enable the methods of this Property
    */
   constructor (IRI, graph) {
     this.IRI = IRI

@@ -3,7 +3,7 @@ const util = require('./utilities')
 class ReasoningEngine {
   /**
    * @class
-   * @param {object} graph The parent Graph-class to which this ReasoningEngine belongs
+   * @param {Graph} graph The parent Graph-class to which this ReasoningEngine belongs
    */
   constructor (graph) {
     this.graph = graph

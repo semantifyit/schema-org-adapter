@@ -16629,7 +16629,7 @@ class Class {
    *
    * @class
    * @param {string} IRI - The compacted IRI of this Class, e.g. "schema:Book"
-   * @param {object} graph - The underlying data graph to enable the methods of this Class
+   * @param {Graph} graph - The underlying data graph to enable the methods of this Class
    */
   constructor(IRI, graph) {
     this.IRI = IRI;
@@ -16876,7 +16876,7 @@ class DataType {
    *
    * @class
    * @param {string} IRI - The compacted IRI of this DataType, e.g. "schema:Number"
-   * @param {object} graph - The underlying data graph to enable the methods of this DataType
+   * @param {Graph} graph - The underlying data graph to enable the methods of this DataType
    */
   constructor(IRI, graph) {
     this.IRI = IRI;
@@ -17091,7 +17091,7 @@ class Enumeration {
    *
    * @class
    * @param {string} IRI - The compacted IRI of this Enumeration, e.g. "schema:DayOfWeek"
-   * @param {object} graph - The underlying data graph to enable the methods of this Enumeration
+   * @param {Graph} graph - The underlying data graph to enable the methods of this Enumeration
    */
   constructor(IRI, graph) {
     this.IRI = IRI;
@@ -17211,15 +17211,31 @@ class Enumeration {
   /**
    * Retrieves the enumeration members (soa:hasEnumerationMember) of this Enumeration
    *
-   * @returns {Array} The enumeration members of this Enumeration
+   * @param {boolean} implicit - (default = false) retrieves also implicit enumeration members (inheritance from sub-enumerations)
    * @param {object|null} filter - (default = null) an optional filter for the enumeration members
+   * @returns {Array} The enumeration members of this Enumeration
    */
 
 
   getEnumerationMembers() {
-    var filter = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : null;
+    var implicit = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : false;
+    var filter = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
     var enumObj = this.graph.enumerations[this.IRI];
-    var result = enumObj['soa:hasEnumerationMember'];
+    var result = [];
+    result.push(...enumObj['soa:hasEnumerationMember']);
+
+    if (implicit === true) {
+      var subClasses = this.getSubClasses(true, null);
+
+      for (var i = 0; i < subClasses.length; i++) {
+        var actualEnumeration = this.graph.enumerations[subClasses[i]];
+
+        if (actualEnumeration) {
+          result.push(...actualEnumeration['soa:hasEnumerationMember']);
+        }
+      }
+    }
+
     return util.applyFilter(util.uniquifyArray(result), filter, this.graph);
   }
   /**
@@ -17325,7 +17341,7 @@ class Enumeration {
     result.supersededBy = this.isSupersededBy();
     result.name = this.getName();
     result.description = this.getDescription();
-    result.enumerationMembers = this.getEnumerationMembers(filter);
+    result.enumerationMembers = this.getEnumerationMembers(implicit, filter);
     result.superClasses = this.getSuperClasses(implicit, filter);
     result.subClasses = this.getSubClasses(implicit, filter);
     result.properties = this.getProperties(implicit, filter);
@@ -17348,7 +17364,7 @@ class EnumerationMember {
    *
    * @class
    * @param {string} IRI - The compacted IRI of this EnumerationMember, e.g. "schema:Friday"
-   * @param {object} graph - The underlying data graph to enable the methods of this EnumerationMember
+   * @param {Graph} graph - The underlying data graph to enable the methods of this EnumerationMember
    */
   constructor(IRI, graph) {
     this.IRI = IRI;
@@ -17468,15 +17484,31 @@ class EnumerationMember {
   /**
    * Retrieves the domain enumerations (soa:enumerationDomainIncludes) of this EnumerationMember
    *
+   * @param {boolean} implicit - (default = false) retrieves also implicit domain enumerations (inheritance from super-enumerations)
    * @param {object|null} filter - (default = null) an optional filter for the domain enumerations
    * @returns {Array} The domain enumerations of this EnumerationMember
    */
 
 
   getDomainEnumerations() {
-    var filter = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : null;
+    var implicit = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : false;
+    var filter = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
     var enumObj = this.graph.enumerationMembers[this.IRI];
-    var result = enumObj['soa:enumerationDomainIncludes'];
+    var result = [];
+    result.push(...enumObj['soa:enumerationDomainIncludes']);
+
+    if (implicit === true) {
+      var domainEnumerationsToCheck = JSON.parse(JSON.stringify(result));
+
+      for (var i = 0; i < domainEnumerationsToCheck.length; i++) {
+        result.push(...this.graph.reasoner.inferImplicitSuperClasses(domainEnumerationsToCheck[i]));
+      }
+
+      result = util.applyFilter(util.uniquifyArray(result), {
+        'termType': 'Enumeration'
+      }, this.graph);
+    }
+
     return util.applyFilter(util.uniquifyArray(result), filter, this.graph);
   }
   /**
@@ -17492,13 +17524,15 @@ class EnumerationMember {
   /**
    * Generates a JSON representation of this EnumerationMember
    *
+   * @param {boolean} implicit - (default = false) includes also implicit data
    * @param {object|null} filter - (default = null) an optional filter for the generated data
    * @returns {object} The JSON representation of this EnumerationMember
    */
 
 
   toJSON() {
-    var filter = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : null;
+    var implicit = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : false;
+    var filter = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
     var result = {};
     result['id'] = this.getIRI(true);
     result['IRI'] = this.getIRI();
@@ -17508,7 +17542,7 @@ class EnumerationMember {
     result['supersededBy'] = this.isSupersededBy();
     result['name'] = this.getName();
     result['description'] = this.getDescription();
-    result['domainEnumerations'] = this.getDomainEnumerations(filter);
+    result['domainEnumerations'] = this.getDomainEnumerations(implicit, filter);
     return result;
   }
 
@@ -18520,7 +18554,7 @@ class Property {
    *
    * @class
    * @param {string} IRI - The compacted IRI of this Property, e.g. "schema:address"
-   * @param {object} graph - The underlying data graph to enable the methods of this Property
+   * @param {Graph} graph - The underlying data graph to enable the methods of this Property
    */
   constructor(IRI, graph) {
     this.IRI = IRI;
@@ -18807,7 +18841,7 @@ var util = require('./utilities');
 class ReasoningEngine {
   /**
    * @class
-   * @param {object} graph The parent Graph-class to which this ReasoningEngine belongs
+   * @param {Graph} graph The parent Graph-class to which this ReasoningEngine belongs
    */
   constructor(graph) {
     this.graph = graph;
