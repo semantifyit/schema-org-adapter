@@ -10829,7 +10829,7 @@ util.isNodejs =
 // To remain compatible with older browsers, we fall back to 'window' if 'self'
 // is not available.
 util.globalScope = (function() {
-  if(util.isNodejs || global) {
+  if(util.isNodejs) {
     return global;
   }
 
@@ -19456,7 +19456,8 @@ class SDOAdapter {
     return _asyncToGenerator(function* () {
       return new Promise(function (resolve, reject) {
         axios.get('https://raw.githubusercontent.com/schemaorg/schemaorg/master/versions.json').then(function (res) {
-          resolve(res.data.schemaversion);
+          resolve(res.data.schemaversion || '7.03' // default for now
+          );
         }).catch(function (err) {
           reject(console.log(err));
         });

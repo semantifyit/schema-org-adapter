@@ -364,7 +364,7 @@ class SDOAdapter {
         )
         .then(function (res) {
           resolve(
-            res.data.schemaversion
+            res.data.schemaversion || '7.03' // default for now
           )
         })
         .catch(function (err) {
