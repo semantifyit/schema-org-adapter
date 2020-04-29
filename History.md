@@ -1,3 +1,8 @@
+1.4.0 / 2020-04-29
+==================
+
+  * Added fallback version for "latest" schema.org version, in case the versions file lists a file that doesnt exist yet.
+
 1.2.0 / 2020-02-12
 ==================
 
