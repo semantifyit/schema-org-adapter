@@ -2,6 +2,11 @@ const Graph = require('./Graph')
 const util = require('./utilities')
 const axios = require('axios')
 
+const FALLBACK_VERSION = '7.04'
+const URI_SDO_GITHUB = 'https://raw.githubusercontent.com/schemaorg/schemaorg/master/'
+const URI_SDO_RELEASES = URI_SDO_GITHUB + 'data/releases/'
+const URI_SDO_VERSIONS = URI_SDO_GITHUB + 'versions.json'
+
 class SDOAdapter {
   /**
    * The SDOAdapter is a JS-Class that represents the interface between the user and this library. Its methods enable to add vocabularies to its memory as well as retrieving vocabulary items. It is possible to create multiple instances of this JS-Class which use different vocabularies.
@@ -336,13 +341,13 @@ class SDOAdapter {
   async constructSDOVocabularyURL (version = 'latest', vocabularyPart = 'schema') {
     // "https://raw.githubusercontent.com/schemaorg/schemaorg/master/data/releases/3.9/all-layers.jsonld";
     if (version === 'latest') {
-      return 'https://raw.githubusercontent.com/schemaorg/schemaorg/master/data/releases/' +
+      return URI_SDO_RELEASES +
         await this.getLatestSDOVersion() +
         '/' +
         vocabularyPart +
         '.jsonld'
     } else {
-      return 'https://raw.githubusercontent.com/schemaorg/schemaorg/master/data/releases/' +
+      return URI_SDO_RELEASES +
         version +
         '/' +
         vocabularyPart +
@@ -357,20 +362,24 @@ class SDOAdapter {
    * @returns {Promise.<string>} The latest version of the schema.org vocabulary
    */
   async getLatestSDOVersion () {
-    return new Promise(function (resolve, reject) {
-      axios
-        .get(
-          'https://raw.githubusercontent.com/schemaorg/schemaorg/master/versions.json'
-        )
-        .then(function (res) {
-          resolve(
-            res.data.schemaversion || '7.03' // default for now
-          )
-        })
-        .catch(function (err) {
-          reject(console.log(err))
-        })
-    })
+    try {
+      const versionFile = await axios.get(URI_SDO_VERSIONS)
+
+      if (versionFile.data.schemaversion) {
+        try {
+          // Use head() to check whether file exists
+          await axios.head(URI_SDO_RELEASES + versionFile.data.schemaversion)
+          return versionFile.data.schemaversion
+        } catch (e) {
+          return FALLBACK_VERSION // Fallback, if release version does not exist
+        }
+      } else {
+        return FALLBACK_VERSION // Fallback, if version file could not be accessed
+      }
+    }
+    catch (err) {
+      console.log(err);
+    }
   }
 }
 
