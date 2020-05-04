@@ -1,9 +1,10 @@
 {
   "name": "schema-org-adapter",
-  "version": "1.4.0",
+  "version": "1.5.0",
   "description": "Fast, simple & flexible API for the Schema.org Vocabulary (and vocabulary extensions!) for Node and Browsers",
   "main": "src/SDOAdapter.js",
   "scripts": {
+    "buildAll": "npm run-script build && npm run-script buildMinified",
     "build": "browserify src/SDOAdapter.js -s SDOAdapter | derequire -cm --toplevel > dist/schema-org-adapter.js",
     "buildMinified": "browserify src/SDOAdapter.js -s SDOAdapter -g [uglifyify] | derequire -cm --toplevel > dist/schema-org-adapter.min.js",
     "test": "jest",
@@ -31,25 +32,25 @@
     "url": "https://github.com/semantifyit/schema-org-adapter"
   },
   "dependencies": {
-    "axios": "^0.19.1",
-    "jsonld": "^2.0.1"
+    "axios": "^0.19.2",
+    "jsonld": "^2.0.2"
   },
   "devDependencies": {
-    "@babel/preset-env": "^7.0.0",
+    "@babel/preset-env": "^7.9.6",
     "babel-core": "^6.26.3",
-    "babel-eslint": "^10.0.3",
+    "babel-eslint": "^10.1.0",
     "babelify": "^10.0.0",
-    "browserify": "^16.5.0",
-    "derequire": "^2.0.6",
+    "browserify": "^16.5.1",
+    "derequire": "^2.1.0",
     "eslint": "^6.8.0",
-    "eslint-plugin-jest": "^23.6.0",
-    "eslint-plugin-jsdoc": "^20.3.0",
-    "eslint-plugin-markdown": "^1.0.1",
-    "eslint-plugin-node": "^11.0.0",
+    "eslint-plugin-jest": "^23.8.2",
+    "eslint-plugin-jsdoc": "^20.4.0",
+    "eslint-plugin-markdown": "^1.0.2",
+    "eslint-plugin-node": "^11.1.0",
     "jest": "^25.4.0",
-    "jsdoc": "^3.6.3",
+    "jsdoc": "^3.6.4",
     "jsdoc-to-markdown": "^5.0.3",
-    "standard": "^14.3.1",
+    "standard": "^14.3.3",
     "uglifyify": "^5.0.2"
   },
   "jest": {

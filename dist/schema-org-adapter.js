@@ -1,15 +1,15 @@
-(function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.SDOAdapter = f()}})(function(){var define,module,exports;return (function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
-module.exports = require('./lib/axios');
-},{"./lib/axios":3}],2:[function(require,module,exports){
+(function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.SDOAdapter = f()}})(function(){var define,module,exports;return (function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(_dereq_,module,exports){
+module.exports = _dereq_('./lib/axios');
+},{"./lib/axios":3}],2:[function(_dereq_,module,exports){
 'use strict';
 
-var utils = require('./../utils');
-var settle = require('./../core/settle');
-var buildURL = require('./../helpers/buildURL');
-var buildFullPath = require('../core/buildFullPath');
-var parseHeaders = require('./../helpers/parseHeaders');
-var isURLSameOrigin = require('./../helpers/isURLSameOrigin');
-var createError = require('../core/createError');
+var utils = _dereq_('./../utils');
+var settle = _dereq_('./../core/settle');
+var buildURL = _dereq_('./../helpers/buildURL');
+var buildFullPath = _dereq_('../core/buildFullPath');
+var parseHeaders = _dereq_('./../helpers/parseHeaders');
+var isURLSameOrigin = _dereq_('./../helpers/isURLSameOrigin');
+var createError = _dereq_('../core/createError');
 
 module.exports = function xhrAdapter(config) {
   return new Promise(function dispatchXhrRequest(resolve, reject) {
@@ -106,7 +106,7 @@ module.exports = function xhrAdapter(config) {
     // This is only done if running in a standard browser environment.
     // Specifically not if we're in a web worker, or react-native.
     if (utils.isStandardBrowserEnv()) {
-      var cookies = require('./../helpers/cookies');
+      var cookies = _dereq_('./../helpers/cookies');
 
       // Add xsrf header
       var xsrfValue = (config.withCredentials || isURLSameOrigin(fullPath)) && config.xsrfCookieName ?
@@ -182,14 +182,14 @@ module.exports = function xhrAdapter(config) {
   });
 };
 
-},{"../core/buildFullPath":9,"../core/createError":10,"./../core/settle":14,"./../helpers/buildURL":18,"./../helpers/cookies":20,"./../helpers/isURLSameOrigin":22,"./../helpers/parseHeaders":25,"./../utils":27}],3:[function(require,module,exports){
+},{"../core/buildFullPath":9,"../core/createError":10,"./../core/settle":14,"./../helpers/buildURL":18,"./../helpers/cookies":20,"./../helpers/isURLSameOrigin":22,"./../helpers/parseHeaders":24,"./../utils":26}],3:[function(_dereq_,module,exports){
 'use strict';
 
-var utils = require('./utils');
-var bind = require('./helpers/bind');
-var Axios = require('./core/Axios');
-var mergeConfig = require('./core/mergeConfig');
-var defaults = require('./defaults');
+var utils = _dereq_('./utils');
+var bind = _dereq_('./helpers/bind');
+var Axios = _dereq_('./core/Axios');
+var mergeConfig = _dereq_('./core/mergeConfig');
+var defaults = _dereq_('./defaults');
 
 /**
  * Create an instance of Axios
@@ -222,22 +222,22 @@ axios.create = function create(instanceConfig) {
 };
 
 // Expose Cancel & CancelToken
-axios.Cancel = require('./cancel/Cancel');
-axios.CancelToken = require('./cancel/CancelToken');
-axios.isCancel = require('./cancel/isCancel');
+axios.Cancel = _dereq_('./cancel/Cancel');
+axios.CancelToken = _dereq_('./cancel/CancelToken');
+axios.isCancel = _dereq_('./cancel/isCancel');
 
 // Expose all/spread
 axios.all = function all(promises) {
   return Promise.all(promises);
 };
-axios.spread = require('./helpers/spread');
+axios.spread = _dereq_('./helpers/spread');
 
 module.exports = axios;
 
 // Allow use of default import syntax in TypeScript
 module.exports.default = axios;
 
-},{"./cancel/Cancel":4,"./cancel/CancelToken":5,"./cancel/isCancel":6,"./core/Axios":7,"./core/mergeConfig":13,"./defaults":16,"./helpers/bind":17,"./helpers/spread":26,"./utils":27}],4:[function(require,module,exports){
+},{"./cancel/Cancel":4,"./cancel/CancelToken":5,"./cancel/isCancel":6,"./core/Axios":7,"./core/mergeConfig":13,"./defaults":16,"./helpers/bind":17,"./helpers/spread":25,"./utils":26}],4:[function(_dereq_,module,exports){
 'use strict';
 
 /**
@@ -258,10 +258,10 @@ Cancel.prototype.__CANCEL__ = true;
 
 module.exports = Cancel;
 
-},{}],5:[function(require,module,exports){
+},{}],5:[function(_dereq_,module,exports){
 'use strict';
 
-var Cancel = require('./Cancel');
+var Cancel = _dereq_('./Cancel');
 
 /**
  * A `CancelToken` is an object that can be used to request cancellation of an operation.
@@ -317,21 +317,21 @@ CancelToken.source = function source() {
 
 module.exports = CancelToken;
 
-},{"./Cancel":4}],6:[function(require,module,exports){
+},{"./Cancel":4}],6:[function(_dereq_,module,exports){
 'use strict';
 
 module.exports = function isCancel(value) {
   return !!(value && value.__CANCEL__);
 };
 
-},{}],7:[function(require,module,exports){
+},{}],7:[function(_dereq_,module,exports){
 'use strict';
 
-var utils = require('./../utils');
-var buildURL = require('../helpers/buildURL');
-var InterceptorManager = require('./InterceptorManager');
-var dispatchRequest = require('./dispatchRequest');
-var mergeConfig = require('./mergeConfig');
+var utils = _dereq_('./../utils');
+var buildURL = _dereq_('../helpers/buildURL');
+var InterceptorManager = _dereq_('./InterceptorManager');
+var dispatchRequest = _dereq_('./dispatchRequest');
+var mergeConfig = _dereq_('./mergeConfig');
 
 /**
  * Create a new instance of Axios
@@ -420,10 +420,10 @@ utils.forEach(['post', 'put', 'patch'], function forEachMethodWithData(method) {
 
 module.exports = Axios;
 
-},{"../helpers/buildURL":18,"./../utils":27,"./InterceptorManager":8,"./dispatchRequest":11,"./mergeConfig":13}],8:[function(require,module,exports){
+},{"../helpers/buildURL":18,"./../utils":26,"./InterceptorManager":8,"./dispatchRequest":11,"./mergeConfig":13}],8:[function(_dereq_,module,exports){
 'use strict';
 
-var utils = require('./../utils');
+var utils = _dereq_('./../utils');
 
 function InterceptorManager() {
   this.handlers = [];
@@ -474,11 +474,11 @@ InterceptorManager.prototype.forEach = function forEach(fn) {
 
 module.exports = InterceptorManager;
 
-},{"./../utils":27}],9:[function(require,module,exports){
+},{"./../utils":26}],9:[function(_dereq_,module,exports){
 'use strict';
 
-var isAbsoluteURL = require('../helpers/isAbsoluteURL');
-var combineURLs = require('../helpers/combineURLs');
+var isAbsoluteURL = _dereq_('../helpers/isAbsoluteURL');
+var combineURLs = _dereq_('../helpers/combineURLs');
 
 /**
  * Creates a new URL by combining the baseURL with the requestedURL,
@@ -496,10 +496,10 @@ module.exports = function buildFullPath(baseURL, requestedURL) {
   return requestedURL;
 };
 
-},{"../helpers/combineURLs":19,"../helpers/isAbsoluteURL":21}],10:[function(require,module,exports){
+},{"../helpers/combineURLs":19,"../helpers/isAbsoluteURL":21}],10:[function(_dereq_,module,exports){
 'use strict';
 
-var enhanceError = require('./enhanceError');
+var enhanceError = _dereq_('./enhanceError');
 
 /**
  * Create an Error with the specified message, config, error code, request and response.
@@ -516,13 +516,13 @@ module.exports = function createError(message, config, code, request, response) 
   return enhanceError(error, config, code, request, response);
 };
 
-},{"./enhanceError":12}],11:[function(require,module,exports){
+},{"./enhanceError":12}],11:[function(_dereq_,module,exports){
 'use strict';
 
-var utils = require('./../utils');
-var transformData = require('./transformData');
-var isCancel = require('../cancel/isCancel');
-var defaults = require('../defaults');
+var utils = _dereq_('./../utils');
+var transformData = _dereq_('./transformData');
+var isCancel = _dereq_('../cancel/isCancel');
+var defaults = _dereq_('../defaults');
 
 /**
  * Throws a `Cancel` if cancellation has been requested.
@@ -597,7 +597,7 @@ module.exports = function dispatchRequest(config) {
   });
 };
 
-},{"../cancel/isCancel":6,"../defaults":16,"./../utils":27,"./transformData":15}],12:[function(require,module,exports){
+},{"../cancel/isCancel":6,"../defaults":16,"./../utils":26,"./transformData":15}],12:[function(_dereq_,module,exports){
 'use strict';
 
 /**
@@ -641,10 +641,10 @@ module.exports = function enhanceError(error, config, code, request, response) {
   return error;
 };
 
-},{}],13:[function(require,module,exports){
+},{}],13:[function(_dereq_,module,exports){
 'use strict';
 
-var utils = require('../utils');
+var utils = _dereq_('../utils');
 
 /**
  * Config-specific merge-function which creates a new config-object
@@ -716,10 +716,10 @@ module.exports = function mergeConfig(config1, config2) {
   return config;
 };
 
-},{"../utils":27}],14:[function(require,module,exports){
+},{"../utils":26}],14:[function(_dereq_,module,exports){
 'use strict';
 
-var createError = require('./createError');
+var createError = _dereq_('./createError');
 
 /**
  * Resolve or reject a Promise based on response status.
@@ -743,10 +743,10 @@ module.exports = function settle(resolve, reject, response) {
   }
 };
 
-},{"./createError":10}],15:[function(require,module,exports){
+},{"./createError":10}],15:[function(_dereq_,module,exports){
 'use strict';
 
-var utils = require('./../utils');
+var utils = _dereq_('./../utils');
 
 /**
  * Transform the data for a request or a response
@@ -765,12 +765,12 @@ module.exports = function transformData(data, headers, fns) {
   return data;
 };
 
-},{"./../utils":27}],16:[function(require,module,exports){
+},{"./../utils":26}],16:[function(_dereq_,module,exports){
 (function (process){
 'use strict';
 
-var utils = require('./utils');
-var normalizeHeaderName = require('./helpers/normalizeHeaderName');
+var utils = _dereq_('./utils');
+var normalizeHeaderName = _dereq_('./helpers/normalizeHeaderName');
 
 var DEFAULT_CONTENT_TYPE = {
   'Content-Type': 'application/x-www-form-urlencoded'
@@ -786,10 +786,10 @@ function getDefaultAdapter() {
   var adapter;
   if (typeof XMLHttpRequest !== 'undefined') {
     // For browsers use XHR adapter
-    adapter = require('./adapters/xhr');
+    adapter = _dereq_('./adapters/xhr');
   } else if (typeof process !== 'undefined' && Object.prototype.toString.call(process) === '[object process]') {
     // For node use HTTP adapter
-    adapter = require('./adapters/http');
+    adapter = _dereq_('./adapters/http');
   }
   return adapter;
 }
@@ -865,8 +865,8 @@ utils.forEach(['post', 'put', 'patch'], function forEachMethodWithData(method) {
 
 module.exports = defaults;
 
-}).call(this,require('_process'))
-},{"./adapters/http":2,"./adapters/xhr":2,"./helpers/normalizeHeaderName":24,"./utils":27,"_process":60}],17:[function(require,module,exports){
+}).call(this,_dereq_('_process'))
+},{"./adapters/http":2,"./adapters/xhr":2,"./helpers/normalizeHeaderName":23,"./utils":26,"_process":59}],17:[function(_dereq_,module,exports){
 'use strict';
 
 module.exports = function bind(fn, thisArg) {
@@ -879,10 +879,10 @@ module.exports = function bind(fn, thisArg) {
   };
 };
 
-},{}],18:[function(require,module,exports){
+},{}],18:[function(_dereq_,module,exports){
 'use strict';
 
-var utils = require('./../utils');
+var utils = _dereq_('./../utils');
 
 function encode(val) {
   return encodeURIComponent(val).
@@ -952,7 +952,7 @@ module.exports = function buildURL(url, params, paramsSerializer) {
   return url;
 };
 
-},{"./../utils":27}],19:[function(require,module,exports){
+},{"./../utils":26}],19:[function(_dereq_,module,exports){
 'use strict';
 
 /**
@@ -968,10 +968,10 @@ module.exports = function combineURLs(baseURL, relativeURL) {
     : baseURL;
 };
 
-},{}],20:[function(require,module,exports){
+},{}],20:[function(_dereq_,module,exports){
 'use strict';
 
-var utils = require('./../utils');
+var utils = _dereq_('./../utils');
 
 module.exports = (
   utils.isStandardBrowserEnv() ?
@@ -1023,7 +1023,7 @@ module.exports = (
     })()
 );
 
-},{"./../utils":27}],21:[function(require,module,exports){
+},{"./../utils":26}],21:[function(_dereq_,module,exports){
 'use strict';
 
 /**
@@ -1039,11 +1039,10 @@ module.exports = function isAbsoluteURL(url) {
   return /^([a-z][a-z\d\+\-\.]*:)?\/\//i.test(url);
 };
 
-},{}],22:[function(require,module,exports){
+},{}],22:[function(_dereq_,module,exports){
 'use strict';
 
-var utils = require('./../utils');
-var isValidXss = require('./isValidXss');
+var utils = _dereq_('./../utils');
 
 module.exports = (
   utils.isStandardBrowserEnv() ?
@@ -1063,10 +1062,6 @@ module.exports = (
     */
       function resolveURL(url) {
         var href = url;
-
-        if (isValidXss(url)) {
-          throw new Error('URL contains XSS injection attempt');
-        }
 
         if (msie) {
         // IE needs attribute set twice to normalize properties
@@ -1114,19 +1109,10 @@ module.exports = (
     })()
 );
 
-},{"./../utils":27,"./isValidXss":23}],23:[function(require,module,exports){
+},{"./../utils":26}],23:[function(_dereq_,module,exports){
 'use strict';
 
-module.exports = function isValidXss(requestURL) {
-  var xssRegex = /(\b)(on\w+)=|javascript|(<\s*)(\/*)script/gi;
-  return xssRegex.test(requestURL);
-};
-
-
-},{}],24:[function(require,module,exports){
-'use strict';
-
-var utils = require('../utils');
+var utils = _dereq_('../utils');
 
 module.exports = function normalizeHeaderName(headers, normalizedName) {
   utils.forEach(headers, function processHeader(value, name) {
@@ -1137,10 +1123,10 @@ module.exports = function normalizeHeaderName(headers, normalizedName) {
   });
 };
 
-},{"../utils":27}],25:[function(require,module,exports){
+},{"../utils":26}],24:[function(_dereq_,module,exports){
 'use strict';
 
-var utils = require('./../utils');
+var utils = _dereq_('./../utils');
 
 // Headers whose duplicates are ignored by node
 // c.f. https://nodejs.org/api/http.html#http_message_headers
@@ -1192,7 +1178,7 @@ module.exports = function parseHeaders(headers) {
   return parsed;
 };
 
-},{"./../utils":27}],26:[function(require,module,exports){
+},{"./../utils":26}],25:[function(_dereq_,module,exports){
 'use strict';
 
 /**
@@ -1221,10 +1207,10 @@ module.exports = function spread(callback) {
   };
 };
 
-},{}],27:[function(require,module,exports){
+},{}],26:[function(_dereq_,module,exports){
 'use strict';
 
-var bind = require('./helpers/bind');
+var bind = _dereq_('./helpers/bind');
 
 /*global toString:true*/
 
@@ -1567,9 +1553,9 @@ module.exports = {
   trim: trim
 };
 
-},{"./helpers/bind":17}],28:[function(require,module,exports){
+},{"./helpers/bind":17}],27:[function(_dereq_,module,exports){
 
-},{}],29:[function(require,module,exports){
+},{}],28:[function(_dereq_,module,exports){
 /* jshint esversion: 6 */
 /* jslint node: true */
 'use strict';
@@ -1607,7 +1593,7 @@ module.exports = function (object) {
   }
 };
 
-},{}],30:[function(require,module,exports){
+},{}],29:[function(_dereq_,module,exports){
 /*
  * Copyright (c) 2019 Digital Bazaar, Inc. All rights reserved.
  */
@@ -1617,10 +1603,10 @@ const {
   isArray: _isArray,
   isObject: _isObject,
   isString: _isString,
-} = require('./types');
-const {prependBase} = require('./url');
-const JsonLdError = require('./JsonLdError');
-const ResolvedContext = require('./ResolvedContext');
+} = _dereq_('./types');
+const {prependBase} = _dereq_('./url');
+const JsonLdError = _dereq_('./JsonLdError');
+const ResolvedContext = _dereq_('./ResolvedContext');
 
 const MAX_CONTEXT_URLS = 10;
 
@@ -1820,6 +1806,10 @@ function _throwInvalidLocalContext(ctx) {
  * @param base the base IRI to use to resolve relative IRIs.
  */
 function _resolveContextUrls({context, base}) {
+  if(!context) {
+    return;
+  }
+
   const ctx = context['@context'];
 
   if(_isString(ctx)) {
@@ -1852,7 +1842,7 @@ function _resolveContextUrls({context, base}) {
   }
 }
 
-},{"./JsonLdError":31,"./ResolvedContext":36,"./types":50,"./url":51}],31:[function(require,module,exports){
+},{"./JsonLdError":30,"./ResolvedContext":35,"./types":49,"./url":50}],30:[function(_dereq_,module,exports){
 /*
  * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
  */
@@ -1877,7 +1867,7 @@ module.exports = class JsonLdError extends Error {
   }
 };
 
-},{}],32:[function(require,module,exports){
+},{}],31:[function(_dereq_,module,exports){
 /*
  * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
  */
@@ -1931,16 +1921,16 @@ module.exports = jsonld => {
   return JsonLdProcessor;
 };
 
-},{}],33:[function(require,module,exports){
+},{}],32:[function(_dereq_,module,exports){
 /*
  * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
  */
 'use strict';
 
 // TODO: move `NQuads` to its own package
-module.exports = require('rdf-canonize').NQuads;
+module.exports = _dereq_('rdf-canonize').NQuads;
 
-},{"rdf-canonize":70}],34:[function(require,module,exports){
+},{"rdf-canonize":69}],33:[function(_dereq_,module,exports){
 /*
  * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
  */
@@ -1953,7 +1943,7 @@ const {
   RDF_OBJECT,
   RDF_XML_LITERAL,
   XSD_STRING,
-} = require('./constants');
+} = _dereq_('./constants');
 
 let _Node;
 if(typeof Node !== 'undefined') {
@@ -2077,12 +2067,12 @@ module.exports = class Rdfa {
 
 function getXMLSerializerClass() {
   if(typeof XMLSerializer === 'undefined') {
-    return require('xmldom').XMLSerializer;
+    return _dereq_('xmldom').XMLSerializer;
   }
   return XMLSerializer;
 }
 
-},{"./constants":38,"xmldom":28}],35:[function(require,module,exports){
+},{"./constants":37,"xmldom":27}],34:[function(_dereq_,module,exports){
 /*
  * Copyright (c) 2017-2019 Digital Bazaar, Inc. All rights reserved.
  */
@@ -2122,13 +2112,13 @@ module.exports = class RequestQueue {
   }
 };
 
-},{}],36:[function(require,module,exports){
+},{}],35:[function(_dereq_,module,exports){
 /*
  * Copyright (c) 2019 Digital Bazaar, Inc. All rights reserved.
  */
 'use strict';
 
-const LRU = require('lru-cache');
+const LRU = _dereq_('lru-cache');
 
 const MAX_ACTIVE_CONTEXTS = 10;
 
@@ -2154,20 +2144,20 @@ module.exports = class ResolvedContext {
   }
 };
 
-},{"lru-cache":53}],37:[function(require,module,exports){
+},{"lru-cache":52}],36:[function(_dereq_,module,exports){
 /*
  * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
  */
 'use strict';
 
-const JsonLdError = require('./JsonLdError');
+const JsonLdError = _dereq_('./JsonLdError');
 
 const {
   isArray: _isArray,
   isObject: _isObject,
   isString: _isString,
   isUndefined: _isUndefined
-} = require('./types');
+} = _dereq_('./types');
 
 const {
   isList: _isList,
@@ -2175,7 +2165,7 @@ const {
   isGraph: _isGraph,
   isSimpleGraph: _isSimpleGraph,
   isSubjectReference: _isSubjectReference
-} = require('./graphTypes');
+} = _dereq_('./graphTypes');
 
 const {
   expandIri: _expandIri,
@@ -2183,17 +2173,17 @@ const {
   isKeyword: _isKeyword,
   process: _processContext,
   processingMode: _processingMode
-} = require('./context');
+} = _dereq_('./context');
 
 const {
   removeBase: _removeBase
-} = require('./url');
+} = _dereq_('./url');
 
 const {
   addValue: _addValue,
   asArray: _asArray,
   compareShortestLeast: _compareShortestLeast
-} = require('./util');
+} = _dereq_('./util');
 
 const api = {};
 module.exports = api;
@@ -3109,7 +3099,7 @@ api.compactValue = ({activeCtx, activeProperty, value, options}) => {
     const preserveIndex = '@index' in value && !container.includes('@index');
 
     // if there's no @index to preserve ...
-    if(!preserveIndex) {
+    if(!preserveIndex && type !== '@none') {
       // matching @type or @language specified in context, compact value
       if(value['@type'] === type || value['@language'] === language) {
         return value['@value'];
@@ -3128,6 +3118,7 @@ api.compactValue = ({activeCtx, activeProperty, value, options}) => {
     const hasNullMapping = (activeCtx.mappings.has(activeProperty) &&
       activeCtx.mappings.get(activeProperty)['@language'] === null);
     if(isValueOnlyKey &&
+      type !== '@none' &&
       (!hasDefaultLanguage || !isValueString || hasNullMapping)) {
       return value['@value'];
     }
@@ -3326,17 +3317,15 @@ function _selectTerm(
   prefs.push('@none');
 
   const containerMap = activeCtx.inverse[iri];
-  for(let ci = 0; ci < containers.length; ++ci) {
+  for(const container of containers) {
     // if container not available in the map, continue
-    const container = containers[ci];
     if(!(container in containerMap)) {
       continue;
     }
 
     const typeOrLanguageValueMap = containerMap[container][typeOrLanguage];
-    for(let pi = 0; pi < prefs.length; ++pi) {
+    for(const pref of prefs) {
       // if type/language option not available in the map, continue
-      const pref = prefs[pi];
       if(!(pref in typeOrLanguageValueMap)) {
         continue;
       }
@@ -3366,7 +3355,7 @@ function _checkNestProperty(activeCtx, nestProperty, options) {
   }
 }
 
-},{"./JsonLdError":31,"./context":39,"./graphTypes":46,"./types":50,"./url":51,"./util":52}],38:[function(require,module,exports){
+},{"./JsonLdError":30,"./context":38,"./graphTypes":45,"./types":49,"./url":50,"./util":51}],37:[function(_dereq_,module,exports){
 /*
  * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
  */
@@ -3397,33 +3386,33 @@ module.exports = {
   XSD_STRING: XSD + 'string',
 };
 
-},{}],39:[function(require,module,exports){
+},{}],38:[function(_dereq_,module,exports){
 /*
  * Copyright (c) 2017-2019 Digital Bazaar, Inc. All rights reserved.
  */
 'use strict';
 
-const util = require('./util');
-const JsonLdError = require('./JsonLdError');
+const util = _dereq_('./util');
+const JsonLdError = _dereq_('./JsonLdError');
 
 const {
   isArray: _isArray,
   isObject: _isObject,
   isString: _isString,
   isUndefined: _isUndefined
-} = require('./types');
+} = _dereq_('./types');
 
 const {
   isAbsolute: _isAbsoluteIri,
   isRelative: _isRelativeIri,
   prependBase,
   parse: parseUrl
-} = require('./url');
+} = _dereq_('./url');
 
 const {
   asArray: _asArray,
   compareShortestLeast: _compareShortestLeast
-} = require('./util');
+} = _dereq_('./util');
 
 const INITIAL_CONTEXT_CACHE = new Map();
 const INITIAL_CONTEXT_CACHE_MAX_SIZE = 10000;
@@ -3927,7 +3916,15 @@ api.createTermDefinition = ({
         {code: 'invalid type mapping', context: localCtx});
     }
 
-    if(type !== '@id' && type !== '@vocab' && type !== '@json') {
+    if((type === '@json' || type === '@none')) {
+      if(api.processingMode(activeCtx, 1.0)) {
+        throw new JsonLdError(
+          'Invalid JSON-LD syntax; an @context @type value must not be ' +
+          `"${type}" in JSON-LD 1.0 mode.`,
+          'jsonld.SyntaxError',
+          {code: 'invalid type mapping', context: localCtx});
+      }
+    } else if(type !== '@id' && type !== '@vocab') {
       // expand @type to full IRI
       type = _expandIri(
         activeCtx, type, {vocab: true, base: false}, localCtx, defined,
@@ -4359,6 +4356,10 @@ api.getInitialContext = options => {
         if(mapping.reverse) {
           // term is preferred for values using @reverse
           _addPreferredTerm(term, entry['@type'], '@reverse');
+        } else if(mapping['@type'] === '@none') {
+          _addPreferredTerm(term, entry['@any'], '@none');
+          _addPreferredTerm(term, entry['@language'], '@none');
+          _addPreferredTerm(term, entry['@type'], '@none');
         } else if('@type' in mapping) {
           // term is preferred for values using specific type
           _addPreferredTerm(term, entry['@type'], mapping['@type']);
@@ -4544,7 +4545,7 @@ api.processingMode = (activeCtx, version) => {
  * @return true if the value is a keyword, false if not.
  */
 api.isKeyword = v => {
-  if(!_isString(v)) {
+  if(!_isString(v) || v[0] !== '@') {
     return false;
   }
   switch(v) {
@@ -4623,16 +4624,16 @@ function _deepCompare(x1, x2) {
   return true;
 }
 
-},{"./JsonLdError":31,"./types":50,"./url":51,"./util":52}],40:[function(require,module,exports){
+},{"./JsonLdError":30,"./types":49,"./url":50,"./util":51}],39:[function(_dereq_,module,exports){
 /*
  * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
  */
 'use strict';
 
-const {parseLinkHeader, buildHeaders} = require('../util');
-const {LINK_HEADER_REL} = require('../constants');
-const JsonLdError = require('../JsonLdError');
-const RequestQueue = require('../RequestQueue');
+const {parseLinkHeader, buildHeaders} = _dereq_('../util');
+const {LINK_HEADER_REL} = _dereq_('../constants');
+const JsonLdError = _dereq_('../JsonLdError');
+const RequestQueue = _dereq_('../RequestQueue');
 
 /**
  * Creates a built-in node document loader.
@@ -4659,8 +4660,8 @@ module.exports = ({
 } = {strictSSL: true, maxRedirects: -1, headers: {}}) => {
   headers = buildHeaders(headers);
   // TODO: use `axios`
-  request = request || require('request');
-  const http = require('http');
+  request = request || _dereq_('request');
+  const http = _dereq_('http');
 
   const queue = new RequestQueue();
   return queue.wrapLoader(function(url) {
@@ -4787,16 +4788,16 @@ function _request(request, options) {
   });
 }
 
-},{"../JsonLdError":31,"../RequestQueue":35,"../constants":38,"../util":52,"http":28,"request":28}],41:[function(require,module,exports){
+},{"../JsonLdError":30,"../RequestQueue":34,"../constants":37,"../util":51,"http":27,"request":27}],40:[function(_dereq_,module,exports){
 /*
  * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
  */
 'use strict';
 
-const {parseLinkHeader, buildHeaders} = require('../util');
-const {LINK_HEADER_REL} = require('../constants');
-const JsonLdError = require('../JsonLdError');
-const RequestQueue = require('../RequestQueue');
+const {parseLinkHeader, buildHeaders} = _dereq_('../util');
+const {LINK_HEADER_REL} = _dereq_('../constants');
+const JsonLdError = _dereq_('../JsonLdError');
+const RequestQueue = _dereq_('../RequestQueue');
 
 const REGEX_LINK_HEADER = /(^|(\r\n))link:/i;
 
@@ -4895,13 +4896,13 @@ function _get(xhr, url, headers) {
   });
 }
 
-},{"../JsonLdError":31,"../RequestQueue":35,"../constants":38,"../util":52}],42:[function(require,module,exports){
+},{"../JsonLdError":30,"../RequestQueue":34,"../constants":37,"../util":51}],41:[function(_dereq_,module,exports){
 /*
  * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
  */
 'use strict';
 
-const JsonLdError = require('./JsonLdError');
+const JsonLdError = _dereq_('./JsonLdError');
 
 const {
   isArray: _isArray,
@@ -4909,13 +4910,13 @@ const {
   isEmptyObject: _isEmptyObject,
   isString: _isString,
   isUndefined: _isUndefined
-} = require('./types');
+} = _dereq_('./types');
 
 const {
   isList: _isList,
   isValue: _isValue,
   isGraph: _isGraph
-} = require('./graphTypes');
+} = _dereq_('./graphTypes');
 
 const {
   expandIri: _expandIri,
@@ -4923,18 +4924,18 @@ const {
   isKeyword: _isKeyword,
   process: _processContext,
   processingMode: _processingMode
-} = require('./context');
+} = _dereq_('./context');
 
 const {
   isAbsolute: _isAbsoluteIri
-} = require('./url');
+} = _dereq_('./url');
 
 const {
   addValue: _addValue,
   asArray: _asArray,
   getValues: _getValues,
   validateTypeValue: _validateTypeValue
-} = require('./util');
+} = _dereq_('./util');
 
 const api = {};
 module.exports = api;
@@ -5111,12 +5112,16 @@ api.expand = async ({
   // set the type-scoped context to the context on input, for use later
   typeScopedContext = activeCtx;
 
+  // Remember the first key found expanding to @type
+  let typeKey = null;
+
   // look for scoped contexts on `@type`
   for(const key of keys) {
     const expandedProperty = _expandIri(activeCtx, key, {vocab: true}, options);
     if(expandedProperty === '@type') {
       // set scoped contexts from @type
       // avoid sorting if possible
+      typeKey = typeKey || key;
       const value = element[key];
       const types =
         Array.isArray(value) ?
@@ -5146,6 +5151,7 @@ api.expand = async ({
     options,
     insideList,
     typeScopedContext,
+    typeKey,
     expansionMap});
 
   // get property count on expanded output
@@ -5181,7 +5187,10 @@ api.expand = async ({
     const types = _getValues(rval, '@type');
 
     // drop null @values unless custom mapped
-    if(values.length === 0) {
+    if(_processingMode(activeCtx, 1.1) && types.includes('@json') &&
+      types.length === 1) {
+      // Any value of @value is okay if @type: @json
+    } else if(values.length === 0) {
       const mapped = await expansionMap({
         unmappedValue: rval,
         activeCtx,
@@ -5202,9 +5211,6 @@ api.expand = async ({
         'Invalid JSON-LD syntax; only strings may be language-tagged.',
         'jsonld.SyntaxError',
         {code: 'invalid language-tagged value', element: rval});
-    } else if(_processingMode(activeCtx, 1.1) && types.includes('@json') &&
-      types.length === 1) {
-      // Any value of @value is okay if @type: @json
     } else if(!types.every(t =>
       (_isAbsoluteIri(t) && !(_isString(t) && t.indexOf('_:') === 0) ||
       _isEmptyObject(t)))) {
@@ -5300,11 +5306,19 @@ async function _expandObject({
   options = {},
   insideList,
   typeScopedContext,
+  typeKey,
   expansionMap
 }) {
   const keys = Object.keys(element).sort();
   const nests = [];
   let unexpandedValue;
+
+  // Figure out if this is the type for a JSON literal
+  const isJsonType = element[typeKey] &&
+    _expandIri(activeCtx,
+      (_isArray(element[typeKey]) ? element[typeKey][0] : element[typeKey]),
+      {vocab: true}, options) == '@json';
+
   for(const key of keys) {
     let value = element[key];
     let expandedValue;
@@ -5415,8 +5429,13 @@ async function _expandObject({
       // capture value for later
       // "colliding keywords" check prevents this from being set twice
       unexpandedValue = value;
-      _addValue(
-        expandedParent, '@value', value, {propertyIsArray: options.isFrame});
+      if(isJsonType && _processingMode(activeCtx, 1.1)) {
+        // no coercion to array, and retain all values
+        expandedParent['@value'] = value;
+      } else {
+        _addValue(
+          expandedParent, '@value', value, {propertyIsArray: options.isFrame});
+      }
       continue;
     }
 
@@ -5701,6 +5720,7 @@ async function _expandObject({
         expandedParent,
         options,
         insideList,
+        typeKey,
         expansionMap});
     }
   }
@@ -5753,7 +5773,7 @@ function _expandValue({activeCtx, activeProperty, value, options}) {
 
   const rval = {};
 
-  if(type && !['@id', '@vocab'].includes(type)) {
+  if(type && !['@id', '@vocab', '@none'].includes(type)) {
     // other type
     rval['@type'] = type;
   } else if(_isString(value)) {
@@ -5905,7 +5925,7 @@ async function _expandIndexMap(
   return rval;
 }
 
-},{"./JsonLdError":31,"./context":39,"./graphTypes":46,"./types":50,"./url":51,"./util":52}],43:[function(require,module,exports){
+},{"./JsonLdError":30,"./context":38,"./graphTypes":45,"./types":49,"./url":50,"./util":51}],42:[function(_dereq_,module,exports){
 /*
  * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
  */
@@ -5913,11 +5933,11 @@ async function _expandIndexMap(
 
 const {
   isSubjectReference: _isSubjectReference
-} = require('./graphTypes');
+} = _dereq_('./graphTypes');
 
 const {
   createMergedNodeMap: _createMergedNodeMap
-} = require('./nodeMap');
+} = _dereq_('./nodeMap');
 
 const api = {};
 module.exports = api;
@@ -5945,21 +5965,21 @@ api.flatten = input => {
   return flattened;
 };
 
-},{"./graphTypes":46,"./nodeMap":48}],44:[function(require,module,exports){
+},{"./graphTypes":45,"./nodeMap":47}],43:[function(_dereq_,module,exports){
 /*
  * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
  */
 'use strict';
 
-const {isKeyword} = require('./context');
-const graphTypes = require('./graphTypes');
-const types = require('./types');
-const util = require('./util');
-const JsonLdError = require('./JsonLdError');
+const {isKeyword} = _dereq_('./context');
+const graphTypes = _dereq_('./graphTypes');
+const types = _dereq_('./types');
+const util = _dereq_('./util');
+const JsonLdError = _dereq_('./JsonLdError');
 const {
   createNodeMap: _createNodeMap,
   mergeNodeMapGraphs: _mergeNodeMapGraphs
-} = require('./nodeMap');
+} = _dereq_('./nodeMap');
 
 const api = {};
 module.exports = api;
@@ -6602,16 +6622,16 @@ function _valueMatch(pattern, value) {
   return true;
 }
 
-},{"./JsonLdError":31,"./context":39,"./graphTypes":46,"./nodeMap":48,"./types":50,"./util":52}],45:[function(require,module,exports){
+},{"./JsonLdError":30,"./context":38,"./graphTypes":45,"./nodeMap":47,"./types":49,"./util":51}],44:[function(_dereq_,module,exports){
 /*
  * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
  */
 'use strict';
 
-const JsonLdError = require('./JsonLdError');
-const graphTypes = require('./graphTypes');
-const types = require('./types');
-const util = require('./util');
+const JsonLdError = _dereq_('./JsonLdError');
+const graphTypes = _dereq_('./graphTypes');
+const types = _dereq_('./types');
+const util = _dereq_('./util');
 
 // constants
 const {
@@ -6632,7 +6652,7 @@ const {
   XSD_DOUBLE,
   XSD_INTEGER,
   XSD_STRING,
-} = require('./constants');
+} = _dereq_('./constants');
 
 const api = {};
 module.exports = api;
@@ -6933,13 +6953,13 @@ function _RDFToObject(o, useNativeTypes) {
   return rval;
 }
 
-},{"./JsonLdError":31,"./constants":38,"./graphTypes":46,"./types":50,"./util":52}],46:[function(require,module,exports){
+},{"./JsonLdError":30,"./constants":37,"./graphTypes":45,"./types":49,"./util":51}],45:[function(_dereq_,module,exports){
 /*
  * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
  */
 'use strict';
 
-const types = require('./types');
+const types = _dereq_('./types');
 
 const api = {};
 module.exports = api;
@@ -7054,7 +7074,7 @@ api.isBlankNode = v => {
   return false;
 };
 
-},{"./types":50}],47:[function(require,module,exports){
+},{"./types":49}],46:[function(_dereq_,module,exports){
 (function (process,global){
 /**
  * A JavaScript implementation of the JSON-LD API.
@@ -7091,50 +7111,50 @@ api.isBlankNode = v => {
  * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-const canonize = require('rdf-canonize');
-const util = require('./util');
-const ContextResolver = require('./ContextResolver');
+const canonize = _dereq_('rdf-canonize');
+const util = _dereq_('./util');
+const ContextResolver = _dereq_('./ContextResolver');
 const IdentifierIssuer = util.IdentifierIssuer;
-const JsonLdError = require('./JsonLdError');
-const LRU = require('lru-cache');
-const NQuads = require('./NQuads');
-const Rdfa = require('./Rdfa');
+const JsonLdError = _dereq_('./JsonLdError');
+const LRU = _dereq_('lru-cache');
+const NQuads = _dereq_('./NQuads');
+const Rdfa = _dereq_('./Rdfa');
 
-const {expand: _expand} = require('./expand');
-const {flatten: _flatten} = require('./flatten');
-const {fromRDF: _fromRDF} = require('./fromRdf');
-const {toRDF: _toRDF} = require('./toRdf');
+const {expand: _expand} = _dereq_('./expand');
+const {flatten: _flatten} = _dereq_('./flatten');
+const {fromRDF: _fromRDF} = _dereq_('./fromRdf');
+const {toRDF: _toRDF} = _dereq_('./toRdf');
 
 const {
   frameMergedOrDefault: _frameMergedOrDefault
-} = require('./frame');
+} = _dereq_('./frame');
 
 const {
   isArray: _isArray,
   isObject: _isObject,
   isString: _isString
-} = require('./types');
+} = _dereq_('./types');
 
 const {
   isSubjectReference: _isSubjectReference,
-} = require('./graphTypes');
+} = _dereq_('./graphTypes');
 
 const {
   getInitialContext: _getInitialContext,
   process: _processContext
-} = require('./context');
+} = _dereq_('./context');
 
 const {
   compact: _compact,
   compactIri: _compactIri,
   removePreserve: _removePreserve
-} = require('./compact');
+} = _dereq_('./compact');
 
 const {
   createNodeMap: _createNodeMap,
   createMergedNodeMap: _createMergedNodeMap,
   mergeNodeMaps: _mergeNodeMaps
-} = require('./nodeMap');
+} = _dereq_('./nodeMap');
 
 // determine if in-browser or using node.js
 const _nodejs = (
@@ -7983,14 +8003,14 @@ jsonld.processContext = async function(
 };
 
 // backwards compatibility
-jsonld.getContextValue = require('./context').getContextValue;
+jsonld.getContextValue = _dereq_('./context').getContextValue;
 
 /**
  * Document loaders.
  */
 jsonld.documentLoaders = {};
-jsonld.documentLoaders.node = require('./documentLoaders/node');
-jsonld.documentLoaders.xhr = require('./documentLoaders/xhr');
+jsonld.documentLoaders.node = _dereq_('./documentLoaders/node');
+jsonld.documentLoaders.xhr = _dereq_('./documentLoaders/xhr');
 
 /**
  * Assigns the default document loader for external document URLs to a built-in
@@ -8043,7 +8063,7 @@ jsonld.registerRDFParser('application/nquads', NQuads.parse);
 jsonld.registerRDFParser('rdfa-api', Rdfa.parse);
 
 /* URL API */
-jsonld.url = require('./url');
+jsonld.url = _dereq_('./url');
 
 /* Utility API */
 jsonld.util = util;
@@ -8054,10 +8074,10 @@ Object.assign(jsonld, util);
 jsonld.promises = jsonld;
 
 // backwards compatibility
-jsonld.RequestQueue = require('./RequestQueue');
+jsonld.RequestQueue = _dereq_('./RequestQueue');
 
 /* WebIDL API */
-jsonld.JsonLdProcessor = require('./JsonLdProcessor')(jsonld);
+jsonld.JsonLdProcessor = _dereq_('./JsonLdProcessor')(jsonld);
 
 // setup browser global JsonLdProcessor
 if(_browser && typeof global.JsonLdProcessor === 'undefined') {
@@ -8103,18 +8123,18 @@ wrapper(factory);
 // export API
 module.exports = factory;
 
-}).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./ContextResolver":30,"./JsonLdError":31,"./JsonLdProcessor":32,"./NQuads":33,"./Rdfa":34,"./RequestQueue":35,"./compact":37,"./context":39,"./documentLoaders/node":40,"./documentLoaders/xhr":41,"./expand":42,"./flatten":43,"./frame":44,"./fromRdf":45,"./graphTypes":46,"./nodeMap":48,"./toRdf":49,"./types":50,"./url":51,"./util":52,"_process":60,"lru-cache":53,"rdf-canonize":70}],48:[function(require,module,exports){
+}).call(this,_dereq_('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
+},{"./ContextResolver":29,"./JsonLdError":30,"./JsonLdProcessor":31,"./NQuads":32,"./Rdfa":33,"./RequestQueue":34,"./compact":36,"./context":38,"./documentLoaders/node":39,"./documentLoaders/xhr":40,"./expand":41,"./flatten":42,"./frame":43,"./fromRdf":44,"./graphTypes":45,"./nodeMap":47,"./toRdf":48,"./types":49,"./url":50,"./util":51,"_process":59,"lru-cache":52,"rdf-canonize":69}],47:[function(_dereq_,module,exports){
 /*
  * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
  */
 'use strict';
 
-const {isKeyword} = require('./context');
-const graphTypes = require('./graphTypes');
-const types = require('./types');
-const util = require('./util');
-const JsonLdError = require('./JsonLdError');
+const {isKeyword} = _dereq_('./context');
+const graphTypes = _dereq_('./graphTypes');
+const types = _dereq_('./types');
+const util = _dereq_('./util');
+const JsonLdError = _dereq_('./JsonLdError');
 
 const api = {};
 module.exports = api;
@@ -8385,18 +8405,18 @@ api.mergeNodeMaps = graphs => {
   return defaultGraph;
 };
 
-},{"./JsonLdError":31,"./context":39,"./graphTypes":46,"./types":50,"./util":52}],49:[function(require,module,exports){
+},{"./JsonLdError":30,"./context":38,"./graphTypes":45,"./types":49,"./util":51}],48:[function(_dereq_,module,exports){
 /*
  * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
  */
 'use strict';
 
-const {createNodeMap} = require('./nodeMap');
-const {isKeyword} = require('./context');
-const graphTypes = require('./graphTypes');
-const jsonCanonicalize = require('canonicalize');
-const types = require('./types');
-const util = require('./util');
+const {createNodeMap} = _dereq_('./nodeMap');
+const {isKeyword} = _dereq_('./context');
+const graphTypes = _dereq_('./graphTypes');
+const jsonCanonicalize = _dereq_('canonicalize');
+const types = _dereq_('./types');
+const util = _dereq_('./util');
 
 const {
   // RDF,
@@ -8416,11 +8436,11 @@ const {
   XSD_DOUBLE,
   XSD_INTEGER,
   XSD_STRING,
-} = require('./constants');
+} = _dereq_('./constants');
 
 const {
   isAbsolute: _isAbsoluteIri
-} = require('./url');
+} = _dereq_('./url');
 
 const api = {};
 module.exports = api;
@@ -8658,7 +8678,7 @@ function _objectToRDF(item, issuer, dataset, graphTerm) {
   return object;
 }
 
-},{"./constants":38,"./context":39,"./graphTypes":46,"./nodeMap":48,"./types":50,"./url":51,"./util":52,"canonicalize":29}],50:[function(require,module,exports){
+},{"./constants":37,"./context":38,"./graphTypes":45,"./nodeMap":47,"./types":49,"./url":50,"./util":51,"canonicalize":28}],49:[function(_dereq_,module,exports){
 /*
  * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
  */
@@ -8751,13 +8771,13 @@ api.isString = v => (typeof v === 'string' ||
  */
 api.isUndefined = v => typeof v === 'undefined';
 
-},{}],51:[function(require,module,exports){
+},{}],50:[function(_dereq_,module,exports){
 /*
  * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
  */
 'use strict';
 
-const types = require('./types');
+const types = _dereq_('./types');
 
 const api = {};
 module.exports = api;
@@ -9054,17 +9074,17 @@ api.isAbsolute = v => types.isString(v) && isAbsoluteRegex.test(v);
  */
 api.isRelative = v => types.isString(v);
 
-},{"./types":50}],52:[function(require,module,exports){
+},{"./types":49}],51:[function(_dereq_,module,exports){
 /*
  * Copyright (c) 2017-2019 Digital Bazaar, Inc. All rights reserved.
  */
 'use strict';
 
-const graphTypes = require('./graphTypes');
-const types = require('./types');
+const graphTypes = _dereq_('./graphTypes');
+const types = _dereq_('./types');
 // TODO: move `IdentifierIssuer` to its own package
-const IdentifierIssuer = require('rdf-canonize').IdentifierIssuer;
-const JsonLdError = require('./JsonLdError');
+const IdentifierIssuer = _dereq_('rdf-canonize').IdentifierIssuer;
+const JsonLdError = _dereq_('./JsonLdError');
 
 // constants
 const REGEX_LINK_HEADERS = /(?:<[^>]*?>|"[^"]*?"|[^,])+/g;
@@ -9505,11 +9525,11 @@ function _labelBlankNodes(issuer, element) {
   return element;
 }
 
-},{"./JsonLdError":31,"./graphTypes":46,"./types":50,"rdf-canonize":70}],53:[function(require,module,exports){
+},{"./JsonLdError":30,"./graphTypes":45,"./types":49,"rdf-canonize":69}],52:[function(_dereq_,module,exports){
 'use strict'
 
 // A linked list to keep track of recently-used-ness
-const Yallist = require('yallist')
+const Yallist = _dereq_('yallist')
 
 const MAX = Symbol('max')
 const LENGTH = Symbol('length')
@@ -9841,7 +9861,7 @@ const forEachStep = (self, fn, node, thisp) => {
 
 module.exports = LRUCache
 
-},{"yallist":74}],54:[function(require,module,exports){
+},{"yallist":73}],53:[function(_dereq_,module,exports){
 (function (Buffer){
 /**
  * Base-N/Base-X encoding/decoding functions.
@@ -10030,8 +10050,8 @@ function _encodeWithByteBuffer(input, alphabet) {
   return output;
 }
 
-}).call(this,require("buffer").Buffer)
-},{"buffer":28}],55:[function(require,module,exports){
+}).call(this,_dereq_("buffer").Buffer)
+},{"buffer":27}],54:[function(_dereq_,module,exports){
 /**
  * Node.js module for Forge.
  *
@@ -10046,7 +10066,7 @@ module.exports = {
   }
 };
 
-},{}],56:[function(require,module,exports){
+},{}],55:[function(_dereq_,module,exports){
 /**
  * Node.js module for Forge message digests.
  *
@@ -10054,12 +10074,12 @@ module.exports = {
  *
  * Copyright 2011-2017 Digital Bazaar, Inc.
  */
-var forge = require('./forge');
+var forge = _dereq_('./forge');
 
 module.exports = forge.md = forge.md || {};
 forge.md.algorithms = forge.md.algorithms || {};
 
-},{"./forge":55}],57:[function(require,module,exports){
+},{"./forge":54}],56:[function(_dereq_,module,exports){
 /**
  * Secure Hash Algorithm with 160-bit digest (SHA-1) implementation.
  *
@@ -10067,9 +10087,9 @@ forge.md.algorithms = forge.md.algorithms || {};
  *
  * Copyright (c) 2010-2015 Digital Bazaar, Inc.
  */
-var forge = require('./forge');
-require('./md');
-require('./util');
+var forge = _dereq_('./forge');
+_dereq_('./md');
+_dereq_('./util');
 
 var sha1 = module.exports = forge.sha1 = forge.sha1 || {};
 forge.md.sha1 = forge.md.algorithms.sha1 = sha1;
@@ -10380,7 +10400,7 @@ function _update(s, w, bytes) {
   }
 }
 
-},{"./forge":55,"./md":56,"./util":59}],58:[function(require,module,exports){
+},{"./forge":54,"./md":55,"./util":58}],57:[function(_dereq_,module,exports){
 /**
  * Secure Hash Algorithm with 256-bit digest (SHA-256) implementation.
  *
@@ -10390,9 +10410,9 @@ function _update(s, w, bytes) {
  *
  * Copyright (c) 2010-2015 Digital Bazaar, Inc.
  */
-var forge = require('./forge');
-require('./md');
-require('./util');
+var forge = _dereq_('./forge');
+_dereq_('./md');
+_dereq_('./util');
 
 var sha256 = module.exports = forge.sha256 = forge.sha256 || {};
 forge.md.sha256 = forge.md.algorithms.sha256 = sha256;
@@ -10709,7 +10729,7 @@ function _update(s, w, bytes) {
   }
 }
 
-},{"./forge":55,"./md":56,"./util":59}],59:[function(require,module,exports){
+},{"./forge":54,"./md":55,"./util":58}],58:[function(_dereq_,module,exports){
 (function (process,global,Buffer,__argument0,__argument1,__argument2,__argument3,setImmediate){
 /**
  * Utility functions for web applications.
@@ -10718,8 +10738,8 @@ function _update(s, w, bytes) {
  *
  * Copyright (c) 2010-2018 Digital Bazaar, Inc.
  */
-var forge = require('./forge');
-var baseN = require('./baseN');
+var forge = _dereq_('./forge');
+var baseN = _dereq_('./baseN');
 
 /* Utilities API */
 var util = module.exports = forge.util = forge.util || {};
@@ -10992,7 +11012,7 @@ util.ByteStringBuffer.prototype.fillWithByte = function(b, n) {
 /**
  * Puts bytes in this buffer.
  *
- * @param bytes the bytes (as a UTF-8 encoded string) to put.
+ * @param bytes the bytes (as a binary encoded string) to put.
  *
  * @return this buffer.
  */
@@ -11280,11 +11300,13 @@ util.ByteStringBuffer.prototype.getSignedInt = function(n) {
 };
 
 /**
- * Reads bytes out into a UTF-8 string and clears them from the buffer.
+ * Reads bytes out as a binary encoded string and clears them from the
+ * buffer. Note that the resulting string is binary encoded (in node.js this
+ * encoding is referred to as `binary`, it is *not* `utf8`).
  *
  * @param count the number of bytes to read, undefined or null for all.
  *
- * @return a UTF-8 string of bytes.
+ * @return a binary encoded string of bytes.
  */
 util.ByteStringBuffer.prototype.getBytes = function(count) {
   var rval;
@@ -11304,12 +11326,12 @@ util.ByteStringBuffer.prototype.getBytes = function(count) {
 };
 
 /**
- * Gets a UTF-8 encoded string of the bytes from this buffer without modifying
- * the read pointer.
+ * Gets a binary encoded string of the bytes from this buffer without
+ * modifying the read pointer.
  *
  * @param count the number of bytes to get, omit to get all.
  *
- * @return a string full of UTF-8 encoded characters.
+ * @return a string full of binary encoded characters.
  */
 util.ByteStringBuffer.prototype.bytes = function(count) {
   return (typeof(count) === 'undefined' ?
@@ -11941,11 +11963,12 @@ util.DataBuffer.prototype.getSignedInt = function(n) {
 };
 
 /**
- * Reads bytes out into a UTF-8 string and clears them from the buffer.
+ * Reads bytes out as a binary encoded string and clears them from the
+ * buffer.
  *
  * @param count the number of bytes to read, undefined or null for all.
  *
- * @return a UTF-8 string of bytes.
+ * @return a binary encoded string of bytes.
  */
 util.DataBuffer.prototype.getBytes = function(count) {
   // TODO: deprecate this method, it is poorly named and
@@ -11968,12 +11991,12 @@ util.DataBuffer.prototype.getBytes = function(count) {
 };
 
 /**
- * Gets a UTF-8 encoded string of the bytes from this buffer without modifying
- * the read pointer.
+ * Gets a binary encoded string of the bytes from this buffer without
+ * modifying the read pointer.
  *
  * @param count the number of bytes to get, omit to get all.
  *
- * @return a string full of UTF-8 encoded characters.
+ * @return a string full of binary encoded characters.
  */
 util.DataBuffer.prototype.bytes = function(count) {
   // TODO: deprecate this method, it is poorly named, add "getString()"
@@ -12120,12 +12143,13 @@ util.DataBuffer.prototype.toString = function(encoding) {
 /** End Buffer w/UInt8Array backing */
 
 /**
- * Creates a buffer that stores bytes. A value may be given to put into the
- * buffer that is either a string of bytes or a UTF-16 string that will
- * be encoded using UTF-8 (to do the latter, specify 'utf8' as the encoding).
+ * Creates a buffer that stores bytes. A value may be given to populate the
+ * buffer with data. This value can either be string of encoded bytes or a
+ * regular string of characters. When passing a string of binary encoded
+ * bytes, the encoding `raw` should be given. This is also the default. When
+ * passing a string of characters, the encoding `utf8` should be given.
  *
- * @param [input] the bytes to wrap (as a string) or a UTF-16 string to encode
- *          as UTF-8.
+ * @param [input] a string with encoded bytes to store in the buffer.
  * @param [encoding] (default: 'raw', other: 'utf8').
  */
 util.createBuffer = function(input, encoding) {
@@ -12354,24 +12378,27 @@ util.decode64 = function(input) {
 };
 
 /**
- * UTF-8 encodes the given UTF-16 encoded string (a standard JavaScript
- * string). Non-ASCII characters will be encoded as multiple bytes according
- * to UTF-8.
+ * Encodes the given string of characters (a standard JavaScript
+ * string) as a binary encoded string where the bytes represent
+ * a UTF-8 encoded string of characters. Non-ASCII characters will be
+ * encoded as multiple bytes according to UTF-8.
  *
- * @param str the string to encode.
+ * @param str a standard string of characters to encode.
  *
- * @return the UTF-8 encoded string.
+ * @return the binary encoded string.
  */
 util.encodeUtf8 = function(str) {
   return unescape(encodeURIComponent(str));
 };
 
 /**
- * Decodes a UTF-8 encoded string into a UTF-16 string.
+ * Decodes a binary encoded string that contains bytes that
+ * represent a UTF-8 encoded string of characters -- into a
+ * string of characters (a standard JavaScript string).
  *
- * @param str the string to decode.
+ * @param str the binary encoded string to decode.
  *
- * @return the UTF-16 encoded string (standard JavaScript string).
+ * @return the resulting standard string of characters.
  */
 util.decodeUtf8 = function(str) {
   return decodeURIComponent(escape(str));
@@ -13705,8 +13732,8 @@ util.estimateCores = function(options, callback) {
   }
 };
 
-}).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {},require("buffer").Buffer,arguments[3],arguments[4],arguments[5],arguments[6],require("timers").setImmediate)
-},{"./baseN":54,"./forge":55,"_process":60,"buffer":28,"timers":72}],60:[function(require,module,exports){
+}).call(this,_dereq_('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {},_dereq_("buffer").Buffer,arguments[3],arguments[4],arguments[5],arguments[6],_dereq_("timers").setImmediate)
+},{"./baseN":53,"./forge":54,"_process":59,"buffer":27,"timers":71}],59:[function(_dereq_,module,exports){
 // shim for using process in browser
 var process = module.exports = {};
 
@@ -13892,13 +13919,13 @@ process.chdir = function (dir) {
 };
 process.umask = function() { return 0; };
 
-},{}],61:[function(require,module,exports){
+},{}],60:[function(_dereq_,module,exports){
 /**
  * Copyright (c) 2016-2017 Digital Bazaar, Inc. All rights reserved.
  */
 'use strict';
 
-const util = require('./util');
+const util = _dereq_('./util');
 
 module.exports = class AsyncAlgorithm {
   constructor({
@@ -14021,13 +14048,13 @@ module.exports = class AsyncAlgorithm {
   }
 };
 
-},{"./util":71}],62:[function(require,module,exports){
+},{"./util":70}],61:[function(_dereq_,module,exports){
 /*
  * Copyright (c) 2016-2017 Digital Bazaar, Inc. All rights reserved.
  */
 'use strict';
 
-const util = require('./util');
+const util = _dereq_('./util');
 
 module.exports = class IdentifierIssuer {
   /**
@@ -14094,16 +14121,16 @@ module.exports = class IdentifierIssuer {
   }
 };
 
-},{"./util":71}],63:[function(require,module,exports){
+},{"./util":70}],62:[function(_dereq_,module,exports){
 /*
  * Copyright (c) 2016-2017 Digital Bazaar, Inc. All rights reserved.
  */
 'use strict';
 
-const forge = require('node-forge/lib/forge');
-require('node-forge/lib/md');
-require('node-forge/lib/sha1');
-require('node-forge/lib/sha256');
+const forge = _dereq_('node-forge/lib/forge');
+_dereq_('node-forge/lib/md');
+_dereq_('node-forge/lib/sha1');
+_dereq_('node-forge/lib/sha256');
 
 module.exports = class MessageDigest {
   /**
@@ -14124,7 +14151,7 @@ module.exports = class MessageDigest {
   }
 };
 
-},{"node-forge/lib/forge":55,"node-forge/lib/md":56,"node-forge/lib/sha1":57,"node-forge/lib/sha256":58}],64:[function(require,module,exports){
+},{"node-forge/lib/forge":54,"node-forge/lib/md":55,"node-forge/lib/sha1":56,"node-forge/lib/sha256":57}],63:[function(_dereq_,module,exports){
 /*
  * Copyright (c) 2016-2017 Digital Bazaar, Inc. All rights reserved.
  */
@@ -14505,7 +14532,7 @@ function _unescape(s) {
   });
 }
 
-},{}],65:[function(require,module,exports){
+},{}],64:[function(_dereq_,module,exports){
 /*
  * Copyright (c) 2016-2017 Digital Bazaar, Inc. All rights reserved.
  */
@@ -14592,18 +14619,18 @@ module.exports = class Permutator {
 };
 
 
-},{}],66:[function(require,module,exports){
+},{}],65:[function(_dereq_,module,exports){
 /*
  * Copyright (c) 2016-2017 Digital Bazaar, Inc. All rights reserved.
  */
 'use strict';
 
-const AsyncAlgorithm = require('./AsyncAlgorithm');
-const IdentifierIssuer = require('./IdentifierIssuer');
-const MessageDigest = require('./MessageDigest');
-const Permutator = require('./Permutator');
-const NQuads = require('./NQuads');
-const util = require('./util');
+const AsyncAlgorithm = _dereq_('./AsyncAlgorithm');
+const IdentifierIssuer = _dereq_('./IdentifierIssuer');
+const MessageDigest = _dereq_('./MessageDigest');
+const Permutator = _dereq_('./Permutator');
+const NQuads = _dereq_('./NQuads');
+const util = _dereq_('./util');
 
 const POSITIONS = {subject: 's', object: 'o', graph: 'g'};
 
@@ -15007,8 +15034,9 @@ module.exports = class URDNA2015 extends AsyncAlgorithm {
                   // is greater than or equal to the length of chosen path and
                   // path is lexicographically greater than chosen path, then
                   // skip to the next permutation.
-                  if(chosenPath.length !== 0 &&
-                    path.length >= chosenPath.length && path > chosenPath) {
+                  // Note: Comparing path length to chosen path length can be
+                  // optimized away; only compare lexicographically.
+                  if(chosenPath.length !== 0 && path > chosenPath) {
                     // FIXME: may cause inaccurate total depth calculation
                     return nextPermutation();
                   }
@@ -15041,8 +15069,9 @@ module.exports = class URDNA2015 extends AsyncAlgorithm {
                     // path is greater than or equal to the length of chosen
                     // path and path is lexicographically greater than chosen
                     // path, then skip to the next permutation.
-                    if(chosenPath.length !== 0 &&
-                      path.length >= chosenPath.length && path > chosenPath) {
+                    // Note: Comparing path length to chosen path length can be
+                    // optimized away; only compare lexicographically.
+                    if(chosenPath.length !== 0 && path > chosenPath) {
                       // FIXME: may cause inaccurate total depth calculation
                       return nextPermutation();
                     }
@@ -15157,17 +15186,17 @@ module.exports = class URDNA2015 extends AsyncAlgorithm {
   }
 };
 
-},{"./AsyncAlgorithm":61,"./IdentifierIssuer":62,"./MessageDigest":63,"./NQuads":64,"./Permutator":65,"./util":71}],67:[function(require,module,exports){
+},{"./AsyncAlgorithm":60,"./IdentifierIssuer":61,"./MessageDigest":62,"./NQuads":63,"./Permutator":64,"./util":70}],66:[function(_dereq_,module,exports){
 /*
  * Copyright (c) 2016 Digital Bazaar, Inc. All rights reserved.
  */
 'use strict';
 
-const IdentifierIssuer = require('./IdentifierIssuer');
-const MessageDigest = require('./MessageDigest');
-const Permutator = require('./Permutator');
-const NQuads = require('./NQuads');
-const util = require('./util');
+const IdentifierIssuer = _dereq_('./IdentifierIssuer');
+const MessageDigest = _dereq_('./MessageDigest');
+const Permutator = _dereq_('./Permutator');
+const NQuads = _dereq_('./NQuads');
+const util = _dereq_('./util');
 
 const POSITIONS = {subject: 's', object: 'o', graph: 'g'};
 
@@ -15509,8 +15538,9 @@ module.exports = class URDNA2015Sync {
           // is greater than or equal to the length of chosen path and
           // path is lexicographically greater than chosen path, then
           // skip to the next permutation.
-          if(chosenPath.length !== 0 &&
-            path.length >= chosenPath.length && path > chosenPath) {
+          // Note: Comparing path length to chosen path length can be optimized
+          // away; only compare lexicographically.
+          if(chosenPath.length !== 0 && path > chosenPath) {
             nextPermutation = true;
             break;
           }
@@ -15543,8 +15573,9 @@ module.exports = class URDNA2015Sync {
           // is greater than or equal to the length of chosen path and
           // path is lexicographically greater than chosen path, then
           // skip to the next permutation.
-          if(chosenPath.length !== 0 &&
-            path.length >= chosenPath.length && path > chosenPath) {
+          // Note: Comparing path length to chosen path length can be optimized
+          // away; only compare lexicographically.
+          if(chosenPath.length !== 0 && path > chosenPath) {
             nextPermutation = true;
             break;
           }
@@ -15649,14 +15680,14 @@ module.exports = class URDNA2015Sync {
   }
 };
 
-},{"./IdentifierIssuer":62,"./MessageDigest":63,"./NQuads":64,"./Permutator":65,"./util":71}],68:[function(require,module,exports){
+},{"./IdentifierIssuer":61,"./MessageDigest":62,"./NQuads":63,"./Permutator":64,"./util":70}],67:[function(_dereq_,module,exports){
 /*
  * Copyright (c) 2016-2017 Digital Bazaar, Inc. All rights reserved.
  */
 'use strict';
 
-const URDNA2015 = require('./URDNA2015');
-const util = require('./util');
+const URDNA2015 = _dereq_('./URDNA2015');
+const util = _dereq_('./util');
 
 module.exports = class URDNA2012 extends URDNA2015 {
   constructor(options) {
@@ -15738,14 +15769,14 @@ module.exports = class URDNA2012 extends URDNA2015 {
   }
 };
 
-},{"./URDNA2015":66,"./util":71}],69:[function(require,module,exports){
+},{"./URDNA2015":65,"./util":70}],68:[function(_dereq_,module,exports){
 /*
  * Copyright (c) 2016 Digital Bazaar, Inc. All rights reserved.
  */
 'use strict';
 
-const URDNA2015Sync = require('./URDNA2015Sync');
-const util = require('./util');
+const URDNA2015Sync = _dereq_('./URDNA2015Sync');
+const util = _dereq_('./util');
 
 module.exports = class URDNA2012Sync extends URDNA2015Sync {
   constructor() {
@@ -15824,7 +15855,7 @@ module.exports = class URDNA2012Sync extends URDNA2015Sync {
   }
 };
 
-},{"./URDNA2015Sync":67,"./util":71}],70:[function(require,module,exports){
+},{"./URDNA2015Sync":66,"./util":70}],69:[function(_dereq_,module,exports){
 /**
  * An implementation of the RDF Dataset Normalization specification.
  * This library works in the browser and node.js.
@@ -15861,24 +15892,24 @@ module.exports = class URDNA2012Sync extends URDNA2015Sync {
  */
 'use strict';
 
-const util = require('./util');
-const URDNA2015 = require('./URDNA2015');
-const URGNA2012 = require('./URGNA2012');
-const URDNA2015Sync = require('./URDNA2015Sync');
-const URGNA2012Sync = require('./URGNA2012Sync');
+const util = _dereq_('./util');
+const URDNA2015 = _dereq_('./URDNA2015');
+const URGNA2012 = _dereq_('./URGNA2012');
+const URDNA2015Sync = _dereq_('./URDNA2015Sync');
+const URGNA2012Sync = _dereq_('./URGNA2012Sync');
 
 // optional native support
 let rdfCanonizeNative;
 try {
-  rdfCanonizeNative = require('rdf-canonize-native');
+  rdfCanonizeNative = _dereq_('rdf-canonize-native');
 } catch(e) {}
 
 const api = {};
 module.exports = api;
 
 // expose helpers
-api.NQuads = require('./NQuads');
-api.IdentifierIssuer = require('./IdentifierIssuer');
+api.NQuads = _dereq_('./NQuads');
+api.IdentifierIssuer = _dereq_('./IdentifierIssuer');
 
 /**
  * Get or set native API.
@@ -15986,7 +16017,7 @@ api.canonizeSync = function(dataset, options) {
     'Invalid RDF Dataset Canonicalization algorithm: ' + options.algorithm);
 };
 
-},{"./IdentifierIssuer":62,"./NQuads":64,"./URDNA2015":66,"./URDNA2015Sync":67,"./URGNA2012":68,"./URGNA2012Sync":69,"./util":71,"rdf-canonize-native":28}],71:[function(require,module,exports){
+},{"./IdentifierIssuer":61,"./NQuads":63,"./URDNA2015":65,"./URDNA2015Sync":66,"./URGNA2012":67,"./URGNA2012Sync":68,"./util":70,"rdf-canonize-native":27}],70:[function(_dereq_,module,exports){
 (function (process,setImmediate){
 /*
  * Copyright (c) 2016-2017 Digital Bazaar, Inc. All rights reserved.
@@ -16099,10 +16130,10 @@ function _invokeCallback(callback, err, result) {
   }
 }
 
-}).call(this,require('_process'),require("timers").setImmediate)
-},{"_process":60,"timers":72}],72:[function(require,module,exports){
+}).call(this,_dereq_('_process'),_dereq_("timers").setImmediate)
+},{"_process":59,"timers":71}],71:[function(_dereq_,module,exports){
 (function (setImmediate,clearImmediate){
-var nextTick = require('process/browser.js').nextTick;
+var nextTick = _dereq_('process/browser.js').nextTick;
 var apply = Function.prototype.apply;
 var slice = Array.prototype.slice;
 var immediateIds = {};
@@ -16178,8 +16209,8 @@ exports.setImmediate = typeof setImmediate === "function" ? setImmediate : funct
 exports.clearImmediate = typeof clearImmediate === "function" ? clearImmediate : function(id) {
   delete immediateIds[id];
 };
-}).call(this,require("timers").setImmediate,require("timers").clearImmediate)
-},{"process/browser.js":60,"timers":72}],73:[function(require,module,exports){
+}).call(this,_dereq_("timers").setImmediate,_dereq_("timers").clearImmediate)
+},{"process/browser.js":59,"timers":71}],72:[function(_dereq_,module,exports){
 'use strict'
 module.exports = function (Yallist) {
   Yallist.prototype[Symbol.iterator] = function* () {
@@ -16189,7 +16220,7 @@ module.exports = function (Yallist) {
   }
 }
 
-},{}],74:[function(require,module,exports){
+},{}],73:[function(_dereq_,module,exports){
 'use strict'
 module.exports = Yallist
 
@@ -16614,14 +16645,14 @@ function Node (value, prev, next, list) {
 
 try {
   // add if support for Symbol.iterator is present
-  require('./iterator.js')(Yallist)
+  _dereq_('./iterator.js')(Yallist)
 } catch (er) {}
 
-},{"./iterator.js":73}],75:[function(require,module,exports){
+},{"./iterator.js":72}],74:[function(_dereq_,module,exports){
 "use strict";
 
 // the functions for a class Object
-var util = require('./utilities');
+var util = _dereq_('./utilities');
 
 class Class {
   /**
@@ -16864,11 +16895,11 @@ class Class {
 
 module.exports = Class;
 
-},{"./utilities":83}],76:[function(require,module,exports){
+},{"./utilities":82}],75:[function(_dereq_,module,exports){
 "use strict";
 
 // the functions for a data type Object
-var util = require('./utilities');
+var util = _dereq_('./utilities');
 
 class DataType {
   /**
@@ -17079,11 +17110,11 @@ class DataType {
 
 module.exports = DataType;
 
-},{"./utilities":83}],77:[function(require,module,exports){
+},{"./utilities":82}],76:[function(_dereq_,module,exports){
 "use strict";
 
 // the functions for a enumeration Object
-var util = require('./utilities');
+var util = _dereq_('./utilities');
 
 class Enumeration {
   /**
@@ -17352,11 +17383,11 @@ class Enumeration {
 
 module.exports = Enumeration;
 
-},{"./utilities":83}],78:[function(require,module,exports){
+},{"./utilities":82}],77:[function(_dereq_,module,exports){
 "use strict";
 
 //the functions for a enumeration member Object
-var util = require('./utilities');
+var util = _dereq_('./utilities');
 
 class EnumerationMember {
   /**
@@ -17550,26 +17581,26 @@ class EnumerationMember {
 
 module.exports = EnumerationMember;
 
-},{"./utilities":83}],79:[function(require,module,exports){
+},{"./utilities":82}],78:[function(_dereq_,module,exports){
 "use strict";
 
 function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { Promise.resolve(value).then(_next, _throw); } }
 
 function _asyncToGenerator(fn) { return function () { var self = this, args = arguments; return new Promise(function (resolve, reject) { var gen = fn.apply(self, args); function _next(value) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value); } function _throw(err) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err); } _next(undefined); }); }; }
 
-var util = require('./utilities');
+var util = _dereq_('./utilities');
 
-var Class = require('./Class');
+var Class = _dereq_('./Class');
 
-var Property = require('./Property');
+var Property = _dereq_('./Property');
 
-var Enumeration = require('./Enumeration');
+var Enumeration = _dereq_('./Enumeration');
 
-var EnumerationMember = require('./EnumerationMember');
+var EnumerationMember = _dereq_('./EnumerationMember');
 
-var DataType = require('./DataType');
+var DataType = _dereq_('./DataType');
 
-var ReasoningEngine = require('./ReasoningEngine');
+var ReasoningEngine = _dereq_('./ReasoningEngine');
 
 class Graph {
   /**
@@ -18542,11 +18573,11 @@ class Graph {
 
 module.exports = Graph;
 
-},{"./Class":75,"./DataType":76,"./Enumeration":77,"./EnumerationMember":78,"./Property":80,"./ReasoningEngine":81,"./utilities":83}],80:[function(require,module,exports){
+},{"./Class":74,"./DataType":75,"./Enumeration":76,"./EnumerationMember":77,"./Property":79,"./ReasoningEngine":80,"./utilities":82}],79:[function(_dereq_,module,exports){
 "use strict";
 
 //the functions for a property Object
-var util = require('./utilities');
+var util = _dereq_('./utilities');
 
 class Property {
   /**
@@ -18833,10 +18864,10 @@ class Property {
 
 module.exports = Property;
 
-},{"./utilities":83}],81:[function(require,module,exports){
+},{"./utilities":82}],80:[function(_dereq_,module,exports){
 "use strict";
 
-var util = require('./utilities');
+var util = _dereq_('./utilities');
 
 class ReasoningEngine {
   /**
@@ -19070,20 +19101,23 @@ class ReasoningEngine {
 
 module.exports = ReasoningEngine;
 
-},{"./utilities":83}],82:[function(require,module,exports){
+},{"./utilities":82}],81:[function(_dereq_,module,exports){
 "use strict";
 
 function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { Promise.resolve(value).then(_next, _throw); } }
 
 function _asyncToGenerator(fn) { return function () { var self = this, args = arguments; return new Promise(function (resolve, reject) { var gen = fn.apply(self, args); function _next(value) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value); } function _throw(err) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err); } _next(undefined); }); }; }
 
-var Graph = require('./Graph');
+var Graph = _dereq_('./Graph');
 
-var util = require('./utilities');
+var util = _dereq_('./utilities');
 
-var axios = require('axios');
+var axios = _dereq_('axios');
 
-var FALLBACK_VERSION = '7.04';
+var RETRIEVAL_MEMORY = {
+  versionsFile: null,
+  latest: null
+};
 var URI_SDO_GITHUB = 'https://raw.githubusercontent.com/schemaorg/schemaorg/master/';
 var URI_SDO_RELEASES = URI_SDO_GITHUB + 'data/releases/';
 var URI_SDO_VERSIONS = URI_SDO_GITHUB + 'versions.json';
@@ -19443,9 +19477,88 @@ class SDOAdapter {
 
       // "https://raw.githubusercontent.com/schemaorg/schemaorg/master/data/releases/3.9/all-layers.jsonld";
       if (version === 'latest') {
-        return URI_SDO_RELEASES + (yield _this2.getLatestSDOVersion()) + '/' + vocabularyPart + '.jsonld';
+        try {
+          if (!RETRIEVAL_MEMORY.versionsFile) {
+            //1. retrieve versions file if needed (checks for latest and valid version)
+            yield _this2.getSDOVersionFile();
+          } //2. use latest version
+
+
+          return URI_SDO_RELEASES + RETRIEVAL_MEMORY.latest + '/' + vocabularyPart + '.jsonld';
+        } catch (e) {
+          console.log('Could not determine/retrieve the latest version of schema.org');
+          throw e;
+        }
       } else {
         return URI_SDO_RELEASES + version + '/' + vocabularyPart + '.jsonld';
+      }
+    })();
+  }
+  /**
+   * Retrieves the schema.org version listing at https://raw.githubusercontent.com/schemaorg/schemaorg/master/versions.json
+   * and saves it in the local memory. Also sends head-requests to determine if the 'latest' version is really 'fetchable'.
+   * If not, this head-requests are done again for older versions until the latest valid version is determined and saved in the memory.
+   *
+   * @returns {Promise<void>} Returns void when the process ends (signalizing the process ending).
+   */
+
+
+  getSDOVersionFile() {
+    var _this3 = this;
+
+    return _asyncToGenerator(function* () {
+      var versionFile; //1. retrieve versions file
+
+      try {
+        versionFile = yield axios.get(URI_SDO_VERSIONS);
+      } catch (e) {
+        console.log('Unable to retrieve the schema.org versions file at ' + URI_SDO_VERSIONS);
+        throw e;
+      } //2. determine the latest valid version
+
+
+      if (versionFile && versionFile.data) {
+        RETRIEVAL_MEMORY.versionsFile = versionFile.data;
+
+        if (RETRIEVAL_MEMORY.versionsFile.schemaversion) {
+          if (yield _this3.checkURL(URI_SDO_RELEASES + RETRIEVAL_MEMORY.versionsFile.schemaversion + '/all-layers.jsonld')) {
+            RETRIEVAL_MEMORY.latest = RETRIEVAL_MEMORY.versionsFile.schemaversion;
+          } else {
+            if (RETRIEVAL_MEMORY.versionsFile.releaseLog) {
+              var versions = Object.keys(RETRIEVAL_MEMORY.versionsFile.releaseLog);
+
+              for (var i = versions.length - 1; i >= 0; i--) {
+                if (yield _this3.checkURL(URI_SDO_RELEASES + versions[i] + '/all-layers.jsonld')) {
+                  RETRIEVAL_MEMORY.latest = versions[i];
+                  break;
+                }
+              }
+            }
+          }
+
+          return;
+        }
+
+        console.log('Schema.org versions file has an unexpected structure -> ' + URI_SDO_VERSIONS);
+        throw new Error('Schema.org versions file has an unexpected structure!');
+      }
+    })();
+  }
+  /**
+   * Sends a head-request to the given URL, checking if content exists.
+   *
+   * @param {string} url - the URL to check
+   * @returns {Promise<boolean>} - returns true if there is content
+   */
+
+
+  checkURL(url) {
+    return _asyncToGenerator(function* () {
+      try {
+        yield axios.head(url);
+        return true;
+      } catch (e) {
+        return false;
       }
     })();
   }
@@ -19458,24 +19571,15 @@ class SDOAdapter {
 
 
   getLatestSDOVersion() {
-    return _asyncToGenerator(function* () {
-      try {
-        var versionFile = yield axios.get(URI_SDO_VERSIONS);
+    var _this4 = this;
 
-        if (versionFile.data.schemaversion) {
-          try {
-            // Use head() to check whether file exists
-            yield axios.head(URI_SDO_RELEASES + versionFile.data.schemaversion);
-            return versionFile.data.schemaversion;
-          } catch (e) {
-            return FALLBACK_VERSION; // Fallback, if release version does not exist
-          }
-        } else {
-            return FALLBACK_VERSION; // Fallback, if version file could not be accessed
-          }
-      } catch (err) {
-        console.log(err);
+    return _asyncToGenerator(function* () {
+      if (!RETRIEVAL_MEMORY.latest) {
+        //retrieve versions file if needed (checks for latest and valid version)
+        yield _this4.getSDOVersionFile();
       }
+
+      return RETRIEVAL_MEMORY.latest;
     })();
   }
 
@@ -19483,14 +19587,14 @@ class SDOAdapter {
 
 module.exports = SDOAdapter;
 
-},{"./Graph":79,"./utilities":83,"axios":1}],83:[function(require,module,exports){
+},{"./Graph":78,"./utilities":82,"axios":1}],82:[function(_dereq_,module,exports){
 "use strict";
 
 function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { Promise.resolve(value).then(_next, _throw); } }
 
 function _asyncToGenerator(fn) { return function () { var self = this, args = arguments; return new Promise(function (resolve, reject) { var gen = fn.apply(self, args); function _next(value) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value); } function _throw(err) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err); } _next(undefined); }); }; }
 
-var jsonld = require('jsonld');
+var jsonld = _dereq_('jsonld');
 /**
  * Applies a filter to the IRIs in the given Array
  *
@@ -20030,5 +20134,5 @@ module.exports = {
   toAbsoluteIRI
 };
 
-},{"jsonld":47}]},{},[82])(82)
+},{"jsonld":46}]},{},[81])(81)
 });
