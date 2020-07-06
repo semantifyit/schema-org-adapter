@@ -1,3 +1,8 @@
+1.5.1 / 2020-07-06
+==================
+
+  * Added sorting for versions retrieved from schema.org's versions.json, so that the newest versions are tried first as backfall-versions if the latest doesnt exist yet.
+
 1.5.0 / 2020-05-04
 ==================
 

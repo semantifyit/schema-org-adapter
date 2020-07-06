@@ -385,7 +385,7 @@ class SDOAdapter {
           RETRIEVAL_MEMORY.latest = RETRIEVAL_MEMORY.versionsFile.schemaversion
         } else {
           if (RETRIEVAL_MEMORY.versionsFile.releaseLog) {
-            let versions = Object.keys(RETRIEVAL_MEMORY.versionsFile.releaseLog)
+            let versions = Object.keys(RETRIEVAL_MEMORY.versionsFile.releaseLog).sort();
             for (let i = versions.length - 1; i >= 0; i--) {
               if (await this.checkURL(URI_SDO_RELEASES + versions[i] + '/all-layers.jsonld')) {
                 RETRIEVAL_MEMORY.latest = versions[i]

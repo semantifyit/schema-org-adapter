@@ -19525,7 +19525,7 @@ class SDOAdapter {
             RETRIEVAL_MEMORY.latest = RETRIEVAL_MEMORY.versionsFile.schemaversion;
           } else {
             if (RETRIEVAL_MEMORY.versionsFile.releaseLog) {
-              var versions = Object.keys(RETRIEVAL_MEMORY.versionsFile.releaseLog);
+              var versions = Object.keys(RETRIEVAL_MEMORY.versionsFile.releaseLog).sort();
 
               for (var i = versions.length - 1; i >= 0; i--) {
                 if (yield _this3.checkURL(URI_SDO_RELEASES + versions[i] + '/all-layers.jsonld')) {
