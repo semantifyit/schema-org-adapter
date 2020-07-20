@@ -1,6 +1,6 @@
 {
   "name": "schema-org-adapter",
-  "version": "1.5.1",
+  "version": "1.6.0",
   "description": "Fast, simple & flexible API for the Schema.org Vocabulary (and vocabulary extensions!) for Node and Browsers",
   "main": "src/SDOAdapter.js",
   "scripts": {
@@ -36,21 +36,21 @@
     "jsonld": "^2.0.2"
   },
   "devDependencies": {
-    "@babel/preset-env": "^7.9.6",
+    "@babel/preset-env": "^7.10.4",
     "babel-core": "^6.26.3",
     "babel-eslint": "^10.1.0",
     "babelify": "^10.0.0",
     "browserify": "^16.5.1",
-    "derequire": "^2.1.0",
+    "derequire": "^2.1.1",
     "eslint": "^6.8.0",
-    "eslint-plugin-jest": "^23.8.2",
+    "eslint-plugin-jest": "^23.18.0",
     "eslint-plugin-jsdoc": "^20.4.0",
     "eslint-plugin-markdown": "^1.0.2",
     "eslint-plugin-node": "^11.1.0",
-    "jest": "^25.4.0",
+    "jest": "^25.5.4",
     "jsdoc": "^3.6.4",
     "jsdoc-to-markdown": "^5.0.3",
-    "standard": "^14.3.3",
+    "standard": "^14.3.4",
     "uglifyify": "^5.0.2"
   },
   "jest": {
