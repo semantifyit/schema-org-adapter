@@ -3,8 +3,7 @@ const VOC_OBJ_ZOO = require('./data/exampleExternalVocabulary')
 const VOC_OBJ_SDO3_7 = require('./data/schema_3.7')
 const VOC_OBJ_GWON = require('./data/graph_with_one_node')
 const VOC_URL_ZOO = 'https://raw.githubusercontent.com/semantifyit/schema-org-adapter/master/tests/data/exampleExternalVocabulary.json'
-const VOC_URL_SDO5_0 = 'https://raw.githubusercontent.com/schemaorg/schemaorg/master/data/releases/5.0/all-layers.jsonld'
-const VOC_URL_SDO_LATEST = 'https://schema.org/version/latest/all-layers.jsonld' // expected to work in node, but not in browser
+const VOC_URL_SDO5_0 = 'https://raw.githubusercontent.com/schemaorg/schemaorg/main/data/releases/5.0/all-layers.jsonld'
 const VOC_URL_SDO5_0_DIRECT = 'https://schema.org/version/5.0/all-layers.jsonld' // expected to work in node, but not in browser
 
 describe('SDO Adapter methods', () => {
@@ -166,19 +165,11 @@ describe('SDO Adapter methods', () => {
       expect(data1a.length > 1000).toEqual(true)
     }
   )
-  test('fetch vocab by URL - sdo latest ', async () => {
-      const mySA2 = new SDOAdapter()
-      await mySA2.addVocabularies([VOC_URL_SDO_LATEST])
-      const data1b = mySA2.getAllProperties()
-      console.log(data1b.length)
-      expect(data1b.length > 1000).toBe(true)
-    }
-  )
 
   test('construct SDO URL', async () => {
       const mySA = new SDOAdapter()
       const url = await mySA.constructSDOVocabularyURL()
-      const versionPosition = 'https://raw.githubusercontent.com/schemaorg/schemaorg/master/data/releases/'.length
+      const versionPosition = 'https://raw.githubusercontent.com/schemaorg/schemaorg/main/data/releases/'.length
       console.log(url)
       expect(Number(url.substring(versionPosition, versionPosition + 3)) > 5).toBe(true)
       expect(url.includes('schema.jsonld')).toBe(true)
@@ -192,10 +183,10 @@ describe('SDO Adapter methods', () => {
       expect(url3.includes('all-layers.jsonld')).toBe(true)
       const url4 = await mySA.constructSDOVocabularyURL('3.9', 'all-layers')
       console.log(url4)
-      expect(url4).toBe('https://raw.githubusercontent.com/schemaorg/schemaorg/master/data/releases/3.9/all-layers.jsonld')
+      expect(url4).toBe('https://raw.githubusercontent.com/schemaorg/schemaorg/main/data/releases/3.9/all-layers.jsonld')
       const url5 = await mySA.constructSDOVocabularyURL('3.9', 'auto')
       console.log(url5)
-      expect(url5).toBe('https://raw.githubusercontent.com/schemaorg/schemaorg/master/data/releases/3.9/auto.jsonld')
+      expect(url5).toBe('https://raw.githubusercontent.com/schemaorg/schemaorg/main/data/releases/3.9/auto.jsonld')
     }
   )
   test('get lastest sdo version', async () => {

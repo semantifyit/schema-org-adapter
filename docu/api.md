@@ -40,6 +40,8 @@
     * [.getListOfEnumerationMembers(filter)](#SDOAdapter+getListOfEnumerationMembers) ⇒ <code>Array.&lt;string&gt;</code>
     * [.getVocabularies()](#SDOAdapter+getVocabularies) ⇒ <code>object</code>
     * [.constructSDOVocabularyURL(version, vocabularyPart)](#SDOAdapter+constructSDOVocabularyURL) ⇒ <code>Promise.&lt;string&gt;</code>
+    * [.getSDOVersionFile()](#SDOAdapter+getSDOVersionFile) ⇒ <code>Promise.&lt;void&gt;</code>
+    * [.checkURL(url)](#SDOAdapter+checkURL) ⇒ <code>Promise.&lt;boolean&gt;</code>
     * [.getLatestSDOVersion()](#SDOAdapter+getLatestSDOVersion) ⇒ <code>Promise.&lt;string&gt;</code>
 
 <a name="new_SDOAdapter_new"></a>
@@ -255,7 +257,7 @@ Returns key-value pairs of the vocabularies used in this SDOAdapter
 
 ### sdoAdapter.constructSDOVocabularyURL(version, vocabularyPart) ⇒ <code>Promise.&lt;string&gt;</code>
 Creates a URL pointing to the Schema.org vocabulary (the wished version/extension can be specified). This URL can then be added to the SDOAdapter to retrieve the Schema.org vocabulary. Invalid version or vocabularyPart arguments will result in errors, check https://schema.org/docs/developers.html for more information
-To achieve this, the Schema.org version listing on https://raw.githubusercontent.com/schemaorg/schemaorg/master/versions.json is used.
+To achieve this, the Schema.org version listing on https://raw.githubusercontent.com/schemaorg/schemaorg/main/versions.json is used.
 
 **Kind**: instance method of [<code>SDOAdapter</code>](#SDOAdapter)  
 **Returns**: <code>Promise.&lt;string&gt;</code> - The URL to the Schema.org vocabulary  
@@ -265,11 +267,32 @@ To achieve this, the Schema.org version listing on https://raw.githubusercontent
 | version | <code>string</code> | <code>&quot;latest&quot;</code> | the wished Schema.org vocabulary version for the resulting URL (e.g. "5.0", "3.7", or "latest"). default: "latest" |
 | vocabularyPart | <code>string</code> | <code>&quot;schema&quot;</code> | the wished part of the Schema.org vocabulary (schema.org has a core vocabulary and some extensions, check https://schema.org/docs/developers.html for more information). default: "schema" (the core vocabulary) |
 
+<a name="SDOAdapter+getSDOVersionFile"></a>
+
+### sdoAdapter.getSDOVersionFile() ⇒ <code>Promise.&lt;void&gt;</code>
+Retrieves the schema.org version listing at https://raw.githubusercontent.com/schemaorg/schemaorg/main/versions.json
+and saves it in the local memory. Also sends head-requests to determine if the 'latest' version is really 'fetchable'.
+If not, this head-requests are done again for older versions until the latest valid version is determined and saved in the memory.
+
+**Kind**: instance method of [<code>SDOAdapter</code>](#SDOAdapter)  
+**Returns**: <code>Promise.&lt;void&gt;</code> - Returns void when the process ends (signalizing the process ending).  
+<a name="SDOAdapter+checkURL"></a>
+
+### sdoAdapter.checkURL(url) ⇒ <code>Promise.&lt;boolean&gt;</code>
+Sends a head-request to the given URL, checking if content exists.
+
+**Kind**: instance method of [<code>SDOAdapter</code>](#SDOAdapter)  
+**Returns**: <code>Promise.&lt;boolean&gt;</code> - - returns true if there is content  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| url | <code>string</code> | the URL to check |
+
 <a name="SDOAdapter+getLatestSDOVersion"></a>
 
 ### sdoAdapter.getLatestSDOVersion() ⇒ <code>Promise.&lt;string&gt;</code>
 Returns the latest version number of the schema.org vocabulary
-To achieve this, the Schema.org version listing on https://raw.githubusercontent.com/schemaorg/schemaorg/master/versions.json is used.
+To achieve this, the Schema.org version listing on https://raw.githubusercontent.com/schemaorg/schemaorg/main/versions.json is used.
 
 **Kind**: instance method of [<code>SDOAdapter</code>](#SDOAdapter)  
 **Returns**: <code>Promise.&lt;string&gt;</code> - The latest version of the schema.org vocabulary  

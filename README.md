@@ -10,7 +10,7 @@ const SDOAdapter = require('schema-org-adapter')
 const mySDOAdapter = new SDOAdapter()
 
 const urlLatestSDO = await mySDOAdapter.constructSDOVocabularyURL('latest', 'all-layers') 
-// resolves to "https://raw.githubusercontent.com/schemaorg/schemaorg/master/data/releases/6.0/all-layers.jsonld" if 6.0 is the latest version
+// resolves to "https://raw.githubusercontent.com/schemaorg/schemaorg/main/data/releases/6.0/all-layers.jsonld" if 6.0 is the latest version
 await mySDOAdapter.addVocabularies([urlLatestSDO])
 
 let Hotel = mySDOAdapter.getClass('schema:Hotel')

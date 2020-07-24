@@ -19118,7 +19118,7 @@ var RETRIEVAL_MEMORY = {
   versionsFile: null,
   latest: null
 };
-var URI_SDO_GITHUB = 'https://raw.githubusercontent.com/schemaorg/schemaorg/master/';
+var URI_SDO_GITHUB = 'https://raw.githubusercontent.com/schemaorg/schemaorg/main/';
 var URI_SDO_RELEASES = URI_SDO_GITHUB + 'data/releases/';
 var URI_SDO_VERSIONS = URI_SDO_GITHUB + 'versions.json';
 
@@ -19459,7 +19459,7 @@ class SDOAdapter {
   }
   /**
    * Creates a URL pointing to the Schema.org vocabulary (the wished version/extension can be specified). This URL can then be added to the SDOAdapter to retrieve the Schema.org vocabulary. Invalid version or vocabularyPart arguments will result in errors, check https://schema.org/docs/developers.html for more information
-   * To achieve this, the Schema.org version listing on https://raw.githubusercontent.com/schemaorg/schemaorg/master/versions.json is used.
+   * To achieve this, the Schema.org version listing on https://raw.githubusercontent.com/schemaorg/schemaorg/main/versions.json is used.
    *
    * @param {?string} version - the wished Schema.org vocabulary version for the resulting URL (e.g. "5.0", "3.7", or "latest"). default: "latest"
    * @param {?string} vocabularyPart - the wished part of the Schema.org vocabulary (schema.org has a core vocabulary and some extensions, check https://schema.org/docs/developers.html for more information). default: "schema" (the core vocabulary)
@@ -19475,7 +19475,7 @@ class SDOAdapter {
       var version = _arguments.length > 0 && _arguments[0] !== undefined ? _arguments[0] : 'latest';
       var vocabularyPart = _arguments.length > 1 && _arguments[1] !== undefined ? _arguments[1] : 'schema';
 
-      // "https://raw.githubusercontent.com/schemaorg/schemaorg/master/data/releases/3.9/all-layers.jsonld";
+      // "https://raw.githubusercontent.com/schemaorg/schemaorg/main/data/releases/3.9/all-layers.jsonld";
       if (version === 'latest') {
         try {
           if (!RETRIEVAL_MEMORY.versionsFile) {
@@ -19495,7 +19495,7 @@ class SDOAdapter {
     })();
   }
   /**
-   * Retrieves the schema.org version listing at https://raw.githubusercontent.com/schemaorg/schemaorg/master/versions.json
+   * Retrieves the schema.org version listing at https://raw.githubusercontent.com/schemaorg/schemaorg/main/versions.json
    * and saves it in the local memory. Also sends head-requests to determine if the 'latest' version is really 'fetchable'.
    * If not, this head-requests are done again for older versions until the latest valid version is determined and saved in the memory.
    *
@@ -19564,7 +19564,7 @@ class SDOAdapter {
   }
   /**
    * Returns the latest version number of the schema.org vocabulary
-   * To achieve this, the Schema.org version listing on https://raw.githubusercontent.com/schemaorg/schemaorg/master/versions.json is used.
+   * To achieve this, the Schema.org version listing on https://raw.githubusercontent.com/schemaorg/schemaorg/main/versions.json is used.
    *
    * @returns {Promise.<string>} The latest version of the schema.org vocabulary
    */

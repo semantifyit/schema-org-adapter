@@ -1,3 +1,8 @@
+2.0.0 / 2020-07-24
+==================
+
+  * Schema.org has changed their repository structure renaming their "master"-branch to "main". This change broke up the implications of this tool regarding the programmatic construction of schema.org vocabulary URLs, so we updated them.
+
 1.6.0 / 2020-07-20
 ==================
 
