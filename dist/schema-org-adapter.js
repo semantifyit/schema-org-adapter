@@ -17386,7 +17386,7 @@ module.exports = Enumeration;
 },{"./utilities":82}],77:[function(_dereq_,module,exports){
 "use strict";
 
-//the functions for a enumeration member Object
+// the functions for a enumeration member Object
 var util = _dereq_('./utilities');
 
 class EnumerationMember {
@@ -17719,12 +17719,12 @@ class Graph {
         } // B) Classify Input
 
         /**
-         Classify every @graph node based on its @type. The node is transformed to another data-model based on the @type and stored in a new memory storage for an easier further usage. This is the first of two steps for an exact classification of the node, since the @type is not enough for a correct classification. The mapping of our data model and the @type(s) of the corresponding @graph nodes are as follows:
-         classes ("@type" = "rdfs:Class")
-         properties ("@type" = "rdf:Property")
-         dataTypes ("@type" = "rdfs:Class" + "http://schema.org/DataType")
-         enumerations ("@type" = "rdfs:Class", has "http://schema.org/Enumeration" as implicit super-class)
-         enumerationMembers ("@type" = @id(s) of enumeration(s))
+        Classify every @graph node based on its @type. The node is transformed to another data-model based on the @type and stored in a new memory storage for an easier further usage. This is the first of two steps for an exact classification of the node, since the @type is not enough for a correct classification. The mapping of our data model and the @type(s) of the corresponding @graph nodes are as follows:
+        classes ("@type" = "rdfs:Class")
+        properties ("@type" = "rdf:Property")
+        dataTypes ("@type" = "rdfs:Class" + "http://schema.org/DataType")
+        enumerations ("@type" = "rdfs:Class", has "http://schema.org/Enumeration" as implicit super-class)
+        enumerationMembers ("@type" = @id(s) of enumeration(s))
          */
 
 
@@ -17773,9 +17773,9 @@ class Graph {
         } // C) Classification cleaning
 
         /* To have a correct classification for our data model it is needed to clean the data generated in the previous step. Inaccurate records include:
-               Enumerations which are handled as Classes.
-               DataTypes which are handled as Classes.
-               */
+         Enumerations which are handled as Classes.
+         DataTypes which are handled as Classes.
+         */
         // C.1)  Extract enumerations from classes memory
         // For each entry in the classes memory check if its superClasses contain Enumeration or another Enumeration. If this is the case, it is known that this class is an enumeration.
 
@@ -17964,10 +17964,10 @@ class Graph {
         } // E) Relationships
 
         /*  In this step additional fields are added to certain data entries to add links to other data entries, which should make it easier to use the generated data set.#
-              soa:hasProperty is an inverse of schema:domainIncludes
-              soa:isRangeOf is an inverse of schema:rangeIncludes
-              soa:hasEnumerationMember is used for enumerations to list all its enumeration members (their @type includes the @id of the enumeration)
-              soa:enumerationDomainIncludes is an inverse of soa:hasEnumerationMember */
+        soa:hasProperty is an inverse of schema:domainIncludes
+        soa:isRangeOf is an inverse of schema:rangeIncludes
+        soa:hasEnumerationMember is used for enumerations to list all its enumeration members (their @type includes the @id of the enumeration)
+        soa:enumerationDomainIncludes is an inverse of soa:hasEnumerationMember */
         // E.0) add empty arrays for the relationships
 
 
@@ -18007,7 +18007,7 @@ class Graph {
           }
         }
         /* E.1) Add explicit hasProperty and isRangeOf to classes and enumerations
-              For each entry in the classes/enumeration memory, the properties field is added. This data field holds all properties which belong to this class (class/enumeration is domain for property). */
+        For each entry in the classes/enumeration memory, the properties field is added. This data field holds all properties which belong to this class (class/enumeration is domain for property). */
 
 
         propertyKeys = Object.keys(_this.properties);
@@ -18046,9 +18046,9 @@ class Graph {
           }
         }
         /* E.2) Add soa:hasEnumerationMember to enumerations and soa:enumerationDomainIncludes to enumerationMembers
-              For each entry in the enumeration memory the soa:hasEnumerationMember field is added, this data field holds all enumeration members which belong to this enumeration.
-              For each entry in the enumerationMembers memory the soa:enumerationDomainIncludes field is added, this data field holds all enumerations that are a domain for this enumerationMember
-              */
+        For each entry in the enumeration memory the soa:hasEnumerationMember field is added, this data field holds all enumeration members which belong to this enumeration.
+        For each entry in the enumerationMembers memory the soa:enumerationDomainIncludes field is added, this data field holds all enumerations that are a domain for this enumerationMember
+        */
 
 
         enumMemKeys = Object.keys(_this.enumerationMembers);
@@ -18576,7 +18576,7 @@ module.exports = Graph;
 },{"./Class":74,"./DataType":75,"./Enumeration":76,"./EnumerationMember":77,"./Property":79,"./ReasoningEngine":80,"./utilities":82}],79:[function(_dereq_,module,exports){
 "use strict";
 
-//the functions for a property Object
+// the functions for a property Object
 var util = _dereq_('./utilities');
 
 class Property {
@@ -18719,14 +18719,14 @@ class Property {
     result.push(...propertyObj['schema:rangeIncludes']);
 
     if (implicit === true) {
-      //add sub-classes from ranges
+      // add sub-classes from ranges
       var inferredSubClasses = [];
 
       for (var i = 0; i < result.length; i++) {
         inferredSubClasses.push(...this.graph.reasoner.inferImplicitSubClasses(result[i]));
       }
 
-      result.push(...inferredSubClasses); //remove "null" values from array (if range included data types)
+      result.push(...inferredSubClasses); // remove "null" values from array (if range included data types)
 
       result = result.filter(function (el) {
         return el !== null;
@@ -18752,7 +18752,7 @@ class Property {
     result.push(...propertyObj['schema:domainIncludes']);
 
     if (implicit === true) {
-      //add sub-classes from ranges
+      // add sub-classes from ranges
       var inferredSubClasses = [];
 
       for (var i = 0; i < result.length; i++) {
@@ -19134,7 +19134,7 @@ class SDOAdapter {
   /**
    * Adds vocabularies (in JSON-LD format or as URL) to the memory of this SDOAdapter. The function "constructSDOVocabularyURL()" helps you to construct URLs for the schema.org vocabulary
    *
-   * @param {Array.<string|JSON>} vocabArray - The vocabularies to add the graph, in JSON-LD format. Given directly as JSON or by a URL to fetch.
+   * @param {Array.<string|object>} vocabArray - The vocabularies to add the graph, in JSON-LD format. Given directly as JSON or by a URL to fetch.
    * @returns {Promise.<void>} This is an async function
    */
 
@@ -19479,9 +19479,9 @@ class SDOAdapter {
       if (version === 'latest') {
         try {
           if (!RETRIEVAL_MEMORY.versionsFile) {
-            //1. retrieve versions file if needed (checks for latest and valid version)
+            // 1. retrieve versions file if needed (checks for latest and valid version)
             yield _this2.getSDOVersionFile();
-          } //2. use latest version
+          } // 2. use latest version
 
 
           return URI_SDO_RELEASES + RETRIEVAL_MEMORY.latest + '/' + vocabularyPart + '.jsonld';
@@ -19507,14 +19507,14 @@ class SDOAdapter {
     var _this3 = this;
 
     return _asyncToGenerator(function* () {
-      var versionFile; //1. retrieve versions file
+      var versionFile; // 1. retrieve versions file
 
       try {
         versionFile = yield axios.get(URI_SDO_VERSIONS);
       } catch (e) {
         console.log('Unable to retrieve the schema.org versions file at ' + URI_SDO_VERSIONS);
         throw e;
-      } //2. determine the latest valid version
+      } // 2. determine the latest valid version
 
 
       if (versionFile && versionFile.data) {
@@ -19575,7 +19575,7 @@ class SDOAdapter {
 
     return _asyncToGenerator(function* () {
       if (!RETRIEVAL_MEMORY.latest) {
-        //retrieve versions file if needed (checks for latest and valid version)
+        // retrieve versions file if needed (checks for latest and valid version)
         yield _this4.getSDOVersionFile();
       }
 
@@ -19610,7 +19610,7 @@ function applyFilter(dataArray, filter, graph) {
     return dataArray;
   }
 
-  var result = []; //check if given value is absolute IRI, if yes, get the vocab indicator for it
+  var result = []; // check if given value is absolute IRI, if yes, get the vocab indicator for it
 
   var context = graph.context;
 
@@ -19630,7 +19630,7 @@ function applyFilter(dataArray, filter, graph) {
         }
       }
     }
-  } //check for every term, if it passes the filter conditions
+  } // check for every term, if it passes the filter conditions
 
 
   for (var i = 0; i < dataArray.length; i++) {
