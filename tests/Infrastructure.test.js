@@ -58,5 +58,5 @@ describe('Infrastructure testing', () => {
             console.log(currentFileURL);
             expect(await mySA.checkURL(currentFileURL)).toBe(true);
         }
-    }, 30000);
+    });
 });

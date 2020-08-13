@@ -16721,6 +16721,8 @@ class Class {
 
     if (classObj['dc:source'] !== undefined) {
       return classObj['dc:source'];
+    } else if (classObj['schema:source']) {
+      return classObj['schema:source'];
     } else {
       return null;
     }
@@ -16968,6 +16970,8 @@ class DataType {
 
     if (dataTypeObj['dc:source'] !== undefined) {
       return dataTypeObj['dc:source'];
+    } else if (dataTypeObj['schema:source']) {
+      return dataTypeObj['schema:source'];
     } else {
       return null;
     }
@@ -17183,6 +17187,8 @@ class Enumeration {
 
     if (enumObj['dc:source'] !== undefined) {
       return enumObj['dc:source'];
+    } else if (enumObj['schema:source']) {
+      return enumObj['schema:source'];
     } else {
       return null;
     }
@@ -17456,6 +17462,8 @@ class EnumerationMember {
 
     if (enumObj['dc:source'] !== undefined) {
       return enumObj['dc:source'];
+    } else if (enumObj['schema:source']) {
+      return enumObj['schema:source'];
     } else {
       return null;
     }
@@ -17679,6 +17687,10 @@ class Graph {
       },
       'dc:source': {
         '@id': 'dc:source',
+        '@type': '@id'
+      },
+      'schema:source': {
+        '@id': 'schema:source',
         '@type': '@id'
       }
     };
@@ -18109,6 +18121,10 @@ class Graph {
 
         if (newNode['dc:source'] !== undefined && newNode['dc:source'] !== null) {
           oldNode['dc:source'] = newNode['dc:source'];
+        }
+
+        if (newNode['schema:source'] !== undefined && newNode['schema:source'] !== null) {
+          oldNode['schema:source'] = newNode['schema:source'];
         } // schema:category -> overwrite
 
 
@@ -18646,6 +18662,8 @@ class Property {
 
     if (propertyObj['dc:source'] !== undefined) {
       return propertyObj['dc:source'];
+    } else if (propertyObj['schema:source']) {
+      return propertyObj['schema:source'];
     } else {
       return null;
     }
@@ -19114,10 +19132,6 @@ var util = _dereq_('./utilities');
 
 var axios = _dereq_('axios');
 
-var RETRIEVAL_MEMORY = {
-  versionsFile: null,
-  latest: null
-};
 var URI_SDO_GITHUB = 'https://raw.githubusercontent.com/schemaorg/schemaorg/main/';
 var URI_SDO_RELEASES = URI_SDO_GITHUB + 'data/releases/';
 var URI_SDO_VERSIONS = URI_SDO_GITHUB + 'versions.json';
@@ -19130,6 +19144,10 @@ class SDOAdapter {
    */
   constructor() {
     this.graph = new Graph(this);
+    this.retrievalMemory = {
+      versionsFile: null,
+      latest: null
+    };
   }
   /**
    * Adds vocabularies (in JSON-LD format or as URL) to the memory of this SDOAdapter. The function "constructSDOVocabularyURL()" helps you to construct URLs for the schema.org vocabulary
@@ -19458,11 +19476,10 @@ class SDOAdapter {
     return result;
   }
   /**
-   * Creates a URL pointing to the Schema.org vocabulary (the wished version/extension can be specified). This URL can then be added to the SDOAdapter to retrieve the Schema.org vocabulary. Invalid version or vocabularyPart arguments will result in errors, check https://schema.org/docs/developers.html for more information
+   * Creates a URL pointing to the Schema.org vocabulary (the wished version can be specified). This URL can then be added to the SDOAdapter to retrieve the Schema.org vocabulary. Invalid version argument will result in errors, check https://schema.org/docs/developers.html for more information
    * To achieve this, the Schema.org version listing on https://raw.githubusercontent.com/schemaorg/schemaorg/main/versions.json is used.
    *
    * @param {?string} version - the wished Schema.org vocabulary version for the resulting URL (e.g. "5.0", "3.7", or "latest"). default: "latest"
-   * @param {?string} vocabularyPart - the wished part of the Schema.org vocabulary (schema.org has a core vocabulary and some extensions, check https://schema.org/docs/developers.html for more information). default: "schema" (the core vocabulary)
    * @returns {Promise.<string>} The URL to the Schema.org vocabulary
    */
 
@@ -19473,25 +19490,23 @@ class SDOAdapter {
 
     return _asyncToGenerator(function* () {
       var version = _arguments.length > 0 && _arguments[0] !== undefined ? _arguments[0] : 'latest';
-      var vocabularyPart = _arguments.length > 1 && _arguments[1] !== undefined ? _arguments[1] : 'schema';
 
-      // "https://raw.githubusercontent.com/schemaorg/schemaorg/main/data/releases/3.9/all-layers.jsonld";
       if (version === 'latest') {
         try {
-          if (!RETRIEVAL_MEMORY.versionsFile) {
-            // 1. retrieve versions file if needed (checks for latest and valid version)
+          if (!_this2.retrievalMemory.versionsFile) {
+            // retrieve versionFile if needed (checks for latest and valid version)
             yield _this2.getSDOVersionFile();
-          } // 2. use latest version
-
-
-          return URI_SDO_RELEASES + RETRIEVAL_MEMORY.latest + '/' + vocabularyPart + '.jsonld';
+            version = _this2.retrievalMemory.latest;
+          }
         } catch (e) {
-          console.log('Could not determine/retrieve the latest version of schema.org');
+          console.error('Could not determine/retrieve the latest version of schema.org');
           throw e;
         }
-      } else {
-        return URI_SDO_RELEASES + version + '/' + vocabularyPart + '.jsonld';
       }
+
+      var fileName = util.getFileNameForSchemaOrgVersion(version); // This can throw an error if the version is <= 3.0
+
+      return URI_SDO_RELEASES + version + '/' + fileName; // e.g. "https://raw.githubusercontent.com/schemaorg/schemaorg/main/data/releases/3.9/all-layers.jsonld";
     })();
   }
   /**
@@ -19518,29 +19533,37 @@ class SDOAdapter {
 
 
       if (versionFile && versionFile.data) {
-        RETRIEVAL_MEMORY.versionsFile = versionFile.data;
+        _this3.retrievalMemory.versionsFile = versionFile.data;
 
-        if (RETRIEVAL_MEMORY.versionsFile.schemaversion) {
-          if (yield _this3.checkURL(URI_SDO_RELEASES + RETRIEVAL_MEMORY.versionsFile.schemaversion + '/all-layers.jsonld')) {
-            RETRIEVAL_MEMORY.latest = RETRIEVAL_MEMORY.versionsFile.schemaversion;
+        if (_this3.retrievalMemory.versionsFile.schemaversion) {
+          if (yield _this3.checkURL(yield _this3.constructSDOVocabularyURL(_this3.retrievalMemory.versionsFile.schemaversion))) {
+            _this3.retrievalMemory.latest = _this3.retrievalMemory.versionsFile.schemaversion;
           } else {
-            if (RETRIEVAL_MEMORY.versionsFile.releaseLog) {
-              var versions = Object.keys(RETRIEVAL_MEMORY.versionsFile.releaseLog).sort();
+            // If the version stated as latest by schema.org doesnt exist, then try the other versions given in the release log until we find a valid one
+            if (_this3.retrievalMemory.versionsFile.releaseLog) {
+              var sortedArray = util.sortReleaseEntriesByDate(_this3.retrievalMemory.versionsFile.releaseLog); // Sort release entries by the date. latest is first in array
 
-              for (var i = versions.length - 1; i >= 0; i--) {
-                if (yield _this3.checkURL(URI_SDO_RELEASES + versions[i] + '/all-layers.jsonld')) {
-                  RETRIEVAL_MEMORY.latest = versions[i];
+              for (var currVersion of sortedArray) {
+                if (yield _this3.checkURL(yield _this3.constructSDOVocabularyURL(currVersion[0]))) {
+                  _this3.retrievalMemory.latest = currVersion[0];
                   break;
                 }
               }
+            }
+
+            if (!_this3.retrievalMemory.latest) {
+              var _errMsg = 'Could not find any valid vocabulary file in the Schema.org versions file (to be declared as "latest".';
+              console.log(_errMsg);
+              throw new Error(_errMsg);
             }
           }
 
           return;
         }
 
-        console.log('Schema.org versions file has an unexpected structure -> ' + URI_SDO_VERSIONS);
-        throw new Error('Schema.org versions file has an unexpected structure!');
+        var errMsg = 'Schema.org versions file has an unexpected structure!';
+        console.log(errMsg + ' -> ' + URI_SDO_VERSIONS);
+        throw new Error(errMsg);
       }
     })();
   }
@@ -19574,12 +19597,12 @@ class SDOAdapter {
     var _this4 = this;
 
     return _asyncToGenerator(function* () {
-      if (!RETRIEVAL_MEMORY.latest) {
+      if (!_this4.retrievalMemory.latest) {
         // retrieve versions file if needed (checks for latest and valid version)
         yield _this4.getSDOVersionFile();
       }
 
-      return RETRIEVAL_MEMORY.latest;
+      return _this4.retrievalMemory.latest;
     })();
   }
 
@@ -20119,6 +20142,62 @@ function toAbsoluteIRI(compactIRI, context) {
 
   return null;
 }
+/**
+ * Returns a sorted Array of Arrays that have a schema.org vocabulary version as first entry and it's release date as second entry. Latest is first in array.
+ *
+ * @param {object} releaseLog - the releaseLog object from the versionsFile of schema.org
+ * @returns {array} - Array with sorted release Arrays -> [version, date]
+ */
+
+
+function sortReleaseEntriesByDate(releaseLog) {
+  var versionEntries = Object.entries(releaseLog);
+  return versionEntries.sort((a, b) => new Date(b[1]) - new Date(a[1]));
+}
+/**
+ * Returns the jsonld filename that holds the schema.org vocabulary for a given version.
+ *
+ * @param {string} version - the schema.org version
+ * @returns {string} - the corresponding jsonld filename
+ */
+
+
+function getFileNameForSchemaOrgVersion(version) {
+  switch (version) {
+    case '2.0':
+    case '2.1':
+    case '2.2':
+    case '3.0':
+      throw new Error('There is no jsonld file for that schema.org version.');
+
+    case '3.1':
+    case '3.2':
+    case '3.3':
+    case '3.4':
+    case '3.5':
+    case '3.6':
+    case '3.7':
+    case '3.8':
+    case '3.9':
+    case '4.0':
+    case '5.0':
+    case '6.0':
+    case '7.0':
+    case '7.01':
+    case '7.02':
+    case '7.03':
+    case '7.04':
+    case '8.0':
+      return 'all-layers.jsonld';
+
+    case '9.0':
+      return 'schemaorg-all-http.jsonld';
+
+    default:
+      return 'schemaorg-all-http.jsonld';
+    // this is expected for newer releases that are not covered yet
+  }
+}
 
 module.exports = {
   applyFilter,
@@ -20131,7 +20210,9 @@ module.exports = {
   generateContext,
   curateVocabNode,
   toCompactIRI,
-  toAbsoluteIRI
+  toAbsoluteIRI,
+  sortReleaseEntriesByDate,
+  getFileNameForSchemaOrgVersion
 };
 
 },{"jsonld":46}]},{},[81])(81)

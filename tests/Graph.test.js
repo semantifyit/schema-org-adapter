@@ -1,20 +1,23 @@
 const SDOAdapter = require('../src/SDOAdapter');
 const Graph = require('../src/Graph');
 const VOC_OBJ_ZOO = require('./data/exampleExternalVocabulary');
-const VOC_OBJ_SDO3_7 = require('./data/schema_3.7');
+let VOC_URL_LATEST;
+let VOC_OBJ_LATEST;
 
 /**
  * starts a SDO Adapter for a test
  */
 async function initGraph() {
     const mySA = new SDOAdapter();
+    VOC_URL_LATEST = await mySA.constructSDOVocabularyURL('latest');
+    VOC_OBJ_LATEST = await mySA.fetchVocabularyFromURL(VOC_URL_LATEST);
     return new Graph(mySA);
 }
 
 describe('Graph methods', () => {
     test('addVocabulary()', async() => {
         const myGraph = await initGraph();
-        await myGraph.addVocabulary(VOC_OBJ_SDO3_7);
+        await myGraph.addVocabulary(VOC_OBJ_LATEST);
         const Place = myGraph.getClass('schema:Thing');
         expect(Place.getSubClasses(false).length).toBe(10);
         expect(Place.getSubClasses(false)).not.toContain('ex:Tiger');
@@ -25,7 +28,7 @@ describe('Graph methods', () => {
 
     test('getTerm()', async() => {
         const myGraph = await initGraph();
-        await myGraph.addVocabulary(VOC_OBJ_SDO3_7);
+        await myGraph.addVocabulary(VOC_OBJ_LATEST);
         const hospital = myGraph.getClass('schema:Hospital');
         const hospital2 = myGraph.getTerm('schema:Hospital');
         expect(hospital).toEqual(hospital2);
@@ -45,7 +48,7 @@ describe('Graph methods', () => {
 
     test('discoverCompactIRI()', async() => {
         const myGraph = await initGraph();
-        await myGraph.addVocabulary(VOC_OBJ_SDO3_7);
+        await myGraph.addVocabulary(VOC_OBJ_LATEST);
         expect(myGraph.discoverCompactIRI('Hotel')).toBe('schema:Hotel');
         expect(myGraph.discoverCompactIRI('schema:Hotel')).toBe('schema:Hotel');
         expect(myGraph.discoverCompactIRI('http://schema.org/Hotel')).toBe('schema:Hotel');
@@ -78,7 +81,7 @@ describe('Graph methods', () => {
             ]
         };
         const myGraph = await initGraph();
-        await myGraph.addVocabulary(VOC_OBJ_SDO3_7);
+        await myGraph.addVocabulary(VOC_OBJ_LATEST);
         await myGraph.addVocabulary(VOC_OBJ_ZOO);
         expect(myGraph.classes['ex:SnowTrail']).toBe(undefined);
         await myGraph.addGraphNode(myGraph.classes, snowTrailObjEng);

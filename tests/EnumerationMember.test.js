@@ -1,12 +1,12 @@
 const SDOAdapter = require('../src/SDOAdapter');
-const VOC_OBJ_SDO3_7 = require('./data/schema_3.7');
 
 /**
  *
  */
 async function initAdapter() {
     const mySA = new SDOAdapter();
-    await mySA.addVocabularies([VOC_OBJ_SDO3_7]);
+    const mySDOUrl = await mySA.constructSDOVocabularyURL('latest');
+    await mySA.addVocabularies([mySDOUrl]);
     return mySA;
 }
 

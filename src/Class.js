@@ -60,6 +60,8 @@ class Class {
         const classObj = this.graph.classes[this.IRI];
         if (classObj['dc:source'] !== undefined) {
             return classObj['dc:source'];
+        } else if(classObj['schema:source']){
+            return classObj['schema:source'];
         } else {
             return null;
         }

@@ -54,7 +54,8 @@
     "uglifyify": "^5.0.2"
   },
   "jest": {
-    "testEnvironment": "node"
+    "testEnvironment": "node",
+    "testTimeout": 30000
   },
   "standard": {
     "env": [

@@ -60,6 +60,8 @@ class EnumerationMember {
         let enumObj = this.graph.enumerationMembers[this.IRI];
         if (enumObj['dc:source'] !== undefined) {
             return enumObj['dc:source'];
+        } else if (enumObj['schema:source']) {
+            return enumObj['schema:source'];
         } else {
             return null;
         }

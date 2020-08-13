@@ -84,7 +84,11 @@ class Graph {
             'dc:source': {
                 '@id': 'dc:source',
                 '@type': '@id'
-            }
+            },
+            'schema:source': {
+                '@id': 'schema:source',
+                '@type': '@id'
+            },
         };
         this.classes = {}; // keys are the compacted IRI
         this.properties = {}; // keys are the compacted IRI
@@ -432,6 +436,9 @@ class Graph {
                 // dc:source -> overwrite
                 if (newNode['dc:source'] !== undefined && newNode['dc:source'] !== null) {
                     oldNode['dc:source'] = newNode['dc:source'];
+                }
+                if (newNode['schema:source'] !== undefined && newNode['schema:source'] !== null) {
+                    oldNode['schema:source'] = newNode['schema:source'];
                 }
                 // schema:category -> overwrite
                 if (newNode['schema:category'] !== undefined && newNode['schema:category'] !== null) {

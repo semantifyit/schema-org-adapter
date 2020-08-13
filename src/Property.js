@@ -60,6 +60,8 @@ class Property {
         let propertyObj = this.graph.properties[this.IRI];
         if (propertyObj['dc:source'] !== undefined) {
             return propertyObj['dc:source'];
+        } else if (propertyObj['schema:source']) {
+            return propertyObj['schema:source'];
         } else {
             return null;
         }

@@ -1,6 +1,5 @@
 const SDOAdapter = require('../src/SDOAdapter'); // load the SDOAdapter library
 const VOC_EXAMPLE = require('./data/exampleExternalVocabulary'); // load our external vocabulary
-
 const mySA = new SDOAdapter(); // create an instance of the SDOAdapter
 
 main();

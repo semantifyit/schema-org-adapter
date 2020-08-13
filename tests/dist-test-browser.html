@@ -22,7 +22,7 @@
 
     mySA.constructSDOVocabularyURL('latest').then(function (sdoURL) {
       mySA.addVocabularies([sdoURL, externalVocabURL]).then(function () {
-        let testClass = mySA.getClass('LodgingBusiness')
+        let testClass = mySA.getClass('Hotel')
         console.log(testClass.getName())
         console.log(testClass.getDescription('en'))
         console.log(testClass.toJSON(true))

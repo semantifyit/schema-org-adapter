@@ -39,7 +39,7 @@
     * [.getAllEnumerationMembers(filter)](#SDOAdapter+getAllEnumerationMembers) ⇒ [<code>Array.&lt;EnumerationMember&gt;</code>](#EnumerationMember)
     * [.getListOfEnumerationMembers(filter)](#SDOAdapter+getListOfEnumerationMembers) ⇒ <code>Array.&lt;string&gt;</code>
     * [.getVocabularies()](#SDOAdapter+getVocabularies) ⇒ <code>object</code>
-    * [.constructSDOVocabularyURL(version, vocabularyPart)](#SDOAdapter+constructSDOVocabularyURL) ⇒ <code>Promise.&lt;string&gt;</code>
+    * [.constructSDOVocabularyURL(version)](#SDOAdapter+constructSDOVocabularyURL) ⇒ <code>Promise.&lt;string&gt;</code>
     * [.getSDOVersionFile()](#SDOAdapter+getSDOVersionFile) ⇒ <code>Promise.&lt;void&gt;</code>
     * [.checkURL(url)](#SDOAdapter+checkURL) ⇒ <code>Promise.&lt;boolean&gt;</code>
     * [.getLatestSDOVersion()](#SDOAdapter+getLatestSDOVersion) ⇒ <code>Promise.&lt;string&gt;</code>
@@ -59,7 +59,7 @@ Adds vocabularies (in JSON-LD format or as URL) to the memory of this SDOAdapter
 
 | Param | Type | Description |
 | --- | --- | --- |
-| vocabArray | <code>Array.&lt;(string\|JSON)&gt;</code> | The vocabularies to add the graph, in JSON-LD format. Given directly as JSON or by a URL to fetch. |
+| vocabArray | <code>Array.&lt;(string\|object)&gt;</code> | The vocabularies to add the graph, in JSON-LD format. Given directly as JSON or by a URL to fetch. |
 
 <a name="SDOAdapter+getClass"></a>
 
@@ -255,8 +255,8 @@ Returns key-value pairs of the vocabularies used in this SDOAdapter
 **Returns**: <code>object</code> - An object containing the key-value pairs representing the used vocabularies  
 <a name="SDOAdapter+constructSDOVocabularyURL"></a>
 
-### sdoAdapter.constructSDOVocabularyURL(version, vocabularyPart) ⇒ <code>Promise.&lt;string&gt;</code>
-Creates a URL pointing to the Schema.org vocabulary (the wished version/extension can be specified). This URL can then be added to the SDOAdapter to retrieve the Schema.org vocabulary. Invalid version or vocabularyPart arguments will result in errors, check https://schema.org/docs/developers.html for more information
+### sdoAdapter.constructSDOVocabularyURL(version) ⇒ <code>Promise.&lt;string&gt;</code>
+Creates a URL pointing to the Schema.org vocabulary (the wished version can be specified). This URL can then be added to the SDOAdapter to retrieve the Schema.org vocabulary. Invalid version argument will result in errors, check https://schema.org/docs/developers.html for more information
 To achieve this, the Schema.org version listing on https://raw.githubusercontent.com/schemaorg/schemaorg/main/versions.json is used.
 
 **Kind**: instance method of [<code>SDOAdapter</code>](#SDOAdapter)  
@@ -265,7 +265,6 @@ To achieve this, the Schema.org version listing on https://raw.githubusercontent
 | Param | Type | Default | Description |
 | --- | --- | --- | --- |
 | version | <code>string</code> | <code>&quot;latest&quot;</code> | the wished Schema.org vocabulary version for the resulting URL (e.g. "5.0", "3.7", or "latest"). default: "latest" |
-| vocabularyPart | <code>string</code> | <code>&quot;schema&quot;</code> | the wished part of the Schema.org vocabulary (schema.org has a core vocabulary and some extensions, check https://schema.org/docs/developers.html for more information). default: "schema" (the core vocabulary) |
 
 <a name="SDOAdapter+getSDOVersionFile"></a>
 

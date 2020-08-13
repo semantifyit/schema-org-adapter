@@ -1,14 +1,14 @@
 const util = require('./../src/utilities');
 const SDOAdapter = require('../src/SDOAdapter');
 const VOC_OBJ_ZOO = require('./data/exampleExternalVocabulary');
-const VOC_OBJ_SDO3_7 = require('./data/schema_3.7');
 
 /**
  *
  */
 async function initAdapter() {
     const mySA = new SDOAdapter();
-    await mySA.addVocabularies([VOC_OBJ_SDO3_7, VOC_OBJ_ZOO]);
+    const mySDOUrl = await mySA.constructSDOVocabularyURL('latest');
+    await mySA.addVocabularies([mySDOUrl, VOC_OBJ_ZOO]);
     return mySA;
 }
 
@@ -18,7 +18,7 @@ const testContext = {
     xsd: 'http://www.w3.org/2001/XMLSchema#',
     dc: 'http://purl.org/dc/terms/',
     schema: 'http://schema.org/',
-    'ex': 'https://example-vocab.ex/',
+    ex: 'https://example-vocab.ex/',
     soa: 'http://schema-org-adapter.at/vocabTerms/',
     'soa:superClassOf': {
         '@id': 'soa:superClassOf',
@@ -74,6 +74,10 @@ const testContext = {
     },
     'dc:source': {
         '@id': 'dc:source',
+        '@type': '@id'
+    },
+    'schema:source': {
+        '@id': 'schema:source',
         '@type': '@id'
     }
 };

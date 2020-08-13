@@ -60,6 +60,8 @@ class DataType {
         const dataTypeObj = this.graph.dataTypes[this.IRI];
         if (dataTypeObj['dc:source'] !== undefined) {
             return dataTypeObj['dc:source'];
+        } else if (dataTypeObj['schema:source']) {
+            return dataTypeObj['schema:source'];
         } else {
             return null;
         }
