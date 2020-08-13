@@ -2,11 +2,6 @@ const Graph = require('./Graph');
 const util = require('./utilities');
 const axios = require('axios');
 
-const RETRIEVAL_MEMORY = {
-    versionsFile: null,
-    latest: null
-};
-
 const URI_SDO_GITHUB = 'https://raw.githubusercontent.com/schemaorg/schemaorg/main/';
 const URI_SDO_RELEASES = URI_SDO_GITHUB + 'data/releases/';
 const URI_SDO_VERSIONS = URI_SDO_GITHUB + 'versions.json';
@@ -19,6 +14,10 @@ class SDOAdapter {
      */
     constructor() {
         this.graph = new Graph(this);
+        this.retrievalMemory = {
+            versionsFile: null,
+            latest: null
+        };
     }
 
     /**
@@ -34,7 +33,7 @@ class SDOAdapter {
                 if (util.isString(vocabArray[i])) {
                     if (
                         vocabArray[i].startsWith('www') ||
-            vocabArray[i].startsWith('http')
+                        vocabArray[i].startsWith('http')
                     ) {
                         // assume it is a URL
                         const fetchedVocab = await this.fetchVocabularyFromURL(
@@ -45,8 +44,8 @@ class SDOAdapter {
                         } catch (e) {
                             console.log(
                                 'The given URL ' +
-                vocabArray[i] +
-                ' did not contain a valid JSON-LD vocabulary.'
+                                vocabArray[i] +
+                                ' did not contain a valid JSON-LD vocabulary.'
                             );
                         }
                     } else {
@@ -101,7 +100,7 @@ class SDOAdapter {
      * @returns {Class|Enumeration} The JS-Class representing a Class of an Enumeration (depending on the given id)
      */
     getClass(id, filter = null) {
-    // returns also enumerations
+        // returns also enumerations
         return this.graph.getClass(id, filter);
     }
 
@@ -131,7 +130,7 @@ class SDOAdapter {
      * @returns {Array.<string>} An array of IRIs representing all vocabulary Classes, does not include Enumerations
      */
     getListOfClasses(filter = null) {
-    // do not include enumerations
+        // do not include enumerations
         return util.applyFilter(
             Object.keys(this.graph.classes),
             filter,
@@ -335,30 +334,28 @@ class SDOAdapter {
     }
 
     /**
-     * Creates a URL pointing to the Schema.org vocabulary (the wished version/extension can be specified). This URL can then be added to the SDOAdapter to retrieve the Schema.org vocabulary. Invalid version or vocabularyPart arguments will result in errors, check https://schema.org/docs/developers.html for more information
+     * Creates a URL pointing to the Schema.org vocabulary (the wished version can be specified). This URL can then be added to the SDOAdapter to retrieve the Schema.org vocabulary. Invalid version argument will result in errors, check https://schema.org/docs/developers.html for more information
      * To achieve this, the Schema.org version listing on https://raw.githubusercontent.com/schemaorg/schemaorg/main/versions.json is used.
      *
      * @param {?string} version - the wished Schema.org vocabulary version for the resulting URL (e.g. "5.0", "3.7", or "latest"). default: "latest"
-     * @param {?string} vocabularyPart - the wished part of the Schema.org vocabulary (schema.org has a core vocabulary and some extensions, check https://schema.org/docs/developers.html for more information). default: "schema" (the core vocabulary)
      * @returns {Promise.<string>} The URL to the Schema.org vocabulary
      */
-    async constructSDOVocabularyURL(version = 'latest', vocabularyPart = 'schema') {
-    // "https://raw.githubusercontent.com/schemaorg/schemaorg/main/data/releases/3.9/all-layers.jsonld";
+    async constructSDOVocabularyURL(version = 'latest') {
         if (version === 'latest') {
             try {
-                if (!RETRIEVAL_MEMORY.versionsFile) {
-                    // 1. retrieve versions file if needed (checks for latest and valid version)
+                if (!this.retrievalMemory.versionsFile) {
+                    // retrieve versionFile if needed (checks for latest and valid version)
                     await this.getSDOVersionFile();
+                    version = this.retrievalMemory.latest;
                 }
-                // 2. use latest version
-                return URI_SDO_RELEASES + RETRIEVAL_MEMORY.latest + '/' + vocabularyPart + '.jsonld';
             } catch (e) {
-                console.log('Could not determine/retrieve the latest version of schema.org');
+                console.error('Could not determine/retrieve the latest version of schema.org');
                 throw e;
             }
-        } else {
-            return URI_SDO_RELEASES + version + '/' + vocabularyPart + '.jsonld';
         }
+        const fileName = util.getFileNameForSchemaOrgVersion(version); // This can throw an error if the version is <= 3.0
+        return URI_SDO_RELEASES + version + '/' + fileName;
+        // e.g. "https://raw.githubusercontent.com/schemaorg/schemaorg/main/data/releases/3.9/all-layers.jsonld";
     }
 
     /**
@@ -379,25 +376,33 @@ class SDOAdapter {
         }
         // 2. determine the latest valid version
         if (versionFile && versionFile.data) {
-            RETRIEVAL_MEMORY.versionsFile = versionFile.data;
-            if (RETRIEVAL_MEMORY.versionsFile.schemaversion) {
-                if (await this.checkURL(URI_SDO_RELEASES + RETRIEVAL_MEMORY.versionsFile.schemaversion + '/all-layers.jsonld')) {
-                    RETRIEVAL_MEMORY.latest = RETRIEVAL_MEMORY.versionsFile.schemaversion;
+            this.retrievalMemory.versionsFile = versionFile.data;
+            if (this.retrievalMemory.versionsFile.schemaversion) {
+                if (await this.checkURL(await this.constructSDOVocabularyURL(this.retrievalMemory.versionsFile.schemaversion))) {
+                    this.retrievalMemory.latest = this.retrievalMemory.versionsFile.schemaversion;
                 } else {
-                    if (RETRIEVAL_MEMORY.versionsFile.releaseLog) {
-                        let versions = Object.keys(RETRIEVAL_MEMORY.versionsFile.releaseLog).sort();
-                        for (let i = versions.length - 1; i >= 0; i--) {
-                            if (await this.checkURL(URI_SDO_RELEASES + versions[i] + '/all-layers.jsonld')) {
-                                RETRIEVAL_MEMORY.latest = versions[i];
+                    // If the version stated as latest by schema.org doesnt exist, then try the other versions given in the release log until we find a valid one
+                    if (this.retrievalMemory.versionsFile.releaseLog) {
+                        const sortedArray = util.sortReleaseEntriesByDate(this.retrievalMemory.versionsFile.releaseLog);
+                        // Sort release entries by the date. latest is first in array
+                        for (const currVersion of sortedArray) {
+                            if (await this.checkURL(await this.constructSDOVocabularyURL(currVersion[0]))) {
+                                this.retrievalMemory.latest = currVersion[0];
                                 break;
                             }
                         }
                     }
+                    if (!this.retrievalMemory.latest) {
+                        let errMsg = 'Could not find any valid vocabulary file in the Schema.org versions file (to be declared as "latest".';
+                        console.log(errMsg);
+                        throw new Error(errMsg);
+                    }
                 }
                 return;
             }
-            console.log('Schema.org versions file has an unexpected structure -> ' + URI_SDO_VERSIONS);
-            throw new Error('Schema.org versions file has an unexpected structure!');
+            let errMsg = 'Schema.org versions file has an unexpected structure!';
+            console.log(errMsg + ' -> ' + URI_SDO_VERSIONS);
+            throw new Error(errMsg);
         }
     }
 
@@ -423,11 +428,11 @@ class SDOAdapter {
      * @returns {Promise.<string>} The latest version of the schema.org vocabulary
      */
     async getLatestSDOVersion() {
-        if (!RETRIEVAL_MEMORY.latest) {
+        if (!this.retrievalMemory.latest) {
             // retrieve versions file if needed (checks for latest and valid version)
             await this.getSDOVersionFile();
         }
-        return RETRIEVAL_MEMORY.latest;
+        return this.retrievalMemory.latest;
     }
 }
 

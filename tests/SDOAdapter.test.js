@@ -163,37 +163,23 @@ describe('SDO Adapter methods', () => {
         const data1a = mySA.getAllProperties();
         console.log(data1a.length);
         expect(data1a.length > 1000).toEqual(true);
-    }
-    );
+    });
 
     test('construct SDO URL', async() => {
         const mySA = new SDOAdapter();
-        const url = await mySA.constructSDOVocabularyURL();
-        const versionPosition = 'https://raw.githubusercontent.com/schemaorg/schemaorg/main/data/releases/'.length;
+        const url = await mySA.constructSDOVocabularyURL('9.0');
         console.log(url);
-        expect(Number(url.substring(versionPosition, versionPosition + 3)) > 5).toBe(true);
-        expect(url.includes('schema.jsonld')).toBe(true);
-        const url2 = await mySA.constructSDOVocabularyURL('latest');
+        expect(url).toBe('https://raw.githubusercontent.com/schemaorg/schemaorg/main/data/releases/9.0/schemaorg-all-http.jsonld');
+        const url2 = await mySA.constructSDOVocabularyURL('3.9');
         console.log(url2);
-        expect(Number(url2.substring(versionPosition, versionPosition + 3)) > 5).toBe(true);
-        expect(url2.includes('schema.jsonld')).toBe(true);
-        const url3 = await mySA.constructSDOVocabularyURL('latest', 'all-layers');
-        console.log(url3);
-        expect(Number(url3.substring(versionPosition, versionPosition + 3)) > 5).toBe(true);
-        expect(url3.includes('all-layers.jsonld')).toBe(true);
-        const url4 = await mySA.constructSDOVocabularyURL('3.9', 'all-layers');
-        console.log(url4);
-        expect(url4).toBe('https://raw.githubusercontent.com/schemaorg/schemaorg/main/data/releases/3.9/all-layers.jsonld');
-        const url5 = await mySA.constructSDOVocabularyURL('3.9', 'auto');
-        console.log(url5);
-        expect(url5).toBe('https://raw.githubusercontent.com/schemaorg/schemaorg/main/data/releases/3.9/auto.jsonld');
-    }
-    );
+        expect(url2).toBe('https://raw.githubusercontent.com/schemaorg/schemaorg/main/data/releases/3.9/all-layers.jsonld');
+    });
+
     test('get lastest sdo version', async() => {
         const mySA = new SDOAdapter();
         const latestVersion = await mySA.getLatestSDOVersion();
         console.log(latestVersion);
         expect(Number(latestVersion) > 5).toBe(true);
-    }
-    );
+        expect(Object.keys(mySA.retrievalMemory.versionsFile.releaseLog).includes(latestVersion)).toBe(true);
+    });
 });

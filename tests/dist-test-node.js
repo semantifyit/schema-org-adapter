@@ -8,7 +8,7 @@ main();
  * example usage of the library within node.js
  */
 async function main() {
-    const mySDOUrl = await mySA.constructSDOVocabularyURL('latest', 'all-layers');
+    const mySDOUrl = await mySA.constructSDOVocabularyURL('latest');
     await mySA.addVocabularies([mySDOUrl, VOC_OBJ_ZOO]);
     let testClass = mySA.getClass('http://schema.org/Person');
     console.log(mySA.getVocabularies());

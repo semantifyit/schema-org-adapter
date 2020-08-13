@@ -307,7 +307,7 @@ async function preProcessVocab(vocab, newContext) {
  */
 function curateVocabNode(vocabNode, vocabularies) {
     if (vocabNode['rdfs:comment'] !== undefined) {
-    // make a vocab object with "en" as the standard value
+        // make a vocab object with "en" as the standard value
         if (isString(vocabNode['rdfs:comment'])) {
             // standard -> "en"
             vocabNode['rdfs:comment'] = {
@@ -330,7 +330,7 @@ function curateVocabNode(vocabNode, vocabularies) {
         vocabNode['rdfs:comment'] = {};
     }
     if (vocabNode['rdfs:label'] !== undefined) {
-    // make a vocab object with "en" as the standard value
+        // make a vocab object with "en" as the standard value
         if (isString(vocabNode['rdfs:label'])) {
             // "rdfs:label": "transcript"
             // standard -> "en"
@@ -451,6 +451,56 @@ function toAbsoluteIRI(compactIRI, context) {
     return null;
 }
 
+/**
+ * Returns a sorted Array of Arrays that have a schema.org vocabulary version as first entry and it's release date as second entry. Latest is first in array.
+ *
+ * @param {object} releaseLog - the releaseLog object from the versionsFile of schema.org
+ * @returns {array)} - Array with sorted release Arrays -> [version, date]
+ */
+function sortReleaseEntriesByDate(releaseLog) {
+    let versionEntries = Object.entries(releaseLog);
+    return versionEntries.sort((a, b) => new Date(b[1]) - new Date(a[1]));
+}
+
+/**
+ * Returns the jsonld filename that holds the schema.org vocabulary for a given version.
+ *
+ * @param {string} version - the schema.org version
+ * @returns {string} - the corresponding jsonld filename
+ */
+function getFileNameForSchemaOrgVersion(version) {
+    switch (version) {
+        case '2.0':
+        case '2.1':
+        case '2.2':
+        case '3.0':
+            throw new Error('There is no jsonld file for that schema.org version.');
+        case '3.1':
+        case '3.2':
+        case '3.3':
+        case '3.4':
+        case '3.5':
+        case '3.6':
+        case '3.7':
+        case '3.8':
+        case '3.9':
+        case '4.0':
+        case '5.0':
+        case '6.0':
+        case '7.0':
+        case '7.01':
+        case '7.02':
+        case '7.03':
+        case '7.04':
+        case '8.0':
+            return 'all-layers.jsonld';
+        case '9.0':
+            return 'schemaorg-all-http.jsonld';
+        default:
+            return 'schemaorg-all-http.jsonld'; // this is expected for newer releases that are not covered yet
+    }
+}
+
 module.exports = {
     applyFilter,
     copByVal,
@@ -462,5 +512,7 @@ module.exports = {
     generateContext,
     curateVocabNode,
     toCompactIRI,
-    toAbsoluteIRI
+    toAbsoluteIRI,
+    sortReleaseEntriesByDate,
+    getFileNameForSchemaOrgVersion
 };

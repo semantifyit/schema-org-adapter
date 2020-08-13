@@ -20,7 +20,7 @@
     let mySA = new SDOAdapter()
     let externalVocabURL= "https://raw.githubusercontent.com/semantifyit/schema-org-adapter/master/tests/data/exampleExternalVocabulary.json";
 
-    mySA.constructSDOVocabularyURL('latest', 'all-layers').then(function (sdoURL) {
+    mySA.constructSDOVocabularyURL('latest').then(function (sdoURL) {
       mySA.addVocabularies([sdoURL, externalVocabURL]).then(function () {
         let testClass = mySA.getClass('LodgingBusiness')
         console.log(testClass.getName())

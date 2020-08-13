@@ -9,7 +9,7 @@ main();
  * example usage of the SDOAdapter in node.js
  */
 async function main() {
-    const mySDOUrl = await mySA.constructSDOVocabularyURL('latest', 'schema'); // construct the latest vocabulary URL for Schema.org
+    const mySDOUrl = await mySA.constructSDOVocabularyURL('latest'); // construct the latest vocabulary URL for Schema.org
     await mySA.addVocabularies([mySDOUrl, VOC_EXAMPLE]); // add schema.org and our external vocabulary to the SDOAdapter
     let AnimalClass = mySA.getClass('ex:Animal'); // get a JS-Class for the Class-Term https://example-vocab.ex/Animal , note that the compacted version of the IRI is also a valid parameter for the function
     console.log(JSON.stringify(AnimalClass.toJSON(true, null), null, 2)); // AnimalClass.toJSON() prints a JSON version of the Class, note that here we pass 'true' as parameter for the reasoning (the result will contain attributes resolved though reasoning, e.g. properties of super-classes)
