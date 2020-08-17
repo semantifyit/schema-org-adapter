@@ -5,11 +5,14 @@
 <br><br>
 <a href="https://www.npmjs.com/package/schema-org-adapter" rel="nofollow"><img src="https://img.shields.io/npm/v/schema-org-adapter.svg" alt="NPM Version"></a>
 <a href="https://eslint.org/"><img src="https://img.shields.io/badge/code%20style-ESLint-brightgreen" alt="Code style in ESLint" /></a>
-<a href="https://creativecommons.org/licenses/by-sa/4.0/"><img src="https://img.shields.io/badge/License-CC%20BY--SA%204.0-lightgrey.svg" alt="License: CC BY-SA 4.0" /></a>
+<a href="https://david-dm.org/semantifyit/schema-org-adapter"><img src="https://david-dm.org/semantifyit/schema-org-adapter.svg" alt="Dependencies" /></a>
+<a href="https://github.com/semantifyit/schema-org-adapter/issues"><img src="https://img.shields.io/github/issues/semantifyit/schema-org-adapter.svg" alt="Issues open" /></a>
 <br>
 <img src="/coverage/badge-functions.svg" alt="Jest Test Coverage Functions" />
 <img src="/coverage/badge-lines.svg" alt="Jest Test Coverage Lines" />
 <img src="/coverage/badge-statements.svg" alt="Jest Test Coverage Statements" />
+<br>
+<a href="https://creativecommons.org/licenses/by-sa/4.0/"><img src="https://img.shields.io/badge/License-CC%20BY--SA%204.0-lightgrey.svg" alt="License: CC BY-SA 4.0" /></a>
 </div>
 <br>
 
