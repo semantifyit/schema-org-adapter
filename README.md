@@ -92,6 +92,7 @@ It is possible to filter the results of some functions by passing a filter objec
 ```javascript
 const SDOAdapter = require('schema-org-adapter');
 const mySdoAdapter = new SDOAdapter();
+await mySdoAdapter.addVocabularies(await mySDOAdapter.constructSDOVocabularyURL('latest'));
 
 //get list of classes that are NOT superseded
 let listOfClasses = mySdoAdapter.getAllClasses({

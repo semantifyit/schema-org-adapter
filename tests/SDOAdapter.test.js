@@ -48,6 +48,46 @@ describe('SDO Adapter methods', () => {
         expect(vocabs.ex).toBe('https://example-vocab.ex/');
     });
 
+    test('getTerm()', async() => {
+        const mySA = new SDOAdapter();
+        await mySA.addVocabularies(VOC_OBJ_SDO3_7);
+        const hospital = mySA.getClass('schema:Hospital');
+        const hospital2 = mySA.getTerm('schema:Hospital');
+        expect(hospital).toEqual(hospital2);
+        const address = mySA.getProperty('schema:address');
+        const address2 = mySA.getTerm('schema:address');
+        expect(address).toEqual(address2);
+        const numb = mySA.getDataType('schema:Number');
+        const numb2 = mySA.getTerm('schema:Number');
+        expect(numb).toEqual(numb2);
+        const DayOfWeek = mySA.getEnumeration('schema:DayOfWeek');
+        const DayOfWeek2 = mySA.getTerm('schema:DayOfWeek');
+        expect(DayOfWeek).toEqual(DayOfWeek2);
+        const Friday = mySA.getEnumerationMember('schema:Friday');
+        const Friday2 = mySA.getTerm('schema:Friday');
+        expect(Friday).toEqual(Friday2);
+    });
+
+    test('getTerm() latest', async() => {
+        const mySA = new SDOAdapter();
+        await mySA.addVocabularies(await mySA.constructSDOVocabularyURL('latest'));
+        const hospital = mySA.getClass('schema:Hospital');
+        const hospital2 = mySA.getTerm('schema:Hospital');
+        expect(hospital).toEqual(hospital2);
+        const address = mySA.getProperty('schema:address');
+        const address2 = mySA.getTerm('schema:address');
+        expect(address).toEqual(address2);
+        const numb = mySA.getDataType('schema:Number');
+        const numb2 = mySA.getTerm('schema:Number');
+        expect(numb).toEqual(numb2);
+        const DayOfWeek = mySA.getEnumeration('schema:DayOfWeek');
+        const DayOfWeek2 = mySA.getTerm('schema:DayOfWeek');
+        expect(DayOfWeek).toEqual(DayOfWeek2);
+        const Friday = mySA.getEnumerationMember('schema:Friday');
+        const Friday2 = mySA.getTerm('schema:Friday');
+        expect(Friday).toEqual(Friday2);
+    });
+
     test('getClass()', async() => {
         const mySA = new SDOAdapter();
         await mySA.addVocabularies([VOC_URL_SDO5_0, VOC_URL_ZOO]);

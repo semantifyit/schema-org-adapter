@@ -19767,6 +19767,19 @@ class SDOAdapter {
     })();
   }
   /**
+   * Creates a corresponding JS-Class for the given IRI, depending on its term-category
+   *
+   * @param {string} id - The id of the wished term, can be an IRI (absolute or compact) or a label
+   * @param {object} filter - (optional) The filter settings to be applied on the result
+   * @returns {Class|Property|Enumeration|EnumerationMember|DataType} the JS-Class for the given IRI
+   */
+
+
+  getTerm(id) {
+    var filter = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
+    return this.graph.getTerm(id, filter);
+  }
+  /**
    * Creates a JS-Class for a vocabulary Class by the given identifier (@id) or name
    *
    * @param {string} id - The identifier of the wished Class. It can be either a compact IRI -> "schema:Hotel", an absolute IRI -> "http://schema.org/Hotel", or the name (rdfs:label) -> "name" of the class (which may be ambiguous if multiple vocabularies/languages are used).
