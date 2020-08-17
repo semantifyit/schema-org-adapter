@@ -19684,6 +19684,9 @@ var util = _dereq_('./utilities');
 
 var axios = _dereq_('axios');
 
+var URI_SEMANTIFY_GITHUB = 'https://raw.githubusercontent.com/semantifyit/schemaorg/main/';
+var URI_SEMANTIFY_RELEASES = URI_SEMANTIFY_GITHUB + 'data/releases/';
+var URI_SEMANTIFY_VERSIONS = URI_SEMANTIFY_GITHUB + 'versions.json';
 var URI_SDO_GITHUB = 'https://raw.githubusercontent.com/schemaorg/schemaorg/main/';
 var URI_SDO_RELEASES = URI_SDO_GITHUB + 'data/releases/';
 var URI_SDO_VERSIONS = URI_SDO_GITHUB + 'versions.json';
@@ -19695,11 +19698,13 @@ class SDOAdapter {
    * @class
    */
   constructor() {
+    var useExperimental = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : false;
     this.graph = new Graph(this);
     this.retrievalMemory = {
       versionsFile: null,
       latest: null
     };
+    this.useExperimental = useExperimental;
   }
   /**
    * Adds vocabularies (in JSON-LD format or as URL) to the memory of this SDOAdapter. The function "constructSDOVocabularyURL()" helps you to construct URLs for the schema.org vocabulary
@@ -20069,7 +20074,7 @@ class SDOAdapter {
 
       var fileName = util.getFileNameForSchemaOrgVersion(version); // This can throw an error if the version is <= 3.0
 
-      return URI_SDO_RELEASES + version + '/' + fileName; // e.g. "https://raw.githubusercontent.com/schemaorg/schemaorg/main/data/releases/3.9/all-layers.jsonld";
+      return _this2.getReleasesURI() + version + '/' + fileName; // e.g. "https://raw.githubusercontent.com/schemaorg/schemaorg/main/data/releases/3.9/all-layers.jsonld";
     })();
   }
   /**
@@ -20088,9 +20093,9 @@ class SDOAdapter {
       var versionFile; // 1. retrieve versions file
 
       try {
-        versionFile = yield axios.get(URI_SDO_VERSIONS);
+        versionFile = yield axios.get(_this3.getVersionFileURI());
       } catch (e) {
-        console.log('Unable to retrieve the schema.org versions file at ' + URI_SDO_VERSIONS);
+        console.log('Unable to retrieve the schema.org versions file at ' + _this3.getVersionFileURI());
         throw e;
       } // 2. determine the latest valid version
 
@@ -20125,7 +20130,7 @@ class SDOAdapter {
         }
 
         var errMsg = 'Schema.org versions file has an unexpected structure!';
-        console.log(errMsg + ' -> ' + URI_SDO_VERSIONS);
+        console.log(errMsg + ' -> ' + _this3.getVersionFileURI());
         throw new Error(errMsg);
       }
     })();
@@ -20167,6 +20172,22 @@ class SDOAdapter {
 
       return _this4.retrievalMemory.latest;
     })();
+  }
+  /**
+   * Returns the base part of respective release URI
+   */
+
+
+  getReleasesURI() {
+    return this.useExperimental ? URI_SDO_RELEASES : URI_SEMANTIFY_RELEASES;
+  }
+  /**
+   * Returns the URI of the respective versions file
+   */
+
+
+  getVersionFileURI() {
+    return this.useExperimental ? URI_SDO_VERSIONS : URI_SEMANTIFY_VERSIONS;
   }
 
 }
