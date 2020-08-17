@@ -8,7 +8,7 @@ let VOC_OBJ_LATEST;
  * starts a SDO Adapter for a test
  */
 async function initGraph() {
-    const mySA = new SDOAdapter();
+    const mySA = new SDOAdapter(global.useExperimental);
     VOC_URL_LATEST = await mySA.constructSDOVocabularyURL('latest');
     VOC_OBJ_LATEST = await mySA.fetchVocabularyFromURL(VOC_URL_LATEST);
     return new Graph(mySA);

@@ -1,7 +1,7 @@
 const SDOAdapter = require('../src/SDOAdapter');
 const VOC_OBJ_ZOO = require('./data/exampleExternalVocabulary');
 // const VOC_URL_ZOO = 'https://raw.githubusercontent.com/semantifyit/schema-org-adapter/master/tests/data/exampleExternalVocabulary.json'
-const mySA = new SDOAdapter();
+const mySA = new SDOAdapter(global.useExperimental);
 main();
 
 /**

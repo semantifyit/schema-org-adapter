@@ -17,7 +17,7 @@
 <!--<script src="https://cdn.jsdelivr.net/gh/semantifyit/schema-org-adapter/dist/schema-org-adapter.min.js"></script>-->
 <script>
   (function () {
-    let mySA = new SDOAdapter()
+    let mySA = new SDOAdapter(global.useExperimental)
     let externalVocabURL= "https://raw.githubusercontent.com/semantifyit/schema-org-adapter/master/tests/data/exampleExternalVocabulary.json";
 
     mySA.constructSDOVocabularyURL('latest').then(function (sdoURL) {

@@ -4,7 +4,7 @@ const SDOAdapter = require('../src/SDOAdapter');
  *
  */
 async function initAdapter() {
-    const mySA = new SDOAdapter();
+    const mySA = new SDOAdapter(global.useExperimental);
     const mySDOUrl = await mySA.constructSDOVocabularyURL('latest');
     await mySA.addVocabularies([mySDOUrl]);
     return mySA;

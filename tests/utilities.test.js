@@ -6,7 +6,7 @@ const VOC_OBJ_ZOO = require('./data/exampleExternalVocabulary');
  *
  */
 async function initAdapter() {
-    const mySA = new SDOAdapter();
+    const mySA = new SDOAdapter(global.useExperimental);
     const mySDOUrl = await mySA.constructSDOVocabularyURL('latest');
     await mySA.addVocabularies([mySDOUrl, VOC_OBJ_ZOO]);
     return mySA;
