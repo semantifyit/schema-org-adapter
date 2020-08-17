@@ -58,11 +58,11 @@ describe('Class methods', () => {
         const mySA = await initAdapter();
         const hotel = mySA.getClass('schema:Hotel');
         expect(hotel.getDescription()).toBe('A hotel is an establishment that provides lodging paid on a short-term basis (Source: Wikipedia, the free encyclopedia, see http://en.wikipedia.org/wiki/Hotel).\n' +
-      '<br /><br />\n' +
-      'See also the <a href="/docs/hotels.html">dedicated document on the use of schema.org for marking up hotels and other forms of accommodations</a>.');
+            '<br /><br />\n' +
+            'See also the <a href="/docs/hotels.html">dedicated document on the use of schema.org for marking up hotels and other forms of accommodations</a>.');
         expect(hotel.getDescription('en')).toBe('A hotel is an establishment that provides lodging paid on a short-term basis (Source: Wikipedia, the free encyclopedia, see http://en.wikipedia.org/wiki/Hotel).\n' +
-      '<br /><br />\n' +
-      'See also the <a href="/docs/hotels.html">dedicated document on the use of schema.org for marking up hotels and other forms of accommodations</a>.');
+            '<br /><br />\n' +
+            'See also the <a href="/docs/hotels.html">dedicated document on the use of schema.org for marking up hotels and other forms of accommodations</a>.');
         expect(hotel.getDescription('de')).toBe(null);
     });
 

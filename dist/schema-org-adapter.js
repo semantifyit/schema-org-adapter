@@ -17731,12 +17731,12 @@ class Graph {
         } // B) Classify Input
 
         /**
-        Classify every @graph node based on its @type. The node is transformed to another data-model based on the @type and stored in a new memory storage for an easier further usage. This is the first of two steps for an exact classification of the node, since the @type is not enough for a correct classification. The mapping of our data model and the @type(s) of the corresponding @graph nodes are as follows:
-        classes ("@type" = "rdfs:Class")
-        properties ("@type" = "rdf:Property")
-        dataTypes ("@type" = "rdfs:Class" + "http://schema.org/DataType")
-        enumerations ("@type" = "rdfs:Class", has "http://schema.org/Enumeration" as implicit super-class)
-        enumerationMembers ("@type" = @id(s) of enumeration(s))
+         Classify every @graph node based on its @type. The node is transformed to another data-model based on the @type and stored in a new memory storage for an easier further usage. This is the first of two steps for an exact classification of the node, since the @type is not enough for a correct classification. The mapping of our data model and the @type(s) of the corresponding @graph nodes are as follows:
+         classes ("@type" = "rdfs:Class")
+         properties ("@type" = "rdf:Property")
+         dataTypes ("@type" = "rdfs:Class" + "http://schema.org/DataType")
+         enumerations ("@type" = "rdfs:Class", has "http://schema.org/Enumeration" as implicit super-class)
+         enumerationMembers ("@type" = @id(s) of enumeration(s))
          */
 
 
@@ -20146,7 +20146,7 @@ function toAbsoluteIRI(compactIRI, context) {
  * Returns a sorted Array of Arrays that have a schema.org vocabulary version as first entry and it's release date as second entry. Latest is first in array.
  *
  * @param {object} releaseLog - the releaseLog object from the versionsFile of schema.org
- * @returns {array} - Array with sorted release Arrays -> [version, date]
+ * @returns {Array} - Array with sorted release Arrays -> [version, date]
  */
 
 

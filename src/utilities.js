@@ -455,7 +455,7 @@ function toAbsoluteIRI(compactIRI, context) {
  * Returns a sorted Array of Arrays that have a schema.org vocabulary version as first entry and it's release date as second entry. Latest is first in array.
  *
  * @param {object} releaseLog - the releaseLog object from the versionsFile of schema.org
- * @returns {array} - Array with sorted release Arrays -> [version, date]
+ * @returns {Array} - Array with sorted release Arrays -> [version, date]
  */
 function sortReleaseEntriesByDate(releaseLog) {
     let versionEntries = Object.entries(releaseLog);

@@ -16,24 +16,24 @@
 <!--You can also use a CDN!-->
 <!--<script src="https://cdn.jsdelivr.net/gh/semantifyit/schema-org-adapter/dist/schema-org-adapter.min.js"></script>-->
 <script>
-  (function () {
-    let mySA = new SDOAdapter()
-    let externalVocabURL= "https://raw.githubusercontent.com/semantifyit/schema-org-adapter/master/tests/data/exampleExternalVocabulary.json";
+    (function() {
+        let mySA = new SDOAdapter();
+        let externalVocabURL = 'https://raw.githubusercontent.com/semantifyit/schema-org-adapter/master/tests/data/exampleExternalVocabulary.json';
 
-    mySA.constructSDOVocabularyURL('latest').then(function (sdoURL) {
-      mySA.addVocabularies([sdoURL, externalVocabURL]).then(function () {
-        let testClass = mySA.getClass('Hotel')
-        console.log(testClass.getName())
-        console.log(testClass.getDescription('en'))
-        console.log(testClass.toJSON(true))
-        let testClassExternal = mySA.getClass('Tiger')
-        console.log(testClassExternal.toJSON(true))
-        let testProperty = mySA.getProperty('accountablePerson')
-        console.log(testProperty.getRanges())
-        document.getElementById('output').innerHTML = JSON.stringify(testClass.toJSON(true), null, 2)
-      })
-    })
+        mySA.constructSDOVocabularyURL('latest').then(function(sdoURL) {
+            mySA.addVocabularies([sdoURL, externalVocabURL]).then(function() {
+                let testClass = mySA.getClass('Hotel');
+                console.log(testClass.getName());
+                console.log(testClass.getDescription('en'));
+                console.log(testClass.toJSON(true));
+                let testClassExternal = mySA.getClass('Tiger');
+                console.log(testClassExternal.toJSON(true));
+                let testProperty = mySA.getProperty('accountablePerson');
+                console.log(testProperty.getRanges());
+                document.getElementById('output').innerHTML = JSON.stringify(testClass.toJSON(true), null, 2);
+            });
+        });
 
-  })()
+    })();
 </script>
 </html>

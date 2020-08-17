@@ -34,7 +34,7 @@ async function main() {
     console.log(JSON.stringify(testProperty.getName('en'), null, 2));
     const testDataType = mySA.getDataType('schema:Number');
     console.log(JSON.stringify(testDataType.toJSON(false, null), null, 2));
-    let testEnumeration = mySA.getEnumeration("schema:MedicalEnumeration");
+    let testEnumeration = mySA.getEnumeration('schema:MedicalEnumeration');
     console.log(JSON.stringify(testEnumeration.toJSON(true, null), null, 2));
     const testEnumerationMember = mySA.getEnumerationMember('schema:Radiography');
     console.log(JSON.stringify(testEnumerationMember.toJSON(false, null), null, 2));

@@ -50,17 +50,11 @@
     "jest": "^25.5.4",
     "jsdoc": "^3.6.4",
     "jsdoc-to-markdown": "^5.0.3",
-    "standard": "^14.3.4",
     "uglifyify": "^5.0.2"
   },
   "jest": {
     "testEnvironment": "node",
     "testTimeout": 30000
-  },
-  "standard": {
-    "env": [
-      "jest"
-    ]
   },
   "browserify": {
     "transform": [
