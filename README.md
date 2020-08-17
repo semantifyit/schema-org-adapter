@@ -1,8 +1,8 @@
 # Schema.org Adapter
 
-**Fast, simple & flexible API for the Schema.org Vocabulary (and vocabulary extensions!) for Node and Browsers**
-
 <div align="center">
+**Fast, simple & flexible API for the Schema.org Vocabulary (and vocabulary extensions!) for Node and Browsers**
+<br>
 <a href="https://www.npmjs.com/package/schema-org-adapter" rel="nofollow"><img src="https://img.shields.io/npm/v/schema-org-adapter.svg" alt="NPM Version"></a>
 <a href="https://eslint.org/"><img src="https://img.shields.io/badge/code%20style-ESLint-brightgreen" alt="Code style in ESLint" /></a>
 <a href="https://creativecommons.org/licenses/by-sa/4.0/"><img src="https://img.shields.io/badge/License-CC%20BY--SA%204.0-lightgrey.svg" alt="License: CC BY-SA 4.0" /></a>
@@ -11,6 +11,7 @@
 <img src="/coverage/badge-lines.svg" alt="Jest Test Coverage Lines" />
 <img src="/coverage/badge-statements.svg" alt="Jest Test Coverage Statements" />
 </div>
+<br>
 
 ```javascript
 // 1. Import the package
