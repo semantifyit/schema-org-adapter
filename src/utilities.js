@@ -90,7 +90,7 @@ function applyFilter(dataArray, filter, graph) {
                         typeIRI = 'schema:DataType';
                         break;
                     default:
-                        console.log('Invalid filter.termType ' + toCheck[t]);
+                        throw new Error('Invalid filter.termType ' + toCheck[t]);
                 }
                 if (typeIRI === actualTerm.getTermType()) {
                     matchFound = true;
@@ -134,6 +134,16 @@ function isObject(value) {
         return false;
     }
     return typeof value === 'object';
+}
+
+/**
+ * Checks if the given input is undefined or null
+ *
+ * @param {*} value - the input element to check
+ * @returns {boolean} true if the given input is undefined or null
+ */
+function isNil(value) {
+    return (value === undefined || value === null);
 }
 
 /**
@@ -507,6 +517,7 @@ module.exports = {
     isArray,
     isString,
     isObject,
+    isNil,
     uniquifyArray,
     preProcessVocab,
     generateContext,

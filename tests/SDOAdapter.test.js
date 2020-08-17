@@ -6,12 +6,19 @@ const VOC_URL_ZOO = 'https://raw.githubusercontent.com/semantifyit/schema-org-ad
 const VOC_URL_SDO5_0 = 'https://raw.githubusercontent.com/schemaorg/schemaorg/main/data/releases/5.0/all-layers.jsonld';
 const VOC_URL_SDO5_0_DIRECT = 'https://schema.org/version/5.0/all-layers.jsonld'; // expected to work in node, but not in browser (because of redirect)
 
+/**
+ *  Tests regarding the JS-Class for "SDOAdapter"
+ */
 describe('SDO Adapter methods', () => {
     test('addVocabularies()', async() => {
         const mySA = new SDOAdapter();
         await mySA.addVocabularies([VOC_OBJ_SDO3_7, VOC_OBJ_GWON]);
         const testClass = mySA.getClass('namespace:AwesomePerson');
         expect(testClass.getName()).toEqual('validValue');
+        // await mySA.addVocabularies('http://noVocab.com')
+        await expect(mySA.addVocabularies('http://noVocab.com')).rejects.toEqual(Error('The given URL http://noVocab.com did not contain a valid JSON-LD vocabulary.'));
+        await expect(mySA.addVocabularies([true])).rejects.toEqual(Error('The first argument of the function must be an Array of vocabularies or a single vocabulary (JSON-LD as Object/String)'));
+        await mySA.addVocabularies(JSON.stringify(VOC_OBJ_SDO3_7)); // try stringified version
     });
 
     test('addVocabularies() add single vocabulary', async() => {
@@ -119,8 +126,8 @@ describe('SDO Adapter methods', () => {
         expect(allClassesZoo.length).toBe(2);
         const allClassesSchema = mySA.getAllClasses({ fromVocabulary: 'schema' });
         expect(allClassesSchema.length).toBe(731);
-        for (let i = 0; i < allClasses.length; i++) {
-            expect(allClasses[i].getTermType()).toBe('rdfs:Class'); // should NOT contain enumerations
+        for (const actClass of allClasses) {
+            expect(actClass.getTermType()).toBe('rdfs:Class'); // should NOT contain enumerations
         }
     });
 
@@ -133,8 +140,8 @@ describe('SDO Adapter methods', () => {
         expect(allClassesZoo.length).toBe(2);
         const allClassesSchema = mySA.getAllClasses({ fromVocabulary: 'schema' });
         expect(allClassesSchema.length === allClasses.length - 2).toBe(true);
-        for (let i = 0; i < allClasses.length; i++) {
-            expect(allClasses[i].getTermType()).toBe('rdfs:Class'); // should NOT contain enumerations
+        for (const actClass of allClasses) {
+            expect(actClass.getTermType()).toBe('rdfs:Class'); // should NOT contain enumerations
         }
     });
 
@@ -175,8 +182,8 @@ describe('SDO Adapter methods', () => {
         expect(allPropertiesEx.length).toBe(2);
         const allPropertiesSchema = mySA.getAllProperties({ fromVocabulary: 'schema' });
         expect(allPropertiesSchema.length).toBe(1241);
-        for (let i = 0; i < allProperties.length; i++) {
-            expect(allProperties[i].getTermType()).toBe('rdf:Property');
+        for (const actProperty of allProperties) {
+            expect(actProperty.getTermType()).toBe('rdf:Property');
         }
     });
 
@@ -189,8 +196,8 @@ describe('SDO Adapter methods', () => {
         expect(allPropertiesEx.length).toBe(2);
         const allPropertiesSchema = mySA.getAllProperties({ fromVocabulary: 'schema' });
         expect(allPropertiesSchema.length === allProperties.length - 2).toBe(true);
-        for (let i = 0; i < allProperties.length; i++) {
-            expect(allProperties[i].getTermType()).toBe('rdf:Property');
+        for (const actProperty of allProperties) {
+            expect(actProperty.getTermType()).toBe('rdf:Property');
         }
     });
 
@@ -231,8 +238,8 @@ describe('SDO Adapter methods', () => {
         expect(allDataTypesFromEx.length).toBe(0);
         const allDataTypesFromSDO = mySA.getAllDataTypes({ fromVocabulary: 'schema' });
         expect(allDataTypesFromSDO.length).toBe(11);
-        for (let i = 0; i < allDT.length; i++) {
-            expect(allDT[i].getTermType()).toBe('schema:DataType');
+        for (const actDT of allDT) {
+            expect(actDT.getTermType()).toBe('schema:DataType');
         }
     });
 
@@ -245,8 +252,8 @@ describe('SDO Adapter methods', () => {
         expect(allDataTypesFromEx.length).toBe(0);
         const allDataTypesFromSDO = mySA.getAllDataTypes({ fromVocabulary: 'schema' });
         expect(allDataTypesFromSDO.length > 10).toBe(true);
-        for (let i = 0; i < allDT.length; i++) {
-            expect(allDT[i].getTermType()).toBe('schema:DataType');
+        for (const actDT of allDT) {
+            expect(actDT.getTermType()).toBe('schema:DataType');
         }
     });
 
@@ -281,20 +288,20 @@ describe('SDO Adapter methods', () => {
     test('getAllEnumerations()', async() => {
         const mySA = new SDOAdapter();
         await mySA.addVocabularies([VOC_OBJ_SDO3_7, VOC_OBJ_ZOO]);
-        const allDT = mySA.getAllEnumerations();
-        expect(allDT.length).toBe(60);
-        for (let i = 0; i < allDT.length; i++) {
-            expect(allDT[i].getTermType()).toBe('schema:Enumeration');
+        const allEnumerations = mySA.getAllEnumerations();
+        expect(allEnumerations.length).toBe(60);
+        for (const actEnumeration of allEnumerations) {
+            expect(actEnumeration.getTermType()).toBe('schema:Enumeration');
         }
     });
 
     test('getAllEnumerations() latest', async() => {
         const mySA = new SDOAdapter();
         await mySA.addVocabularies([await mySA.constructSDOVocabularyURL('latest'), VOC_OBJ_ZOO]);
-        const allDT = mySA.getAllEnumerations();
-        expect(allDT.length > 60).toBe(true);
-        for (let i = 0; i < allDT.length; i++) {
-            expect(allDT[i].getTermType()).toBe('schema:Enumeration');
+        const allEnumerations = mySA.getAllEnumerations();
+        expect(allEnumerations.length > 60).toBe(true);
+        for (const actEnumeration of allEnumerations) {
+            expect(actEnumeration.getTermType()).toBe('schema:Enumeration');
         }
     });
 
@@ -329,20 +336,20 @@ describe('SDO Adapter methods', () => {
     test('getAllEnumerationMembers()', async() => {
         const mySA = new SDOAdapter();
         await mySA.addVocabularies([VOC_OBJ_SDO3_7, VOC_OBJ_ZOO]);
-        const allDT = mySA.getAllEnumerationMembers();
-        expect(allDT.length).toBe(256);
-        for (let i = 0; i < allDT.length; i++) {
-            expect(allDT[i].getTermType()).toBe('soa:EnumerationMember');
+        const allEnumerationMembers = mySA.getAllEnumerationMembers();
+        expect(allEnumerationMembers.length).toBe(256);
+        for (const actEnumerationMember of allEnumerationMembers) {
+            expect(actEnumerationMember.getTermType()).toBe('soa:EnumerationMember');
         }
     });
 
     test('getAllEnumerationMembers() latest', async() => {
         const mySA = new SDOAdapter();
         await mySA.addVocabularies([await mySA.constructSDOVocabularyURL('latest'), VOC_OBJ_ZOO]);
-        const allDT = mySA.getAllEnumerationMembers();
-        expect(allDT.length > 250).toBe(true);
-        for (let i = 0; i < allDT.length; i++) {
-            expect(allDT[i].getTermType()).toBe('soa:EnumerationMember');
+        const allEnumerationMembers = mySA.getAllEnumerationMembers();
+        expect(allEnumerationMembers.length > 250).toBe(true);
+        for (const actEnumerationMember of allEnumerationMembers) {
+            expect(actEnumerationMember.getTermType()).toBe('soa:EnumerationMember');
         }
     });
 

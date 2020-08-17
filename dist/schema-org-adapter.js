@@ -17696,9 +17696,9 @@ class Enumeration {
 
     if (compactForm) {
       return this.IRI;
-    } else {
-      return util.toAbsoluteIRI(this.IRI, this.graph.context);
     }
+
+    return util.toAbsoluteIRI(this.IRI, this.graph.context);
   }
   /**
    * Retrieves the term type (@type) of this Enumeration (is always "schema:Enumeration")
@@ -17720,11 +17720,11 @@ class Enumeration {
   getVocabulary() {
     var enumObj = this.graph.enumerations[this.IRI];
 
-    if (enumObj['schema:isPartOf'] !== undefined) {
+    if (!util.isNil(enumObj['schema:isPartOf'])) {
       return enumObj['schema:isPartOf'];
-    } else {
-      return null;
     }
+
+    return null;
   }
   /**
    * Retrieves the source (dc:source) of this Enumeration
@@ -17736,13 +17736,13 @@ class Enumeration {
   getSource() {
     var enumObj = this.graph.enumerations[this.IRI];
 
-    if (enumObj['dc:source'] !== undefined) {
+    if (!util.isNil(enumObj['dc:source'])) {
       return enumObj['dc:source'];
-    } else if (enumObj['schema:source']) {
+    } else if (!util.isNil(enumObj['schema:source'])) {
       return enumObj['schema:source'];
-    } else {
-      return null;
     }
+
+    return null;
   }
   /**
    * Retrieves the Enumeration superseding (schema:supersededBy) this Enumeration
@@ -17756,9 +17756,9 @@ class Enumeration {
 
     if (util.isString(enumObj['schema:supersededBy'])) {
       return enumObj['schema:supersededBy'];
-    } else {
-      return null;
     }
+
+    return null;
   }
   /**
    * Retrieves the name (rdfs:label) of this Enumeration in a wished language (optional)
@@ -17771,8 +17771,9 @@ class Enumeration {
   getName() {
     var language = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 'en';
     var nameObj = this.graph.enumerations[this.IRI]['rdfs:label'];
+    console.log(nameObj);
 
-    if (nameObj === null || nameObj[language] === undefined) {
+    if (util.isNil(nameObj) || util.isNil(nameObj[language])) {
       return null;
     }
 
@@ -17790,7 +17791,7 @@ class Enumeration {
     var language = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 'en';
     var descriptionObj = this.graph.enumerations[this.IRI]['rdfs:comment'];
 
-    if (descriptionObj === null || descriptionObj[language] === undefined) {
+    if (util.isNil(descriptionObj) || util.isNil(descriptionObj[language])) {
       return null;
     }
 
@@ -17812,13 +17813,13 @@ class Enumeration {
     var result = [];
     result.push(...enumObj['soa:hasEnumerationMember']);
 
-    if (implicit === true) {
+    if (implicit) {
       var subClasses = this.getSubClasses(true, null);
 
-      for (var i = 0; i < subClasses.length; i++) {
-        var actualEnumeration = this.graph.enumerations[subClasses[i]];
+      for (var actSubClass of subClasses) {
+        var actualEnumeration = this.graph.enumerations[actSubClass];
 
-        if (actualEnumeration) {
+        if (!util.isNil(actualEnumeration)) {
           result.push(...actualEnumeration['soa:hasEnumerationMember']);
         }
       }
@@ -17842,9 +17843,9 @@ class Enumeration {
     var result = [];
     result.push(...enumObj['soa:hasProperty']);
 
-    if (implicit === true) {
+    if (implicit) {
       // add properties from super-classes
-      result.push(...this.graph.reasoner.inferPropertiesFromSuperClasses(enumObj['rdfs:subClassOf'])); // add sub-properties ? todo
+      result.push(...this.graph.reasoner.inferPropertiesFromSuperClasses(enumObj['rdfs:subClassOf'])); // add sub-properties ?
       // for (let p = 0; p < result.length; p++) {
       //     result.push(... this.graph.reasoner.inferSubProperties(result[p]));
       // }
@@ -17867,7 +17868,7 @@ class Enumeration {
     var enumObj = this.graph.enumerations[this.IRI];
     var result = [];
 
-    if (implicit === true) {
+    if (implicit) {
       result.push(...this.graph.reasoner.inferImplicitSuperClasses(this.IRI));
     } else {
       result.push(...enumObj['rdfs:subClassOf']);
@@ -17890,7 +17891,7 @@ class Enumeration {
     var enumObj = this.graph.enumerations[this.IRI];
     var result = [];
 
-    if (implicit === true) {
+    if (implicit) {
       result.push(...this.graph.reasoner.inferImplicitSubClasses(this.IRI));
     } else {
       result.push(...enumObj['soa:superClassOf']);
@@ -19722,19 +19723,18 @@ class SDOAdapter {
           if (util.isString(vocabArray[i])) {
             if (vocabArray[i].startsWith('www') || vocabArray[i].startsWith('http')) {
               // assume it is a URL
-              var fetchedVocab = yield _this.fetchVocabularyFromURL(vocabArray[i]);
-
               try {
+                var fetchedVocab = yield _this.fetchVocabularyFromURL(vocabArray[i]);
                 yield _this.graph.addVocabulary(fetchedVocab);
               } catch (e) {
-                console.log('The given URL ' + vocabArray[i] + ' did not contain a valid JSON-LD vocabulary.');
+                throw new Error('The given URL ' + vocabArray[i] + ' did not contain a valid JSON-LD vocabulary.');
               }
             } else {
               // assume it is a string-version of a JSON-LD
               try {
                 yield _this.graph.addVocabulary(JSON.parse(vocabArray[i]));
               } catch (e) {
-                console.log('Parsing of vocabulary string produced an invalid JSON-LD.');
+                throw new Error('Parsing of vocabulary string produced an invalid JSON-LD.');
               }
             }
           } else if (util.isObject(vocabArray[i])) {
@@ -19752,18 +19752,13 @@ class SDOAdapter {
 
   fetchVocabularyFromURL(url) {
     return _asyncToGenerator(function* () {
-      try {
-        return new Promise(function (resolve, reject) {
-          axios.get(url).then(function (res) {
-            resolve(res.data);
-          }).catch(function (err) {
-            reject(console.log(err));
-          });
+      return new Promise(function (resolve, reject) {
+        axios.get(url).then(function (res) {
+          resolve(res.data);
+        }).catch(function (err) {
+          reject('Could not find any resource at the given URL.');
         });
-      } catch (e) {
-        console.log(e);
-        return '';
-      }
+      });
     })();
   }
   /**
@@ -20292,7 +20287,7 @@ function applyFilter(dataArray, filter, graph) {
             break;
 
           default:
-            console.log('Invalid filter.termType ' + toCheck[t]);
+            throw new Error('Invalid filter.termType ' + toCheck[t]);
         }
 
         if (typeIRI === actualTerm.getTermType()) {
@@ -20344,6 +20339,17 @@ function isObject(value) {
   }
 
   return typeof value === 'object';
+}
+/**
+ * Checks if the given input is undefined or null
+ *
+ * @param {*} value - the input element to check
+ * @returns {boolean} true if the given input is undefined or null
+ */
+
+
+function isNil(value) {
+  return value === undefined || value === null;
 }
 /**
  * Checks if the given input is a string
@@ -20773,6 +20779,7 @@ module.exports = {
   isArray,
   isString,
   isObject,
+  isNil,
   uniquifyArray,
   preProcessVocab,
   generateContext,

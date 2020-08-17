@@ -39,13 +39,13 @@ class SDOAdapter {
                         vocabArray[i].startsWith('http')
                     ) {
                         // assume it is a URL
-                        const fetchedVocab = await this.fetchVocabularyFromURL(
-                            vocabArray[i]
-                        );
                         try {
+                            const fetchedVocab = await this.fetchVocabularyFromURL(
+                                vocabArray[i]
+                            );
                             await this.graph.addVocabulary(fetchedVocab);
                         } catch (e) {
-                            console.log(
+                            throw new Error(
                                 'The given URL ' +
                                 vocabArray[i] +
                                 ' did not contain a valid JSON-LD vocabulary.'
@@ -56,7 +56,7 @@ class SDOAdapter {
                         try {
                             await this.graph.addVocabulary(JSON.parse(vocabArray[i]));
                         } catch (e) {
-                            console.log(
+                            throw new Error(
                                 'Parsing of vocabulary string produced an invalid JSON-LD.'
                             );
                         }
@@ -78,21 +78,16 @@ class SDOAdapter {
     }
 
     async fetchVocabularyFromURL(url) {
-        try {
-            return new Promise(function(resolve, reject) {
-                axios
-                    .get(url)
-                    .then(function(res) {
-                        resolve(res.data);
-                    })
-                    .catch(function(err) {
-                        reject(console.log(err));
-                    });
-            });
-        } catch (e) {
-            console.log(e);
-            return '';
-        }
+        return new Promise(function(resolve, reject) {
+            axios
+                .get(url)
+                .then(function(res) {
+                    resolve(res.data);
+                })
+                .catch(function(err) {
+                    reject('Could not find any resource at the given URL.');
+                });
+        });
     }
 
     /**

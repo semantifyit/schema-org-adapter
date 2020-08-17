@@ -2,7 +2,7 @@ const SDOAdapter = require('../src/SDOAdapter');
 const VOC_OBJ_ZOO = require('./data/exampleExternalVocabulary');
 
 /**
- *
+ *  @returns {SDOAdapter} - the initialized SDO-Adapter ready for testing.
  */
 async function initAdapter() {
     const mySA = new SDOAdapter();
@@ -11,6 +11,9 @@ async function initAdapter() {
     return mySA;
 }
 
+/**
+ *  Tests regarding the JS-Class for "Class"
+ */
 describe('Class methods', () => {
     test('getTermType()', async() => {
         const mySA = await initAdapter();
