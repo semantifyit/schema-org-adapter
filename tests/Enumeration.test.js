@@ -1,7 +1,8 @@
 const SDOAdapter = require('../src/SDOAdapter');
+const util = require('../src/utilities');
 
 /**
- *
+ *  @returns {SDOAdapter} - the initialized SDO-Adapter ready for testing.
  */
 async function initAdapter() {
     const mySA = new SDOAdapter(global.useExperimental);
@@ -10,6 +11,9 @@ async function initAdapter() {
     return mySA;
 }
 
+/**
+ *  Tests regarding the JS-Class for "Enumeration"
+ */
 describe('Enumeration methods', () => {
     test('constructor()', async() => {
         const mySA = await initAdapter();
@@ -114,5 +118,11 @@ describe('Enumeration methods', () => {
         expect(PaymentMethod.getSubClasses(false)).toContain('schema:PaymentCard');
         expect(PaymentMethod.getSubClasses(true)).toContain('schema:CreditCard');
         expect(PaymentMethod.getSubClasses(false)).not.toContain('schema:CreditCard');
+    });
+
+    test('toJSON()', async() => {
+        const mySA = await initAdapter();
+        const PaymentMethod = mySA.getEnumeration('schema:PaymentMethod');
+        expect(util.isObject(PaymentMethod.toJSON())).toBe(true);
     });
 });

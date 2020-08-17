@@ -60,7 +60,7 @@ class Class {
         const classObj = this.graph.classes[this.IRI];
         if (classObj['dc:source'] !== undefined) {
             return classObj['dc:source'];
-        } else if(classObj['schema:source']){
+        } else if (classObj['schema:source']) {
             return classObj['schema:source'];
         } else {
             return null;
@@ -185,11 +185,11 @@ class Class {
      * @returns {object} The JSON representation of this Class
      */
     toJSON(implicit = true, filter = null) {
-    // (implicit === true) ->
-    // properties of all parent classes
-    // sub-properties of all properties ??
-    // sub-classes and their subclasses
-    // super-classes and their superclasses
+        // (implicit === true) ->
+        // properties of all parent classes
+        // sub-properties of all properties ??
+        // sub-classes and their subclasses
+        // super-classes and their superclasses
         const result = {};
         result.id = this.getIRI(true);
         result.IRI = this.getIRI();

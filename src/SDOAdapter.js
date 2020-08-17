@@ -28,10 +28,13 @@ class SDOAdapter {
     /**
      * Adds vocabularies (in JSON-LD format or as URL) to the memory of this SDOAdapter. The function "constructSDOVocabularyURL()" helps you to construct URLs for the schema.org vocabulary
      *
-     * @param {Array.<string|object>} vocabArray - The vocabularies to add the graph, in JSON-LD format. Given directly as JSON or by a URL to fetch.
+     * @param {Array.<string|object>|string|object} vocabArray - The vocabular(y/ies) to add the graph, in JSON-LD format. Given directly as JSON or by a URL to fetch.
      * @returns {Promise.<void>} This is an async function
      */
     async addVocabularies(vocabArray) {
+        if (!util.isArray(vocabArray) && (util.isString(vocabArray) || util.isObject(vocabArray))) {
+            vocabArray = [vocabArray];
+        }
         if (util.isArray(vocabArray)) {
             // check every vocab if it is a valid JSON-LD. If string -> try to JSON.parse()
             for (let i = 0; i < vocabArray.length; i++) {
@@ -41,13 +44,13 @@ class SDOAdapter {
                         vocabArray[i].startsWith('http')
                     ) {
                         // assume it is a URL
-                        const fetchedVocab = await this.fetchVocabularyFromURL(
-                            vocabArray[i]
-                        );
                         try {
+                            const fetchedVocab = await this.fetchVocabularyFromURL(
+                                vocabArray[i]
+                            );
                             await this.graph.addVocabulary(fetchedVocab);
                         } catch (e) {
-                            console.log(
+                            throw new Error(
                                 'The given URL ' +
                                 vocabArray[i] +
                                 ' did not contain a valid JSON-LD vocabulary.'
@@ -58,7 +61,7 @@ class SDOAdapter {
                         try {
                             await this.graph.addVocabulary(JSON.parse(vocabArray[i]));
                         } catch (e) {
-                            console.log(
+                            throw new Error(
                                 'Parsing of vocabulary string produced an invalid JSON-LD.'
                             );
                         }
@@ -68,33 +71,39 @@ class SDOAdapter {
                 } else {
                     // invalid argument type!
                     throw new Error(
-                        'The first argument of the function must be an Array of vocabularies (JSON-LD as Object/String)'
+                        'The first argument of the function must be an Array of vocabularies or a single vocabulary (JSON-LD as Object/String)'
                     );
                 }
             }
         } else {
             throw new Error(
-                'The first argument of the function must be an Array of vocabularies (JSON-LD)'
+                'The first argument of the function must be an Array of vocabularies or a single vocabulary (JSON-LD as Object/String)'
             );
         }
     }
 
     async fetchVocabularyFromURL(url) {
-        try {
-            return new Promise(function(resolve, reject) {
-                axios
-                    .get(url)
-                    .then(function(res) {
-                        resolve(res.data);
-                    })
-                    .catch(function(err) {
-                        reject(console.log(err));
-                    });
-            });
-        } catch (e) {
-            console.log(e);
-            return '';
-        }
+        return new Promise(function(resolve, reject) {
+            axios
+                .get(url)
+                .then(function(res) {
+                    resolve(res.data);
+                })
+                .catch(function(err) {
+                    reject('Could not find any resource at the given URL.');
+                });
+        });
+    }
+
+    /**
+     * Creates a corresponding JS-Class for the given IRI, depending on its term-category
+     *
+     * @param {string} id - The id of the wished term, can be an IRI (absolute or compact) or a label
+     * @param {object} filter - (optional) The filter settings to be applied on the result
+     * @returns {Class|Property|Enumeration|EnumerationMember|DataType} the JS-Class for the given IRI
+     */
+    getTerm(id, filter = null) {
+        return this.graph.getTerm(id, filter);
     }
 
     /**

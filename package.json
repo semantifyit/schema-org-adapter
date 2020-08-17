@@ -8,6 +8,8 @@
     "build": "browserify src/SDOAdapter.js -s SDOAdapter | derequire -cm --toplevel > dist/schema-org-adapter.js",
     "buildMinified": "browserify src/SDOAdapter.js -s SDOAdapter -g [uglifyify] | derequire -cm --toplevel > dist/schema-org-adapter.min.js",
     "test": "jest",
+    "badges": "jest-coverage-badges",
+    "test:badges": "npm run-script test && npm run-script badges",
     "genJsDoc": "jsdoc src/ --destination ./jsDoc",
     "getJsDocMD": "jsdoc2md src/SDOAdapter.js src/Class.js src/Property.js src/Enumeration.js src/EnumerationMember.js src/DataType.js > docu/api.md",
     "eslint check": "eslint src/*.js tests/*.js"
@@ -33,33 +35,34 @@
   },
   "dependencies": {
     "axios": "^0.19.2",
-    "jsonld": "^2.0.2"
+    "jsonld": "^3.1.1"
   },
   "devDependencies": {
-    "@babel/preset-env": "^7.10.4",
+    "@babel/preset-env": "^7.11.0",
     "babel-core": "^6.26.3",
     "babel-eslint": "^10.1.0",
     "babelify": "^10.0.0",
-    "browserify": "^16.5.1",
+    "browserify": "^16.5.2",
     "derequire": "^2.1.1",
-    "eslint": "^6.8.0",
-    "eslint-plugin-jest": "^23.18.0",
-    "eslint-plugin-jsdoc": "^20.4.0",
+    "eslint": "^7.7.0",
+    "eslint-plugin-jest": "^23.20.0",
+    "eslint-plugin-jsdoc": "^30.2.3",
     "eslint-plugin-markdown": "^1.0.2",
     "eslint-plugin-node": "^11.1.0",
-    "jest": "^25.5.4",
-    "jsdoc": "^3.6.4",
-    "jsdoc-to-markdown": "^5.0.3",
-    "standard": "^14.3.4",
+    "jest": "^26.4.0",
+    "jest-coverage-badges": "^1.1.2",
+    "jsdoc": "^3.6.5",
+    "jsdoc-to-markdown": "^6.0.1",
     "uglifyify": "^5.0.2"
   },
   "jest": {
     "testEnvironment": "node",
-    "testTimeout": 30000
-  },
-  "standard": {
-    "env": [
-      "jest"
+    "testTimeout": 30000,
+    "collectCoverage": true,
+    "coverageReporters": [
+      "json-summary",
+      "text",
+      "lcov"
     ]
   },
   "browserify": {

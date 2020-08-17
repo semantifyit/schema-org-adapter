@@ -23,9 +23,8 @@ class Enumeration {
     getIRI(compactForm = false) {
         if (compactForm) {
             return this.IRI;
-        } else {
-            return util.toAbsoluteIRI(this.IRI, this.graph.context);
         }
+        return util.toAbsoluteIRI(this.IRI, this.graph.context);
     }
 
     /**
@@ -44,11 +43,10 @@ class Enumeration {
      */
     getVocabulary() {
         const enumObj = this.graph.enumerations[this.IRI];
-        if (enumObj['schema:isPartOf'] !== undefined) {
+        if (!util.isNil(enumObj['schema:isPartOf'])) {
             return enumObj['schema:isPartOf'];
-        } else {
-            return null;
         }
+        return null;
     }
 
     /**
@@ -58,13 +56,12 @@ class Enumeration {
      */
     getSource() {
         const enumObj = this.graph.enumerations[this.IRI];
-        if (enumObj['dc:source'] !== undefined) {
+        if (!util.isNil(enumObj['dc:source'])) {
             return enumObj['dc:source'];
-        } else if (enumObj['schema:source']) {
+        } else if (!util.isNil(enumObj['schema:source'])) {
             return enumObj['schema:source'];
-        } else {
-            return null;
         }
+        return null;
     }
 
     /**
@@ -76,9 +73,8 @@ class Enumeration {
         const enumObj = this.graph.enumerations[this.IRI];
         if (util.isString(enumObj['schema:supersededBy'])) {
             return enumObj['schema:supersededBy'];
-        } else {
-            return null;
         }
+        return null;
     }
 
     /**
@@ -89,7 +85,8 @@ class Enumeration {
      */
     getName(language = 'en') {
         const nameObj = this.graph.enumerations[this.IRI]['rdfs:label'];
-        if (nameObj === null || nameObj[language] === undefined) {
+        console.log(nameObj);
+        if (util.isNil(nameObj) || util.isNil(nameObj[language])) {
             return null;
         }
         return nameObj[language];
@@ -103,7 +100,7 @@ class Enumeration {
      */
     getDescription(language = 'en') {
         const descriptionObj = this.graph.enumerations[this.IRI]['rdfs:comment'];
-        if (descriptionObj === null || descriptionObj[language] === undefined) {
+        if (util.isNil(descriptionObj) || util.isNil(descriptionObj[language])) {
             return null;
         }
         return descriptionObj[language];
@@ -120,11 +117,11 @@ class Enumeration {
         const enumObj = this.graph.enumerations[this.IRI];
         const result = [];
         result.push(...enumObj['soa:hasEnumerationMember']);
-        if (implicit === true) {
-            let subClasses = this.getSubClasses(true, null);
-            for (let i = 0; i < subClasses.length; i++) {
-                let actualEnumeration = this.graph.enumerations[subClasses[i]];
-                if (actualEnumeration) {
+        if (implicit) {
+            const subClasses = this.getSubClasses(true, null);
+            for (const actSubClass of subClasses) {
+                const actualEnumeration = this.graph.enumerations[actSubClass];
+                if (!util.isNil(actualEnumeration)) {
                     result.push(...actualEnumeration['soa:hasEnumerationMember']);
                 }
             }
@@ -143,10 +140,10 @@ class Enumeration {
         const enumObj = this.graph.enumerations[this.IRI];
         const result = [];
         result.push(...enumObj['soa:hasProperty']);
-        if (implicit === true) {
+        if (implicit) {
             // add properties from super-classes
             result.push(...this.graph.reasoner.inferPropertiesFromSuperClasses(enumObj['rdfs:subClassOf']));
-            // add sub-properties ? todo
+            // add sub-properties ?
             // for (let p = 0; p < result.length; p++) {
             //     result.push(... this.graph.reasoner.inferSubProperties(result[p]));
             // }
@@ -164,7 +161,7 @@ class Enumeration {
     getSuperClasses(implicit = true, filter = null) {
         const enumObj = this.graph.enumerations[this.IRI];
         const result = [];
-        if (implicit === true) {
+        if (implicit) {
             result.push(...this.graph.reasoner.inferImplicitSuperClasses(this.IRI));
         } else {
             result.push(...enumObj['rdfs:subClassOf']);
@@ -182,7 +179,7 @@ class Enumeration {
     getSubClasses(implicit = true, filter = null) {
         const enumObj = this.graph.enumerations[this.IRI];
         const result = [];
-        if (implicit === true) {
+        if (implicit) {
             result.push(...this.graph.reasoner.inferImplicitSubClasses(this.IRI));
         } else {
             result.push(...enumObj['soa:superClassOf']);

@@ -90,7 +90,7 @@ function applyFilter(dataArray, filter, graph) {
                         typeIRI = 'schema:DataType';
                         break;
                     default:
-                        console.log('Invalid filter.termType ' + toCheck[t]);
+                        throw new Error('Invalid filter.termType ' + toCheck[t]);
                 }
                 if (typeIRI === actualTerm.getTermType()) {
                     matchFound = true;
@@ -134,6 +134,16 @@ function isObject(value) {
         return false;
     }
     return typeof value === 'object';
+}
+
+/**
+ * Checks if the given input is undefined or null
+ *
+ * @param {*} value - the input element to check
+ * @returns {boolean} true if the given input is undefined or null
+ */
+function isNil(value) {
+    return (value === undefined || value === null);
 }
 
 /**
@@ -455,7 +465,7 @@ function toAbsoluteIRI(compactIRI, context) {
  * Returns a sorted Array of Arrays that have a schema.org vocabulary version as first entry and it's release date as second entry. Latest is first in array.
  *
  * @param {object} releaseLog - the releaseLog object from the versionsFile of schema.org
- * @returns {array} - Array with sorted release Arrays -> [version, date]
+ * @returns {Array} - Array with sorted release Arrays -> [version, date]
  */
 function sortReleaseEntriesByDate(releaseLog) {
     let versionEntries = Object.entries(releaseLog);
@@ -507,6 +517,7 @@ module.exports = {
     isArray,
     isString,
     isObject,
+    isNil,
     uniquifyArray,
     preProcessVocab,
     generateContext,

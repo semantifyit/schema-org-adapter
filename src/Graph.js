@@ -104,7 +104,7 @@ class Graph {
      * @returns {boolean} returns true on success
      */
     async addVocabulary(vocab) {
-    // this algorithm is well-documented in /docu/algorithm.md
+        // this algorithm is well-documented in /docu/algorithm.md
         try {
             // A) Pre-process Vocabulary
             // create new context
@@ -117,12 +117,12 @@ class Graph {
             }
             // B) Classify Input
             /**
-       Classify every @graph node based on its @type. The node is transformed to another data-model based on the @type and stored in a new memory storage for an easier further usage. This is the first of two steps for an exact classification of the node, since the @type is not enough for a correct classification. The mapping of our data model and the @type(s) of the corresponding @graph nodes are as follows:
-       classes ("@type" = "rdfs:Class")
-       properties ("@type" = "rdf:Property")
-       dataTypes ("@type" = "rdfs:Class" + "http://schema.org/DataType")
-       enumerations ("@type" = "rdfs:Class", has "http://schema.org/Enumeration" as implicit super-class)
-       enumerationMembers ("@type" = @id(s) of enumeration(s))
+             Classify every @graph node based on its @type. The node is transformed to another data-model based on the @type and stored in a new memory storage for an easier further usage. This is the first of two steps for an exact classification of the node, since the @type is not enough for a correct classification. The mapping of our data model and the @type(s) of the corresponding @graph nodes are as follows:
+             classes ("@type" = "rdfs:Class")
+             properties ("@type" = "rdf:Property")
+             dataTypes ("@type" = "rdfs:Class" + "http://schema.org/DataType")
+             enumerations ("@type" = "rdfs:Class", has "http://schema.org/Enumeration" as implicit super-class)
+             enumerationMembers ("@type" = @id(s) of enumeration(s))
              */
             for (let i = 0; i < vocab['@graph'].length; i++) {
                 const curNode = JSON.parse(JSON.stringify(vocab['@graph'][i]));

@@ -5,7 +5,7 @@ let VOC_URL_LATEST;
 let VOC_OBJ_LATEST;
 
 /**
- * starts a SDO Adapter for a test
+ *  @returns {SDOAdapter} - the initialized SDO-Adapter ready for testing.
  */
 async function initGraph() {
     const mySA = new SDOAdapter(global.useExperimental);
@@ -14,6 +14,9 @@ async function initGraph() {
     return new Graph(mySA);
 }
 
+/**
+ *  Tests regarding the JS-Class for "Graph"
+ */
 describe('Graph methods', () => {
     test('addVocabulary()', async() => {
         const myGraph = await initGraph();
