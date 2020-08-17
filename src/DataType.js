@@ -23,9 +23,8 @@ class DataType {
     getIRI(compactForm = false) {
         if (compactForm) {
             return this.IRI;
-        } else {
-            return util.toAbsoluteIRI(this.IRI, this.graph.context);
         }
+        return util.toAbsoluteIRI(this.IRI, this.graph.context);
     }
 
     /**
@@ -44,11 +43,10 @@ class DataType {
      */
     getVocabulary() {
         const dataTypeObj = this.graph.dataTypes[this.IRI];
-        if (dataTypeObj['schema:isPartOf'] !== undefined) {
+        if (!util.isNil(dataTypeObj['schema:isPartOf'])) {
             return dataTypeObj['schema:isPartOf'];
-        } else {
-            return null;
         }
+        return null;
     }
 
     /**
@@ -58,13 +56,12 @@ class DataType {
      */
     getSource() {
         const dataTypeObj = this.graph.dataTypes[this.IRI];
-        if (dataTypeObj['dc:source'] !== undefined) {
+        if (!util.isNil(dataTypeObj['dc:source'])) {
             return dataTypeObj['dc:source'];
-        } else if (dataTypeObj['schema:source']) {
+        } else if (!util.isNil(dataTypeObj['schema:source'])) {
             return dataTypeObj['schema:source'];
-        } else {
-            return null;
         }
+        return null;
     }
 
     /**
@@ -76,9 +73,8 @@ class DataType {
         const dataTypeObj = this.graph.dataTypes[this.IRI];
         if (util.isString(dataTypeObj['schema:supersededBy'])) {
             return dataTypeObj['schema:supersededBy'];
-        } else {
-            return null;
         }
+        return null;
     }
 
     /**
@@ -89,7 +85,7 @@ class DataType {
      */
     getName(language = 'en') {
         const nameObj = this.graph.dataTypes[this.IRI]['rdfs:label'];
-        if (nameObj === null || nameObj[language] === undefined) {
+        if (util.isNil(nameObj) || util.isNil(nameObj[language])) {
             return null;
         }
         return nameObj[language];
@@ -103,7 +99,7 @@ class DataType {
      */
     getDescription(language = 'en') {
         const descriptionObj = this.graph.dataTypes[this.IRI]['rdfs:comment'];
-        if (descriptionObj === null || descriptionObj[language] === undefined) {
+        if (util.isNil(descriptionObj) || util.isNil(descriptionObj[language])) {
             return null;
         }
         return descriptionObj[language];
@@ -119,7 +115,7 @@ class DataType {
     getSuperDataTypes(implicit = true, filter = null) {
         const dataTypeObj = this.graph.dataTypes[this.IRI];
         const result = [];
-        if (implicit === true) {
+        if (implicit) {
             result.push(...this.graph.reasoner.inferImplicitSuperDataTypes(this.IRI));
         } else {
             result.push(...dataTypeObj['rdfs:subClassOf']);
@@ -137,7 +133,7 @@ class DataType {
     getSubDataTypes(implicit = true, filter = null) {
         const dataTypeObj = this.graph.dataTypes[this.IRI];
         const result = [];
-        if (implicit === true) {
+        if (implicit) {
             result.push(...this.graph.reasoner.inferImplicitSubDataTypes(this.IRI));
         } else {
             result.push(...dataTypeObj['soa:superClassOf']);

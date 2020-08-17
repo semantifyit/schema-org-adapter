@@ -85,7 +85,6 @@ class Enumeration {
      */
     getName(language = 'en') {
         const nameObj = this.graph.enumerations[this.IRI]['rdfs:label'];
-        console.log(nameObj);
         if (util.isNil(nameObj) || util.isNil(nameObj[language])) {
             return null;
         }

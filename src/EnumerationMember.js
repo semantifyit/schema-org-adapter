@@ -23,9 +23,8 @@ class EnumerationMember {
     getIRI(compactForm = false) {
         if (compactForm) {
             return this.IRI;
-        } else {
-            return util.toAbsoluteIRI(this.IRI, this.graph.context);
         }
+        return util.toAbsoluteIRI(this.IRI, this.graph.context);
     }
 
     /**
@@ -44,11 +43,10 @@ class EnumerationMember {
      */
     getVocabulary() {
         let enumObj = this.graph.enumerationMembers[this.IRI];
-        if (enumObj['schema:isPartOf'] !== undefined) {
+        if (!util.isNil(enumObj['schema:isPartOf'])) {
             return enumObj['schema:isPartOf'];
-        } else {
-            return null;
         }
+        return null;
     }
 
     /**
@@ -58,13 +56,12 @@ class EnumerationMember {
      */
     getSource() {
         let enumObj = this.graph.enumerationMembers[this.IRI];
-        if (enumObj['dc:source'] !== undefined) {
+        if (!util.isNil(enumObj['dc:source'])) {
             return enumObj['dc:source'];
-        } else if (enumObj['schema:source']) {
+        } else if (!util.isNil(enumObj['schema:source'])) {
             return enumObj['schema:source'];
-        } else {
-            return null;
         }
+        return null;
     }
 
     /**
@@ -76,9 +73,8 @@ class EnumerationMember {
         let enumObj = this.graph.enumerationMembers[this.IRI];
         if (util.isString(enumObj['schema:supersededBy'])) {
             return enumObj['schema:supersededBy'];
-        } else {
-            return null;
         }
+        return null;
     }
 
     /**
@@ -89,7 +85,7 @@ class EnumerationMember {
      */
     getName(language = 'en') {
         let nameObj = this.graph.enumerationMembers[this.IRI]['rdfs:label'];
-        if (nameObj === null || nameObj[language] === undefined) {
+        if (util.isNil(nameObj) || util.isNil(nameObj[language])) {
             return null;
         }
         return nameObj[language];
@@ -103,7 +99,7 @@ class EnumerationMember {
      */
     getDescription(language = 'en') {
         let descriptionObj = this.graph.enumerationMembers[this.IRI]['rdfs:comment'];
-        if (descriptionObj === null || descriptionObj[language] === undefined) {
+        if (util.isNil(descriptionObj) || util.isNil(descriptionObj[language])) {
             return null;
         }
         return descriptionObj[language];
@@ -120,10 +116,10 @@ class EnumerationMember {
         let enumObj = this.graph.enumerationMembers[this.IRI];
         let result = [];
         result.push(...enumObj['soa:enumerationDomainIncludes']);
-        if (implicit === true) {
+        if (implicit) {
             let domainEnumerationsToCheck = JSON.parse(JSON.stringify(result));
-            for (let i = 0; i < domainEnumerationsToCheck.length; i++) {
-                result.push(...this.graph.reasoner.inferImplicitSuperClasses(domainEnumerationsToCheck[i]));
+            for (const actDE of domainEnumerationsToCheck) {
+                result.push(...this.graph.reasoner.inferImplicitSuperClasses(actDE));
             }
             result = util.applyFilter(util.uniquifyArray(result), { 'termType': 'Enumeration' }, this.graph);
         }

@@ -1,5 +1,6 @@
 const SDOAdapter = require('../src/SDOAdapter');
 const VOC_OBJ_ZOO = require('./data/exampleExternalVocabulary');
+const util = require('../src/utilities');
 
 /**
  *  @returns {SDOAdapter} - the initialized SDO-Adapter ready for testing.
@@ -89,8 +90,8 @@ describe('Class methods', () => {
         const musicEvent = mySA.getClass('schema:MusicEvent');
         const eventProps = event.getProperties(true);
         const musicEventProps = musicEvent.getProperties(true);
-        for (let i = 0; i < eventProps.length; i++) {
-            expect(musicEventProps).toContain(eventProps[i]);
+        for (const actProp of eventProps) {
+            expect(musicEventProps).toContain(actProp);
         }
         const crWork = mySA.getClass('schema:CreativeWork');
         expect(crWork.getProperties(true)).not.toContain('schema:legislationJurisdiction');
@@ -114,5 +115,11 @@ describe('Class methods', () => {
         const lodgingBusiness = mySA.getClass('schema:LodgingBusiness');
         expect(lodgingBusiness.getSubClasses()).toContain('schema:Hotel');
         expect(lodgingBusiness.getSubClasses()).not.toContain('schema:Thing');
+    });
+
+    test('toString()', async() => {
+        const mySA = await initAdapter();
+        const thing = mySA.getClass('schema:Thing');
+        expect(util.isObject(JSON.parse(thing.toString()))).toBe(true);
     });
 });

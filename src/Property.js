@@ -23,9 +23,8 @@ class Property {
     getIRI(compactForm = false) {
         if (compactForm) {
             return this.IRI;
-        } else {
-            return util.toAbsoluteIRI(this.IRI, this.graph.context);
         }
+        return util.toAbsoluteIRI(this.IRI, this.graph.context);
     }
 
     /**
@@ -44,11 +43,10 @@ class Property {
      */
     getVocabulary() {
         let propertyObj = this.graph.properties[this.IRI];
-        if (propertyObj['schema:isPartOf'] !== undefined) {
+        if (!util.isNil(propertyObj['schema:isPartOf'])) {
             return propertyObj['schema:isPartOf'];
-        } else {
-            return null;
         }
+        return null;
     }
 
     /**
@@ -58,13 +56,12 @@ class Property {
      */
     getSource() {
         let propertyObj = this.graph.properties[this.IRI];
-        if (propertyObj['dc:source'] !== undefined) {
+        if (!util.isNil(propertyObj['dc:source'])) {
             return propertyObj['dc:source'];
-        } else if (propertyObj['schema:source']) {
+        } else if (!util.isNil(propertyObj['schema:source'])) {
             return propertyObj['schema:source'];
-        } else {
-            return null;
         }
+        return null;
     }
 
     /**
@@ -76,9 +73,8 @@ class Property {
         let propertyObj = this.graph.properties[this.IRI];
         if (util.isString(propertyObj['schema:supersededBy'])) {
             return propertyObj['schema:supersededBy'];
-        } else {
-            return null;
         }
+        return null;
     }
 
     /**
@@ -89,7 +85,7 @@ class Property {
      */
     getName(language = 'en') {
         let nameObj = this.graph.properties[this.IRI]['rdfs:label'];
-        if (nameObj === null || nameObj[language] === undefined) {
+        if (util.isNil(nameObj) || util.isNil(nameObj[language])) {
             return null;
         }
         return nameObj[language];
@@ -103,7 +99,7 @@ class Property {
      */
     getDescription(language = 'en') {
         let descriptionObj = this.graph.properties[this.IRI]['rdfs:comment'];
-        if (descriptionObj === null || descriptionObj[language] === undefined) {
+        if (util.isNil(descriptionObj) || util.isNil(descriptionObj[language])) {
             return null;
         }
         return descriptionObj[language];
@@ -120,11 +116,11 @@ class Property {
         let propertyObj = this.graph.properties[this.IRI];
         let result = [];
         result.push(...propertyObj['schema:rangeIncludes']);
-        if (implicit === true) {
+        if (implicit) {
             // add sub-classes from ranges
             let inferredSubClasses = [];
-            for (let i = 0; i < result.length; i++) {
-                inferredSubClasses.push(...this.graph.reasoner.inferImplicitSubClasses(result[i]));
+            for (const actRes of result) {
+                inferredSubClasses.push(...this.graph.reasoner.inferImplicitSubClasses(actRes));
             }
             result.push(...inferredSubClasses);
             // remove "null" values from array (if range included data types)
@@ -146,11 +142,11 @@ class Property {
         let propertyObj = this.graph.properties[this.IRI];
         let result = [];
         result.push(...propertyObj['schema:domainIncludes']);
-        if (implicit === true) {
+        if (implicit) {
             // add sub-classes from ranges
             let inferredSubClasses = [];
-            for (let i = 0; i < result.length; i++) {
-                inferredSubClasses.push(...this.graph.reasoner.inferImplicitSubClasses(result[i]));
+            for (const actRes of result) {
+                inferredSubClasses.push(...this.graph.reasoner.inferImplicitSubClasses(actRes));
             }
             result.push(...inferredSubClasses);
         }
@@ -168,7 +164,7 @@ class Property {
         let propertyObj = this.graph.properties[this.IRI];
         let result = [];
 
-        if (implicit === true) {
+        if (implicit) {
             result.push(...this.graph.reasoner.inferSuperProperties(this.IRI));
         } else {
             result.push(...propertyObj['rdfs:subPropertyOf']);
@@ -187,7 +183,7 @@ class Property {
         let propertyObj = this.graph.properties[this.IRI];
         let result = [];
 
-        if (implicit === true) {
+        if (implicit) {
             result.push(...this.graph.reasoner.inferSubProperties(this.IRI));
         } else {
             result.push(...propertyObj['soa:superPropertyOf']);
