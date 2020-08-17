@@ -1,4 +1,5 @@
 const SDOAdapter = require('../src/SDOAdapter');
+const util = require('../src/utilities');
 
 /**
  *  @returns {SDOAdapter} - the initialized SDO-Adapter ready for testing.
@@ -76,5 +77,11 @@ describe('EnumerationMember methods', () => {
         expect(Radiography.getDomainEnumerations().length).toBe(2);
         expect(Radiography.getDomainEnumerations(true).length).not.toBe(2);
         expect(Radiography.getDomainEnumerations(true)).toContain('schema:MedicalEnumeration');
+    });
+
+    test('toString()', async() => {
+        const mySA = await initAdapter();
+        const Friday = mySA.getEnumerationMember('schema:Friday');
+        expect(util.isObject(JSON.parse(Friday.toString()))).toBe(true);
     });
 });

@@ -27,6 +27,11 @@ describe('Graph methods', () => {
         await myGraph.addVocabulary(VOC_OBJ_ZOO);
         expect(Place.getSubClasses(false).length).toBe(11);
         expect(Place.getSubClasses(false)).toContain('ex:Animal');
+        await myGraph.addVocabulary(VOC_OBJ_LATEST); // Try adding same vocab again
+        await myGraph.addVocabulary(VOC_OBJ_ZOO); // Try adding same vocab again
+        const Place2 = myGraph.getClass('schema:Thing');
+        expect(Place2.getSubClasses(false).length).toBe(11);
+        expect(Place2.getSubClasses(false)).toContain('ex:Animal');
     });
 
     test('getTerm()', async() => {
@@ -43,18 +48,51 @@ describe('Graph methods', () => {
         expect(numb).toEqual(numb2);
         const DayOfWeek = myGraph.getEnumeration('schema:DayOfWeek');
         const DayOfWeek2 = myGraph.getTerm('schema:DayOfWeek');
+        const DayOfWeek3 = myGraph.getClass('schema:DayOfWeek');
         expect(DayOfWeek).toEqual(DayOfWeek2);
+        expect(DayOfWeek).toEqual(DayOfWeek3);
+        expect(DayOfWeek2).toEqual(DayOfWeek3);
         const Friday = myGraph.getEnumerationMember('schema:Friday');
         const Friday2 = myGraph.getTerm('schema:Friday');
         expect(Friday).toEqual(Friday2);
+        // Fail tests
+        expect(() => myGraph.getClass('schema:BS')).toThrow();
+        expect(() => myGraph.getProperty('schema:BS')).toThrow();
+        expect(() => myGraph.getDataType('schema:BS')).toThrow();
+        expect(() => myGraph.getEnumeration('schema:BS')).toThrow();
+        expect(() => myGraph.getEnumerationMember('schema:BS')).toThrow();
+        expect(() => myGraph.getClass('BS')).toThrow();
+        expect(() => myGraph.getProperty('BS')).toThrow();
+        expect(() => myGraph.getDataType('BS')).toThrow();
+        expect(() => myGraph.getEnumeration('BS')).toThrow();
+        expect(() => myGraph.getEnumerationMember('BS')).toThrow();
     });
 
     test('discoverCompactIRI()', async() => {
         const myGraph = await initGraph();
         await myGraph.addVocabulary(VOC_OBJ_LATEST);
+        // Class
         expect(myGraph.discoverCompactIRI('Hotel')).toBe('schema:Hotel');
         expect(myGraph.discoverCompactIRI('schema:Hotel')).toBe('schema:Hotel');
         expect(myGraph.discoverCompactIRI('http://schema.org/Hotel')).toBe('schema:Hotel');
+        // Property
+        expect(myGraph.discoverCompactIRI('name')).toBe('schema:name');
+        expect(myGraph.discoverCompactIRI('schema:name')).toBe('schema:name');
+        expect(myGraph.discoverCompactIRI('http://schema.org/name')).toBe('schema:name');
+        // DataType
+        expect(myGraph.discoverCompactIRI('Text')).toBe('schema:Text');
+        expect(myGraph.discoverCompactIRI('schema:Text')).toBe('schema:Text');
+        expect(myGraph.discoverCompactIRI('http://schema.org/Text')).toBe('schema:Text');
+        // Enumeration
+        expect(myGraph.discoverCompactIRI('DayOfWeek')).toBe('schema:DayOfWeek');
+        expect(myGraph.discoverCompactIRI('schema:DayOfWeek')).toBe('schema:DayOfWeek');
+        expect(myGraph.discoverCompactIRI('http://schema.org/DayOfWeek')).toBe('schema:DayOfWeek');
+        // EnumerationMember
+        expect(myGraph.discoverCompactIRI('Friday')).toBe('schema:Friday');
+        expect(myGraph.discoverCompactIRI('schema:Friday')).toBe('schema:Friday');
+        expect(myGraph.discoverCompactIRI('http://schema.org/Friday')).toBe('schema:Friday');
+        // Not valid
+        expect(myGraph.discoverCompactIRI('SomeBS')).toBe(null);
     });
 
     test('containsLabel()', async() => {

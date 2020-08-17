@@ -1,4 +1,5 @@
 const SDOAdapter = require('../src/SDOAdapter');
+const util = require('../src/utilities');
 
 /**
  *  @returns {SDOAdapter} - the initialized SDO-Adapter ready for testing.
@@ -78,5 +79,11 @@ describe('DataType methods', () => {
         expect(text.getSubDataTypes()).toContain('schema:CssSelectorType');
         expect(text.getSubDataTypes()).toContain('schema:URL');
         expect(text.getSubDataTypes()).not.toContain('schema:Integer');
+    });
+
+    test('toString()', async() => {
+        const mySA = await initAdapter();
+        const text = mySA.getDataType('schema:Text');
+        expect(util.isObject(JSON.parse(text.toString()))).toBe(true);
     });
 });

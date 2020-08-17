@@ -17230,9 +17230,9 @@ class Class {
 
     if (compactForm) {
       return this.IRI;
-    } else {
-      return util.toAbsoluteIRI(this.IRI, this.graph.context);
     }
+
+    return util.toAbsoluteIRI(this.IRI, this.graph.context);
   }
   /**
    * Retrieves the term type (@type) of this Class (is always "rdfs:Class")
@@ -17254,11 +17254,11 @@ class Class {
   getVocabulary() {
     var classObj = this.graph.classes[this.IRI];
 
-    if (classObj['schema:isPartOf'] !== undefined) {
+    if (!util.isNil(classObj['schema:isPartOf'])) {
       return classObj['schema:isPartOf'];
-    } else {
-      return null;
     }
+
+    return null;
   }
   /**
    * Retrieves the source (dc:source) of this Class
@@ -17270,13 +17270,13 @@ class Class {
   getSource() {
     var classObj = this.graph.classes[this.IRI];
 
-    if (classObj['dc:source'] !== undefined) {
+    if (!util.isNil(classObj['dc:source'])) {
       return classObj['dc:source'];
-    } else if (classObj['schema:source']) {
+    } else if (!util.isNil(classObj['schema:source'])) {
       return classObj['schema:source'];
-    } else {
-      return null;
     }
+
+    return null;
   }
   /**
    * Retrieves the class superseding (schema:supersededBy) this Class
@@ -17290,9 +17290,9 @@ class Class {
 
     if (util.isString(classObj['schema:supersededBy'])) {
       return classObj['schema:supersededBy'];
-    } else {
-      return null;
     }
+
+    return null;
   }
   /**
    * Retrieves the name (rdfs:label) of this Class in a wished language (optional)
@@ -17306,7 +17306,7 @@ class Class {
     var language = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 'en';
     var nameObj = this.graph.classes[this.IRI]['rdfs:label'];
 
-    if (nameObj === null || nameObj[language] === undefined) {
+    if (util.isNil(nameObj) || util.isNil(nameObj[language])) {
       return null;
     }
 
@@ -17324,7 +17324,7 @@ class Class {
     var language = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 'en';
     var descriptionObj = this.graph.classes[this.IRI]['rdfs:comment'];
 
-    if (descriptionObj === null || descriptionObj[language] === undefined) {
+    if (util.isNil(descriptionObj) || util.isNil(descriptionObj[language])) {
       return null;
     }
 
@@ -17346,7 +17346,7 @@ class Class {
     var result = [];
     result.push(...classObj['soa:hasProperty']);
 
-    if (implicit === true) {
+    if (implicit) {
       // add properties from super-classes
       result.push(...this.graph.reasoner.inferPropertiesFromSuperClasses(classObj['rdfs:subClassOf'])); // add sub-properties ?
       // for (let p = 0; p < result.length; p++) {
@@ -17371,7 +17371,7 @@ class Class {
     var classObj = this.graph.classes[this.IRI];
     var result = [];
 
-    if (implicit === true) {
+    if (implicit) {
       result.push(...this.graph.reasoner.inferImplicitSuperClasses(this.IRI));
     } else {
       result.push(...classObj['rdfs:subClassOf']);
@@ -17394,7 +17394,7 @@ class Class {
     var classObj = this.graph.classes[this.IRI];
     var result = [];
 
-    if (implicit === true) {
+    if (implicit) {
       result.push(...this.graph.reasoner.inferImplicitSubClasses(this.IRI));
     } else {
       result.push(...classObj['soa:superClassOf']);
@@ -17479,9 +17479,9 @@ class DataType {
 
     if (compactForm) {
       return this.IRI;
-    } else {
-      return util.toAbsoluteIRI(this.IRI, this.graph.context);
     }
+
+    return util.toAbsoluteIRI(this.IRI, this.graph.context);
   }
   /**
    * Retrieves the term type (@type) of this DataType (is always "schema:DataType")
@@ -17503,11 +17503,11 @@ class DataType {
   getVocabulary() {
     var dataTypeObj = this.graph.dataTypes[this.IRI];
 
-    if (dataTypeObj['schema:isPartOf'] !== undefined) {
+    if (!util.isNil(dataTypeObj['schema:isPartOf'])) {
       return dataTypeObj['schema:isPartOf'];
-    } else {
-      return null;
     }
+
+    return null;
   }
   /**
    * Retrieves the source (dc:source) of this DataType
@@ -17519,13 +17519,13 @@ class DataType {
   getSource() {
     var dataTypeObj = this.graph.dataTypes[this.IRI];
 
-    if (dataTypeObj['dc:source'] !== undefined) {
+    if (!util.isNil(dataTypeObj['dc:source'])) {
       return dataTypeObj['dc:source'];
-    } else if (dataTypeObj['schema:source']) {
+    } else if (!util.isNil(dataTypeObj['schema:source'])) {
       return dataTypeObj['schema:source'];
-    } else {
-      return null;
     }
+
+    return null;
   }
   /**
    * Retrieves the DataType superseding (schema:supersededBy) this DataType
@@ -17539,9 +17539,9 @@ class DataType {
 
     if (util.isString(dataTypeObj['schema:supersededBy'])) {
       return dataTypeObj['schema:supersededBy'];
-    } else {
-      return null;
     }
+
+    return null;
   }
   /**
    * Retrieves the name (rdfs:label) of this DataType in a wished language (optional)
@@ -17555,7 +17555,7 @@ class DataType {
     var language = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 'en';
     var nameObj = this.graph.dataTypes[this.IRI]['rdfs:label'];
 
-    if (nameObj === null || nameObj[language] === undefined) {
+    if (util.isNil(nameObj) || util.isNil(nameObj[language])) {
       return null;
     }
 
@@ -17573,7 +17573,7 @@ class DataType {
     var language = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 'en';
     var descriptionObj = this.graph.dataTypes[this.IRI]['rdfs:comment'];
 
-    if (descriptionObj === null || descriptionObj[language] === undefined) {
+    if (util.isNil(descriptionObj) || util.isNil(descriptionObj[language])) {
       return null;
     }
 
@@ -17594,7 +17594,7 @@ class DataType {
     var dataTypeObj = this.graph.dataTypes[this.IRI];
     var result = [];
 
-    if (implicit === true) {
+    if (implicit) {
       result.push(...this.graph.reasoner.inferImplicitSuperDataTypes(this.IRI));
     } else {
       result.push(...dataTypeObj['rdfs:subClassOf']);
@@ -17617,7 +17617,7 @@ class DataType {
     var dataTypeObj = this.graph.dataTypes[this.IRI];
     var result = [];
 
-    if (implicit === true) {
+    if (implicit) {
       result.push(...this.graph.reasoner.inferImplicitSubDataTypes(this.IRI));
     } else {
       result.push(...dataTypeObj['soa:superClassOf']);
@@ -17771,7 +17771,6 @@ class Enumeration {
   getName() {
     var language = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 'en';
     var nameObj = this.graph.enumerations[this.IRI]['rdfs:label'];
-    console.log(nameObj);
 
     if (util.isNil(nameObj) || util.isNil(nameObj[language])) {
       return null;
@@ -17972,9 +17971,9 @@ class EnumerationMember {
 
     if (compactForm) {
       return this.IRI;
-    } else {
-      return util.toAbsoluteIRI(this.IRI, this.graph.context);
     }
+
+    return util.toAbsoluteIRI(this.IRI, this.graph.context);
   }
   /**
    * Retrieves the term type (@type) of this EnumerationMember (is always "schema:Enumeration")
@@ -17996,11 +17995,11 @@ class EnumerationMember {
   getVocabulary() {
     var enumObj = this.graph.enumerationMembers[this.IRI];
 
-    if (enumObj['schema:isPartOf'] !== undefined) {
+    if (!util.isNil(enumObj['schema:isPartOf'])) {
       return enumObj['schema:isPartOf'];
-    } else {
-      return null;
     }
+
+    return null;
   }
   /**
    * Retrieves the source (dc:source) of this EnumerationMember
@@ -18012,13 +18011,13 @@ class EnumerationMember {
   getSource() {
     var enumObj = this.graph.enumerationMembers[this.IRI];
 
-    if (enumObj['dc:source'] !== undefined) {
+    if (!util.isNil(enumObj['dc:source'])) {
       return enumObj['dc:source'];
-    } else if (enumObj['schema:source']) {
+    } else if (!util.isNil(enumObj['schema:source'])) {
       return enumObj['schema:source'];
-    } else {
-      return null;
     }
+
+    return null;
   }
   /**
    * Retrieves the EnumerationMember superseding (schema:supersededBy) this EnumerationMember
@@ -18032,9 +18031,9 @@ class EnumerationMember {
 
     if (util.isString(enumObj['schema:supersededBy'])) {
       return enumObj['schema:supersededBy'];
-    } else {
-      return null;
     }
+
+    return null;
   }
   /**
    * Retrieves the name (rdfs:label) of this EnumerationMember in a wished language (optional)
@@ -18048,7 +18047,7 @@ class EnumerationMember {
     var language = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 'en';
     var nameObj = this.graph.enumerationMembers[this.IRI]['rdfs:label'];
 
-    if (nameObj === null || nameObj[language] === undefined) {
+    if (util.isNil(nameObj) || util.isNil(nameObj[language])) {
       return null;
     }
 
@@ -18066,7 +18065,7 @@ class EnumerationMember {
     var language = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 'en';
     var descriptionObj = this.graph.enumerationMembers[this.IRI]['rdfs:comment'];
 
-    if (descriptionObj === null || descriptionObj[language] === undefined) {
+    if (util.isNil(descriptionObj) || util.isNil(descriptionObj[language])) {
       return null;
     }
 
@@ -18088,11 +18087,11 @@ class EnumerationMember {
     var result = [];
     result.push(...enumObj['soa:enumerationDomainIncludes']);
 
-    if (implicit === true) {
+    if (implicit) {
       var domainEnumerationsToCheck = JSON.parse(JSON.stringify(result));
 
-      for (var i = 0; i < domainEnumerationsToCheck.length; i++) {
-        result.push(...this.graph.reasoner.inferImplicitSuperClasses(domainEnumerationsToCheck[i]));
+      for (var actDE of domainEnumerationsToCheck) {
+        result.push(...this.graph.reasoner.inferImplicitSuperClasses(actDE));
       }
 
       result = util.applyFilter(util.uniquifyArray(result), {
@@ -18278,8 +18277,8 @@ class Graph {
 
         var vocabularies = _this.sdoAdapter.getVocabularies();
 
-        for (var i = 0; i < vocab['@graph'].length; i++) {
-          vocab['@graph'][i] = util.curateVocabNode(vocab['@graph'][i], vocabularies); // curate nodes
+        for (var vocabNode of vocab['@graph']) {
+          vocabNode = util.curateVocabNode(vocabNode, vocabularies); // curate nodes
         } // B) Classify Input
 
         /**
@@ -18292,8 +18291,8 @@ class Graph {
          */
 
 
-        for (var _i = 0; _i < vocab['@graph'].length; _i++) {
-          var curNode = JSON.parse(JSON.stringify(vocab['@graph'][_i]));
+        for (var i = 0; i < vocab['@graph'].length; i++) {
+          var curNode = JSON.parse(JSON.stringify(vocab['@graph'][i]));
 
           if (util.isString(curNode['@type'])) {
             switch (curNode['@type']) {
@@ -18308,7 +18307,7 @@ class Graph {
                 break;
 
               default:
-                // @type is not something expected -> enumerationMember
+                // @type is not something expected -> assume enumerationMember
                 _this.addGraphNode(_this.enumerationMembers, curNode);
 
                 break;
@@ -18323,7 +18322,7 @@ class Graph {
             //   "schema:MedicalImagingTechnique",
             //   "schema:MedicalSpecialty"
             // ]
-            if (curNode['@type'].indexOf('rdfs:Class') !== -1 && curNode['@type'].indexOf('schema:DataType') !== -1) {
+            if (curNode['@type'].includes('rdfs:Class') && curNode['@type'].includes('schema:DataType')) {
               // datatype
               _this.addGraphNode(_this.dataTypes, curNode);
             } else {
@@ -18353,16 +18352,16 @@ class Graph {
 
           var _enumKeys = Object.keys(_this.enumerations);
 
-          for (var _i2 = 0; _i2 < _classesKeys.length; _i2++) {
-            if (_this.classes[_classesKeys[_i2]]['rdfs:subClassOf'] !== undefined) {
-              var subClassArray = _this.classes[_classesKeys[_i2]]['rdfs:subClassOf'];
+          for (var actClassKey of _classesKeys) {
+            if (_this.classes[actClassKey]['rdfs:subClassOf'] !== undefined) {
+              var subClassArray = _this.classes[actClassKey]['rdfs:subClassOf'];
 
-              for (var j = 0; j < subClassArray.length; j++) {
-                if (_enumKeys.indexOf(subClassArray[j]) !== -1 || subClassArray[j] === 'schema:Enumeration') {
-                  if (_this.classes[_classesKeys[_i2]] !== undefined && _this.enumerations[_classesKeys[_i2]] === undefined) {
+              for (var actSubClass of subClassArray) {
+                if (actSubClass === 'schema:Enumeration' || _enumKeys.includes(actSubClass)) {
+                  if (_this.classes[actClassKey] && !_this.enumerations[actClassKey]) {
                     newEnum = true;
-                    _this.enumerations[_classesKeys[_i2]] = JSON.parse(JSON.stringify(_this.classes[_classesKeys[_i2]]));
-                    delete _this.classes[_classesKeys[_i2]];
+                    _this.enumerations[actClassKey] = JSON.parse(JSON.stringify(_this.classes[actClassKey]));
+                    delete _this.classes[actClassKey];
                   }
                 }
               }
@@ -18380,16 +18379,16 @@ class Graph {
 
           var _dtKeys = Object.keys(_this.dataTypes);
 
-          for (var _i3 = 0; _i3 < _classesKeys2.length; _i3++) {
-            if (_this.classes[_classesKeys2[_i3]]['rdfs:subClassOf'] !== undefined) {
-              var _subClassArray = _this.classes[_classesKeys2[_i3]]['rdfs:subClassOf'];
+          for (var _actClassKey of _classesKeys2) {
+            if (_this.classes[_actClassKey]['rdfs:subClassOf'] !== undefined) {
+              var _subClassArray = _this.classes[_actClassKey]['rdfs:subClassOf'];
 
-              for (var _j = 0; _j < _subClassArray.length; _j++) {
-                if (_dtKeys.indexOf(_subClassArray[_j]) !== -1 || _subClassArray[_j] === 'schema:DataType') {
-                  if (_this.classes[_classesKeys2[_i3]] !== undefined && _this.dataTypes[_classesKeys2[_i3]] === undefined) {
+              for (var _actSubClass of _subClassArray) {
+                if (_actSubClass === 'schema:DataType' || _dtKeys.includes(_actSubClass)) {
+                  if (_this.classes[_actClassKey] && !_this.dataTypes[_actClassKey]) {
                     newDatatype = true;
-                    _this.dataTypes[_classesKeys2[_i3]] = JSON.parse(JSON.stringify(_this.classes[_classesKeys2[_i3]]));
-                    delete _this.classes[_classesKeys2[_i3]];
+                    _this.dataTypes[_actClassKey] = JSON.parse(JSON.stringify(_this.classes[_actClassKey]));
+                    delete _this.classes[_actClassKey];
                   }
                 }
               }
@@ -18400,8 +18399,8 @@ class Graph {
 
         var dtKeys = Object.keys(_this.dataTypes);
 
-        for (var _i4 = 0; _i4 < dtKeys.length; _i4++) {
-          _this.dataTypes[dtKeys[_i4]]['@type'] = 'schema:DataType';
+        for (var actDtKey of dtKeys) {
+          _this.dataTypes[actDtKey]['@type'] = 'schema:DataType';
         } // D) Inheritance
 
         /*    Schema.org's Inheritance design states if an entity is the superClass/superProperty of another entity. In our data model design we also hold the information if an entity is the subClass/subProperty of another entity. In this step this inheritance information is generated. */
@@ -18411,27 +18410,27 @@ class Graph {
 
         var classesKeys = Object.keys(_this.classes);
 
-        for (var c = 0; c < classesKeys.length; c++) {
-          var superClasses = _this.classes[classesKeys[c]]['rdfs:subClassOf']; // add empty superClassOf if not defined
+        for (var _actClassKey2 of classesKeys) {
+          var superClasses = _this.classes[_actClassKey2]['rdfs:subClassOf']; // add empty superClassOf if not defined
 
-          if (_this.classes[classesKeys[c]]['soa:superClassOf'] === undefined) {
-            _this.classes[classesKeys[c]]['soa:superClassOf'] = [];
+          if (!_this.classes[_actClassKey2]['soa:superClassOf']) {
+            _this.classes[_actClassKey2]['soa:superClassOf'] = [];
           }
 
-          for (var s = 0; s < superClasses.length; s++) {
-            var superClass = _this.classes[superClasses[s]];
+          for (var actSuperClass of superClasses) {
+            var superClass = _this.classes[actSuperClass];
 
-            if (superClass === undefined) {
-              superClass = _this.enumerations[superClasses[s]];
+            if (!superClass) {
+              superClass = _this.enumerations[actSuperClass];
             }
 
-            if (superClass !== undefined) {
-              if (superClass['soa:superClassOf'] !== undefined) {
-                if (superClass['soa:superClassOf'].indexOf(classesKeys[c]) === -1) {
-                  superClass['soa:superClassOf'].push(classesKeys[c]);
+            if (superClass) {
+              if (superClass['soa:superClassOf']) {
+                if (!superClass['soa:superClassOf'].includes(_actClassKey2)) {
+                  superClass['soa:superClassOf'].push(_actClassKey2);
                 }
               } else {
-                superClass['soa:superClassOf'] = [classesKeys[c]];
+                superClass['soa:superClassOf'] = [_actClassKey2];
               }
             }
           }
@@ -18439,27 +18438,27 @@ class Graph {
 
         var enumKeys = Object.keys(_this.enumerations);
 
-        for (var e = 0; e < enumKeys.length; e++) {
-          var _superClasses = _this.enumerations[enumKeys[e]]['rdfs:subClassOf']; // add empty superClassOf if not defined
+        for (var actEnumKey of enumKeys) {
+          var _superClasses = _this.enumerations[actEnumKey]['rdfs:subClassOf']; // add empty superClassOf if not defined
 
-          if (_this.enumerations[enumKeys[e]]['soa:superClassOf'] === undefined) {
-            _this.enumerations[enumKeys[e]]['soa:superClassOf'] = [];
+          if (!_this.enumerations[actEnumKey]['soa:superClassOf']) {
+            _this.enumerations[actEnumKey]['soa:superClassOf'] = [];
           }
 
-          for (var _s = 0; _s < _superClasses.length; _s++) {
-            var _superClass = _this.classes[_superClasses[_s]];
+          for (var _actSuperClass of _superClasses) {
+            var _superClass = _this.classes[_actSuperClass];
 
-            if (_superClass === undefined) {
-              _superClass = _this.enumerations[_superClasses[_s]];
+            if (!_superClass) {
+              _superClass = _this.enumerations[_actSuperClass];
             }
 
-            if (_superClass !== undefined) {
-              if (_superClass['soa:superClassOf'] !== undefined) {
-                if (_superClass['soa:superClassOf'].indexOf(enumKeys[e]) === -1) {
-                  _superClass['soa:superClassOf'].push(enumKeys[e]);
+            if (_superClass) {
+              if (_superClass['soa:superClassOf']) {
+                if (!_superClass['soa:superClassOf'].includes(actEnumKey)) {
+                  _superClass['soa:superClassOf'].push(actEnumKey);
                 }
               } else {
-                _superClass['soa:superClassOf'] = [enumKeys[e]];
+                _superClass['soa:superClassOf'] = [actEnumKey];
               }
             }
           }
@@ -18469,27 +18468,27 @@ class Graph {
 
         var dataTypeKeys = Object.keys(_this.dataTypes);
 
-        for (var d = 0; d < dataTypeKeys.length; d++) {
-          var _superClasses2 = _this.dataTypes[dataTypeKeys[d]]['rdfs:subClassOf']; // add empty superClassOf if not defined
+        for (var _actDtKey of dataTypeKeys) {
+          var _superClasses2 = _this.dataTypes[_actDtKey]['rdfs:subClassOf']; // add empty superClassOf if not defined
 
-          if (_this.dataTypes[dataTypeKeys[d]]['soa:superClassOf'] === undefined) {
-            _this.dataTypes[dataTypeKeys[d]]['soa:superClassOf'] = [];
+          if (!_this.dataTypes[_actDtKey]['soa:superClassOf']) {
+            _this.dataTypes[_actDtKey]['soa:superClassOf'] = [];
           } // add empty subClassOf if not defined
 
 
-          if (_superClasses2 === undefined) {
-            _this.dataTypes[dataTypeKeys[d]]['rdfs:subClassOf'] = [];
+          if (!_superClasses2) {
+            _this.dataTypes[_actDtKey]['rdfs:subClassOf'] = [];
           } else {
-            for (var _s2 = 0; _s2 < _superClasses2.length; _s2++) {
-              var _superClass2 = _this.dataTypes[_superClasses2[_s2]];
+            for (var _actSuperClass2 of _superClasses2) {
+              var _superClass2 = _this.dataTypes[_actSuperClass2];
 
-              if (_superClass2 !== undefined) {
-                if (_superClass2['soa:superClassOf'] !== undefined) {
-                  if (_superClass2['soa:superClassOf'].indexOf(dataTypeKeys[d]) === -1) {
-                    _superClass2['soa:superClassOf'].push(dataTypeKeys[d]);
+              if (_superClass2) {
+                if (_superClass2['soa:superClassOf']) {
+                  if (!_superClass2['soa:superClassOf'].includes(_actDtKey)) {
+                    _superClass2['soa:superClassOf'].push(_actDtKey);
                   }
                 } else {
-                  _superClass2['soa:superClassOf'] = [dataTypeKeys[d]];
+                  _superClass2['soa:superClassOf'] = [_actDtKey];
                 }
               }
             }
@@ -18500,27 +18499,27 @@ class Graph {
 
         var propertyKeys = Object.keys(_this.properties);
 
-        for (var p = 0; p < propertyKeys.length; p++) {
-          var superProperties = _this.properties[propertyKeys[p]]['rdfs:subPropertyOf']; // add empty superPropertyOf if not defined
+        for (var actPropKey of propertyKeys) {
+          var superProperties = _this.properties[actPropKey]['rdfs:subPropertyOf']; // add empty superPropertyOf if not defined
 
-          if (_this.properties[propertyKeys[p]]['soa:superPropertyOf'] === undefined) {
-            _this.properties[propertyKeys[p]]['soa:superPropertyOf'] = [];
+          if (!_this.properties[actPropKey]['soa:superPropertyOf']) {
+            _this.properties[actPropKey]['soa:superPropertyOf'] = [];
           } // add empty subPropertyOf if not defined
 
 
-          if (superProperties === undefined) {
-            _this.properties[propertyKeys[p]]['rdfs:subPropertyOf'] = [];
+          if (!superProperties) {
+            _this.properties[actPropKey]['rdfs:subPropertyOf'] = [];
           } else {
-            for (var _s3 = 0; _s3 < superProperties.length; _s3++) {
-              var _superClass3 = _this.properties[superProperties[_s3]];
+            for (var actSuperProp of superProperties) {
+              var _superClass3 = _this.properties[actSuperProp];
 
-              if (_superClass3 !== undefined) {
-                if (_superClass3['soa:superPropertyOf'] !== undefined) {
-                  if (_superClass3['soa:superPropertyOf'].indexOf(propertyKeys[p]) === -1) {
-                    _superClass3['soa:superPropertyOf'].push(propertyKeys[p]);
+              if (_superClass3) {
+                if (_superClass3['soa:superPropertyOf']) {
+                  if (!_superClass3['soa:superPropertyOf'].includes(actPropKey)) {
+                    _superClass3['soa:superPropertyOf'].push(actPropKey);
                   }
                 } else {
-                  _superClass3['soa:superPropertyOf'] = [propertyKeys[p]];
+                  _superClass3['soa:superPropertyOf'] = [actPropKey];
                 }
               }
             }
@@ -18537,37 +18536,37 @@ class Graph {
 
         classesKeys = Object.keys(_this.classes);
 
-        for (var _c = 0; _c < classesKeys.length; _c++) {
-          if (_this.classes[classesKeys[_c]]['soa:hasProperty'] === undefined) {
-            _this.classes[classesKeys[_c]]['soa:hasProperty'] = [];
+        for (var _actClassKey3 of classesKeys) {
+          if (!_this.classes[_actClassKey3]['soa:hasProperty']) {
+            _this.classes[_actClassKey3]['soa:hasProperty'] = [];
           }
 
-          if (_this.classes[classesKeys[_c]]['soa:isRangeOf'] === undefined) {
-            _this.classes[classesKeys[_c]]['soa:isRangeOf'] = [];
+          if (!_this.classes[_actClassKey3]['soa:isRangeOf']) {
+            _this.classes[_actClassKey3]['soa:isRangeOf'] = [];
           }
         }
 
         enumKeys = Object.keys(_this.enumerations);
 
-        for (var _e = 0; _e < enumKeys.length; _e++) {
-          if (_this.enumerations[enumKeys[_e]]['soa:hasEnumerationMember'] === undefined) {
-            _this.enumerations[enumKeys[_e]]['soa:hasEnumerationMember'] = [];
+        for (var _actEnumKey of enumKeys) {
+          if (!_this.enumerations[_actEnumKey]['soa:hasEnumerationMember']) {
+            _this.enumerations[_actEnumKey]['soa:hasEnumerationMember'] = [];
           }
 
-          if (_this.enumerations[enumKeys[_e]]['soa:isRangeOf'] === undefined) {
-            _this.enumerations[enumKeys[_e]]['soa:isRangeOf'] = [];
+          if (!_this.enumerations[_actEnumKey]['soa:isRangeOf']) {
+            _this.enumerations[_actEnumKey]['soa:isRangeOf'] = [];
           }
 
-          if (_this.enumerations[enumKeys[_e]]['soa:hasProperty'] === undefined) {
-            _this.enumerations[enumKeys[_e]]['soa:hasProperty'] = [];
+          if (!_this.enumerations[_actEnumKey]['soa:hasProperty']) {
+            _this.enumerations[_actEnumKey]['soa:hasProperty'] = [];
           }
         }
 
         var enumMemKeys = Object.keys(_this.enumerationMembers);
 
-        for (var _e2 = 0; _e2 < enumMemKeys.length; _e2++) {
-          if (_this.enumerationMembers[enumMemKeys[_e2]]['soa:enumerationDomainIncludes'] === undefined) {
-            _this.enumerationMembers[enumMemKeys[_e2]]['soa:enumerationDomainIncludes'] = [];
+        for (var actEnumMemKey of enumMemKeys) {
+          if (!_this.enumerationMembers[actEnumMemKey]['soa:enumerationDomainIncludes']) {
+            _this.enumerationMembers[actEnumMemKey]['soa:enumerationDomainIncludes'] = [];
           }
         }
         /* E.1) Add explicit hasProperty and isRangeOf to classes and enumerations
@@ -18576,35 +18575,35 @@ class Graph {
 
         propertyKeys = Object.keys(_this.properties);
 
-        for (var _p = 0; _p < propertyKeys.length; _p++) {
-          var domainIncludesArray = _this.properties[propertyKeys[_p]]['schema:domainIncludes'];
+        for (var _actPropKey of propertyKeys) {
+          var domainIncludesArray = _this.properties[_actPropKey]['schema:domainIncludes'];
 
           if (util.isArray(domainIncludesArray)) {
-            for (var di = 0; di < domainIncludesArray.length; di++) {
-              var target = _this.classes[domainIncludesArray[di]];
+            for (var actDomain of domainIncludesArray) {
+              var target = _this.classes[actDomain];
 
-              if (target === undefined) {
-                target = _this.enumerations[domainIncludesArray[di]];
+              if (!target) {
+                target = _this.enumerations[actDomain];
               }
 
-              if (target !== undefined && util.isArray(target['soa:hasProperty']) && target['soa:hasProperty'].indexOf(propertyKeys[_p]) === -1) {
-                target['soa:hasProperty'].push(propertyKeys[_p]);
+              if (target && util.isArray(target['soa:hasProperty']) && !target['soa:hasProperty'].includes(_actPropKey)) {
+                target['soa:hasProperty'].push(_actPropKey);
               }
             }
           }
 
-          var rangeIncludesArray = _this.properties[propertyKeys[_p]]['schema:rangeIncludes'];
+          var rangeIncludesArray = _this.properties[_actPropKey]['schema:rangeIncludes'];
 
           if (util.isArray(rangeIncludesArray)) {
-            for (var ri = 0; ri < rangeIncludesArray.length; ri++) {
-              var _target = _this.classes[rangeIncludesArray[ri]];
+            for (var actRange of rangeIncludesArray) {
+              var _target = _this.classes[actRange];
 
-              if (_target === undefined) {
-                _target = _this.enumerations[rangeIncludesArray[ri]];
+              if (!_target) {
+                _target = _this.enumerations[actRange];
               }
 
-              if (_target !== undefined && util.isArray(_target['soa:isRangeOf']) && _target['soa:isRangeOf'].indexOf(propertyKeys[_p]) === -1) {
-                _target['soa:isRangeOf'].push(propertyKeys[_p]);
+              if (_target && util.isArray(_target['soa:isRangeOf']) && !_target['soa:isRangeOf'].includes(_actPropKey)) {
+                _target['soa:isRangeOf'].push(_actPropKey);
               }
             }
           }
@@ -18617,24 +18616,24 @@ class Graph {
 
         enumMemKeys = Object.keys(_this.enumerationMembers);
 
-        for (var _e3 = 0; _e3 < enumMemKeys.length; _e3++) {
-          var enumMem = _this.enumerationMembers[enumMemKeys[_e3]];
+        for (var _actEnumMemKey of enumMemKeys) {
+          var enumMem = _this.enumerationMembers[_actEnumMemKey];
           var enumMemTypeArray = enumMem['@type'];
 
           if (!util.isArray(enumMemTypeArray)) {
             enumMemTypeArray = [enumMemTypeArray];
           }
 
-          for (var t = 0; t < enumMemTypeArray.length; t++) {
-            var _target2 = _this.enumerations[enumMemTypeArray[t]];
+          for (var actEnumMemType of enumMemTypeArray) {
+            var _target2 = _this.enumerations[actEnumMemType];
 
-            if (_target2 !== undefined && util.isArray(_target2['soa:hasEnumerationMember']) && _target2['soa:hasEnumerationMember'].indexOf(enumMemKeys[_e3]) === -1) {
-              _target2['soa:hasEnumerationMember'].push(enumMemKeys[_e3]);
+            if (_target2 && util.isArray(_target2['soa:hasEnumerationMember']) && !_target2['soa:hasEnumerationMember'].includes(_actEnumMemKey)) {
+              _target2['soa:hasEnumerationMember'].push(_actEnumMemKey);
 
               if (util.isArray(enumMem['soa:enumerationDomainIncludes'])) {
-                enumMem['soa:enumerationDomainIncludes'].push(enumMemTypeArray[t]);
+                enumMem['soa:enumerationDomainIncludes'].push(actEnumMemType);
               } else {
-                enumMem['soa:enumerationDomainIncludes'] = [enumMemTypeArray[t]];
+                enumMem['soa:enumerationDomainIncludes'] = [actEnumMemType];
               }
             }
           }
@@ -18658,7 +18657,7 @@ class Graph {
 
   addGraphNode(memory, newNode) {
     try {
-      if (memory[newNode['@id']] === undefined) {
+      if (!memory[newNode['@id']]) {
         memory[newNode['@id']] = newNode;
       } else {
         // merging algorithm
@@ -18666,143 +18665,143 @@ class Graph {
         // @type should stay the same (we already defined the memory to save it)
         // schema:isPartOf -> overwrite
 
-        if (newNode['schema:isPartOf'] !== undefined && newNode['schema:isPartOf'] !== null) {
+        if (!util.isNil(newNode['schema:isPartOf'])) {
           oldNode['schema:isPartOf'] = newNode['schema:isPartOf'];
-        } // dc:source -> overwrite
+        } // dc:source/schema:source -> overwrite
 
 
-        if (newNode['dc:source'] !== undefined && newNode['dc:source'] !== null) {
+        if (!util.isNil(newNode['dc:source'])) {
           oldNode['dc:source'] = newNode['dc:source'];
         }
 
-        if (newNode['schema:source'] !== undefined && newNode['schema:source'] !== null) {
+        if (!util.isNil(newNode['schema:source'])) {
           oldNode['schema:source'] = newNode['schema:source'];
         } // schema:category -> overwrite
 
 
-        if (newNode['schema:category'] !== undefined && newNode['schema:category'] !== null) {
+        if (!util.isNil(newNode['schema:category'])) {
           oldNode['schema:category'] = newNode['schema:category'];
         } // schema:supersededBy -> overwrite
 
 
-        if (newNode['schema:supersededBy'] !== undefined && newNode['schema:supersededBy'] !== null) {
+        if (!util.isNil(newNode['schema:supersededBy'])) {
           oldNode['schema:supersededBy'] = newNode['schema:supersededBy'];
         } // rdfs:label -> add new languages, overwrite old ones if needed
 
 
-        if (newNode['rdfs:label'] !== undefined && newNode['rdfs:label'] !== null) {
+        if (!util.isNil(newNode['rdfs:label'])) {
           var labelKeysNew = Object.keys(newNode['rdfs:label']);
 
-          for (var i = 0; i < labelKeysNew.length; i++) {
-            oldNode['rdfs:label'][labelKeysNew[i]] = newNode['rdfs:label'][labelKeysNew[i]];
+          for (var actLabelKey of labelKeysNew) {
+            oldNode['rdfs:label'][actLabelKey] = newNode['rdfs:label'][actLabelKey];
           }
         } // rdfs:comment -> add new languages, overwrite old ones if needed
 
 
-        if (newNode['rdfs:comment'] !== undefined && newNode['rdfs:comment'] !== null) {
+        if (!util.isNil(newNode['rdfs:comment'])) {
           var commentKeysNew = Object.keys(newNode['rdfs:comment']);
 
-          for (var _i5 = 0; _i5 < commentKeysNew.length; _i5++) {
-            oldNode['rdfs:comment'][commentKeysNew[_i5]] = newNode['rdfs:comment'][commentKeysNew[_i5]];
+          for (var actCommentKey of commentKeysNew) {
+            oldNode['rdfs:comment'][actCommentKey] = newNode['rdfs:comment'][actCommentKey];
           }
         } // rdfs:subClassOf -> add new ids
 
 
-        if (newNode['rdfs:subClassOf'] !== undefined && newNode['rdfs:subClassOf'] !== null) {
-          for (var _i6 = 0; _i6 < newNode['rdfs:subClassOf'].length; _i6++) {
-            if (oldNode['rdfs:subClassOf'].indexOf(newNode['rdfs:subClassOf'][_i6]) === -1) {
+        if (!util.isNil(newNode['rdfs:subClassOf'])) {
+          for (var actSuperClass of newNode['rdfs:subClassOf']) {
+            if (!oldNode['rdfs:subClassOf'].includes(actSuperClass)) {
               // add new entry
-              oldNode['rdfs:subClassOf'].push(newNode['rdfs:subClassOf'][_i6]);
+              oldNode['rdfs:subClassOf'].push(actSuperClass);
             }
           }
         } // soa:superClassOf -> add new ids
 
 
-        if (newNode['soa:superClassOf'] !== undefined && newNode['soa:superClassOf'] !== null) {
-          for (var _i7 = 0; _i7 < newNode['soa:superClassOf'].length; _i7++) {
-            if (oldNode['soa:superClassOf'].indexOf(newNode['soa:superClassOf'][_i7]) === -1) {
+        if (!util.isNil(newNode['soa:superClassOf'])) {
+          for (var actSubClass of newNode['soa:superClassOf']) {
+            if (!oldNode['soa:superClassOf'].includes(actSubClass)) {
               // add new entry
-              oldNode['soa:superClassOf'].push(newNode['soa:superClassOf'][_i7]);
+              oldNode['soa:superClassOf'].push(actSubClass);
             }
           }
         } // soa:hasProperty -> add new ids
 
 
-        if (newNode['soa:hasProperty'] !== undefined && newNode['soa:hasProperty'] !== null) {
-          for (var _i8 = 0; _i8 < newNode['soa:hasProperty'].length; _i8++) {
-            if (oldNode['soa:hasProperty'].indexOf(newNode['soa:hasProperty'][_i8]) === -1) {
+        if (!util.isNil(newNode['soa:hasProperty'])) {
+          for (var actProp of newNode['soa:hasProperty']) {
+            if (!oldNode['soa:hasProperty'].includes(actProp)) {
               // add new entry
-              oldNode['soa:hasProperty'].push(newNode['soa:hasProperty'][_i8]);
+              oldNode['soa:hasProperty'].push(actProp);
             }
           }
         } // soa:isRangeOf -> add new ids
 
 
-        if (newNode['soa:isRangeOf'] !== undefined && newNode['soa:isRangeOf'] !== null) {
-          for (var _i9 = 0; _i9 < newNode['soa:isRangeOf'].length; _i9++) {
-            if (oldNode['soa:isRangeOf'].indexOf(newNode['soa:isRangeOf'][_i9]) === -1) {
+        if (!util.isNil(newNode['soa:isRangeOf'])) {
+          for (var _actProp of newNode['soa:isRangeOf']) {
+            if (!oldNode['soa:isRangeOf'].includes(_actProp)) {
               // add new entry
-              oldNode['soa:isRangeOf'].push(newNode['soa:isRangeOf'][_i9]);
+              oldNode['soa:isRangeOf'].push(_actProp);
             }
           }
         } // soa:enumerationDomainIncludes -> add new ids
 
 
-        if (newNode['soa:enumerationDomainIncludes'] !== undefined && newNode['soa:enumerationDomainIncludes'] !== null) {
-          for (var _i10 = 0; _i10 < newNode['soa:enumerationDomainIncludes'].length; _i10++) {
-            if (oldNode['soa:enumerationDomainIncludes'].indexOf(newNode['soa:enumerationDomainIncludes'][_i10]) === -1) {
+        if (!util.isNil(newNode['soa:enumerationDomainIncludes'])) {
+          for (var actEnum of newNode['soa:enumerationDomainIncludes']) {
+            if (!oldNode['soa:enumerationDomainIncludes'].includes(actEnum)) {
               // add new entry
-              oldNode['soa:enumerationDomainIncludes'].push(newNode['soa:enumerationDomainIncludes'][_i10]);
+              oldNode['soa:enumerationDomainIncludes'].push(actEnum);
             }
           }
         } // soa:hasEnumerationMember -> add new ids
 
 
-        if (newNode['soa:hasEnumerationMember'] !== undefined && newNode['soa:hasEnumerationMember'] !== null) {
-          for (var _i11 = 0; _i11 < newNode['soa:hasEnumerationMember'].length; _i11++) {
-            if (oldNode['soa:hasEnumerationMember'].indexOf(newNode['soa:hasEnumerationMember'][_i11]) === -1) {
+        if (!util.isNil(newNode['soa:hasEnumerationMember'])) {
+          for (var actEnumMem of newNode['soa:hasEnumerationMember']) {
+            if (!oldNode['soa:hasEnumerationMember'].includes(actEnumMem)) {
               // add new entry
-              oldNode['soa:hasEnumerationMember'].push(newNode['soa:hasEnumerationMember'][_i11]);
+              oldNode['soa:hasEnumerationMember'].push(actEnumMem);
             }
           }
         } // rdfs:subPropertyOf -> add new ids
 
 
-        if (newNode['rdfs:subPropertyOf'] !== undefined && newNode['rdfs:subPropertyOf'] !== null) {
-          for (var _i12 = 0; _i12 < newNode['rdfs:subPropertyOf'].length; _i12++) {
-            if (oldNode['rdfs:subPropertyOf'].indexOf(newNode['rdfs:subPropertyOf'][_i12]) === -1) {
+        if (!util.isNil(newNode['rdfs:subPropertyOf'])) {
+          for (var _actProp2 of newNode['rdfs:subPropertyOf']) {
+            if (!oldNode['rdfs:subPropertyOf'].includes(_actProp2)) {
               // add new entry
-              oldNode['rdfs:subPropertyOf'].push(newNode['rdfs:subPropertyOf'][_i12]);
+              oldNode['rdfs:subPropertyOf'].push(_actProp2);
             }
           }
         } // schema:domainIncludes -> add new ids
 
 
-        if (newNode['schema:domainIncludes'] !== undefined && newNode['schema:domainIncludes'] !== null) {
-          for (var _i13 = 0; _i13 < newNode['schema:domainIncludes'].length; _i13++) {
-            if (oldNode['schema:domainIncludes'].indexOf(newNode['schema:domainIncludes'][_i13]) === -1) {
+        if (!util.isNil(newNode['schema:domainIncludes'])) {
+          for (var actDomain of newNode['schema:domainIncludes']) {
+            if (!oldNode['schema:domainIncludes'].includes(actDomain)) {
               // add new entry
-              oldNode['schema:domainIncludes'].push(newNode['schema:domainIncludes'][_i13]);
+              oldNode['schema:domainIncludes'].push(actDomain);
             }
           }
         } // schema:rangeIncludes -> add new ids
 
 
-        if (newNode['schema:rangeIncludes'] !== undefined && newNode['schema:rangeIncludes'] !== null) {
-          for (var _i14 = 0; _i14 < newNode['schema:rangeIncludes'].length; _i14++) {
-            if (oldNode['schema:rangeIncludes'].indexOf(newNode['schema:rangeIncludes'][_i14]) === -1) {
+        if (!util.isNil(newNode['schema:rangeIncludes'])) {
+          for (var actRange of newNode['schema:rangeIncludes']) {
+            if (!oldNode['schema:rangeIncludes'].includes(actRange)) {
               // add new entry
-              oldNode['schema:rangeIncludes'].push(newNode['schema:rangeIncludes'][_i14]);
+              oldNode['schema:rangeIncludes'].push(actRange);
             }
           }
         } // soa:superPropertyOf-> add new ids
 
 
-        if (newNode['schema:superPropertyOf'] !== undefined && newNode['schema:superPropertyOf'] !== null) {
-          for (var _i15 = 0; _i15 < newNode['schema:superPropertyOf'].length; _i15++) {
-            if (oldNode['schema:superPropertyOf'].indexOf(newNode['schema:superPropertyOf'][_i15]) === -1) {
+        if (!util.isNil(newNode['schema:superPropertyOf'])) {
+          for (var _actProp3 of newNode['schema:superPropertyOf']) {
+            if (!oldNode['schema:superPropertyOf'].includes(_actProp3)) {
               // add new entry
-              oldNode['schema:superPropertyOf'].push(newNode['schema:superPropertyOf'][_i15]);
+              oldNode['schema:superPropertyOf'].push(_actProp3);
             }
           }
         }
@@ -18811,10 +18810,6 @@ class Graph {
       return true;
     } catch (e) {
       console.log(e);
-      console.log('memory[newNode[@id]]:');
-      console.log(JSON.stringify(memory[newNode['@id']], null, 2));
-      console.log('newNode:');
-      console.log(JSON.stringify(newNode, null, 2));
       return false;
     }
   }
@@ -18863,7 +18858,7 @@ class Graph {
       }
 
       tryCounter++;
-    } while (targetObj === undefined && tryCounter < 6);
+    } while (!targetObj && tryCounter < 6);
 
     if (targetObj) {
       targetObj = util.applyFilter([targetObj['@id']], filter, this);
@@ -18905,10 +18900,10 @@ class Graph {
     var filter = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
     var compactIRI = this.discoverCompactIRI(id);
 
-    if (compactIRI != null) {
+    if (compactIRI) {
       var classObj = this.classes[compactIRI];
 
-      if (classObj !== undefined) {
+      if (classObj) {
         classObj = util.applyFilter([compactIRI], filter, this);
 
         if (classObj.length === 0) {
@@ -18920,7 +18915,7 @@ class Graph {
         // enumerations can also be counted as classes
         classObj = this.enumerations[compactIRI];
 
-        if (classObj !== undefined) {
+        if (classObj) {
           try {
             return this.getEnumeration(compactIRI, filter);
           } catch (e) {
@@ -18945,10 +18940,10 @@ class Graph {
     var filter = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
     var compactIRI = this.discoverCompactIRI(id);
 
-    if (compactIRI != null) {
+    if (compactIRI) {
       var propertyObj = this.properties[compactIRI];
 
-      if (propertyObj !== undefined) {
+      if (propertyObj) {
         propertyObj = util.applyFilter([compactIRI], filter, this);
 
         if (propertyObj.length === 0) {
@@ -18974,10 +18969,10 @@ class Graph {
     var filter = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
     var compactIRI = this.discoverCompactIRI(id);
 
-    if (compactIRI != null) {
+    if (compactIRI) {
       var dataTypeObj = this.dataTypes[compactIRI];
 
-      if (dataTypeObj !== undefined) {
+      if (dataTypeObj) {
         dataTypeObj = util.applyFilter([compactIRI], filter, this);
 
         if (dataTypeObj.length === 0) {
@@ -19003,10 +18998,10 @@ class Graph {
     var filter = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
     var compactIRI = this.discoverCompactIRI(id);
 
-    if (compactIRI != null) {
+    if (compactIRI) {
       var enumObj = this.enumerations[compactIRI];
 
-      if (enumObj !== undefined) {
+      if (enumObj) {
         enumObj = util.applyFilter([compactIRI], filter, this);
 
         if (enumObj.length === 0) {
@@ -19032,10 +19027,10 @@ class Graph {
     var filter = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
     var compactIRI = this.discoverCompactIRI(id);
 
-    if (compactIRI != null) {
+    if (compactIRI) {
       var enumObj = this.enumerationMembers[compactIRI];
 
-      if (enumObj !== undefined) {
+      if (enumObj) {
         enumObj = util.applyFilter([compactIRI], filter, this);
 
         if (enumObj.length === 0) {
@@ -19061,11 +19056,11 @@ class Graph {
       // is iri
       var terms = Object.keys(this.context);
 
-      for (var i = 0; i < terms.length; i++) {
-        var absoluteIRI = this.context[terms[i]];
+      for (var actTerm of terms) {
+        var absoluteIRI = this.context[actTerm];
 
         if (util.isString(absoluteIRI)) {
-          if (input.startsWith(terms[i])) {
+          if (input.startsWith(actTerm)) {
             // is compactIRI
             return input;
           } else if (input.startsWith(absoluteIRI)) {
@@ -19078,41 +19073,41 @@ class Graph {
       // is label
       var classesKeys = Object.keys(this.classes);
 
-      for (var _i16 = 0; _i16 < classesKeys.length; _i16++) {
-        if (this.containsLabel(this.classes[classesKeys[_i16]], input) === true) {
-          return classesKeys[_i16];
+      for (var actClassKey of classesKeys) {
+        if (this.containsLabel(this.classes[actClassKey], input) === true) {
+          return actClassKey;
         }
       }
 
       var propertiesKeys = Object.keys(this.properties);
 
-      for (var _i17 = 0; _i17 < propertiesKeys.length; _i17++) {
-        if (this.containsLabel(this.properties[propertiesKeys[_i17]], input) === true) {
-          return propertiesKeys[_i17];
+      for (var actPropKey of propertiesKeys) {
+        if (this.containsLabel(this.properties[actPropKey], input) === true) {
+          return actPropKey;
         }
       }
 
       var dataTypeKeys = Object.keys(this.dataTypes);
 
-      for (var _i18 = 0; _i18 < dataTypeKeys.length; _i18++) {
-        if (this.containsLabel(this.dataTypes[dataTypeKeys[_i18]], input) === true) {
-          return dataTypeKeys[_i18];
+      for (var actDtKey of dataTypeKeys) {
+        if (this.containsLabel(this.dataTypes[actDtKey], input) === true) {
+          return actDtKey;
         }
       }
 
       var enumerationKeys = Object.keys(this.enumerations);
 
-      for (var _i19 = 0; _i19 < enumerationKeys.length; _i19++) {
-        if (this.containsLabel(this.enumerations[enumerationKeys[_i19]], input) === true) {
-          return enumerationKeys[_i19];
+      for (var actEnumKey of enumerationKeys) {
+        if (this.containsLabel(this.enumerations[actEnumKey], input) === true) {
+          return actEnumKey;
         }
       }
 
       var enumerationMemberKeys = Object.keys(this.enumerationMembers);
 
-      for (var _i20 = 0; _i20 < enumerationMemberKeys.length; _i20++) {
-        if (this.containsLabel(this.enumerationMembers[enumerationMemberKeys[_i20]], input) === true) {
-          return enumerationMemberKeys[_i20];
+      for (var actEnumMemKey of enumerationMemberKeys) {
+        if (this.containsLabel(this.enumerationMembers[actEnumMemKey], input) === true) {
+          return actEnumMemKey;
         }
       }
     } // if nothing was found yet, the input is invalid
@@ -19124,11 +19119,11 @@ class Graph {
 
 
   containsLabel(termObj, label) {
-    if (termObj !== undefined && util.isObject(termObj['rdfs:label'])) {
+    if (termObj && util.isObject(termObj['rdfs:label'])) {
       var langKeys = Object.keys(termObj['rdfs:label']);
 
-      for (var i = 0; i < langKeys.length; i++) {
-        if (termObj['rdfs:label'][langKeys[i]] === label) {
+      for (var actLangKey of langKeys) {
+        if (termObj['rdfs:label'][actLangKey] === label) {
           return true;
         }
       }
@@ -19172,9 +19167,9 @@ class Property {
 
     if (compactForm) {
       return this.IRI;
-    } else {
-      return util.toAbsoluteIRI(this.IRI, this.graph.context);
     }
+
+    return util.toAbsoluteIRI(this.IRI, this.graph.context);
   }
   /**
    * Retrieves the term type of this Property (is always "rdf:Property")
@@ -19196,11 +19191,11 @@ class Property {
   getVocabulary() {
     var propertyObj = this.graph.properties[this.IRI];
 
-    if (propertyObj['schema:isPartOf'] !== undefined) {
+    if (!util.isNil(propertyObj['schema:isPartOf'])) {
       return propertyObj['schema:isPartOf'];
-    } else {
-      return null;
     }
+
+    return null;
   }
   /**
    * Retrieves the source (dc:source) of this Property
@@ -19212,13 +19207,13 @@ class Property {
   getSource() {
     var propertyObj = this.graph.properties[this.IRI];
 
-    if (propertyObj['dc:source'] !== undefined) {
+    if (!util.isNil(propertyObj['dc:source'])) {
       return propertyObj['dc:source'];
-    } else if (propertyObj['schema:source']) {
+    } else if (!util.isNil(propertyObj['schema:source'])) {
       return propertyObj['schema:source'];
-    } else {
-      return null;
     }
+
+    return null;
   }
   /**
    * Retrieves the Property superseding (schema:supersededBy) this Property
@@ -19232,9 +19227,9 @@ class Property {
 
     if (util.isString(propertyObj['schema:supersededBy'])) {
       return propertyObj['schema:supersededBy'];
-    } else {
-      return null;
     }
+
+    return null;
   }
   /**
    * Retrieves the name (rdfs:label) of this Property in a wished language (optional)
@@ -19248,7 +19243,7 @@ class Property {
     var language = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 'en';
     var nameObj = this.graph.properties[this.IRI]['rdfs:label'];
 
-    if (nameObj === null || nameObj[language] === undefined) {
+    if (util.isNil(nameObj) || util.isNil(nameObj[language])) {
       return null;
     }
 
@@ -19266,7 +19261,7 @@ class Property {
     var language = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 'en';
     var descriptionObj = this.graph.properties[this.IRI]['rdfs:comment'];
 
-    if (descriptionObj === null || descriptionObj[language] === undefined) {
+    if (util.isNil(descriptionObj) || util.isNil(descriptionObj[language])) {
       return null;
     }
 
@@ -19288,12 +19283,12 @@ class Property {
     var result = [];
     result.push(...propertyObj['schema:rangeIncludes']);
 
-    if (implicit === true) {
+    if (implicit) {
       // add sub-classes from ranges
       var inferredSubClasses = [];
 
-      for (var i = 0; i < result.length; i++) {
-        inferredSubClasses.push(...this.graph.reasoner.inferImplicitSubClasses(result[i]));
+      for (var actRes of result) {
+        inferredSubClasses.push(...this.graph.reasoner.inferImplicitSubClasses(actRes));
       }
 
       result.push(...inferredSubClasses); // remove "null" values from array (if range included data types)
@@ -19321,12 +19316,12 @@ class Property {
     var result = [];
     result.push(...propertyObj['schema:domainIncludes']);
 
-    if (implicit === true) {
+    if (implicit) {
       // add sub-classes from ranges
       var inferredSubClasses = [];
 
-      for (var i = 0; i < result.length; i++) {
-        inferredSubClasses.push(...this.graph.reasoner.inferImplicitSubClasses(result[i]));
+      for (var actRes of result) {
+        inferredSubClasses.push(...this.graph.reasoner.inferImplicitSubClasses(actRes));
       }
 
       result.push(...inferredSubClasses);
@@ -19349,7 +19344,7 @@ class Property {
     var propertyObj = this.graph.properties[this.IRI];
     var result = [];
 
-    if (implicit === true) {
+    if (implicit) {
       result.push(...this.graph.reasoner.inferSuperProperties(this.IRI));
     } else {
       result.push(...propertyObj['rdfs:subPropertyOf']);
@@ -19372,7 +19367,7 @@ class Property {
     var propertyObj = this.graph.properties[this.IRI];
     var result = [];
 
-    if (implicit === true) {
+    if (implicit) {
       result.push(...this.graph.reasoner.inferSubProperties(this.IRI));
     } else {
       result.push(...propertyObj['soa:superPropertyOf']);
@@ -20201,17 +20196,17 @@ function applyFilter(dataArray, filter, graph) {
   var context = graph.context;
 
   if (isString(filter.fromVocabulary)) {
-    for (var v = 0; v < Object.keys(context).length; v++) {
-      if (context[Object.keys(context)[v]] === filter.fromVocabulary) {
-        filter.fromVocabulary = Object.keys(context)[v];
+    for (var actKey of Object.keys(context)) {
+      if (context[actKey] === filter.fromVocabulary) {
+        filter.fromVocabulary = actKey;
         break;
       }
     }
   } else if (isArray(filter.fromVocabulary)) {
-    for (var _v = 0; _v < filter.fromVocabulary.length; _v++) {
+    for (var v = 0; v < filter.fromVocabulary.length; v++) {
       for (var vi = 0; vi < Object.keys(context).length; vi++) {
-        if (context[Object.keys(context)[vi]] === filter.fromVocabulary[_v]) {
-          filter.fromVocabulary[_v] = Object.keys(context)[vi];
+        if (context[Object.keys(context)[vi]] === filter.fromVocabulary[v]) {
+          filter.fromVocabulary[v] = Object.keys(context)[vi];
           break;
         }
       }
@@ -20231,7 +20226,7 @@ function applyFilter(dataArray, filter, graph) {
     } // partOf - vocabularies are given as indicators (e.g. "schema")
 
 
-    if (filter.fromVocabulary !== undefined) {
+    if (filter.fromVocabulary) {
       var matchFound = false;
 
       if (isString(filter.fromVocabulary)) {
@@ -20239,8 +20234,8 @@ function applyFilter(dataArray, filter, graph) {
           matchFound = true;
         }
       } else if (isArray(filter.fromVocabulary)) {
-        for (var _v2 = 0; _v2 < filter.fromVocabulary.length; _v2++) {
-          if (actualTerm.getIRI(true).startsWith(filter.fromVocabulary[_v2])) {
+        for (var _v = 0; _v < filter.fromVocabulary.length; _v++) {
+          if (actualTerm.getIRI(true).startsWith(filter.fromVocabulary[_v])) {
             matchFound = true;
           }
         }
@@ -20252,7 +20247,7 @@ function applyFilter(dataArray, filter, graph) {
     } // termType
 
 
-    if (filter.termType !== undefined) {
+    if (filter.termType) {
       var _matchFound = false;
       var toCheck = [];
 
@@ -20334,7 +20329,7 @@ function isObject(value) {
     return false;
   }
 
-  if (value === undefined || value === null) {
+  if (isNil(value)) {
     return false;
   }
 
@@ -20360,7 +20355,7 @@ function isNil(value) {
 
 
 function isString(value) {
-  if (value === undefined || value === null) {
+  if (isNil(value)) {
     return false;
   }
 
@@ -20390,10 +20385,8 @@ function uniquifyArray(array) {
   var seen = {};
   var result = [];
 
-  for (var i = 0; i < array.length; i++) {
-    var item = array[i];
-
-    if (seen[item] !== 1) {
+  for (var item of array) {
+    if (!seen[item]) {
       seen[item] = 1;
       result.push(item);
     }
@@ -20437,7 +20430,7 @@ function generateContext(currentContext, newContext) {
         continue; // URI is already covered, continue with next
       }
 
-      if (resultContext[actKey] === undefined) {
+      if (!resultContext[actKey]) {
         // add new vocab indicator
         resultContext[actKey] = newContext[actKey];
       } else {
@@ -20449,7 +20442,7 @@ function generateContext(currentContext, newContext) {
           while (foundFreeName === false) {
             var newVocabIndicator = actKey + counter++;
 
-            if (resultContext[newVocabIndicator] === undefined) {
+            if (!resultContext[newVocabIndicator]) {
               foundFreeName = true;
               resultContext[newVocabIndicator] = newContext[actKey];
             }
