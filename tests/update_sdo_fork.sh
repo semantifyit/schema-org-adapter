@@ -1,5 +1,18 @@
 #!/bin/bash
 
+# README:
+# =======
+# This script compares the schema.org GitHub repository with the semantify.it GitHub fork of schema.org
+# If there are differences, it runs the tests with the code from the schema.org GitHub repository
+# If all succeed, it update the fork
+#
+# REQUIREMENTS:
+# =============
+# - curl
+# - jq
+# - jest (npm package)
+# - git (configured with push rights to https://github.com/semantifyit/schemaorg.git)
+
 set -x
 
 echo "Compare schema.org Github repository and fork"
