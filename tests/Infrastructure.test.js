@@ -7,14 +7,14 @@ const util = require('../src/utilities');
 describe('Infrastructure testing', () => {
     // Check if the retrieval of the versionsFile from schema.org works.
     test('getVocabularyFile', async() => {
-        const mySA = new SDOAdapter(global.useExperimental);
+        const mySA = new SDOAdapter(global.commitBase);
         await mySA.getSDOVersionFile();
         console.log(mySA.retrievalMemory);
     });
 
     // Check if the structure of the versionsFile from schema.org is the expected.
     test('vocabularyFileStructure', async() => {
-        const mySA = new SDOAdapter(global.useExperimental);
+        const mySA = new SDOAdapter(global.commitBase);
         await mySA.getSDOVersionFile();
         console.log(mySA.retrievalMemory);
         // versionFile has expected structure
@@ -27,7 +27,7 @@ describe('Infrastructure testing', () => {
 
     // Check if the latest version found in the versionsFile is also the latest valid version elaborated by the schema-org-adapter adapter (schema-org-adapter only marks a version as valid if the corresponding vocabulary file exists)
     test('latestVersionIsCorrect', async() => {
-        const mySA = new SDOAdapter(global.useExperimental);
+        const mySA = new SDOAdapter(global.commitBase);
         await mySA.getSDOVersionFile();
         // Sort release entries by the date. latest is first in array
         const sortedVersionsArray = util.sortReleaseEntriesByDate(mySA.retrievalMemory.versionsFile.releaseLog);
@@ -42,7 +42,7 @@ describe('Infrastructure testing', () => {
         // 2.0 - 3.0 have no jsonld
         // 3.1 - 8.0 have all-layers.jsonld
         // 9.0 + have schemaorg-all-http.jsonld
-        const mySA = new SDOAdapter(global.useExperimental);
+        const mySA = new SDOAdapter(global.commitBase);
         await mySA.getSDOVersionFile();
         for (const currentVersion of Object.keys(mySA.retrievalMemory.versionsFile.releaseLog)) {
             let currentFileURL;

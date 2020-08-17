@@ -11,7 +11,7 @@ const VOC_URL_SDO5_0_DIRECT = 'https://schema.org/version/5.0/all-layers.jsonld'
  */
 describe('SDO Adapter methods', () => {
     test('addVocabularies()', async() => {
-        const mySA = new SDOAdapter(global.useExperimental);
+        const mySA = new SDOAdapter(global.commitBase);
         await mySA.addVocabularies([VOC_OBJ_SDO3_7, VOC_OBJ_GWON]);
         const testClass = mySA.getClass('namespace:AwesomePerson');
         expect(testClass.getName()).toEqual('validValue');
@@ -29,14 +29,14 @@ describe('SDO Adapter methods', () => {
     });
 
     test('addVocabularies() latest', async() => {
-        const mySA = new SDOAdapter(global.useExperimental);
+        const mySA = new SDOAdapter(global.commitBase);
         await mySA.addVocabularies([await mySA.constructSDOVocabularyURL('latest'), VOC_OBJ_GWON]);
         const testClass = mySA.getClass('namespace:AwesomePerson');
         expect(testClass.getName()).toEqual('validValue');
     });
 
     test('getVocabularies()', async() => {
-        const mySA = new SDOAdapter(global.useExperimental);
+        const mySA = new SDOAdapter(global.commitBase);
         await mySA.addVocabularies([VOC_OBJ_SDO3_7, VOC_OBJ_ZOO]);
         const vocabs = mySA.getVocabularies();
         expect(Object.keys(vocabs).length).toBe(2);
@@ -46,7 +46,7 @@ describe('SDO Adapter methods', () => {
     });
 
     test('getVocabularies() latest', async() => {
-        const mySA = new SDOAdapter(global.useExperimental);
+        const mySA = new SDOAdapter(global.commitBase);
         await mySA.addVocabularies([await mySA.constructSDOVocabularyURL('latest'), VOC_OBJ_ZOO]);
         const vocabs = mySA.getVocabularies();
         expect(Object.keys(vocabs).length).toBe(2);
@@ -96,21 +96,21 @@ describe('SDO Adapter methods', () => {
     });
 
     test('getClass()', async() => {
-        const mySA = new SDOAdapter(global.useExperimental);
+        const mySA = new SDOAdapter(global.commitBase);
         await mySA.addVocabularies([VOC_URL_SDO5_0, VOC_URL_ZOO]);
         const Hotel = mySA.getClass('schema:Hotel');
         expect(Hotel.getTermType()).toBe('rdfs:Class');
     });
 
     test('getClass() latest', async() => {
-        const mySA = new SDOAdapter(global.useExperimental);
+        const mySA = new SDOAdapter(global.commitBase);
         await mySA.addVocabularies([await mySA.constructSDOVocabularyURL('latest'), VOC_URL_ZOO]);
         const Hotel = mySA.getClass('schema:Hotel');
         expect(Hotel.getTermType()).toBe('rdfs:Class');
     });
 
     test('getListOfClasses()', async() => {
-        const mySA = new SDOAdapter(global.useExperimental);
+        const mySA = new SDOAdapter(global.commitBase);
         await mySA.addVocabularies([VOC_OBJ_SDO3_7, VOC_OBJ_ZOO]);
         const allClassesList = mySA.getListOfClasses();
         expect(allClassesList.length).toBe(733);
@@ -118,7 +118,7 @@ describe('SDO Adapter methods', () => {
     });
 
     test('getAllClasses()', async() => {
-        const mySA = new SDOAdapter(global.useExperimental);
+        const mySA = new SDOAdapter(global.commitBase);
         await mySA.addVocabularies([VOC_OBJ_SDO3_7, VOC_OBJ_ZOO]);
         const allClasses = mySA.getAllClasses();
         expect(allClasses.length).toBe(733);
@@ -132,7 +132,7 @@ describe('SDO Adapter methods', () => {
     });
 
     test('getAllClasses() latest', async() => {
-        const mySA = new SDOAdapter(global.useExperimental);
+        const mySA = new SDOAdapter(global.commitBase);
         await mySA.addVocabularies([await mySA.constructSDOVocabularyURL('latest'), VOC_OBJ_ZOO]);
         const allClasses = mySA.getAllClasses();
         expect(allClasses.length > 700).toBe(true);
@@ -146,35 +146,35 @@ describe('SDO Adapter methods', () => {
     });
 
     test('getProperty()', async() => {
-        const mySA = new SDOAdapter(global.useExperimental);
+        const mySA = new SDOAdapter(global.commitBase);
         await mySA.addVocabularies([VOC_OBJ_SDO3_7, VOC_OBJ_ZOO]);
         const address = mySA.getProperty('schema:address');
         expect(address.getTermType()).toBe('rdf:Property');
     });
 
     test('getProperty() latest', async() => {
-        const mySA = new SDOAdapter(global.useExperimental);
+        const mySA = new SDOAdapter(global.commitBase);
         await mySA.addVocabularies([await mySA.constructSDOVocabularyURL('latest'), VOC_OBJ_ZOO]);
         const address = mySA.getProperty('schema:address');
         expect(address.getTermType()).toBe('rdf:Property');
     });
 
     test('getListOfProperties()', async() => {
-        const mySA = new SDOAdapter(global.useExperimental);
+        const mySA = new SDOAdapter(global.commitBase);
         await mySA.addVocabularies([VOC_OBJ_SDO3_7, VOC_OBJ_ZOO]);
         const allPropertiesList = mySA.getListOfProperties();
         expect(allPropertiesList.length).toBe(1243);
     });
 
     test('getListOfProperties() latest', async() => {
-        const mySA = new SDOAdapter(global.useExperimental);
+        const mySA = new SDOAdapter(global.commitBase);
         await mySA.addVocabularies([await mySA.constructSDOVocabularyURL('latest'), VOC_OBJ_ZOO]);
         const allPropertiesList = mySA.getListOfProperties();
         expect(allPropertiesList.length > 1200).toBe(true);
     });
 
     test('getAllProperties()', async() => {
-        const mySA = new SDOAdapter(global.useExperimental);
+        const mySA = new SDOAdapter(global.commitBase);
         await mySA.addVocabularies([VOC_OBJ_SDO3_7, VOC_OBJ_ZOO]);
         const allProperties = mySA.getAllProperties();
         expect(allProperties.length).toBe(1243);
@@ -188,7 +188,7 @@ describe('SDO Adapter methods', () => {
     });
 
     test('getAllProperties() latest', async() => {
-        const mySA = new SDOAdapter(global.useExperimental);
+        const mySA = new SDOAdapter(global.commitBase);
         await mySA.addVocabularies([await mySA.constructSDOVocabularyURL('latest'), VOC_OBJ_ZOO]);
         const allProperties = mySA.getAllProperties();
         expect(allProperties.length > 1200).toBe(true);
@@ -202,35 +202,35 @@ describe('SDO Adapter methods', () => {
     });
 
     test('getDataType()', async() => {
-        const mySA = new SDOAdapter(global.useExperimental);
+        const mySA = new SDOAdapter(global.commitBase);
         await mySA.addVocabularies([VOC_OBJ_SDO3_7, VOC_OBJ_ZOO]);
         const Number = mySA.getDataType('schema:Number');
         expect(Number.getTermType()).toBe('schema:DataType');
     });
 
     test('getDataType() latest', async() => {
-        const mySA = new SDOAdapter(global.useExperimental);
+        const mySA = new SDOAdapter(global.commitBase);
         await mySA.addVocabularies([await mySA.constructSDOVocabularyURL('latest'), VOC_OBJ_ZOO]);
         const Number = mySA.getDataType('schema:Number');
         expect(Number.getTermType()).toBe('schema:DataType');
     });
 
     test('getListOfDataTypes()', async() => {
-        const mySA = new SDOAdapter(global.useExperimental);
+        const mySA = new SDOAdapter(global.commitBase);
         await mySA.addVocabularies([VOC_OBJ_SDO3_7, VOC_OBJ_ZOO]);
         const allDataTypesList = mySA.getListOfDataTypes();
         expect(allDataTypesList.length).toBe(11);
     });
 
     test('getListOfDataTypes() latest', async() => {
-        const mySA = new SDOAdapter(global.useExperimental);
+        const mySA = new SDOAdapter(global.commitBase);
         await mySA.addVocabularies([await mySA.constructSDOVocabularyURL('latest'), VOC_OBJ_ZOO]);
         const allDataTypesList = mySA.getListOfDataTypes();
         expect(allDataTypesList.length > 10).toBe(true);
     });
 
     test('getAllDataTypes()', async() => {
-        const mySA = new SDOAdapter(global.useExperimental);
+        const mySA = new SDOAdapter(global.commitBase);
         await mySA.addVocabularies([VOC_OBJ_SDO3_7, VOC_OBJ_ZOO]);
         const allDT = mySA.getAllDataTypes();
         expect(allDT.length).toBe(11);
@@ -244,7 +244,7 @@ describe('SDO Adapter methods', () => {
     });
 
     test('getAllDataTypes() latest', async() => {
-        const mySA = new SDOAdapter(global.useExperimental);
+        const mySA = new SDOAdapter(global.commitBase);
         await mySA.addVocabularies([await mySA.constructSDOVocabularyURL('latest'), VOC_OBJ_ZOO]);
         const allDT = mySA.getAllDataTypes();
         expect(allDT.length > 10).toBe(true);
@@ -258,35 +258,35 @@ describe('SDO Adapter methods', () => {
     });
 
     test('getEnumeration()', async() => {
-        const mySA = new SDOAdapter(global.useExperimental);
+        const mySA = new SDOAdapter(global.commitBase);
         await mySA.addVocabularies([VOC_OBJ_SDO3_7, VOC_OBJ_ZOO]);
         const DayOfWeek = mySA.getEnumeration('schema:DayOfWeek');
         expect(DayOfWeek.getTermType()).toBe('schema:Enumeration');
     });
 
     test('getEnumeration() latest', async() => {
-        const mySA = new SDOAdapter(global.useExperimental);
+        const mySA = new SDOAdapter(global.commitBase);
         await mySA.addVocabularies([await mySA.constructSDOVocabularyURL('latest'), VOC_OBJ_ZOO]);
         const DayOfWeek = mySA.getEnumeration('schema:DayOfWeek');
         expect(DayOfWeek.getTermType()).toBe('schema:Enumeration');
     });
 
     test('getListOfEnumerations()', async() => {
-        const mySA = new SDOAdapter(global.useExperimental);
+        const mySA = new SDOAdapter(global.commitBase);
         await mySA.addVocabularies([VOC_OBJ_SDO3_7, VOC_OBJ_ZOO]);
         const allEnumList = mySA.getListOfEnumerations();
         expect(allEnumList.length).toBe(60);
     });
 
     test('getListOfEnumerations() latest', async() => {
-        const mySA = new SDOAdapter(global.useExperimental);
+        const mySA = new SDOAdapter(global.commitBase);
         await mySA.addVocabularies([await mySA.constructSDOVocabularyURL('latest'), VOC_OBJ_ZOO]);
         const allEnumList = mySA.getListOfEnumerations();
         expect(allEnumList.length > 60).toBe(true);
     });
 
     test('getAllEnumerations()', async() => {
-        const mySA = new SDOAdapter(global.useExperimental);
+        const mySA = new SDOAdapter(global.commitBase);
         await mySA.addVocabularies([VOC_OBJ_SDO3_7, VOC_OBJ_ZOO]);
         const allEnumerations = mySA.getAllEnumerations();
         expect(allEnumerations.length).toBe(60);
@@ -296,7 +296,7 @@ describe('SDO Adapter methods', () => {
     });
 
     test('getAllEnumerations() latest', async() => {
-        const mySA = new SDOAdapter(global.useExperimental);
+        const mySA = new SDOAdapter(global.commitBase);
         await mySA.addVocabularies([await mySA.constructSDOVocabularyURL('latest'), VOC_OBJ_ZOO]);
         const allEnumerations = mySA.getAllEnumerations();
         expect(allEnumerations.length > 60).toBe(true);
@@ -306,35 +306,35 @@ describe('SDO Adapter methods', () => {
     });
 
     test('getEnumerationMember()', async() => {
-        const mySA = new SDOAdapter(global.useExperimental);
+        const mySA = new SDOAdapter(global.commitBase);
         await mySA.addVocabularies([VOC_OBJ_SDO3_7, VOC_OBJ_ZOO]);
         const Friday = mySA.getEnumerationMember('schema:Friday');
         expect(Friday.getTermType()).toBe('soa:EnumerationMember');
     });
 
     test('getEnumerationMember() latest', async() => {
-        const mySA = new SDOAdapter(global.useExperimental);
+        const mySA = new SDOAdapter(global.commitBase);
         await mySA.addVocabularies([await mySA.constructSDOVocabularyURL('latest'), VOC_OBJ_ZOO]);
         const Friday = mySA.getEnumerationMember('schema:Friday');
         expect(Friday.getTermType()).toBe('soa:EnumerationMember');
     });
 
     test('getListOfEnumerationMembers()', async() => {
-        const mySA = new SDOAdapter(global.useExperimental);
+        const mySA = new SDOAdapter(global.commitBase);
         await mySA.addVocabularies([VOC_OBJ_SDO3_7, VOC_OBJ_ZOO]);
         const allEnumList = mySA.getListOfEnumerationMembers();
         expect(allEnumList.length).toBe(256);
     });
 
     test('getListOfEnumerationMembers() latest', async() => {
-        const mySA = new SDOAdapter(global.useExperimental);
+        const mySA = new SDOAdapter(global.commitBase);
         await mySA.addVocabularies([await mySA.constructSDOVocabularyURL('latest'), VOC_OBJ_ZOO]);
         const allEnumList = mySA.getListOfEnumerationMembers();
         expect(allEnumList.length > 250).toBe(true);
     });
 
     test('getAllEnumerationMembers()', async() => {
-        const mySA = new SDOAdapter(global.useExperimental);
+        const mySA = new SDOAdapter(global.commitBase);
         await mySA.addVocabularies([VOC_OBJ_SDO3_7, VOC_OBJ_ZOO]);
         const allEnumerationMembers = mySA.getAllEnumerationMembers();
         expect(allEnumerationMembers.length).toBe(256);
@@ -344,7 +344,7 @@ describe('SDO Adapter methods', () => {
     });
 
     test('getAllEnumerationMembers() latest', async() => {
-        const mySA = new SDOAdapter(global.useExperimental);
+        const mySA = new SDOAdapter(global.commitBase);
         await mySA.addVocabularies([await mySA.constructSDOVocabularyURL('latest'), VOC_OBJ_ZOO]);
         const allEnumerationMembers = mySA.getAllEnumerationMembers();
         expect(allEnumerationMembers.length > 250).toBe(true);
@@ -354,7 +354,7 @@ describe('SDO Adapter methods', () => {
     });
 
     test('fetch vocab by URL - direct URL', async() => {
-        const mySA = new SDOAdapter(global.useExperimental);
+        const mySA = new SDOAdapter(global.commitBase);
         await mySA.addVocabularies([VOC_URL_SDO5_0_DIRECT]);
         const data1a = mySA.getAllProperties();
         console.log(data1a.length);
@@ -362,7 +362,7 @@ describe('SDO Adapter methods', () => {
     });
 
     test('construct SDO URL', async() => {
-        const mySA = new SDOAdapter(global.useExperimental);
+        const mySA = new SDOAdapter(global.commitBase);
         const url = await mySA.constructSDOVocabularyURL('9.0');
         console.log(url);
         expect(url).toBe(mySA.getReleasesURI() + '9.0/schemaorg-all-http.jsonld');
@@ -372,7 +372,7 @@ describe('SDO Adapter methods', () => {
     });
 
     test('get lastest sdo version', async() => {
-        const mySA = new SDOAdapter(global.useExperimental);
+        const mySA = new SDOAdapter(global.commitBase);
         const latestVersion = await mySA.getLatestSDOVersion();
         console.log(latestVersion);
         expect(Number(latestVersion) > 5).toBe(true);

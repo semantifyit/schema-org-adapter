@@ -6,23 +6,20 @@ const URI_SEMANTIFY_GITHUB = 'https://raw.githubusercontent.com/semantifyit/sche
 const URI_SEMANTIFY_RELEASES = URI_SEMANTIFY_GITHUB + 'data/releases/';
 const URI_SEMANTIFY_VERSIONS = URI_SEMANTIFY_GITHUB + 'versions.json';
 
-const URI_SDO_GITHUB = 'https://raw.githubusercontent.com/schemaorg/schemaorg/main/';
-const URI_SDO_RELEASES = URI_SDO_GITHUB + 'data/releases/';
-const URI_SDO_VERSIONS = URI_SDO_GITHUB + 'versions.json';
-
 class SDOAdapter {
     /**
      * The SDOAdapter is a JS-Class that represents the interface between the user and this library. Its methods enable to add vocabularies to its memory as well as retrieving vocabulary items. It is possible to create multiple instances of this JS-Class which use different vocabularies.
      *
      * @class
+     * @param {string} commitBase - The commit from https://github.com/schemaorg/schemaorg which is the base for the adapter
      */
-    constructor(useExperimental=false) {
+    constructor(commitBase=null) {
         this.graph = new Graph(this);
         this.retrievalMemory = {
             versionsFile: null,
             latest: null
         };
-        this.useExperimental = useExperimental;
+        this.commitBase = commitBase;
     }
 
     /**
@@ -453,14 +450,14 @@ class SDOAdapter {
      * Returns the base part of respective release URI
      */
     getReleasesURI() {
-        return this.useExperimental ? URI_SDO_RELEASES : URI_SEMANTIFY_RELEASES;
+        return this.commitBase ? 'https://raw.githubusercontent.com/schemaorg/schemaorg/' + this.commitBase + '/data/releases/' : URI_SEMANTIFY_RELEASES;
     }
 
     /**
      * Returns the URI of the respective versions file
      */
     getVersionFileURI() {
-        return this.useExperimental ? URI_SDO_VERSIONS : URI_SEMANTIFY_VERSIONS;
+        return this.commitBase ? 'https://raw.githubusercontent.com/schemaorg/schemaorg/' + this.commitBase + '/versions.json' : URI_SEMANTIFY_VERSIONS;
     }
 }
 
