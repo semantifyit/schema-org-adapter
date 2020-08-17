@@ -8,6 +8,9 @@
     "build": "browserify src/SDOAdapter.js -s SDOAdapter | derequire -cm --toplevel > dist/schema-org-adapter.js",
     "buildMinified": "browserify src/SDOAdapter.js -s SDOAdapter -g [uglifyify] | derequire -cm --toplevel > dist/schema-org-adapter.min.js",
     "test": "jest",
+    "test:coverage": "npm run-script test -- --coverage",
+    "badges": "jest-coverage-badges",
+    "test:badges": "npm run-script test:coverage && npm run-script badges",
     "genJsDoc": "jsdoc src/ --destination ./jsDoc",
     "getJsDocMD": "jsdoc2md src/SDOAdapter.js src/Class.js src/Property.js src/Enumeration.js src/EnumerationMember.js src/DataType.js > docu/api.md",
     "eslint check": "eslint src/*.js tests/*.js"
@@ -48,13 +51,20 @@
     "eslint-plugin-markdown": "^1.0.2",
     "eslint-plugin-node": "^11.1.0",
     "jest": "^25.5.4",
+    "jest-coverage-badges": "^1.1.2",
     "jsdoc": "^3.6.4",
     "jsdoc-to-markdown": "^5.0.3",
     "uglifyify": "^5.0.2"
   },
   "jest": {
     "testEnvironment": "node",
-    "testTimeout": 30000
+    "testTimeout": 30000,
+    "collectCoverage": true,
+    "coverageReporters": [
+      "json-summary",
+      "text",
+      "lcov"
+    ]
   },
   "browserify": {
     "transform": [

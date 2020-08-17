@@ -5,29 +5,34 @@
 <div align="center">
 <a href="https://www.npmjs.com/package/schema-org-adapter" rel="nofollow"><img src="https://img.shields.io/npm/v/schema-org-adapter.svg" alt="NPM Version"></a>
 <a href="https://eslint.org/"><img src="https://img.shields.io/badge/code%20style-ESLint-brightgreen" alt="Code style in ESLint" /></a>
+<a href="https://creativecommons.org/licenses/by-sa/4.0/"><img src="https://img.shields.io/badge/License-CC%20BY--SA%204.0-lightgrey.svg" alt="License: CC BY-SA 4.0" /></a>
+<br>
+<img src="/coverage/badge-functions.svg" alt="Jest Test Coverage Functions" />
+<img src="/coverage/badge-lines.svg" alt="Jest Test Coverage Lines" />
+<img src="/coverage/badge-statements.svg" alt="Jest Test Coverage Statements" />
 </div>
 
 ```javascript
-const SDOAdapter = require('schema-org-adapter')
+// 1. Import the package
+const SDOAdapter = require('schema-org-adapter');
+// 2. Create a new instance of the SDO-Adapter with no knowledge (it must yet be initialized with vocabularies)
+const mySDOAdapter = new SDOAdapter();
+// 3. Initialize the SDO-Adapter with a vocabulary/vocabularyURL (SDO-Adapter can help with that!)
+await mySDOAdapter.addVocabularies([await mySDOAdapter.constructSDOVocabularyURL('latest')]);
 
-const mySDOAdapter = new SDOAdapter()
+// 4. Use the SDO-Adapter!
+let Hotel = mySDOAdapter.getClass('schema:Hotel');
+Hotel.getProperties(); // -> ["schema:audience", "schema:checkinTime", "schema:availableLanguage", ...]
+Hotel.getSuperClasses(false); // Only direct superclasses -> ["schema:LodgingBusiness"]
+Hotel.getSuperClasses(); // Also superclasses of superclasses -> ["schema:LodgingBusiness", "schema:LocalBusiness", "schema:Place", "schema:Organization", "schema:Thing"]
 
-const urlLatestSDO = await mySDOAdapter.constructSDOVocabularyURL('latest') 
-// resolves to "https://raw.githubusercontent.com/schemaorg/schemaorg/main/data/releases/6.0/all-layers.jsonld" if 6.0 is the latest version
-await mySDOAdapter.addVocabularies([urlLatestSDO])
-
-let Hotel = mySDOAdapter.getClass('schema:Hotel')
-Hotel.getProperties() // 117 -> ["schema:audience", "schema:checkinTime", "schema:availableLanguage", ...]
-Hotel.getSuperClasses(false) //only direct superclasses: 1 -> ["schema:LodgingBusiness"]
-Hotel.getSuperClasses() //5 -> ["schema:LodgingBusiness", "schema:LocalBusiness", "schema:Place", "schema:Organization", "schema:Thing"]
-
-let address = mySDOAdapter.getProperty("schema:address")
-address.getRanges() // 2 -> ["schema:PostalAddress", "schema:Text"]
-address.getDomains(false) // only direct domains: 5 -> ["schema:Place", "schema:GeoCoordinates", "schema:GeoShape", "schema:Person", "schema:Organization"]
-address.getDomains() // 229 -> ["schema:Place", "schema:Accommodation", "schema:TouristAttraction", ...]
+let address = mySDOAdapter.getProperty("schema:address");
+address.getRanges(); // -> ["schema:PostalAddress", "schema:Text"]
+address.getDomains(false); // Only direct domains -> ["schema:Place", "schema:GeoCoordinates", "schema:GeoShape", "schema:Person", "schema:Organization"]
+address.getDomains(); // Also subclasses of domains -> ["schema:Place", "schema:Accommodation", "schema:TouristAttraction", ...]
 ```
 
-## Installation
+## Installation and Use
 
 #### NPM
 
@@ -35,15 +40,21 @@ Install the npm package:
 
 `npm install schema-org-adapter`
 
+#### Node
+
 Require the package:
 
 ```javascript
-const SDOAdapter = require('schema-org-adapter')
+const SDOAdapter = require('schema-org-adapter');
 ```
 
 #### Browser
 
 Script-include the bundled package in **/dist** or load via a cdn:
+
+```html
+<script src="/dist/schema-org-adapter.min.js"></script>
+```
 
 ```html
 <script src="https://cdn.jsdelivr.net/gh/semantifyit/schema-org-adapter/dist/schema-org-adapter.min.js"></script>
@@ -54,7 +65,7 @@ Script-include the bundled package in **/dist** or load via a cdn:
 
 &#9733; **Clear data model:** The data model of the rdf-based, machine-readable version of Schema.org is slightly adapted (see <a href="https://github.com/semantifyit/schema-org-adapter/blob/master/docu/algorithm.md" target="_blank">documentation</a> for details) to create the <a href="https://github.com/semantifyit/schema-org-adapter/blob/master/docu/dataModel.md" target="_blank">clear and pragmatic data model</a> of this **Schema.org Adapter**.
 
-&#8633; **Supports external vocabularies:** The **Schema.org Adapter** is lightweight because it does NOT include the vocabulary data, instead it allows the user to input his needed local/remote vocabularies (JSON-LD or URL to JSON-LD). This gives the user the possibility to specify the <a href="https://schema.org/docs/developers.html" target="_blank">version/part of Schema.org</a> he/she needs, and also to use <a href="https://github.com/semantifyit/schema-org-adapter/blob/master/docu/vocabulary.md" target="_blank">external vocabularies</a>.
+&#8633; **Supports external vocabularies:** The **Schema.org Adapter** is lightweight because it does NOT include the vocabulary data, instead it allows the user to input his needed local/remote vocabularies (JSON-LD or URL to JSON-LD). This gives the user the possibility to specify the <a href="https://schema.org/docs/developers.html" target="_blank">version of Schema.org</a> he/she needs, also to use <a href="https://github.com/semantifyit/schema-org-adapter/blob/master/docu/vocabulary.md" target="_blank">external vocabularies</a>.
 
 &#9851; **Built-in reasoning:** The API of **Schema.org Adapter** offers functions and parameters to enable built-in reasoning on the used vocabulary-terms (e.g. resolution of properties, sub-classes, ranges, etc.)
 
@@ -75,13 +86,13 @@ It is possible to filter the results of some functions by passing a filter objec
 * "fromVocabulary": string/Array (e.g. `['http://schema.org/']` -> only vocabulary elements that come from a specific vocabulary will be returned (this may be interesting if you use additional <a href="https://github.com/semantifyit/schema-org-adapter/blob/master/docu/vocabulary.md" target="_blank">external vocabularies</a>))
 
 ```javascript
-const SDOAdapter = require('schema-org-adapter')
-const mySdoAdapter = new SDOAdapter()
+const SDOAdapter = require('schema-org-adapter');
+const mySdoAdapter = new SDOAdapter();
 
 //get list of classes that are NOT superseded
 let listOfClasses = mySdoAdapter.getAllClasses({
   "isSuperseded": false
-})
+});
 ```
 
 ## Acknowledgement
