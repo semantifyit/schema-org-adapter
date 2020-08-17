@@ -19703,7 +19703,7 @@ class SDOAdapter {
   /**
    * Adds vocabularies (in JSON-LD format or as URL) to the memory of this SDOAdapter. The function "constructSDOVocabularyURL()" helps you to construct URLs for the schema.org vocabulary
    *
-   * @param {Array.<string|object>} vocabArray - The vocabularies to add the graph, in JSON-LD format. Given directly as JSON or by a URL to fetch.
+   * @param {Array.<string|object>|string|object} vocabArray - The vocabular(y/ies) to add the graph, in JSON-LD format. Given directly as JSON or by a URL to fetch.
    * @returns {Promise.<void>} This is an async function
    */
 
@@ -19712,6 +19712,10 @@ class SDOAdapter {
     var _this = this;
 
     return _asyncToGenerator(function* () {
+      if (!util.isArray(vocabArray) && (util.isString(vocabArray) || util.isObject(vocabArray))) {
+        vocabArray = [vocabArray];
+      }
+
       if (util.isArray(vocabArray)) {
         // check every vocab if it is a valid JSON-LD. If string -> try to JSON.parse()
         for (var i = 0; i < vocabArray.length; i++) {
@@ -19737,11 +19741,11 @@ class SDOAdapter {
             yield _this.graph.addVocabulary(vocabArray[i]);
           } else {
             // invalid argument type!
-            throw new Error('The first argument of the function must be an Array of vocabularies (JSON-LD as Object/String)');
+            throw new Error('The first argument of the function must be an Array of vocabularies or a single vocabulary (JSON-LD as Object/String)');
           }
         }
       } else {
-        throw new Error('The first argument of the function must be an Array of vocabularies (JSON-LD)');
+        throw new Error('The first argument of the function must be an Array of vocabularies or a single vocabulary (JSON-LD as Object/String)');
       }
     })();
   }

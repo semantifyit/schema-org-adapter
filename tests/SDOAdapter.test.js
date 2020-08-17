@@ -14,6 +14,13 @@ describe('SDO Adapter methods', () => {
         expect(testClass.getName()).toEqual('validValue');
     });
 
+    test('addVocabularies() add single vocabulary', async() => {
+        const mySA = new SDOAdapter();
+        await mySA.addVocabularies(VOC_OBJ_SDO3_7);
+        const testClass = mySA.getClass('schema:Hotel');
+        expect(testClass.getName()).toEqual('Hotel');
+    });
+
     test('addVocabularies() latest', async() => {
         const mySA = new SDOAdapter();
         await mySA.addVocabularies([await mySA.constructSDOVocabularyURL('latest'), VOC_OBJ_GWON]);

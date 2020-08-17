@@ -22,7 +22,7 @@ const SDOAdapter = require('schema-org-adapter');
 // 2. Create a new instance of the SDO-Adapter with no knowledge (it must yet be initialized with vocabularies)
 const mySDOAdapter = new SDOAdapter();
 // 3. Initialize the SDO-Adapter with a vocabulary/vocabularyURL (SDO-Adapter can help with that!)
-await mySDOAdapter.addVocabularies([await mySDOAdapter.constructSDOVocabularyURL('latest')]);
+await mySDOAdapter.addVocabularies(await mySDOAdapter.constructSDOVocabularyURL('latest'));
 
 // 4. Use the SDO-Adapter!
 let Hotel = mySDOAdapter.getClass('schema:Hotel');
