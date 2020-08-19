@@ -23,9 +23,8 @@ class Class {
     getIRI(compactForm = false) {
         if (compactForm) {
             return this.IRI;
-        } else {
-            return util.toAbsoluteIRI(this.IRI, this.graph.context);
         }
+        return util.toAbsoluteIRI(this.IRI, this.graph.context);
     }
 
     /**
@@ -44,11 +43,10 @@ class Class {
      */
     getVocabulary() {
         const classObj = this.graph.classes[this.IRI];
-        if (classObj['schema:isPartOf'] !== undefined) {
+        if (!util.isNil(classObj['schema:isPartOf'])) {
             return classObj['schema:isPartOf'];
-        } else {
-            return null;
         }
+        return null;
     }
 
     /**
@@ -58,13 +56,12 @@ class Class {
      */
     getSource() {
         const classObj = this.graph.classes[this.IRI];
-        if (classObj['dc:source'] !== undefined) {
+        if (!util.isNil(classObj['dc:source'])) {
             return classObj['dc:source'];
-        } else if (classObj['schema:source']) {
+        } else if (!util.isNil(classObj['schema:source'])) {
             return classObj['schema:source'];
-        } else {
-            return null;
         }
+        return null;
     }
 
     /**
@@ -76,9 +73,8 @@ class Class {
         const classObj = this.graph.classes[this.IRI];
         if (util.isString(classObj['schema:supersededBy'])) {
             return classObj['schema:supersededBy'];
-        } else {
-            return null;
         }
+        return null;
     }
 
     /**
@@ -89,7 +85,7 @@ class Class {
      */
     getName(language = 'en') {
         const nameObj = this.graph.classes[this.IRI]['rdfs:label'];
-        if (nameObj === null || nameObj[language] === undefined) {
+        if (util.isNil(nameObj) || util.isNil(nameObj[language])) {
             return null;
         }
         return nameObj[language];
@@ -103,7 +99,7 @@ class Class {
      */
     getDescription(language = 'en') {
         const descriptionObj = this.graph.classes[this.IRI]['rdfs:comment'];
-        if (descriptionObj === null || descriptionObj[language] === undefined) {
+        if (util.isNil(descriptionObj) || util.isNil(descriptionObj[language])) {
             return null;
         }
         return descriptionObj[language];
@@ -120,7 +116,7 @@ class Class {
         const classObj = this.graph.classes[this.IRI];
         const result = [];
         result.push(...classObj['soa:hasProperty']);
-        if (implicit === true) {
+        if (implicit) {
             // add properties from super-classes
             result.push(...this.graph.reasoner.inferPropertiesFromSuperClasses(classObj['rdfs:subClassOf']));
             // add sub-properties ?
@@ -141,8 +137,7 @@ class Class {
     getSuperClasses(implicit = true, filter = null) {
         const classObj = this.graph.classes[this.IRI];
         const result = [];
-
-        if (implicit === true) {
+        if (implicit) {
             result.push(...this.graph.reasoner.inferImplicitSuperClasses(this.IRI));
         } else {
             result.push(...classObj['rdfs:subClassOf']);
@@ -160,7 +155,7 @@ class Class {
     getSubClasses(implicit = true, filter = null) {
         const classObj = this.graph.classes[this.IRI];
         const result = [];
-        if (implicit === true) {
+        if (implicit) {
             result.push(...this.graph.reasoner.inferImplicitSubClasses(this.IRI));
         } else {
             result.push(...classObj['soa:superClassOf']);

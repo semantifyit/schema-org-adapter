@@ -16,9 +16,9 @@ function applyFilter(dataArray, filter, graph) {
     // check if given value is absolute IRI, if yes, get the vocab indicator for it
     const context = graph.context;
     if (isString(filter.fromVocabulary)) {
-        for (let v = 0; v < Object.keys(context).length; v++) {
-            if (context[Object.keys(context)[v]] === filter.fromVocabulary) {
-                filter.fromVocabulary = Object.keys(context)[v];
+        for (const actKey of Object.keys(context)) {
+            if (context[actKey] === filter.fromVocabulary) {
+                filter.fromVocabulary = actKey;
                 break;
             }
         }
@@ -44,7 +44,7 @@ function applyFilter(dataArray, filter, graph) {
             }
         }
         // partOf - vocabularies are given as indicators (e.g. "schema")
-        if (filter.fromVocabulary !== undefined) {
+        if (filter.fromVocabulary) {
             let matchFound = false;
             if (isString(filter.fromVocabulary)) {
                 if (filter.fromVocabulary)
@@ -63,7 +63,7 @@ function applyFilter(dataArray, filter, graph) {
             }
         }
         // termType
-        if (filter.termType !== undefined) {
+        if (filter.termType) {
             let matchFound = false;
             let toCheck = [];
             if (isString(filter.termType)) {
@@ -130,7 +130,7 @@ function isObject(value) {
     if (Array.isArray(value)) {
         return false;
     }
-    if (value === undefined || value === null) {
+    if (isNil(value)) {
         return false;
     }
     return typeof value === 'object';
@@ -153,7 +153,7 @@ function isNil(value) {
  * @returns {boolean} true if the given input is a string
  */
 function isString(value) {
-    if (value === undefined || value === null) {
+    if (isNil(value)) {
         return false;
     }
     return typeof value === 'string' || value instanceof String;
@@ -179,9 +179,8 @@ function isArray(value) {
 function uniquifyArray(array) {
     const seen = {};
     const result = [];
-    for (let i = 0; i < array.length; i++) {
-        const item = array[i];
-        if (seen[item] !== 1) {
+    for (const item of array) {
+        if (!seen[item]) {
             seen[item] = 1;
             result.push(item);
         }
@@ -219,7 +218,7 @@ function generateContext(currentContext, newContext) {
             if (foundMatch) {
                 continue; // URI is already covered, continue with next
             }
-            if (resultContext[actKey] === undefined) {
+            if (!resultContext[actKey]) {
                 // add new vocab indicator
                 resultContext[actKey] = newContext[actKey];
             } else {
@@ -229,7 +228,7 @@ function generateContext(currentContext, newContext) {
                     let counter = 1;
                     while (foundFreeName === false) {
                         const newVocabIndicator = actKey + counter++;
-                        if (resultContext[newVocabIndicator] === undefined) {
+                        if (!resultContext[newVocabIndicator]) {
                             foundFreeName = true;
                             resultContext[newVocabIndicator] = newContext[actKey];
                         }

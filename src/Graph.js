@@ -112,8 +112,8 @@ class Graph {
             // pre-process new vocab
             vocab = await util.preProcessVocab(vocab, this.context); // adapt @graph to new context
             const vocabularies = this.sdoAdapter.getVocabularies();
-            for (let i = 0; i < vocab['@graph'].length; i++) {
-                vocab['@graph'][i] = util.curateVocabNode(vocab['@graph'][i], vocabularies); // curate nodes
+            for (let vocabNode of vocab['@graph']) {
+                vocabNode = util.curateVocabNode(vocabNode, vocabularies); // curate nodes
             }
             // B) Classify Input
             /**
@@ -135,7 +135,7 @@ class Graph {
                             this.addGraphNode(this.properties, curNode);
                             break;
                         default:
-                            // @type is not something expected -> enumerationMember
+                            // @type is not something expected -> assume enumerationMember
                             this.addGraphNode(this.enumerationMembers, curNode);
                             break;
                     }
@@ -149,7 +149,7 @@ class Graph {
                     //   "schema:MedicalImagingTechnique",
                     //   "schema:MedicalSpecialty"
                     // ]
-                    if (curNode['@type'].indexOf('rdfs:Class') !== -1 && curNode['@type'].indexOf('schema:DataType') !== -1) {
+                    if (curNode['@type'].includes('rdfs:Class') && curNode['@type'].includes('schema:DataType')) {
                         // datatype
                         this.addGraphNode(this.dataTypes, curNode);
                     } else {
@@ -174,15 +174,15 @@ class Graph {
                 newEnum = false;
                 const classesKeys = Object.keys(this.classes);
                 const enumKeys = Object.keys(this.enumerations);
-                for (let i = 0; i < classesKeys.length; i++) {
-                    if (this.classes[classesKeys[i]]['rdfs:subClassOf'] !== undefined) {
-                        const subClassArray = this.classes[classesKeys[i]]['rdfs:subClassOf'];
-                        for (let j = 0; j < subClassArray.length; j++) {
-                            if (enumKeys.indexOf(subClassArray[j]) !== -1 || subClassArray[j] === 'schema:Enumeration') {
-                                if (this.classes[classesKeys[i]] !== undefined && this.enumerations[classesKeys[i]] === undefined) {
+                for (const actClassKey of classesKeys) {
+                    if (this.classes[actClassKey]['rdfs:subClassOf'] !== undefined) {
+                        const subClassArray = this.classes[actClassKey]['rdfs:subClassOf'];
+                        for (const actSubClass of subClassArray) {
+                            if (actSubClass === 'schema:Enumeration' || enumKeys.includes(actSubClass)) {
+                                if (this.classes[actClassKey] && !this.enumerations[actClassKey]) {
                                     newEnum = true;
-                                    this.enumerations[classesKeys[i]] = JSON.parse(JSON.stringify(this.classes[classesKeys[i]]));
-                                    delete this.classes[classesKeys[i]];
+                                    this.enumerations[actClassKey] = JSON.parse(JSON.stringify(this.classes[actClassKey]));
+                                    delete this.classes[actClassKey];
                                 }
                             }
                         }
@@ -195,15 +195,15 @@ class Graph {
                 newDatatype = false;
                 const classesKeys = Object.keys(this.classes);
                 const dtKeys = Object.keys(this.dataTypes);
-                for (let i = 0; i < classesKeys.length; i++) {
-                    if (this.classes[classesKeys[i]]['rdfs:subClassOf'] !== undefined) {
-                        const subClassArray = this.classes[classesKeys[i]]['rdfs:subClassOf'];
-                        for (let j = 0; j < subClassArray.length; j++) {
-                            if (dtKeys.indexOf(subClassArray[j]) !== -1 || subClassArray[j] === 'schema:DataType') {
-                                if (this.classes[classesKeys[i]] !== undefined && this.dataTypes[classesKeys[i]] === undefined) {
+                for (const actClassKey of classesKeys) {
+                    if (this.classes[actClassKey]['rdfs:subClassOf'] !== undefined) {
+                        const subClassArray = this.classes[actClassKey]['rdfs:subClassOf'];
+                        for (const actSubClass of subClassArray) {
+                            if (actSubClass === 'schema:DataType' || dtKeys.includes(actSubClass)) {
+                                if (this.classes[actClassKey] && !this.dataTypes[actClassKey]) {
                                     newDatatype = true;
-                                    this.dataTypes[classesKeys[i]] = JSON.parse(JSON.stringify(this.classes[classesKeys[i]]));
-                                    delete this.classes[classesKeys[i]];
+                                    this.dataTypes[actClassKey] = JSON.parse(JSON.stringify(this.classes[actClassKey]));
+                                    delete this.classes[actClassKey];
                                 }
                             }
                         }
@@ -212,8 +212,8 @@ class Graph {
             } while (newDatatype);
             // C.3) change the @type of data-types to a single value, which is "schema:DataType"
             const dtKeys = Object.keys(this.dataTypes);
-            for (let i = 0; i < dtKeys.length; i++) {
-                this.dataTypes[dtKeys[i]]['@type'] = 'schema:DataType';
+            for (const actDtKey of dtKeys) {
+                this.dataTypes[actDtKey]['@type'] = 'schema:DataType';
             }
 
             // D) Inheritance
@@ -221,47 +221,47 @@ class Graph {
             // D.1) Add subClasses for Classes and Enumerations
             // check superclasses for all classes and enumerations. Add these classes/enumerations as subclasses (soa:superClassOf) for the parent class/enumeration
             let classesKeys = Object.keys(this.classes);
-            for (let c = 0; c < classesKeys.length; c++) {
-                const superClasses = this.classes[classesKeys[c]]['rdfs:subClassOf'];
+            for (const actClassKey of classesKeys) {
+                const superClasses = this.classes[actClassKey]['rdfs:subClassOf'];
                 // add empty superClassOf if not defined
-                if (this.classes[classesKeys[c]]['soa:superClassOf'] === undefined) {
-                    this.classes[classesKeys[c]]['soa:superClassOf'] = [];
+                if (!this.classes[actClassKey]['soa:superClassOf']) {
+                    this.classes[actClassKey]['soa:superClassOf'] = [];
                 }
-                for (let s = 0; s < superClasses.length; s++) {
-                    let superClass = this.classes[superClasses[s]];
-                    if (superClass === undefined) {
-                        superClass = this.enumerations[superClasses[s]];
+                for (const actSuperClass of superClasses) {
+                    let superClass = this.classes[actSuperClass];
+                    if (!superClass) {
+                        superClass = this.enumerations[actSuperClass];
                     }
-                    if (superClass !== undefined) {
-                        if (superClass['soa:superClassOf'] !== undefined) {
-                            if (superClass['soa:superClassOf'].indexOf(classesKeys[c]) === -1) {
-                                superClass['soa:superClassOf'].push(classesKeys[c]);
+                    if (superClass) {
+                        if (superClass['soa:superClassOf']) {
+                            if (!superClass['soa:superClassOf'].includes(actClassKey)) {
+                                superClass['soa:superClassOf'].push(actClassKey);
                             }
                         } else {
-                            superClass['soa:superClassOf'] = [classesKeys[c]];
+                            superClass['soa:superClassOf'] = [actClassKey];
                         }
                     }
                 }
             }
             let enumKeys = Object.keys(this.enumerations);
-            for (let e = 0; e < enumKeys.length; e++) {
-                const superClasses = this.enumerations[enumKeys[e]]['rdfs:subClassOf'];
+            for (const actEnumKey of enumKeys) {
+                const superClasses = this.enumerations[actEnumKey]['rdfs:subClassOf'];
                 // add empty superClassOf if not defined
-                if (this.enumerations[enumKeys[e]]['soa:superClassOf'] === undefined) {
-                    this.enumerations[enumKeys[e]]['soa:superClassOf'] = [];
+                if (!this.enumerations[actEnumKey]['soa:superClassOf']) {
+                    this.enumerations[actEnumKey]['soa:superClassOf'] = [];
                 }
-                for (let s = 0; s < superClasses.length; s++) {
-                    let superClass = this.classes[superClasses[s]];
-                    if (superClass === undefined) {
-                        superClass = this.enumerations[superClasses[s]];
+                for (const actSuperClass of superClasses) {
+                    let superClass = this.classes[actSuperClass];
+                    if (!superClass) {
+                        superClass = this.enumerations[actSuperClass];
                     }
-                    if (superClass !== undefined) {
-                        if (superClass['soa:superClassOf'] !== undefined) {
-                            if (superClass['soa:superClassOf'].indexOf(enumKeys[e]) === -1) {
-                                superClass['soa:superClassOf'].push(enumKeys[e]);
+                    if (superClass) {
+                        if (superClass['soa:superClassOf']) {
+                            if (!superClass['soa:superClassOf'].includes(actEnumKey)) {
+                                superClass['soa:superClassOf'].push(actEnumKey);
                             }
                         } else {
-                            superClass['soa:superClassOf'] = [enumKeys[e]];
+                            superClass['soa:superClassOf'] = [actEnumKey];
                         }
                     }
                 }
@@ -269,25 +269,25 @@ class Graph {
             // D.2) Add subClasses for DataTypes
             // For each entry in the dataTypes memory the superClasses are checked (if they are in dataTypes memory) and those super types add the actual entry in their subClasses.
             const dataTypeKeys = Object.keys(this.dataTypes);
-            for (let d = 0; d < dataTypeKeys.length; d++) {
-                const superClasses = this.dataTypes[dataTypeKeys[d]]['rdfs:subClassOf'];
+            for (const actDtKey of dataTypeKeys) {
+                const superClasses = this.dataTypes[actDtKey]['rdfs:subClassOf'];
                 // add empty superClassOf if not defined
-                if (this.dataTypes[dataTypeKeys[d]]['soa:superClassOf'] === undefined) {
-                    this.dataTypes[dataTypeKeys[d]]['soa:superClassOf'] = [];
+                if (!this.dataTypes[actDtKey]['soa:superClassOf']) {
+                    this.dataTypes[actDtKey]['soa:superClassOf'] = [];
                 }
                 // add empty subClassOf if not defined
-                if (superClasses === undefined) {
-                    this.dataTypes[dataTypeKeys[d]]['rdfs:subClassOf'] = [];
+                if (!superClasses) {
+                    this.dataTypes[actDtKey]['rdfs:subClassOf'] = [];
                 } else {
-                    for (let s = 0; s < superClasses.length; s++) {
-                        const superClass = this.dataTypes[superClasses[s]];
-                        if (superClass !== undefined) {
-                            if (superClass['soa:superClassOf'] !== undefined) {
-                                if (superClass['soa:superClassOf'].indexOf(dataTypeKeys[d]) === -1) {
-                                    superClass['soa:superClassOf'].push(dataTypeKeys[d]);
+                    for (const actSuperClass of superClasses) {
+                        const superClass = this.dataTypes[actSuperClass];
+                        if (superClass) {
+                            if (superClass['soa:superClassOf']) {
+                                if (!superClass['soa:superClassOf'].includes(actDtKey)) {
+                                    superClass['soa:superClassOf'].push(actDtKey);
                                 }
                             } else {
-                                superClass['soa:superClassOf'] = [dataTypeKeys[d]];
+                                superClass['soa:superClassOf'] = [actDtKey];
                             }
                         }
                     }
@@ -296,25 +296,25 @@ class Graph {
             // D.3) Add subProperties for Properties
             // For each entry in the properties memory the superProperties are checked (if they are in properties memory) and those super properties add the actual entry in their subProperties. (soa:superPropertyOf)
             let propertyKeys = Object.keys(this.properties);
-            for (let p = 0; p < propertyKeys.length; p++) {
-                const superProperties = this.properties[propertyKeys[p]]['rdfs:subPropertyOf'];
+            for (const actPropKey of propertyKeys) {
+                const superProperties = this.properties[actPropKey]['rdfs:subPropertyOf'];
                 // add empty superPropertyOf if not defined
-                if (this.properties[propertyKeys[p]]['soa:superPropertyOf'] === undefined) {
-                    this.properties[propertyKeys[p]]['soa:superPropertyOf'] = [];
+                if (!this.properties[actPropKey]['soa:superPropertyOf']) {
+                    this.properties[actPropKey]['soa:superPropertyOf'] = [];
                 }
                 // add empty subPropertyOf if not defined
-                if (superProperties === undefined) {
-                    this.properties[propertyKeys[p]]['rdfs:subPropertyOf'] = [];
+                if (!superProperties) {
+                    this.properties[actPropKey]['rdfs:subPropertyOf'] = [];
                 } else {
-                    for (let s = 0; s < superProperties.length; s++) {
-                        const superClass = this.properties[superProperties[s]];
-                        if (superClass !== undefined) {
-                            if (superClass['soa:superPropertyOf'] !== undefined) {
-                                if (superClass['soa:superPropertyOf'].indexOf(propertyKeys[p]) === -1) {
-                                    superClass['soa:superPropertyOf'].push(propertyKeys[p]);
+                    for (const actSuperProp of superProperties) {
+                        const superClass = this.properties[actSuperProp];
+                        if (superClass) {
+                            if (superClass['soa:superPropertyOf']) {
+                                if (!superClass['soa:superPropertyOf'].includes(actPropKey)) {
+                                    superClass['soa:superPropertyOf'].push(actPropKey);
                                 }
                             } else {
-                                superClass['soa:superPropertyOf'] = [propertyKeys[p]];
+                                superClass['soa:superPropertyOf'] = [actPropKey];
                             }
                         }
                     }
@@ -328,57 +328,57 @@ class Graph {
             soa:enumerationDomainIncludes is an inverse of soa:hasEnumerationMember */
             // E.0) add empty arrays for the relationships
             classesKeys = Object.keys(this.classes);
-            for (let c = 0; c < classesKeys.length; c++) {
-                if (this.classes[classesKeys[c]]['soa:hasProperty'] === undefined) {
-                    this.classes[classesKeys[c]]['soa:hasProperty'] = [];
+            for (const actClassKey of classesKeys) {
+                if (!this.classes[actClassKey]['soa:hasProperty']) {
+                    this.classes[actClassKey]['soa:hasProperty'] = [];
                 }
-                if (this.classes[classesKeys[c]]['soa:isRangeOf'] === undefined) {
-                    this.classes[classesKeys[c]]['soa:isRangeOf'] = [];
+                if (!this.classes[actClassKey]['soa:isRangeOf']) {
+                    this.classes[actClassKey]['soa:isRangeOf'] = [];
                 }
             }
             enumKeys = Object.keys(this.enumerations);
-            for (let e = 0; e < enumKeys.length; e++) {
-                if (this.enumerations[enumKeys[e]]['soa:hasEnumerationMember'] === undefined) {
-                    this.enumerations[enumKeys[e]]['soa:hasEnumerationMember'] = [];
+            for (const actEnumKey of enumKeys) {
+                if (!this.enumerations[actEnumKey]['soa:hasEnumerationMember']) {
+                    this.enumerations[actEnumKey]['soa:hasEnumerationMember'] = [];
                 }
-                if (this.enumerations[enumKeys[e]]['soa:isRangeOf'] === undefined) {
-                    this.enumerations[enumKeys[e]]['soa:isRangeOf'] = [];
+                if (!this.enumerations[actEnumKey]['soa:isRangeOf']) {
+                    this.enumerations[actEnumKey]['soa:isRangeOf'] = [];
                 }
-                if (this.enumerations[enumKeys[e]]['soa:hasProperty'] === undefined) {
-                    this.enumerations[enumKeys[e]]['soa:hasProperty'] = [];
+                if (!this.enumerations[actEnumKey]['soa:hasProperty']) {
+                    this.enumerations[actEnumKey]['soa:hasProperty'] = [];
                 }
             }
             let enumMemKeys = Object.keys(this.enumerationMembers);
-            for (let e = 0; e < enumMemKeys.length; e++) {
-                if (this.enumerationMembers[enumMemKeys[e]]['soa:enumerationDomainIncludes'] === undefined) {
-                    this.enumerationMembers[enumMemKeys[e]]['soa:enumerationDomainIncludes'] = [];
+            for (const actEnumMemKey of enumMemKeys) {
+                if (!this.enumerationMembers[actEnumMemKey]['soa:enumerationDomainIncludes']) {
+                    this.enumerationMembers[actEnumMemKey]['soa:enumerationDomainIncludes'] = [];
                 }
             }
             /* E.1) Add explicit hasProperty and isRangeOf to classes and enumerations
             For each entry in the classes/enumeration memory, the properties field is added. This data field holds all properties which belong to this class (class/enumeration is domain for property). */
             propertyKeys = Object.keys(this.properties);
-            for (let p = 0; p < propertyKeys.length; p++) {
-                const domainIncludesArray = this.properties[propertyKeys[p]]['schema:domainIncludes'];
+            for (const actPropKey of propertyKeys) {
+                const domainIncludesArray = this.properties[actPropKey]['schema:domainIncludes'];
                 if (util.isArray(domainIncludesArray)) {
-                    for (let di = 0; di < domainIncludesArray.length; di++) {
-                        let target = this.classes[domainIncludesArray[di]];
-                        if (target === undefined) {
-                            target = this.enumerations[domainIncludesArray[di]];
+                    for (const actDomain of domainIncludesArray) {
+                        let target = this.classes[actDomain];
+                        if (!target) {
+                            target = this.enumerations[actDomain];
                         }
-                        if (target !== undefined && util.isArray(target['soa:hasProperty']) && target['soa:hasProperty'].indexOf(propertyKeys[p]) === -1) {
-                            target['soa:hasProperty'].push(propertyKeys[p]);
+                        if (target && util.isArray(target['soa:hasProperty']) && !target['soa:hasProperty'].includes(actPropKey)) {
+                            target['soa:hasProperty'].push(actPropKey);
                         }
                     }
                 }
-                const rangeIncludesArray = this.properties[propertyKeys[p]]['schema:rangeIncludes'];
+                const rangeIncludesArray = this.properties[actPropKey]['schema:rangeIncludes'];
                 if (util.isArray(rangeIncludesArray)) {
-                    for (let ri = 0; ri < rangeIncludesArray.length; ri++) {
-                        let target = this.classes[rangeIncludesArray[ri]];
-                        if (target === undefined) {
-                            target = this.enumerations[rangeIncludesArray[ri]];
+                    for (const actRange of rangeIncludesArray) {
+                        let target = this.classes[actRange];
+                        if (!target) {
+                            target = this.enumerations[actRange];
                         }
-                        if (target !== undefined && util.isArray(target['soa:isRangeOf']) && target['soa:isRangeOf'].indexOf(propertyKeys[p]) === -1) {
-                            target['soa:isRangeOf'].push(propertyKeys[p]);
+                        if (target && util.isArray(target['soa:isRangeOf']) && !target['soa:isRangeOf'].includes(actPropKey)) {
+                            target['soa:isRangeOf'].push(actPropKey);
                         }
                     }
                 }
@@ -388,20 +388,20 @@ class Graph {
             For each entry in the enumerationMembers memory the soa:enumerationDomainIncludes field is added, this data field holds all enumerations that are a domain for this enumerationMember
             */
             enumMemKeys = Object.keys(this.enumerationMembers);
-            for (let e = 0; e < enumMemKeys.length; e++) {
-                const enumMem = this.enumerationMembers[enumMemKeys[e]];
+            for (const actEnumMemKey of enumMemKeys) {
+                const enumMem = this.enumerationMembers[actEnumMemKey];
                 let enumMemTypeArray = enumMem['@type'];
                 if (!util.isArray(enumMemTypeArray)) {
                     enumMemTypeArray = [enumMemTypeArray];
                 }
-                for (let t = 0; t < enumMemTypeArray.length; t++) {
-                    const target = this.enumerations[enumMemTypeArray[t]];
-                    if (target !== undefined && util.isArray(target['soa:hasEnumerationMember']) && target['soa:hasEnumerationMember'].indexOf(enumMemKeys[e]) === -1) {
-                        target['soa:hasEnumerationMember'].push(enumMemKeys[e]);
+                for (const actEnumMemType of enumMemTypeArray) {
+                    const target = this.enumerations[actEnumMemType];
+                    if (target && util.isArray(target['soa:hasEnumerationMember']) && !target['soa:hasEnumerationMember'].includes(actEnumMemKey)) {
+                        target['soa:hasEnumerationMember'].push(actEnumMemKey);
                         if (util.isArray(enumMem['soa:enumerationDomainIncludes'])) {
-                            enumMem['soa:enumerationDomainIncludes'].push(enumMemTypeArray[t]);
+                            enumMem['soa:enumerationDomainIncludes'].push(actEnumMemType);
                         } else {
-                            enumMem['soa:enumerationDomainIncludes'] = [enumMemTypeArray[t]];
+                            enumMem['soa:enumerationDomainIncludes'] = [actEnumMemType];
                         }
                     }
                 }
@@ -422,7 +422,7 @@ class Graph {
      */
     addGraphNode(memory, newNode) {
         try {
-            if (memory[newNode['@id']] === undefined) {
+            if (!memory[newNode['@id']]) {
                 memory[newNode['@id']] = newNode;
             } else {
                 // merging algorithm
@@ -430,125 +430,125 @@ class Graph {
                 // @id stays the same
                 // @type should stay the same (we already defined the memory to save it)
                 // schema:isPartOf -> overwrite
-                if (newNode['schema:isPartOf'] !== undefined && newNode['schema:isPartOf'] !== null) {
+                if (!util.isNil(newNode['schema:isPartOf'])) {
                     oldNode['schema:isPartOf'] = newNode['schema:isPartOf'];
                 }
-                // dc:source -> overwrite
-                if (newNode['dc:source'] !== undefined && newNode['dc:source'] !== null) {
+                // dc:source/schema:source -> overwrite
+                if (!util.isNil(newNode['dc:source'])) {
                     oldNode['dc:source'] = newNode['dc:source'];
                 }
-                if (newNode['schema:source'] !== undefined && newNode['schema:source'] !== null) {
+                if (!util.isNil(newNode['schema:source'])) {
                     oldNode['schema:source'] = newNode['schema:source'];
                 }
                 // schema:category -> overwrite
-                if (newNode['schema:category'] !== undefined && newNode['schema:category'] !== null) {
+                if (!util.isNil(newNode['schema:category'])) {
                     oldNode['schema:category'] = newNode['schema:category'];
                 }
                 // schema:supersededBy -> overwrite
-                if (newNode['schema:supersededBy'] !== undefined && newNode['schema:supersededBy'] !== null) {
+                if (!util.isNil(newNode['schema:supersededBy'])) {
                     oldNode['schema:supersededBy'] = newNode['schema:supersededBy'];
                 }
                 // rdfs:label -> add new languages, overwrite old ones if needed
-                if (newNode['rdfs:label'] !== undefined && newNode['rdfs:label'] !== null) {
+                if (!util.isNil(newNode['rdfs:label'])) {
                     const labelKeysNew = Object.keys(newNode['rdfs:label']);
-                    for (let i = 0; i < labelKeysNew.length; i++) {
-                        oldNode['rdfs:label'][labelKeysNew[i]] = newNode['rdfs:label'][labelKeysNew[i]];
+                    for (const actLabelKey of labelKeysNew) {
+                        oldNode['rdfs:label'][actLabelKey] = newNode['rdfs:label'][actLabelKey];
                     }
                 }
                 // rdfs:comment -> add new languages, overwrite old ones if needed
-                if (newNode['rdfs:comment'] !== undefined && newNode['rdfs:comment'] !== null) {
+                if (!util.isNil(newNode['rdfs:comment'])) {
                     const commentKeysNew = Object.keys(newNode['rdfs:comment']);
-                    for (let i = 0; i < commentKeysNew.length; i++) {
-                        oldNode['rdfs:comment'][commentKeysNew[i]] = newNode['rdfs:comment'][commentKeysNew[i]];
+                    for (const actCommentKey of commentKeysNew) {
+                        oldNode['rdfs:comment'][actCommentKey] = newNode['rdfs:comment'][actCommentKey];
                     }
                 }
                 // rdfs:subClassOf -> add new ids
-                if (newNode['rdfs:subClassOf'] !== undefined && newNode['rdfs:subClassOf'] !== null) {
-                    for (let i = 0; i < newNode['rdfs:subClassOf'].length; i++) {
-                        if (oldNode['rdfs:subClassOf'].indexOf(newNode['rdfs:subClassOf'][i]) === -1) {
+                if (!util.isNil(newNode['rdfs:subClassOf'])) {
+                    for (const actSuperClass of newNode['rdfs:subClassOf']) {
+                        if (!oldNode['rdfs:subClassOf'].includes(actSuperClass)) {
                             // add new entry
-                            oldNode['rdfs:subClassOf'].push(newNode['rdfs:subClassOf'][i]);
+                            oldNode['rdfs:subClassOf'].push(actSuperClass);
                         }
                     }
                 }
                 // soa:superClassOf -> add new ids
-                if (newNode['soa:superClassOf'] !== undefined && newNode['soa:superClassOf'] !== null) {
-                    for (let i = 0; i < newNode['soa:superClassOf'].length; i++) {
-                        if (oldNode['soa:superClassOf'].indexOf(newNode['soa:superClassOf'][i]) === -1) {
+                if (!util.isNil(newNode['soa:superClassOf'])) {
+                    for (const actSubClass of newNode['soa:superClassOf']) {
+                        if (!oldNode['soa:superClassOf'].includes(actSubClass)) {
                             // add new entry
-                            oldNode['soa:superClassOf'].push(newNode['soa:superClassOf'][i]);
+                            oldNode['soa:superClassOf'].push(actSubClass);
                         }
                     }
                 }
                 // soa:hasProperty -> add new ids
-                if (newNode['soa:hasProperty'] !== undefined && newNode['soa:hasProperty'] !== null) {
-                    for (let i = 0; i < newNode['soa:hasProperty'].length; i++) {
-                        if (oldNode['soa:hasProperty'].indexOf(newNode['soa:hasProperty'][i]) === -1) {
+                if (!util.isNil(newNode['soa:hasProperty'])) {
+                    for (const actProp of newNode['soa:hasProperty']) {
+                        if (!oldNode['soa:hasProperty'].includes(actProp)) {
                             // add new entry
-                            oldNode['soa:hasProperty'].push(newNode['soa:hasProperty'][i]);
+                            oldNode['soa:hasProperty'].push(actProp);
                         }
                     }
                 }
                 // soa:isRangeOf -> add new ids
-                if (newNode['soa:isRangeOf'] !== undefined && newNode['soa:isRangeOf'] !== null) {
-                    for (let i = 0; i < newNode['soa:isRangeOf'].length; i++) {
-                        if (oldNode['soa:isRangeOf'].indexOf(newNode['soa:isRangeOf'][i]) === -1) {
+                if (!util.isNil(newNode['soa:isRangeOf'])) {
+                    for (const actProp of newNode['soa:isRangeOf']) {
+                        if (!oldNode['soa:isRangeOf'].includes(actProp)) {
                             // add new entry
-                            oldNode['soa:isRangeOf'].push(newNode['soa:isRangeOf'][i]);
+                            oldNode['soa:isRangeOf'].push(actProp);
                         }
                     }
                 }
                 // soa:enumerationDomainIncludes -> add new ids
-                if (newNode['soa:enumerationDomainIncludes'] !== undefined && newNode['soa:enumerationDomainIncludes'] !== null) {
-                    for (let i = 0; i < newNode['soa:enumerationDomainIncludes'].length; i++) {
-                        if (oldNode['soa:enumerationDomainIncludes'].indexOf(newNode['soa:enumerationDomainIncludes'][i]) === -1) {
+                if (!util.isNil(newNode['soa:enumerationDomainIncludes'])) {
+                    for (const actEnum of newNode['soa:enumerationDomainIncludes']) {
+                        if (!oldNode['soa:enumerationDomainIncludes'].includes(actEnum)) {
                             // add new entry
-                            oldNode['soa:enumerationDomainIncludes'].push(newNode['soa:enumerationDomainIncludes'][i]);
+                            oldNode['soa:enumerationDomainIncludes'].push(actEnum);
                         }
                     }
                 }
                 // soa:hasEnumerationMember -> add new ids
-                if (newNode['soa:hasEnumerationMember'] !== undefined && newNode['soa:hasEnumerationMember'] !== null) {
-                    for (let i = 0; i < newNode['soa:hasEnumerationMember'].length; i++) {
-                        if (oldNode['soa:hasEnumerationMember'].indexOf(newNode['soa:hasEnumerationMember'][i]) === -1) {
+                if (!util.isNil(newNode['soa:hasEnumerationMember'])) {
+                    for (const actEnumMem of newNode['soa:hasEnumerationMember']) {
+                        if (!oldNode['soa:hasEnumerationMember'].includes(actEnumMem)) {
                             // add new entry
-                            oldNode['soa:hasEnumerationMember'].push(newNode['soa:hasEnumerationMember'][i]);
+                            oldNode['soa:hasEnumerationMember'].push(actEnumMem);
                         }
                     }
                 }
                 // rdfs:subPropertyOf -> add new ids
-                if (newNode['rdfs:subPropertyOf'] !== undefined && newNode['rdfs:subPropertyOf'] !== null) {
-                    for (let i = 0; i < newNode['rdfs:subPropertyOf'].length; i++) {
-                        if (oldNode['rdfs:subPropertyOf'].indexOf(newNode['rdfs:subPropertyOf'][i]) === -1) {
+                if (!util.isNil(newNode['rdfs:subPropertyOf'])) {
+                    for (const actProp of newNode['rdfs:subPropertyOf']) {
+                        if (!oldNode['rdfs:subPropertyOf'].includes(actProp)) {
                             // add new entry
-                            oldNode['rdfs:subPropertyOf'].push(newNode['rdfs:subPropertyOf'][i]);
+                            oldNode['rdfs:subPropertyOf'].push(actProp);
                         }
                     }
                 }
                 // schema:domainIncludes -> add new ids
-                if (newNode['schema:domainIncludes'] !== undefined && newNode['schema:domainIncludes'] !== null) {
-                    for (let i = 0; i < newNode['schema:domainIncludes'].length; i++) {
-                        if (oldNode['schema:domainIncludes'].indexOf(newNode['schema:domainIncludes'][i]) === -1) {
+                if (!util.isNil(newNode['schema:domainIncludes'])) {
+                    for (const actDomain of newNode['schema:domainIncludes']) {
+                        if (!oldNode['schema:domainIncludes'].includes(actDomain)) {
                             // add new entry
-                            oldNode['schema:domainIncludes'].push(newNode['schema:domainIncludes'][i]);
+                            oldNode['schema:domainIncludes'].push(actDomain);
                         }
                     }
                 }
                 // schema:rangeIncludes -> add new ids
-                if (newNode['schema:rangeIncludes'] !== undefined && newNode['schema:rangeIncludes'] !== null) {
-                    for (let i = 0; i < newNode['schema:rangeIncludes'].length; i++) {
-                        if (oldNode['schema:rangeIncludes'].indexOf(newNode['schema:rangeIncludes'][i]) === -1) {
+                if (!util.isNil(newNode['schema:rangeIncludes'])) {
+                    for (const actRange of newNode['schema:rangeIncludes']) {
+                        if (!oldNode['schema:rangeIncludes'].includes(actRange)) {
                             // add new entry
-                            oldNode['schema:rangeIncludes'].push(newNode['schema:rangeIncludes'][i]);
+                            oldNode['schema:rangeIncludes'].push(actRange);
                         }
                     }
                 }
                 // soa:superPropertyOf-> add new ids
-                if (newNode['schema:superPropertyOf'] !== undefined && newNode['schema:superPropertyOf'] !== null) {
-                    for (let i = 0; i < newNode['schema:superPropertyOf'].length; i++) {
-                        if (oldNode['schema:superPropertyOf'].indexOf(newNode['schema:superPropertyOf'][i]) === -1) {
+                if (!util.isNil(newNode['schema:superPropertyOf'])) {
+                    for (const actProp of newNode['schema:superPropertyOf']) {
+                        if (!oldNode['schema:superPropertyOf'].includes(actProp)) {
                             // add new entry
-                            oldNode['schema:superPropertyOf'].push(newNode['schema:superPropertyOf'][i]);
+                            oldNode['schema:superPropertyOf'].push(actProp);
                         }
                     }
                 }
@@ -556,10 +556,6 @@ class Graph {
             return true;
         } catch (e) {
             console.log(e);
-            console.log('memory[newNode[@id]]:');
-            console.log(JSON.stringify(memory[newNode['@id']], null, 2));
-            console.log('newNode:');
-            console.log(JSON.stringify(newNode, null, 2));
             return false;
         }
     }
@@ -600,7 +596,7 @@ class Graph {
                     break;
             }
             tryCounter++;
-        } while (targetObj === undefined && tryCounter < 6);
+        } while (!targetObj && tryCounter < 6);
 
         if (targetObj) {
             targetObj = util.applyFilter([targetObj['@id']], filter, this);
@@ -634,9 +630,9 @@ class Graph {
      */
     getClass(id, filter = null) {
         const compactIRI = this.discoverCompactIRI(id);
-        if (compactIRI != null) {
+        if (compactIRI) {
             let classObj = this.classes[compactIRI];
-            if (classObj !== undefined) {
+            if (classObj) {
                 classObj = util.applyFilter([compactIRI], filter, this);
                 if (classObj.length === 0) {
                     throw new Error('There is no class with that IRI and filter settings.');
@@ -646,7 +642,7 @@ class Graph {
             } else {
                 // enumerations can also be counted as classes
                 classObj = this.enumerations[compactIRI];
-                if (classObj !== undefined) {
+                if (classObj) {
                     try {
                         return this.getEnumeration(compactIRI, filter);
                     } catch (e) {
@@ -667,9 +663,9 @@ class Graph {
      */
     getProperty(id, filter = null) {
         const compactIRI = this.discoverCompactIRI(id);
-        if (compactIRI != null) {
+        if (compactIRI) {
             let propertyObj = this.properties[compactIRI];
-            if (propertyObj !== undefined) {
+            if (propertyObj) {
                 propertyObj = util.applyFilter([compactIRI], filter, this);
                 if (propertyObj.length === 0) {
                     throw new Error('There is no property with that URI and filter settings.');
@@ -690,9 +686,9 @@ class Graph {
      */
     getDataType(id, filter = null) {
         const compactIRI = this.discoverCompactIRI(id);
-        if (compactIRI != null) {
+        if (compactIRI) {
             let dataTypeObj = this.dataTypes[compactIRI];
-            if (dataTypeObj !== undefined) {
+            if (dataTypeObj) {
                 dataTypeObj = util.applyFilter([compactIRI], filter, this);
                 if (dataTypeObj.length === 0) {
                     throw new Error('There is no data-type with that IRI and filter settings.');
@@ -713,9 +709,9 @@ class Graph {
      */
     getEnumeration(id, filter = null) {
         const compactIRI = this.discoverCompactIRI(id);
-        if (compactIRI != null) {
+        if (compactIRI) {
             let enumObj = this.enumerations[compactIRI];
-            if (enumObj !== undefined) {
+            if (enumObj) {
                 enumObj = util.applyFilter([compactIRI], filter, this);
                 if (enumObj.length === 0) {
                     throw new Error('There is no enumeration with that IRI and filter settings.');
@@ -736,9 +732,9 @@ class Graph {
      */
     getEnumerationMember(id, filter = null) {
         const compactIRI = this.discoverCompactIRI(id);
-        if (compactIRI != null) {
+        if (compactIRI) {
             let enumObj = this.enumerationMembers[compactIRI];
-            if (enumObj !== undefined) {
+            if (enumObj) {
                 enumObj = util.applyFilter([compactIRI], filter, this);
                 if (enumObj.length === 0) {
                     throw new Error('There is no EnumerationMember with that IRI and filter settings.');
@@ -760,10 +756,10 @@ class Graph {
         if (input.indexOf(':') !== -1) {
             // is iri
             const terms = Object.keys(this.context);
-            for (let i = 0; i < terms.length; i++) {
-                const absoluteIRI = this.context[terms[i]];
+            for (const actTerm of terms) {
+                const absoluteIRI = this.context[actTerm];
                 if (util.isString(absoluteIRI)) {
-                    if (input.startsWith(terms[i])) {
+                    if (input.startsWith(actTerm)) {
                         // is compactIRI
                         return input;
                     } else if (input.startsWith(absoluteIRI)) {
@@ -775,33 +771,33 @@ class Graph {
         } else {
             // is label
             const classesKeys = Object.keys(this.classes);
-            for (let i = 0; i < classesKeys.length; i++) {
-                if (this.containsLabel(this.classes[classesKeys[i]], input) === true) {
-                    return classesKeys[i];
+            for (const actClassKey of classesKeys) {
+                if (this.containsLabel(this.classes[actClassKey], input) === true) {
+                    return actClassKey;
                 }
             }
             const propertiesKeys = Object.keys(this.properties);
-            for (let i = 0; i < propertiesKeys.length; i++) {
-                if (this.containsLabel(this.properties[propertiesKeys[i]], input) === true) {
-                    return propertiesKeys[i];
+            for (const actPropKey of propertiesKeys) {
+                if (this.containsLabel(this.properties[actPropKey], input) === true) {
+                    return actPropKey;
                 }
             }
             const dataTypeKeys = Object.keys(this.dataTypes);
-            for (let i = 0; i < dataTypeKeys.length; i++) {
-                if (this.containsLabel(this.dataTypes[dataTypeKeys[i]], input) === true) {
-                    return dataTypeKeys[i];
+            for (const actDtKey of dataTypeKeys) {
+                if (this.containsLabel(this.dataTypes[actDtKey], input) === true) {
+                    return actDtKey;
                 }
             }
             const enumerationKeys = Object.keys(this.enumerations);
-            for (let i = 0; i < enumerationKeys.length; i++) {
-                if (this.containsLabel(this.enumerations[enumerationKeys[i]], input) === true) {
-                    return enumerationKeys[i];
+            for (const actEnumKey of enumerationKeys) {
+                if (this.containsLabel(this.enumerations[actEnumKey], input) === true) {
+                    return actEnumKey;
                 }
             }
             const enumerationMemberKeys = Object.keys(this.enumerationMembers);
-            for (let i = 0; i < enumerationMemberKeys.length; i++) {
-                if (this.containsLabel(this.enumerationMembers[enumerationMemberKeys[i]], input) === true) {
-                    return enumerationMemberKeys[i];
+            for (const actEnumMemKey of enumerationMemberKeys) {
+                if (this.containsLabel(this.enumerationMembers[actEnumMemKey], input) === true) {
+                    return actEnumMemKey;
                 }
             }
         }
@@ -812,10 +808,10 @@ class Graph {
     // helper function for discoverCompactIRI()
     // returns true, if the termObj uses the given label (in any language)
     containsLabel(termObj, label) {
-        if (termObj !== undefined && util.isObject(termObj['rdfs:label'])) {
+        if (termObj && util.isObject(termObj['rdfs:label'])) {
             const langKeys = Object.keys(termObj['rdfs:label']);
-            for (let i = 0; i < langKeys.length; i++) {
-                if (termObj['rdfs:label'][langKeys[i]] === label) {
+            for (const actLangKey of langKeys) {
+                if (termObj['rdfs:label'][actLangKey] === label) {
                     return true;
                 }
             }

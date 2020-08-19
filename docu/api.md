@@ -23,6 +23,7 @@
 * [SDOAdapter](#SDOAdapter)
     * [new SDOAdapter()](#new_SDOAdapter_new)
     * [.addVocabularies(vocabArray)](#SDOAdapter+addVocabularies) ⇒ <code>Promise.&lt;void&gt;</code>
+    * [.getTerm(id, filter)](#SDOAdapter+getTerm) ⇒ [<code>Class</code>](#Class) \| [<code>Property</code>](#Property) \| [<code>Enumeration</code>](#Enumeration) \| [<code>EnumerationMember</code>](#EnumerationMember) \| [<code>DataType</code>](#DataType)
     * [.getClass(id, filter)](#SDOAdapter+getClass) ⇒ [<code>Class</code>](#Class) \| [<code>Enumeration</code>](#Enumeration)
     * [.getAllClasses(filter)](#SDOAdapter+getAllClasses) ⇒ <code>Array.&lt;(Class\|Enumeration)&gt;</code>
     * [.getListOfClasses(filter)](#SDOAdapter+getListOfClasses) ⇒ <code>Array.&lt;string&gt;</code>
@@ -59,7 +60,20 @@ Adds vocabularies (in JSON-LD format or as URL) to the memory of this SDOAdapter
 
 | Param | Type | Description |
 | --- | --- | --- |
-| vocabArray | <code>Array.&lt;(string\|object)&gt;</code> | The vocabularies to add the graph, in JSON-LD format. Given directly as JSON or by a URL to fetch. |
+| vocabArray | <code>Array.&lt;(string\|object)&gt;</code> \| <code>string</code> \| <code>object</code> | The vocabular(y/ies) to add the graph, in JSON-LD format. Given directly as JSON or by a URL to fetch. |
+
+<a name="SDOAdapter+getTerm"></a>
+
+### sdoAdapter.getTerm(id, filter) ⇒ [<code>Class</code>](#Class) \| [<code>Property</code>](#Property) \| [<code>Enumeration</code>](#Enumeration) \| [<code>EnumerationMember</code>](#EnumerationMember) \| [<code>DataType</code>](#DataType)
+Creates a corresponding JS-Class for the given IRI, depending on its term-category
+
+**Kind**: instance method of [<code>SDOAdapter</code>](#SDOAdapter)  
+**Returns**: [<code>Class</code>](#Class) \| [<code>Property</code>](#Property) \| [<code>Enumeration</code>](#Enumeration) \| [<code>EnumerationMember</code>](#EnumerationMember) \| [<code>DataType</code>](#DataType) - the JS-Class for the given IRI  
+
+| Param | Type | Default | Description |
+| --- | --- | --- | --- |
+| id | <code>string</code> |  | The id of the wished term, can be an IRI (absolute or compact) or a label |
+| filter | <code>object</code> | <code></code> | (optional) The filter settings to be applied on the result |
 
 <a name="SDOAdapter+getClass"></a>
 

@@ -1,5 +1,6 @@
 const SDOAdapter = require('../src/SDOAdapter');
 const VOC_OBJ_Zoo = require('./data/exampleExternalVocabulary');
+const util = require('../src/utilities');
 
 /**
  *  @returns {SDOAdapter} - the initialized SDO-Adapter ready for testing.
@@ -128,15 +129,21 @@ describe('Property methods', () => {
     test('getInverseOf() - Bijection', async() => {
         const mySA = await initAdapter();
         const allProperties = mySA.getAllProperties();
-        for (let p = 0; p < allProperties.length; p++) {
-            let thisProp = allProperties[p].getIRI(true);
-            let thisInverse = allProperties[p].getInverseOf();
-            if (thisInverse !== undefined) {
+        for (const actProp of allProperties) {
+            let thisProp = actProp.getIRI(true);
+            let thisInverse = actProp.getInverseOf();
+            if (thisInverse) {
                 let inverseProp = mySA.getProperty(thisInverse, null);
                 let inversePropInverse = inverseProp.getInverseOf();
                 console.log(thisProp + ' -> ' + thisInverse + ' -> ' + inversePropInverse);
                 expect(inversePropInverse).toBe(thisProp);
             }
         }
+    });
+
+    test('toString()', async() => {
+        const mySA = await initAdapter();
+        const subOrganization = mySA.getProperty('schema:subOrganization');
+        expect(util.isObject(JSON.parse(subOrganization.toString()))).toBe(true);
     });
 });

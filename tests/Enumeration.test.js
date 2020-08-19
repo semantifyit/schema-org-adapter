@@ -78,7 +78,7 @@ describe('Enumeration methods', () => {
     test('getEnumerationMembers()', async() => {
         const mySA = await initAdapter();
         const DayOfWeek = mySA.getEnumeration('schema:DayOfWeek');
-        expect(DayOfWeek.getEnumerationMembers()).toContain('schema:Monday');
+        expect(DayOfWeek.getEnumerationMembers(true)).toContain('schema:Monday');
         expect(DayOfWeek.getEnumerationMembers()).toContain('schema:Friday');
         expect(DayOfWeek.getEnumerationMembers()).not.toContain('schema:Thing');
         expect(DayOfWeek.getEnumerationMembers().length).toBe(DayOfWeek.getEnumerationMembers(true).length); // DayOfWeek has no sub-Enumeration
@@ -120,9 +120,9 @@ describe('Enumeration methods', () => {
         expect(PaymentMethod.getSubClasses(false)).not.toContain('schema:CreditCard');
     });
 
-    test('toJSON()', async() => {
+    test('toString()', async() => {
         const mySA = await initAdapter();
-        const PaymentMethod = mySA.getEnumeration('schema:PaymentMethod');
-        expect(util.isObject(PaymentMethod.toJSON())).toBe(true);
+        const PaymentMethod = mySA.getClass('schema:PaymentMethod');
+        expect(util.isObject(JSON.parse(PaymentMethod.toString()))).toBe(true);
     });
 });
