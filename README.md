@@ -8,9 +8,9 @@
 <a href="https://david-dm.org/semantifyit/schema-org-adapter"><img src="https://david-dm.org/semantifyit/schema-org-adapter.svg" alt="Dependencies" /></a>
 <a href="https://github.com/semantifyit/schema-org-adapter/issues"><img src="https://img.shields.io/github/issues/semantifyit/schema-org-adapter.svg" alt="Issues open" /></a>
 <br>
-<img src="/coverage/badge-functions.svg" alt="Jest Test Coverage Functions" />
-<img src="/coverage/badge-lines.svg" alt="Jest Test Coverage Lines" />
-<img src="/coverage/badge-statements.svg" alt="Jest Test Coverage Statements" />
+<img src="https://raw.githubusercontent.com/semantifyit/schema-org-adapter/master/coverage/badge-functions.svg?sanitize=true" alt="Jest Test Coverage Functions" />
+<img src="https://raw.githubusercontent.com/semantifyit/schema-org-adapter/master/coverage/badge-lines.svg?sanitize=true" alt="Jest Test Coverage Lines" />
+<img src="https://raw.githubusercontent.com/semantifyit/schema-org-adapter/master/coverage/badge-statements.svg?sanitize=true" alt="Jest Test Coverage Statements" />
 <br>
 <a href="https://creativecommons.org/licenses/by-sa/4.0/"><img src="https://img.shields.io/badge/License-CC%20BY--SA%204.0-lightgrey.svg" alt="License: CC BY-SA 4.0" /></a>
 </div>
