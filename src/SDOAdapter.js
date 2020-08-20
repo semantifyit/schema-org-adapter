@@ -357,8 +357,8 @@ class SDOAdapter {
                 if (!this.retrievalMemory.versionsFile) {
                     // retrieve versionFile if needed (checks for latest and valid version)
                     await this.getSDOVersionFile();
-                    version = this.retrievalMemory.latest;
                 }
+                version = this.retrievalMemory.latest;
             } catch (e) {
                 console.error('Could not determine/retrieve the latest version of schema.org');
                 throw e;

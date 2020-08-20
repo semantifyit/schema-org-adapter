@@ -21,6 +21,7 @@
         let externalVocabURL = 'https://raw.githubusercontent.com/semantifyit/schema-org-adapter/master/tests/data/exampleExternalVocabulary.json';
 
         mySA.constructSDOVocabularyURL('latest').then(function(sdoURL) {
+            console.log('The latest version is ' + sdoURL);
             mySA.addVocabularies([sdoURL, externalVocabURL]).then(function() {
                 let testClass = mySA.getClass('Hotel');
                 console.log(testClass.getName());

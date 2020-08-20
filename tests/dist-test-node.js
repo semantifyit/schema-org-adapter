@@ -9,6 +9,7 @@ main();
  */
 async function main() {
     const mySDOUrl = await mySA.constructSDOVocabularyURL('latest');
+    console.log('The latest version is ' + mySDOUrl);
     await mySA.addVocabularies([mySDOUrl, VOC_OBJ_ZOO]);
     let testClass = mySA.getClass('http://schema.org/Person');
     console.log(mySA.getVocabularies());

@@ -20057,8 +20057,9 @@ class SDOAdapter {
           if (!_this2.retrievalMemory.versionsFile) {
             // retrieve versionFile if needed (checks for latest and valid version)
             yield _this2.getSDOVersionFile();
-            version = _this2.retrievalMemory.latest;
           }
+
+          version = _this2.retrievalMemory.latest;
         } catch (e) {
           console.error('Could not determine/retrieve the latest version of schema.org');
           throw e;
