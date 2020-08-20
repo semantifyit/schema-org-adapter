@@ -6,7 +6,7 @@ const util = require('../src/utilities');
  *  @returns {SDOAdapter} - the initialized SDO-Adapter ready for testing.
  */
 async function initAdapter() {
-    const mySA = new SDOAdapter();
+    const mySA = new SDOAdapter(global.commitBase);
     const mySDOUrl = await mySA.constructSDOVocabularyURL('latest');
     await mySA.addVocabularies([mySDOUrl, VOC_OBJ_Zoo]);
     return mySA;

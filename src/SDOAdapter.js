@@ -2,22 +2,24 @@ const Graph = require('./Graph');
 const util = require('./utilities');
 const axios = require('axios');
 
-const URI_SDO_GITHUB = 'https://raw.githubusercontent.com/schemaorg/schemaorg/main/';
-const URI_SDO_RELEASES = URI_SDO_GITHUB + 'data/releases/';
-const URI_SDO_VERSIONS = URI_SDO_GITHUB + 'versions.json';
+const URI_SEMANTIFY_GITHUB = 'https://raw.githubusercontent.com/semantifyit/schemaorg/main/';
+const URI_SEMANTIFY_RELEASES = URI_SEMANTIFY_GITHUB + 'data/releases/';
+const URI_SEMANTIFY_VERSIONS = URI_SEMANTIFY_GITHUB + 'versions.json';
 
 class SDOAdapter {
     /**
      * The SDOAdapter is a JS-Class that represents the interface between the user and this library. Its methods enable to add vocabularies to its memory as well as retrieving vocabulary items. It is possible to create multiple instances of this JS-Class which use different vocabularies.
      *
      * @class
+     * @param {string} commitBase - The commit from https://github.com/schemaorg/schemaorg which is the base for the adapter
      */
-    constructor() {
+    constructor(commitBase=null) {
         this.graph = new Graph(this);
         this.retrievalMemory = {
             versionsFile: null,
             latest: null
         };
+        this.commitBase = commitBase;
     }
 
     /**
@@ -363,7 +365,7 @@ class SDOAdapter {
             }
         }
         const fileName = util.getFileNameForSchemaOrgVersion(version); // This can throw an error if the version is <= 3.0
-        return URI_SDO_RELEASES + version + '/' + fileName;
+        return this.getReleasesURI() + version + '/' + fileName;
         // e.g. "https://raw.githubusercontent.com/schemaorg/schemaorg/main/data/releases/3.9/all-layers.jsonld";
     }
 
@@ -378,9 +380,9 @@ class SDOAdapter {
         let versionFile;
         // 1. retrieve versions file
         try {
-            versionFile = await axios.get(URI_SDO_VERSIONS);
+            versionFile = await axios.get(this.getVersionFileURI());
         } catch (e) {
-            console.log('Unable to retrieve the schema.org versions file at ' + URI_SDO_VERSIONS);
+            console.log('Unable to retrieve the schema.org versions file at ' + this.getVersionFileURI());
             throw(e);
         }
         // 2. determine the latest valid version
@@ -410,7 +412,7 @@ class SDOAdapter {
                 return;
             }
             let errMsg = 'Schema.org versions file has an unexpected structure!';
-            console.log(errMsg + ' -> ' + URI_SDO_VERSIONS);
+            console.log(errMsg + ' -> ' + this.getVersionFileURI());
             throw new Error(errMsg);
         }
     }
@@ -442,6 +444,20 @@ class SDOAdapter {
             await this.getSDOVersionFile();
         }
         return this.retrievalMemory.latest;
+    }
+
+    /**
+     * Returns the base part of respective release URI
+     */
+    getReleasesURI() {
+        return this.commitBase ? 'https://raw.githubusercontent.com/schemaorg/schemaorg/' + this.commitBase + '/data/releases/' : URI_SEMANTIFY_RELEASES;
+    }
+
+    /**
+     * Returns the URI of the respective versions file
+     */
+    getVersionFileURI() {
+        return this.commitBase ? 'https://raw.githubusercontent.com/schemaorg/schemaorg/' + this.commitBase + '/versions.json' : URI_SEMANTIFY_VERSIONS;
     }
 }
 

@@ -8,7 +8,7 @@ let VOC_OBJ_LATEST;
  *  @returns {SDOAdapter} - the initialized SDO-Adapter ready for testing.
  */
 async function initGraph() {
-    const mySA = new SDOAdapter();
+    const mySA = new SDOAdapter(global.commitBase);
     VOC_URL_LATEST = await mySA.constructSDOVocabularyURL('latest');
     VOC_OBJ_LATEST = await mySA.fetchVocabularyFromURL(VOC_URL_LATEST);
     return new Graph(mySA);
