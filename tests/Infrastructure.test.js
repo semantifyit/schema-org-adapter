@@ -1,5 +1,6 @@
 const SDOAdapter = require('../src/SDOAdapter');
 const util = require('../src/utilities');
+const axios = require('axios');
 
 /**
  *  These tests check the retrieving of data from schema.org to ensure the correct functionality of vocabulary version determination and usage
@@ -35,6 +36,8 @@ describe('Infrastructure testing', () => {
         console.log('Latest version by versionsFile: ' + sortedVersionsArray[0][0]);
         console.log('Latest version by schema-org-adapter: ' + mySA.retrievalMemory.latest);
         expect(sortedVersionsArray[0][0] === mySA.retrievalMemory.latest).toBe(true);
+        // Check if the latest version is also officially declared on the schema.org website - if error -> does not exist
+        await axios.get('https://schema.org/version/' + sortedVersionsArray[0][0]);
     });
 
     // Checks if the version files returned from getFileNameForSchemaOrgVersion() really exist (if they can be fetched)

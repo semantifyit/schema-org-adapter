@@ -11,9 +11,9 @@ class SDOAdapter {
      * The SDOAdapter is a JS-Class that represents the interface between the user and this library. Its methods enable to add vocabularies to its memory as well as retrieving vocabulary items. It is possible to create multiple instances of this JS-Class which use different vocabularies.
      *
      * @class
-     * @param {string} commitBase - The commit from https://github.com/schemaorg/schemaorg which is the base for the adapter
+     * @param {string|null} commitBase - The commit from https://github.com/schemaorg/schemaorg which is the base for the adapter (if not given, we take the latest commit of our fork at https://github.com/semantifyit/schemaorg)
      */
-    constructor(commitBase=null) {
+    constructor(commitBase = null) {
         this.graph = new Graph(this);
         this.retrievalMemory = {
             versionsFile: null,

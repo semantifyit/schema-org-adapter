@@ -1,3 +1,12 @@
+3.0.0 / 2020-08-20
+==================
+
+  * **constructSDOVocabularyURL()** -> Adapted our code to work with the new vocabulary file deployment style/naming. It is not possible to specify the used "parts" of schema.org anymore (e.g. auto, pending, etc.). The files "all-layers.jsonld" and "schemaorg-all-http.jsonld" are now taken as the standard. 
+  * **constructSDOVocabularyURL()** -> In order to ensure the quality of this library we made a fork of schema.org, from which we fetch the data. We have an update script that checks for schema.org releases, executes tests, and if they succeed, the fork will automatically be updated (which consequently enables this library to use the latest release of schema.org). If you want to use the **original repository**, you can pass the commit/branch name to the schema-org-adapter on creation -> `let mySdoAdapter = new SDOAdapter("main")`
+  * Added **getTerm()** for the SDOAdapter JS-Class. This function will automatically detect the term-type for the given URI.  
+  * Dependencies update.
+  * Changed code-style from Standard to ESLint.
+  
 2.0.0 / 2020-07-24
 ==================
 

@@ -65,11 +65,11 @@ Script-include the bundled package in **/dist** or load via a cdn:
 ```
 
 ## Features
-&#8984; **Empowers the semantic web:** <a href="http://schema.org/" target="_blank">Schema.org</a> has become the standard vocabulary for the semantic web. This **Schema.org Adapter** gives developers a clear API to access the schema.org vocabulary in a simple way. 
+&#8984; **Empowers the semantic web:** <a href="http://schema.org/" target="_blank">Schema.org</a> has become the standard vocabulary for the semantic web. This **Schema.org Adapter** gives developers a clear API to access the schema.org vocabulary in a simple way.
 
 &#9733; **Clear data model:** The data model of the rdf-based, machine-readable version of Schema.org is slightly adapted (see <a href="https://github.com/semantifyit/schema-org-adapter/blob/master/docu/algorithm.md" target="_blank">documentation</a> for details) to create the <a href="https://github.com/semantifyit/schema-org-adapter/blob/master/docu/dataModel.md" target="_blank">clear and pragmatic data model</a> of this **Schema.org Adapter**.
 
-&#8633; **Supports external vocabularies:** The **Schema.org Adapter** is lightweight because it does NOT include the vocabulary data, instead it allows the user to input his needed local/remote vocabularies (JSON-LD or URL to JSON-LD). This gives the user the possibility to specify the <a href="https://schema.org/docs/developers.html" target="_blank">version of Schema.org</a> he/she needs, also to use <a href="https://github.com/semantifyit/schema-org-adapter/blob/master/docu/vocabulary.md" target="_blank">external vocabularies</a>.
+&#8633; **Supports schema.org versions and external vocabularies:** The **Schema.org Adapter** is lightweight because it does NOT include the vocabulary data, instead it allows the user to input his needed local/remote vocabularies (JSON-LD or URL to JSON-LD). This gives the user the possibility to specify the <a href="https://schema.org/docs/developers.html" target="_blank">version of Schema.org</a> he/she needs, also to use <a href="https://github.com/semantifyit/schema-org-adapter/blob/master/docu/vocabulary.md" target="_blank">external vocabularies</a>. It is possible to input the wished schema.org vocabulary file/URL directly, or build such a vocabulary URL using functions provided by schema-org-adapter (it uses a repository-fork with daily test-controlled updates from the official schema.org repository to ensure the correct function of the library while also keeping up-to-date with schema.org releases).
 
 &#9851; **Built-in reasoning:** The API of **Schema.org Adapter** offers functions and parameters to enable built-in reasoning on the used vocabulary-terms (e.g. resolution of properties, sub-classes, ranges, etc.)
 

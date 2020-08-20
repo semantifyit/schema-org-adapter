@@ -1,6 +1,6 @@
 {
   "name": "schema-org-adapter",
-  "version": "2.0.0",
+  "version": "3.0.0",
   "description": "Fast, simple & flexible API for the Schema.org Vocabulary (and vocabulary extensions!) for Node and Browsers",
   "main": "src/SDOAdapter.js",
   "scripts": {
@@ -8,6 +8,7 @@
     "build": "browserify src/SDOAdapter.js -s SDOAdapter | derequire -cm --toplevel > dist/schema-org-adapter.js",
     "buildMinified": "browserify src/SDOAdapter.js -s SDOAdapter -g [uglifyify] | derequire -cm --toplevel > dist/schema-org-adapter.min.js",
     "test": "jest",
+    "testLatestOriginalRepository": "jest --globals=\"{\\\"commitBase\\\":\\\"main\\\"}\"",
     "badges": "jest-coverage-badges",
     "test:badges": "npm run-script test && npm run-script badges",
     "genJsDoc": "jsdoc src/ --destination ./jsDoc",

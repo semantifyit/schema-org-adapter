@@ -21,7 +21,7 @@
 **Kind**: global class  
 
 * [SDOAdapter](#SDOAdapter)
-    * [new SDOAdapter()](#new_SDOAdapter_new)
+    * [new SDOAdapter(commitBase)](#new_SDOAdapter_new)
     * [.addVocabularies(vocabArray)](#SDOAdapter+addVocabularies) ⇒ <code>Promise.&lt;void&gt;</code>
     * [.getTerm(id, filter)](#SDOAdapter+getTerm) ⇒ [<code>Class</code>](#Class) \| [<code>Property</code>](#Property) \| [<code>Enumeration</code>](#Enumeration) \| [<code>EnumerationMember</code>](#EnumerationMember) \| [<code>DataType</code>](#DataType)
     * [.getClass(id, filter)](#SDOAdapter+getClass) ⇒ [<code>Class</code>](#Class) \| [<code>Enumeration</code>](#Enumeration)
@@ -44,11 +44,18 @@
     * [.getSDOVersionFile()](#SDOAdapter+getSDOVersionFile) ⇒ <code>Promise.&lt;void&gt;</code>
     * [.checkURL(url)](#SDOAdapter+checkURL) ⇒ <code>Promise.&lt;boolean&gt;</code>
     * [.getLatestSDOVersion()](#SDOAdapter+getLatestSDOVersion) ⇒ <code>Promise.&lt;string&gt;</code>
+    * [.getReleasesURI()](#SDOAdapter+getReleasesURI)
+    * [.getVersionFileURI()](#SDOAdapter+getVersionFileURI)
 
 <a name="new_SDOAdapter_new"></a>
 
-### new SDOAdapter()
+### new SDOAdapter(commitBase)
 The SDOAdapter is a JS-Class that represents the interface between the user and this library. Its methods enable to add vocabularies to its memory as well as retrieving vocabulary items. It is possible to create multiple instances of this JS-Class which use different vocabularies.
+
+
+| Param | Type | Default | Description |
+| --- | --- | --- | --- |
+| commitBase | <code>string</code> \| <code>null</code> | <code>null</code> | The commit from https://github.com/schemaorg/schemaorg which is the base for the adapter (if not given, we take the latest commit of our fork at https://github.com/semantifyit/schemaorg) |
 
 <a name="SDOAdapter+addVocabularies"></a>
 
@@ -309,6 +316,18 @@ To achieve this, the Schema.org version listing on https://raw.githubusercontent
 
 **Kind**: instance method of [<code>SDOAdapter</code>](#SDOAdapter)  
 **Returns**: <code>Promise.&lt;string&gt;</code> - The latest version of the schema.org vocabulary  
+<a name="SDOAdapter+getReleasesURI"></a>
+
+### sdoAdapter.getReleasesURI()
+Returns the base part of respective release URI
+
+**Kind**: instance method of [<code>SDOAdapter</code>](#SDOAdapter)  
+<a name="SDOAdapter+getVersionFileURI"></a>
+
+### sdoAdapter.getVersionFileURI()
+Returns the URI of the respective versions file
+
+**Kind**: instance method of [<code>SDOAdapter</code>](#SDOAdapter)  
 <a name="Class"></a>
 
 ## Class
