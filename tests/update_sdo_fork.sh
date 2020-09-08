@@ -26,6 +26,8 @@ then
 else
   echo "There are differences between schema.org GitHub and fork"
   echo "Running tests ..."
+  DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+  cd $DIR
   jest --globals="{\"commitBase\":\"$SDO_COMMIT\"}"
   if [[ $? == 0 ]];
   then
@@ -42,4 +44,3 @@ else
     echo "Some test/s didn't run sucessfully"
   fi;
 fi;
-
