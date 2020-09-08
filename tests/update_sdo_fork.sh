@@ -31,9 +31,9 @@ else
   then
     echo "All tests ran successfully"
     echo "Update fork ..."
-    git clone --single-branch https://github.com/semantifyit/schemaorg.git
+    git clone --single-branch git@github.com:semantifyit/schemaorg.git
     cd schemaorg
-    git remote add upstream https://github.com/schemaorg/schemaorg.git
+    git remote add upstream git@github.com:schemaorg/schemaorg.git
     git fetch upstream main
     git checkout main
     git merge $SDO_COMMIT
