@@ -1,3 +1,9 @@
+3.0.3 / 2020-09-11
+==================
+
+  * Dependencies update.
+  * Minor bug-fix regarding the reusability of **constructSDOVocabularyURL()**.
+
 3.0.0 / 2020-08-20
 ==================
 
