@@ -17926,6 +17926,16 @@ class Enumeration {
     return util.applyFilter(util.uniquifyArray(result), filter, this.graph);
   }
   /**
+   * Retrieves the properties which have this Enumeration as a range
+   *
+   * @returns {Array} The properties which have this Enumeration as a range
+   */
+
+
+  isRangeOf() {
+    return this.graph.enumerations[this.IRI]['soa:isRangeOf'];
+  }
+  /**
    * Generates a string representation of this Enumeration (Based on its JSON representation)
    *
    * @returns {string} The string representation of this Enumeration
@@ -17960,6 +17970,7 @@ class Enumeration {
     result.superClasses = this.getSuperClasses(implicit, filter);
     result.subClasses = this.getSubClasses(implicit, filter);
     result.properties = this.getProperties(implicit, filter);
+    result.rangeOf = this.isRangeOf();
     return result;
   }
 

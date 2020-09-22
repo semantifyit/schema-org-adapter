@@ -1,3 +1,8 @@
+3.0.5 / 2020-09-22
+==================
+
+  * Added **.isRangeOf()** to Enumerations (retrieve properties for which this enumeration is a range).
+
 3.0.4 / 2020-09-11
 ==================
 
