@@ -225,6 +225,7 @@ class Enumeration {
         result.superClasses = this.getSuperClasses(implicit, filter);
         result.subClasses = this.getSubClasses(implicit, filter);
         result.properties = this.getProperties(implicit, filter);
+        result.rangeOf = this.isRangeOf();
         return result;
     }
 }
