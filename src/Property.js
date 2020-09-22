@@ -110,7 +110,7 @@ class Property {
      *
      * @param {boolean} implicit - (default = true) retrieves also implicit ranges (inheritance from sub-classes of the ranges)
      * @param {object|null} filter - (default = null) an optional filter for the ranges
-     * @returns {Array} The ranges of this Property
+     * @returns {string[]} The ranges of this Property
      */
     getRanges(implicit = true, filter = null) {
         let propertyObj = this.graph.properties[this.IRI];
@@ -120,7 +120,7 @@ class Property {
             // add sub-classes from ranges
             let inferredSubClasses = [];
             for (const actRes of result) {
-                inferredSubClasses.push(...this.graph.reasoner.inferImplicitSubClasses(actRes));
+                inferredSubClasses.push(...this.graph.reasoner.inferSubClasses(actRes));
             }
             result.push(...inferredSubClasses);
             // remove "null" values from array (if range included data types)
@@ -136,7 +136,7 @@ class Property {
      *
      * @param {boolean} implicit - (default = true) retrieves also implicit domains (inheritance from sub-classes of the domains)
      * @param {object|null} filter - (default = null) an optional filter for the domains
-     * @returns {Array} The domains of this Property
+     * @returns {string[]} The domains of this Property
      */
     getDomains(implicit = true, filter = null) {
         let propertyObj = this.graph.properties[this.IRI];
@@ -146,7 +146,7 @@ class Property {
             // add sub-classes from ranges
             let inferredSubClasses = [];
             for (const actRes of result) {
-                inferredSubClasses.push(...this.graph.reasoner.inferImplicitSubClasses(actRes));
+                inferredSubClasses.push(...this.graph.reasoner.inferSubClasses(actRes));
             }
             result.push(...inferredSubClasses);
         }
@@ -158,7 +158,7 @@ class Property {
      *
      * @param {boolean} implicit - (default = true) retrieves also implicit super-properties (recursive from super-properties)
      * @param {object|null} filter - (default = null) an optional filter for the super-properties
-     * @returns {Array} The super-properties of this Property
+     * @returns {string[]} The super-properties of this Property
      */
     getSuperProperties(implicit = true, filter = null) {
         let propertyObj = this.graph.properties[this.IRI];
@@ -177,7 +177,7 @@ class Property {
      *
      * @param {boolean} implicit - (default = true) retrieves also implicit sub-properties (recursive from sub-properties)
      * @param {object|null} filter - (default = null) an optional filter for the sub-properties
-     * @returns {Array} The sub-properties of this Property
+     * @returns {string[]} The sub-properties of this Property
      */
     getSubProperties(implicit = true, filter = null) {
         let propertyObj = this.graph.properties[this.IRI];

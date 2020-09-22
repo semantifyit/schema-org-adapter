@@ -110,7 +110,7 @@ class EnumerationMember {
      *
      * @param {boolean} implicit - (default = false) retrieves also implicit domain enumerations (inheritance from super-enumerations)
      * @param {object|null} filter - (default = null) an optional filter for the domain enumerations
-     * @returns {Array} The domain enumerations of this EnumerationMember
+     * @returns {string[]} The domain enumerations of this EnumerationMember
      */
     getDomainEnumerations(implicit = false, filter = null) {
         let enumObj = this.graph.enumerationMembers[this.IRI];
@@ -119,7 +119,7 @@ class EnumerationMember {
         if (implicit) {
             let domainEnumerationsToCheck = JSON.parse(JSON.stringify(result));
             for (const actDE of domainEnumerationsToCheck) {
-                result.push(...this.graph.reasoner.inferImplicitSuperClasses(actDE));
+                result.push(...this.graph.reasoner.inferSuperClasses(actDE));
             }
             result = util.applyFilter(util.uniquifyArray(result), { 'termType': 'Enumeration' }, this.graph);
         }

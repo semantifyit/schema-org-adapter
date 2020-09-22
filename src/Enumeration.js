@@ -110,7 +110,7 @@ class Enumeration {
      *
      * @param {boolean} implicit - (default = false) retrieves also implicit enumeration members (inheritance from sub-enumerations)
      * @param {object|null} filter - (default = null) an optional filter for the enumeration members
-     * @returns {Array} The enumeration members of this Enumeration
+     * @returns {string[]} The enumeration members of this Enumeration
      */
     getEnumerationMembers(implicit = false, filter = null) {
         const enumObj = this.graph.enumerations[this.IRI];
@@ -133,7 +133,7 @@ class Enumeration {
      *
      * @param {boolean} implicit - (default = true) retrieves also implicit properties (inheritance from super-classes)
      * @param {object|null} filter - (default = null) an optional filter for the properties
-     * @returns {Array} The properties of this Enumeration
+     * @returns {string[]} The properties of this Enumeration
      */
     getProperties(implicit = true, filter = null) {
         const enumObj = this.graph.enumerations[this.IRI];
@@ -155,13 +155,13 @@ class Enumeration {
      *
      * @param {boolean} implicit - (default = true) retrieves also implicit super-classes (recursive from super-classes)
      * @param {object|null} filter - (default = null) an optional filter for the super-classes
-     * @returns {Array} The super-classes of this Enumeration
+     * @returns {string[]} The super-classes of this Enumeration
      */
     getSuperClasses(implicit = true, filter = null) {
         const enumObj = this.graph.enumerations[this.IRI];
         const result = [];
         if (implicit) {
-            result.push(...this.graph.reasoner.inferImplicitSuperClasses(this.IRI));
+            result.push(...this.graph.reasoner.inferSuperClasses(this.IRI));
         } else {
             result.push(...enumObj['rdfs:subClassOf']);
         }
@@ -173,13 +173,13 @@ class Enumeration {
      *
      * @param {boolean} implicit - (default = true) retrieves also implicit sub-classes (recursive from sub-classes)
      * @param {object|null} filter - (default = null) an optional filter for the sub-classes
-     * @returns {Array} The sub-classes of this Enumeration
+     * @returns {string[]} The sub-classes of this Enumeration
      */
     getSubClasses(implicit = true, filter = null) {
         const enumObj = this.graph.enumerations[this.IRI];
         const result = [];
         if (implicit) {
-            result.push(...this.graph.reasoner.inferImplicitSubClasses(this.IRI));
+            result.push(...this.graph.reasoner.inferSubClasses(this.IRI));
         } else {
             result.push(...enumObj['soa:superClassOf']);
         }

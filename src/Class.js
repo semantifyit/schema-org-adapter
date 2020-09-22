@@ -110,7 +110,7 @@ class Class {
      *
      * @param {boolean} implicit - (default = true) retrieves also implicit properties (inheritance from super-classes)
      * @param {object|null} filter - (default = null) an optional filter for the properties
-     * @returns {Array} The properties of this Class
+     * @returns {string[]} The properties of this Class
      */
     getProperties(implicit = true, filter = null) {
         const classObj = this.graph.classes[this.IRI];
@@ -132,13 +132,13 @@ class Class {
      *
      * @param {boolean} implicit - (default = true) retrieves also implicit super-classes (recursive from super-classes)
      * @param {object|null} filter - (default = null) an optional filter for the super-classes
-     * @returns {Array} The super-classes of this Class
+     * @returns {string[]} The super-classes of this Class
      */
     getSuperClasses(implicit = true, filter = null) {
         const classObj = this.graph.classes[this.IRI];
         const result = [];
         if (implicit) {
-            result.push(...this.graph.reasoner.inferImplicitSuperClasses(this.IRI));
+            result.push(...this.graph.reasoner.inferSuperClasses(this.IRI));
         } else {
             result.push(...classObj['rdfs:subClassOf']);
         }
@@ -150,13 +150,13 @@ class Class {
      *
      * @param {boolean} implicit - (default = true) retrieves also implicit sub-classes (recursive from sub-classes)
      * @param {object|null} filter - (default = null) an optional filter for the sub-classes
-     * @returns {Array} The sub-classes of this Class
+     * @returns {string[]} The sub-classes of this Class
      */
     getSubClasses(implicit = true, filter = null) {
         const classObj = this.graph.classes[this.IRI];
         const result = [];
         if (implicit) {
-            result.push(...this.graph.reasoner.inferImplicitSubClasses(this.IRI));
+            result.push(...this.graph.reasoner.inferSubClasses(this.IRI));
         } else {
             result.push(...classObj['soa:superClassOf']);
         }

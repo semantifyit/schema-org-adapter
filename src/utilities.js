@@ -3,10 +3,10 @@ const jsonld = require('jsonld');
 /**
  * Applies a filter to the IRIs in the given Array
  *
- * @param {Array} dataArray - Array of IRIs that should be filtered
+ * @param {string[]} dataArray - Array of IRIs that should be filtered
  * @param {object} filter - The filter options, which can be: "isSuperseded": T/F, "termType": string/Array, "fromVocabulary": string/Array
  * @param {Graph} graph - the graph calling this function
- * @returns {Array} Array of IRIs that are in compliance with the given filter options
+ * @returns {string[]} Array of IRIs that are in compliance with the given filter options
  */
 function applyFilter(dataArray, filter, graph) {
     if (!Array.isArray(dataArray) || dataArray.length === 0 || filter === null || Object.keys(filter).length === 0) {

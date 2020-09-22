@@ -110,13 +110,13 @@ class DataType {
      *
      * @param {boolean} implicit - (default = true) retrieves also implicit super-DataTypes (recursive from super-DataTypes)
      * @param {object|null} filter - (default = null) an optional filter for the super-DataTypes
-     * @returns {Array} The super-DataTypes of this DataType
+     * @returns {string[]} The super-DataTypes of this DataType
      */
     getSuperDataTypes(implicit = true, filter = null) {
         const dataTypeObj = this.graph.dataTypes[this.IRI];
         const result = [];
         if (implicit) {
-            result.push(...this.graph.reasoner.inferImplicitSuperDataTypes(this.IRI));
+            result.push(...this.graph.reasoner.inferSuperDataTypes(this.IRI));
         } else {
             result.push(...dataTypeObj['rdfs:subClassOf']);
         }
@@ -128,13 +128,13 @@ class DataType {
      *
      * @param {boolean} implicit - (default = true) retrieves also implicit sub-DataTypes (recursive from sub-DataTypes)
      * @param {object|null} filter - (default = null) an optional filter for the sub-DataTypes
-     * @returns {Array} The sub-DataTypes of this DataType
+     * @returns {string[]} The sub-DataTypes of this DataType
      */
     getSubDataTypes(implicit = true, filter = null) {
         const dataTypeObj = this.graph.dataTypes[this.IRI];
         const result = [];
         if (implicit) {
-            result.push(...this.graph.reasoner.inferImplicitSubDataTypes(this.IRI));
+            result.push(...this.graph.reasoner.inferSubDataTypes(this.IRI));
         } else {
             result.push(...dataTypeObj['soa:superClassOf']);
         }

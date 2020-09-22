@@ -268,7 +268,7 @@ class Graph {
             }
             // D.2) Add subClasses for DataTypes
             // For each entry in the dataTypes memory the superClasses are checked (if they are in dataTypes memory) and those super types add the actual entry in their subClasses.
-            const dataTypeKeys = Object.keys(this.dataTypes);
+            let dataTypeKeys = Object.keys(this.dataTypes);
             for (const actDtKey of dataTypeKeys) {
                 const superClasses = this.dataTypes[actDtKey]['rdfs:subClassOf'];
                 // add empty superClassOf if not defined
@@ -348,14 +348,22 @@ class Graph {
                     this.enumerations[actEnumKey]['soa:hasProperty'] = [];
                 }
             }
+            dataTypeKeys = Object.keys(this.dataTypes);
+            for (const actDataTypeKey of dataTypeKeys) {
+                if (!this.dataTypes[actDataTypeKey]['soa:isRangeOf']) {
+                    this.dataTypes[actDataTypeKey]['soa:isRangeOf'] = [];
+                }
+            }
             let enumMemKeys = Object.keys(this.enumerationMembers);
             for (const actEnumMemKey of enumMemKeys) {
                 if (!this.enumerationMembers[actEnumMemKey]['soa:enumerationDomainIncludes']) {
                     this.enumerationMembers[actEnumMemKey]['soa:enumerationDomainIncludes'] = [];
                 }
             }
-            /* E.1) Add explicit hasProperty and isRangeOf to classes and enumerations
-            For each entry in the classes/enumeration memory, the properties field is added. This data field holds all properties which belong to this class (class/enumeration is domain for property). */
+            /* E.1) Add explicit hasProperty and isRangeOf to classes, enumerations, and data types
+            For each entry in the classes/enumeration/dataType memory, the soa:hasProperty field is added.
+            This data field holds all properties which belong to this class/enumeration (class/enumeration is domain for property).
+            Also the soa:isRangeOf field is added -> holds all properties which use to this class/enumeration/dataType as range (class/enumeration/dataType is range for property). */
             propertyKeys = Object.keys(this.properties);
             for (const actPropKey of propertyKeys) {
                 const domainIncludesArray = this.properties[actPropKey]['schema:domainIncludes'];
@@ -373,10 +381,7 @@ class Graph {
                 const rangeIncludesArray = this.properties[actPropKey]['schema:rangeIncludes'];
                 if (util.isArray(rangeIncludesArray)) {
                     for (const actRange of rangeIncludesArray) {
-                        let target = this.classes[actRange];
-                        if (!target) {
-                            target = this.enumerations[actRange];
-                        }
+                        let target = this.classes[actRange] || this.enumerations[actRange] || this.dataTypes[actRange];
                         if (target && util.isArray(target['soa:isRangeOf']) && !target['soa:isRangeOf'].includes(actPropKey)) {
                             target['soa:isRangeOf'].push(actPropKey);
                         }

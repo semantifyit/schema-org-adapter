@@ -113,6 +113,7 @@ In this step additional fields are added to certain data entries to add links to
 - Classes -> "soa:hasProperty", "soa:isRangeOf"
 - Enumerations -> "soa:hasProperty", "soa:isRangeOf", "soa:hasEnumerationMember"
 - EnumerationMembers -> "soa:enumerationDomainIncludes"
+- DataTypes -> "soa:isRangeOf"
   
 #### E.1) Add explicit hasProperty and isRangeOf to classes and enumerations
  For each entry in the classes/enumeration memory, the "soa:hasProperty" and "soa:isRangeOf" entries are added. "soa:hasProperty" holds all properties that have this class/enumeration as explicit domain. "soa:isRangeOf" holds all properties that have this class/enumeration as explicit range.

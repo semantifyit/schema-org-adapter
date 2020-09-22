@@ -25,8 +25,8 @@ class SDOAdapter {
     /**
      * Adds vocabularies (in JSON-LD format or as URL) to the memory of this SDOAdapter. The function "constructSDOVocabularyURL()" helps you to construct URLs for the schema.org vocabulary
      *
-     * @param {Array.<string|object>|string|object} vocabArray - The vocabular(y/ies) to add the graph, in JSON-LD format. Given directly as JSON or by a URL to fetch.
-     * @returns {Promise.<void>} This is an async function
+     * @param {string[]|object[]|string|object} vocabArray - The vocabular(y/ies) to add the graph, in JSON-LD format. Given directly as JSON or by a URL to fetch.
+     * @returns {Promise<void>} This is an async function
      */
     async addVocabularies(vocabArray) {
         if (!util.isArray(vocabArray) && (util.isString(vocabArray) || util.isObject(vocabArray))) {
@@ -79,6 +79,12 @@ class SDOAdapter {
         }
     }
 
+    /**
+     * Fetches a vocabulary from the given URL.
+     *
+     * @param {string} url - the URL from which the vocabulary should be fetched
+     * @returns {Promise<object>} - the fetched vocabulary object
+     */
     async fetchVocabularyFromURL(url) {
         return new Promise(function(resolve, reject) {
             axios
@@ -119,7 +125,7 @@ class SDOAdapter {
      * Creates an array of JS-Classes for all vocabulary Classes
      *
      * @param {object|null} filter - (default = null) an optional filter for the Class creation
-     * @returns {Array.<Class|Enumeration>} An array of JS-Classes representing all vocabulary Classes, does not include Enumerations
+     * @returns {Class[]} An array of JS-Classes representing all vocabulary Classes, does not include Enumerations
      */
     getAllClasses(filter = null) {
         const classesIRIList = this.getListOfClasses(filter);
@@ -138,7 +144,7 @@ class SDOAdapter {
      * Creates an array of IRIs for all vocabulary Classes
      *
      * @param {object|null} filter - (default = null) an optional filter for the List creation
-     * @returns {Array.<string>} An array of IRIs representing all vocabulary Classes, does not include Enumerations
+     * @returns {string[]} An array of IRIs representing all vocabulary Classes, does not include Enumerations
      */
     getListOfClasses(filter = null) {
         // do not include enumerations
@@ -164,7 +170,7 @@ class SDOAdapter {
      * Creates an array of JS-Classes for all vocabulary Properties
      *
      * @param {object|null} filter - (default = null) an optional filter for the Property creation
-     * @returns {Array.<Property>} An array of JS-Classes representing all vocabulary Properties
+     * @returns {Property[]} An array of JS-Classes representing all vocabulary Properties
      */
     getAllProperties(filter = null) {
         const propertiesIRIList = this.getListOfProperties(filter);
@@ -183,7 +189,7 @@ class SDOAdapter {
      * Creates an array of IRIs for all vocabulary Properties
      *
      * @param {object|null} filter - (default = null) an optional filter for the List creation
-     * @returns {Array.<string>} An array of IRIs representing all vocabulary Properties
+     * @returns {string[]} An array of IRIs representing all vocabulary Properties
      */
     getListOfProperties(filter = null) {
         return util.applyFilter(
@@ -208,7 +214,7 @@ class SDOAdapter {
      * Creates an array of JS-Classes for all vocabulary DataTypes
      *
      * @param {object|null} filter - (default = null) an optional filter for the DataType creation
-     * @returns {Array.<DataType>} An array of JS-Classes representing all vocabulary DataTypes
+     * @returns {DataType[]} An array of JS-Classes representing all vocabulary DataTypes
      */
     getAllDataTypes(filter = null) {
         const dataTypesIRIList = this.getListOfDataTypes(filter);
@@ -227,7 +233,7 @@ class SDOAdapter {
      * Creates an array of IRIs for all vocabulary DataTypes
      *
      * @param {object|null} filter - (default = null) an optional filter for the List creation
-     * @returns {Array.<string>} An array of IRIs representing all vocabulary DataTypes
+     * @returns {string[]} An array of IRIs representing all vocabulary DataTypes
      */
     getListOfDataTypes(filter = null) {
         return util.applyFilter(
@@ -252,7 +258,7 @@ class SDOAdapter {
      * Creates an array of JS-Classes for all vocabulary Enumerations
      *
      * @param {object|null} filter - (default = null) an optional filter for the Enumeration creation
-     * @returns {Array.<Enumeration>} An array of JS-Classes representing all vocabulary Enumerations
+     * @returns {Enumeration[]} An array of JS-Classes representing all vocabulary Enumerations
      */
     getAllEnumerations(filter = null) {
         const enumerationsIRIList = this.getListOfEnumerations(filter);
@@ -271,7 +277,7 @@ class SDOAdapter {
      * Creates an array of IRIs for all vocabulary Enumerations
      *
      * @param {object|null} filter - (default = null) an optional filter for the List creation
-     * @returns {Array.<string>} An array of IRIs representing all vocabulary Enumerations
+     * @returns {string[]} An array of IRIs representing all vocabulary Enumerations
      */
     getListOfEnumerations(filter = null) {
         return util.applyFilter(
@@ -296,7 +302,7 @@ class SDOAdapter {
      * Creates an array of JS-Classes for all vocabulary EnumerationMember
      *
      * @param {object|null} filter - (default = null) an optional filter for the EnumerationMember creation
-     * @returns {Array.<EnumerationMember>} An array of JS-Classes representing all vocabulary EnumerationMember
+     * @returns {EnumerationMember[]} An array of JS-Classes representing all vocabulary EnumerationMember
      */
     getAllEnumerationMembers(filter = null) {
         const enumerationMembersIRIList = this.getListOfEnumerationMembers(filter);
@@ -315,7 +321,7 @@ class SDOAdapter {
      * Creates an array of IRIs for all vocabulary EnumerationMember
      *
      * @param {object|null} filter - (default = null) an optional filter for the List creation
-     * @returns {Array.<string>} An array of IRIs representing all vocabulary EnumerationMember
+     * @returns {string[]} An array of IRIs representing all vocabulary EnumerationMember
      */
     getListOfEnumerationMembers(filter = null) {
         return util.applyFilter(
@@ -349,7 +355,7 @@ class SDOAdapter {
      * To achieve this, the Schema.org version listing on https://raw.githubusercontent.com/schemaorg/schemaorg/main/versions.json is used.
      *
      * @param {?string} version - the wished Schema.org vocabulary version for the resulting URL (e.g. "5.0", "3.7", or "latest"). default: "latest"
-     * @returns {Promise.<string>} The URL to the Schema.org vocabulary
+     * @returns {Promise<string>} The URL to the Schema.org vocabulary
      */
     async constructSDOVocabularyURL(version = 'latest') {
         if (version === 'latest') {
@@ -436,7 +442,7 @@ class SDOAdapter {
      * Returns the latest version number of the schema.org vocabulary
      * To achieve this, the Schema.org version listing on https://raw.githubusercontent.com/schemaorg/schemaorg/main/versions.json is used.
      *
-     * @returns {Promise.<string>} The latest version of the schema.org vocabulary
+     * @returns {Promise<string>} The latest version of the schema.org vocabulary
      */
     async getLatestSDOVersion() {
         if (!this.retrievalMemory.latest) {
@@ -448,6 +454,8 @@ class SDOAdapter {
 
     /**
      * Returns the base part of respective release URI
+     *
+     * @returns {string} the base part of respective release URI
      */
     getReleasesURI() {
         return this.commitBase ? 'https://raw.githubusercontent.com/schemaorg/schemaorg/' + this.commitBase + '/data/releases/' : URI_SEMANTIFY_RELEASES;
@@ -455,6 +463,8 @@ class SDOAdapter {
 
     /**
      * Returns the URI of the respective versions file
+     *
+     * @returns {string} the URI of the respective versions file
      */
     getVersionFileURI() {
         return this.commitBase ? 'https://raw.githubusercontent.com/schemaorg/schemaorg/' + this.commitBase + '/versions.json' : URI_SEMANTIFY_VERSIONS;

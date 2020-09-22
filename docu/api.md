@@ -23,9 +23,10 @@
 * [SDOAdapter](#SDOAdapter)
     * [new SDOAdapter(commitBase)](#new_SDOAdapter_new)
     * [.addVocabularies(vocabArray)](#SDOAdapter+addVocabularies) ⇒ <code>Promise.&lt;void&gt;</code>
+    * [.fetchVocabularyFromURL(url)](#SDOAdapter+fetchVocabularyFromURL) ⇒ <code>Promise.&lt;object&gt;</code>
     * [.getTerm(id, filter)](#SDOAdapter+getTerm) ⇒ [<code>Class</code>](#Class) \| [<code>Property</code>](#Property) \| [<code>Enumeration</code>](#Enumeration) \| [<code>EnumerationMember</code>](#EnumerationMember) \| [<code>DataType</code>](#DataType)
     * [.getClass(id, filter)](#SDOAdapter+getClass) ⇒ [<code>Class</code>](#Class) \| [<code>Enumeration</code>](#Enumeration)
-    * [.getAllClasses(filter)](#SDOAdapter+getAllClasses) ⇒ <code>Array.&lt;(Class\|Enumeration)&gt;</code>
+    * [.getAllClasses(filter)](#SDOAdapter+getAllClasses) ⇒ [<code>Array.&lt;Class&gt;</code>](#Class)
     * [.getListOfClasses(filter)](#SDOAdapter+getListOfClasses) ⇒ <code>Array.&lt;string&gt;</code>
     * [.getProperty(id, filter)](#SDOAdapter+getProperty) ⇒ [<code>Property</code>](#Property)
     * [.getAllProperties(filter)](#SDOAdapter+getAllProperties) ⇒ [<code>Array.&lt;Property&gt;</code>](#Property)
@@ -44,8 +45,8 @@
     * [.getSDOVersionFile()](#SDOAdapter+getSDOVersionFile) ⇒ <code>Promise.&lt;void&gt;</code>
     * [.checkURL(url)](#SDOAdapter+checkURL) ⇒ <code>Promise.&lt;boolean&gt;</code>
     * [.getLatestSDOVersion()](#SDOAdapter+getLatestSDOVersion) ⇒ <code>Promise.&lt;string&gt;</code>
-    * [.getReleasesURI()](#SDOAdapter+getReleasesURI)
-    * [.getVersionFileURI()](#SDOAdapter+getVersionFileURI)
+    * [.getReleasesURI()](#SDOAdapter+getReleasesURI) ⇒ <code>string</code>
+    * [.getVersionFileURI()](#SDOAdapter+getVersionFileURI) ⇒ <code>string</code>
 
 <a name="new_SDOAdapter_new"></a>
 
@@ -67,7 +68,19 @@ Adds vocabularies (in JSON-LD format or as URL) to the memory of this SDOAdapter
 
 | Param | Type | Description |
 | --- | --- | --- |
-| vocabArray | <code>Array.&lt;(string\|object)&gt;</code> \| <code>string</code> \| <code>object</code> | The vocabular(y/ies) to add the graph, in JSON-LD format. Given directly as JSON or by a URL to fetch. |
+| vocabArray | <code>Array.&lt;string&gt;</code> \| <code>Array.&lt;object&gt;</code> \| <code>string</code> \| <code>object</code> | The vocabular(y/ies) to add the graph, in JSON-LD format. Given directly as JSON or by a URL to fetch. |
+
+<a name="SDOAdapter+fetchVocabularyFromURL"></a>
+
+### sdoAdapter.fetchVocabularyFromURL(url) ⇒ <code>Promise.&lt;object&gt;</code>
+Fetches a vocabulary from the given URL.
+
+**Kind**: instance method of [<code>SDOAdapter</code>](#SDOAdapter)  
+**Returns**: <code>Promise.&lt;object&gt;</code> - - the fetched vocabulary object  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| url | <code>string</code> | the URL from which the vocabulary should be fetched |
 
 <a name="SDOAdapter+getTerm"></a>
 
@@ -97,11 +110,11 @@ Creates a JS-Class for a vocabulary Class by the given identifier (@id) or name
 
 <a name="SDOAdapter+getAllClasses"></a>
 
-### sdoAdapter.getAllClasses(filter) ⇒ <code>Array.&lt;(Class\|Enumeration)&gt;</code>
+### sdoAdapter.getAllClasses(filter) ⇒ [<code>Array.&lt;Class&gt;</code>](#Class)
 Creates an array of JS-Classes for all vocabulary Classes
 
 **Kind**: instance method of [<code>SDOAdapter</code>](#SDOAdapter)  
-**Returns**: <code>Array.&lt;(Class\|Enumeration)&gt;</code> - An array of JS-Classes representing all vocabulary Classes, does not include Enumerations  
+**Returns**: [<code>Array.&lt;Class&gt;</code>](#Class) - An array of JS-Classes representing all vocabulary Classes, does not include Enumerations  
 
 | Param | Type | Default | Description |
 | --- | --- | --- | --- |
@@ -318,16 +331,18 @@ To achieve this, the Schema.org version listing on https://raw.githubusercontent
 **Returns**: <code>Promise.&lt;string&gt;</code> - The latest version of the schema.org vocabulary  
 <a name="SDOAdapter+getReleasesURI"></a>
 
-### sdoAdapter.getReleasesURI()
+### sdoAdapter.getReleasesURI() ⇒ <code>string</code>
 Returns the base part of respective release URI
 
 **Kind**: instance method of [<code>SDOAdapter</code>](#SDOAdapter)  
+**Returns**: <code>string</code> - the base part of respective release URI  
 <a name="SDOAdapter+getVersionFileURI"></a>
 
-### sdoAdapter.getVersionFileURI()
+### sdoAdapter.getVersionFileURI() ⇒ <code>string</code>
 Returns the URI of the respective versions file
 
 **Kind**: instance method of [<code>SDOAdapter</code>](#SDOAdapter)  
+**Returns**: <code>string</code> - the URI of the respective versions file  
 <a name="Class"></a>
 
 ## Class
@@ -342,9 +357,9 @@ Returns the URI of the respective versions file
     * [.isSupersededBy()](#Class+isSupersededBy) ⇒ <code>string</code> \| <code>null</code>
     * [.getName(language)](#Class+getName) ⇒ <code>string</code> \| <code>null</code>
     * [.getDescription(language)](#Class+getDescription) ⇒ <code>string</code> \| <code>null</code>
-    * [.getProperties(implicit, filter)](#Class+getProperties) ⇒ <code>Array</code>
-    * [.getSuperClasses(implicit, filter)](#Class+getSuperClasses) ⇒ <code>Array</code>
-    * [.getSubClasses(implicit, filter)](#Class+getSubClasses) ⇒ <code>Array</code>
+    * [.getProperties(implicit, filter)](#Class+getProperties) ⇒ <code>Array.&lt;string&gt;</code>
+    * [.getSuperClasses(implicit, filter)](#Class+getSuperClasses) ⇒ <code>Array.&lt;string&gt;</code>
+    * [.getSubClasses(implicit, filter)](#Class+getSubClasses) ⇒ <code>Array.&lt;string&gt;</code>
     * [.toString()](#Class+toString) ⇒ <code>string</code>
     * [.toJSON(implicit, filter)](#Class+toJSON) ⇒ <code>object</code>
 
@@ -425,11 +440,11 @@ Retrieves the description (rdfs:comment) of this Class in a wished language (opt
 
 <a name="Class+getProperties"></a>
 
-### class.getProperties(implicit, filter) ⇒ <code>Array</code>
+### class.getProperties(implicit, filter) ⇒ <code>Array.&lt;string&gt;</code>
 Retrieves the explicit/implicit properties (soa:hasProperty) of this Class
 
 **Kind**: instance method of [<code>Class</code>](#Class)  
-**Returns**: <code>Array</code> - The properties of this Class  
+**Returns**: <code>Array.&lt;string&gt;</code> - The properties of this Class  
 
 | Param | Type | Default | Description |
 | --- | --- | --- | --- |
@@ -438,11 +453,11 @@ Retrieves the explicit/implicit properties (soa:hasProperty) of this Class
 
 <a name="Class+getSuperClasses"></a>
 
-### class.getSuperClasses(implicit, filter) ⇒ <code>Array</code>
+### class.getSuperClasses(implicit, filter) ⇒ <code>Array.&lt;string&gt;</code>
 Retrieves the explicit/implicit super-classes (rdfs:subClassOf) of this Class
 
 **Kind**: instance method of [<code>Class</code>](#Class)  
-**Returns**: <code>Array</code> - The super-classes of this Class  
+**Returns**: <code>Array.&lt;string&gt;</code> - The super-classes of this Class  
 
 | Param | Type | Default | Description |
 | --- | --- | --- | --- |
@@ -451,11 +466,11 @@ Retrieves the explicit/implicit super-classes (rdfs:subClassOf) of this Class
 
 <a name="Class+getSubClasses"></a>
 
-### class.getSubClasses(implicit, filter) ⇒ <code>Array</code>
+### class.getSubClasses(implicit, filter) ⇒ <code>Array.&lt;string&gt;</code>
 Retrieves the explicit/implicit sub-classes (soa:superClassOf) of this Class
 
 **Kind**: instance method of [<code>Class</code>](#Class)  
-**Returns**: <code>Array</code> - The sub-classes of this Class  
+**Returns**: <code>Array.&lt;string&gt;</code> - The sub-classes of this Class  
 
 | Param | Type | Default | Description |
 | --- | --- | --- | --- |
@@ -496,10 +511,10 @@ Generates an explicit/implicit JSON representation of this Class.
     * [.isSupersededBy()](#Property+isSupersededBy) ⇒ <code>string</code> \| <code>null</code>
     * [.getName(language)](#Property+getName) ⇒ <code>string</code> \| <code>null</code>
     * [.getDescription(language)](#Property+getDescription) ⇒ <code>string</code> \| <code>null</code>
-    * [.getRanges(implicit, filter)](#Property+getRanges) ⇒ <code>Array</code>
-    * [.getDomains(implicit, filter)](#Property+getDomains) ⇒ <code>Array</code>
-    * [.getSuperProperties(implicit, filter)](#Property+getSuperProperties) ⇒ <code>Array</code>
-    * [.getSubProperties(implicit, filter)](#Property+getSubProperties) ⇒ <code>Array</code>
+    * [.getRanges(implicit, filter)](#Property+getRanges) ⇒ <code>Array.&lt;string&gt;</code>
+    * [.getDomains(implicit, filter)](#Property+getDomains) ⇒ <code>Array.&lt;string&gt;</code>
+    * [.getSuperProperties(implicit, filter)](#Property+getSuperProperties) ⇒ <code>Array.&lt;string&gt;</code>
+    * [.getSubProperties(implicit, filter)](#Property+getSubProperties) ⇒ <code>Array.&lt;string&gt;</code>
     * [.getInverseOf()](#Property+getInverseOf) ⇒ <code>string</code>
     * [.toString()](#Property+toString) ⇒ <code>string</code>
     * [.toJSON(implicit, filter)](#Property+toJSON) ⇒ <code>object</code>
@@ -581,11 +596,11 @@ Retrieves the description (rdfs:comment) of this Property in a wished language (
 
 <a name="Property+getRanges"></a>
 
-### property.getRanges(implicit, filter) ⇒ <code>Array</code>
+### property.getRanges(implicit, filter) ⇒ <code>Array.&lt;string&gt;</code>
 Retrieves the explicit/implicit ranges (schema:rangeIncludes) of this Property
 
 **Kind**: instance method of [<code>Property</code>](#Property)  
-**Returns**: <code>Array</code> - The ranges of this Property  
+**Returns**: <code>Array.&lt;string&gt;</code> - The ranges of this Property  
 
 | Param | Type | Default | Description |
 | --- | --- | --- | --- |
@@ -594,11 +609,11 @@ Retrieves the explicit/implicit ranges (schema:rangeIncludes) of this Property
 
 <a name="Property+getDomains"></a>
 
-### property.getDomains(implicit, filter) ⇒ <code>Array</code>
+### property.getDomains(implicit, filter) ⇒ <code>Array.&lt;string&gt;</code>
 Retrieves the explicit/implicit domains (schema:domainIncludes) of this Property
 
 **Kind**: instance method of [<code>Property</code>](#Property)  
-**Returns**: <code>Array</code> - The domains of this Property  
+**Returns**: <code>Array.&lt;string&gt;</code> - The domains of this Property  
 
 | Param | Type | Default | Description |
 | --- | --- | --- | --- |
@@ -607,11 +622,11 @@ Retrieves the explicit/implicit domains (schema:domainIncludes) of this Property
 
 <a name="Property+getSuperProperties"></a>
 
-### property.getSuperProperties(implicit, filter) ⇒ <code>Array</code>
+### property.getSuperProperties(implicit, filter) ⇒ <code>Array.&lt;string&gt;</code>
 Retrieves the explicit/implicit super-properties (rdfs:subPropertyOf) of this Property
 
 **Kind**: instance method of [<code>Property</code>](#Property)  
-**Returns**: <code>Array</code> - The super-properties of this Property  
+**Returns**: <code>Array.&lt;string&gt;</code> - The super-properties of this Property  
 
 | Param | Type | Default | Description |
 | --- | --- | --- | --- |
@@ -620,11 +635,11 @@ Retrieves the explicit/implicit super-properties (rdfs:subPropertyOf) of this Pr
 
 <a name="Property+getSubProperties"></a>
 
-### property.getSubProperties(implicit, filter) ⇒ <code>Array</code>
+### property.getSubProperties(implicit, filter) ⇒ <code>Array.&lt;string&gt;</code>
 Retrieves the explicit/implicit sub-properties (soa:superPropertyOf) of this Property
 
 **Kind**: instance method of [<code>Property</code>](#Property)  
-**Returns**: <code>Array</code> - The sub-properties of this Property  
+**Returns**: <code>Array.&lt;string&gt;</code> - The sub-properties of this Property  
 
 | Param | Type | Default | Description |
 | --- | --- | --- | --- |
@@ -672,10 +687,11 @@ Generates an explicit/implicit JSON representation of this Property.
     * [.isSupersededBy()](#Enumeration+isSupersededBy) ⇒ <code>string</code> \| <code>null</code>
     * [.getName(language)](#Enumeration+getName) ⇒ <code>string</code> \| <code>null</code>
     * [.getDescription(language)](#Enumeration+getDescription) ⇒ <code>string</code> \| <code>null</code>
-    * [.getEnumerationMembers(implicit, filter)](#Enumeration+getEnumerationMembers) ⇒ <code>Array</code>
-    * [.getProperties(implicit, filter)](#Enumeration+getProperties) ⇒ <code>Array</code>
-    * [.getSuperClasses(implicit, filter)](#Enumeration+getSuperClasses) ⇒ <code>Array</code>
-    * [.getSubClasses(implicit, filter)](#Enumeration+getSubClasses) ⇒ <code>Array</code>
+    * [.getEnumerationMembers(implicit, filter)](#Enumeration+getEnumerationMembers) ⇒ <code>Array.&lt;string&gt;</code>
+    * [.getProperties(implicit, filter)](#Enumeration+getProperties) ⇒ <code>Array.&lt;string&gt;</code>
+    * [.getSuperClasses(implicit, filter)](#Enumeration+getSuperClasses) ⇒ <code>Array.&lt;string&gt;</code>
+    * [.getSubClasses(implicit, filter)](#Enumeration+getSubClasses) ⇒ <code>Array.&lt;string&gt;</code>
+    * [.isRangeOf()](#Enumeration+isRangeOf) ⇒ <code>Array</code>
     * [.toString()](#Enumeration+toString) ⇒ <code>string</code>
     * [.toJSON(implicit, filter)](#Enumeration+toJSON) ⇒ <code>object</code>
 
@@ -756,11 +772,11 @@ Retrieves the description (rdfs:comment) of this Enumeration in a wished languag
 
 <a name="Enumeration+getEnumerationMembers"></a>
 
-### enumeration.getEnumerationMembers(implicit, filter) ⇒ <code>Array</code>
+### enumeration.getEnumerationMembers(implicit, filter) ⇒ <code>Array.&lt;string&gt;</code>
 Retrieves the enumeration members (soa:hasEnumerationMember) of this Enumeration
 
 **Kind**: instance method of [<code>Enumeration</code>](#Enumeration)  
-**Returns**: <code>Array</code> - The enumeration members of this Enumeration  
+**Returns**: <code>Array.&lt;string&gt;</code> - The enumeration members of this Enumeration  
 
 | Param | Type | Default | Description |
 | --- | --- | --- | --- |
@@ -769,11 +785,11 @@ Retrieves the enumeration members (soa:hasEnumerationMember) of this Enumeration
 
 <a name="Enumeration+getProperties"></a>
 
-### enumeration.getProperties(implicit, filter) ⇒ <code>Array</code>
+### enumeration.getProperties(implicit, filter) ⇒ <code>Array.&lt;string&gt;</code>
 Retrieves the explicit/implicit properties (soa:hasProperty) of this Enumeration
 
 **Kind**: instance method of [<code>Enumeration</code>](#Enumeration)  
-**Returns**: <code>Array</code> - The properties of this Enumeration  
+**Returns**: <code>Array.&lt;string&gt;</code> - The properties of this Enumeration  
 
 | Param | Type | Default | Description |
 | --- | --- | --- | --- |
@@ -782,11 +798,11 @@ Retrieves the explicit/implicit properties (soa:hasProperty) of this Enumeration
 
 <a name="Enumeration+getSuperClasses"></a>
 
-### enumeration.getSuperClasses(implicit, filter) ⇒ <code>Array</code>
+### enumeration.getSuperClasses(implicit, filter) ⇒ <code>Array.&lt;string&gt;</code>
 Retrieves the explicit/implicit super-classes (rdfs:subClassOf) of this Enumeration
 
 **Kind**: instance method of [<code>Enumeration</code>](#Enumeration)  
-**Returns**: <code>Array</code> - The super-classes of this Enumeration  
+**Returns**: <code>Array.&lt;string&gt;</code> - The super-classes of this Enumeration  
 
 | Param | Type | Default | Description |
 | --- | --- | --- | --- |
@@ -795,17 +811,24 @@ Retrieves the explicit/implicit super-classes (rdfs:subClassOf) of this Enumerat
 
 <a name="Enumeration+getSubClasses"></a>
 
-### enumeration.getSubClasses(implicit, filter) ⇒ <code>Array</code>
+### enumeration.getSubClasses(implicit, filter) ⇒ <code>Array.&lt;string&gt;</code>
 Retrieves the explicit/implicit sub-classes (soa:superClassOf) of this Enumeration
 
 **Kind**: instance method of [<code>Enumeration</code>](#Enumeration)  
-**Returns**: <code>Array</code> - The sub-classes of this Enumeration  
+**Returns**: <code>Array.&lt;string&gt;</code> - The sub-classes of this Enumeration  
 
 | Param | Type | Default | Description |
 | --- | --- | --- | --- |
 | implicit | <code>boolean</code> | <code>true</code> | (default = true) retrieves also implicit sub-classes (recursive from sub-classes) |
 | filter | <code>object</code> \| <code>null</code> | <code></code> | (default = null) an optional filter for the sub-classes |
 
+<a name="Enumeration+isRangeOf"></a>
+
+### enumeration.isRangeOf() ⇒ <code>Array</code>
+Retrieves the properties which have this Enumeration as a range
+
+**Kind**: instance method of [<code>Enumeration</code>](#Enumeration)  
+**Returns**: <code>Array</code> - The properties which have this Enumeration as a range  
 <a name="Enumeration+toString"></a>
 
 ### enumeration.toString() ⇒ <code>string</code>
@@ -840,7 +863,7 @@ Generates an explicit/implicit JSON representation of this Enumeration
     * [.isSupersededBy()](#EnumerationMember+isSupersededBy) ⇒ <code>string</code> \| <code>null</code>
     * [.getName(language)](#EnumerationMember+getName) ⇒ <code>string</code> \| <code>null</code>
     * [.getDescription(language)](#EnumerationMember+getDescription) ⇒ <code>string</code> \| <code>null</code>
-    * [.getDomainEnumerations(implicit, filter)](#EnumerationMember+getDomainEnumerations) ⇒ <code>Array</code>
+    * [.getDomainEnumerations(implicit, filter)](#EnumerationMember+getDomainEnumerations) ⇒ <code>Array.&lt;string&gt;</code>
     * [.toString()](#EnumerationMember+toString) ⇒ <code>string</code>
     * [.toJSON(implicit, filter)](#EnumerationMember+toJSON) ⇒ <code>object</code>
 
@@ -921,11 +944,11 @@ Retrieves the description (rdfs:comment) of this EnumerationMember in a wished l
 
 <a name="EnumerationMember+getDomainEnumerations"></a>
 
-### enumerationMember.getDomainEnumerations(implicit, filter) ⇒ <code>Array</code>
+### enumerationMember.getDomainEnumerations(implicit, filter) ⇒ <code>Array.&lt;string&gt;</code>
 Retrieves the domain enumerations (soa:enumerationDomainIncludes) of this EnumerationMember
 
 **Kind**: instance method of [<code>EnumerationMember</code>](#EnumerationMember)  
-**Returns**: <code>Array</code> - The domain enumerations of this EnumerationMember  
+**Returns**: <code>Array.&lt;string&gt;</code> - The domain enumerations of this EnumerationMember  
 
 | Param | Type | Default | Description |
 | --- | --- | --- | --- |
@@ -966,8 +989,8 @@ Generates a JSON representation of this EnumerationMember
     * [.isSupersededBy()](#DataType+isSupersededBy) ⇒ <code>string</code> \| <code>null</code>
     * [.getName(language)](#DataType+getName) ⇒ <code>string</code> \| <code>null</code>
     * [.getDescription(language)](#DataType+getDescription) ⇒ <code>string</code> \| <code>null</code>
-    * [.getSuperDataTypes(implicit, filter)](#DataType+getSuperDataTypes) ⇒ <code>Array</code>
-    * [.getSubDataTypes(implicit, filter)](#DataType+getSubDataTypes) ⇒ <code>Array</code>
+    * [.getSuperDataTypes(implicit, filter)](#DataType+getSuperDataTypes) ⇒ <code>Array.&lt;string&gt;</code>
+    * [.getSubDataTypes(implicit, filter)](#DataType+getSubDataTypes) ⇒ <code>Array.&lt;string&gt;</code>
     * [.toString()](#DataType+toString) ⇒ <code>string</code>
     * [.toJSON(implicit, filter)](#DataType+toJSON) ⇒ <code>object</code>
 
@@ -1048,11 +1071,11 @@ Retrieves the description (rdfs:comment) of this DataType in a wished language (
 
 <a name="DataType+getSuperDataTypes"></a>
 
-### dataType.getSuperDataTypes(implicit, filter) ⇒ <code>Array</code>
+### dataType.getSuperDataTypes(implicit, filter) ⇒ <code>Array.&lt;string&gt;</code>
 Retrieves the explicit/implicit super-DataTypes (rdfs:subClassOf) of this DataType
 
 **Kind**: instance method of [<code>DataType</code>](#DataType)  
-**Returns**: <code>Array</code> - The super-DataTypes of this DataType  
+**Returns**: <code>Array.&lt;string&gt;</code> - The super-DataTypes of this DataType  
 
 | Param | Type | Default | Description |
 | --- | --- | --- | --- |
@@ -1061,11 +1084,11 @@ Retrieves the explicit/implicit super-DataTypes (rdfs:subClassOf) of this DataTy
 
 <a name="DataType+getSubDataTypes"></a>
 
-### dataType.getSubDataTypes(implicit, filter) ⇒ <code>Array</code>
+### dataType.getSubDataTypes(implicit, filter) ⇒ <code>Array.&lt;string&gt;</code>
 Retrieves the explicit/implicit sub-DataTypes (soa:superClassOf) of this DataType
 
 **Kind**: instance method of [<code>DataType</code>](#DataType)  
-**Returns**: <code>Array</code> - The sub-DataTypes of this DataType  
+**Returns**: <code>Array.&lt;string&gt;</code> - The sub-DataTypes of this DataType  
 
 | Param | Type | Default | Description |
 | --- | --- | --- | --- |
