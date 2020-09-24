@@ -119,10 +119,6 @@ class Class {
         if (implicit) {
             // add properties from super-classes
             result.push(...this.graph.reasoner.inferPropertiesFromSuperClasses(classObj['rdfs:subClassOf']));
-            // add sub-properties ?
-            // for (let p = 0; p < result.length; p++) {
-            //     result.push(... this.graph.reasoner.inferSubProperties(result[p]));
-            // }
         }
         return util.applyFilter(util.uniquifyArray(result), filter, this.graph);
     }
@@ -164,6 +160,23 @@ class Class {
     }
 
     /**
+     * Retrieves the properties that have this Class as a range
+     *
+     * @param {boolean} implicit - (default = true) includes also implicit data
+     * @param {object|null} filter - (default = null) an optional filter for the generated data
+     * @returns {Array} The properties that have this Class as a range
+     */
+    isRangeOf(implicit = true, filter = null) {
+        const result = [];
+        if (implicit) {
+            result.push(...this.graph.reasoner.inferRangeOf(this.IRI));
+        } else {
+            result.push(...this.graph.classes[this.IRI]['soa:isRangeOf']);
+        }
+        return util.applyFilter(util.uniquifyArray(result), filter, this.graph);
+    }
+
+    /**
      * Generates a string representation of this Class (Based on its JSON representation)
      *
      * @returns {string} The string representation of this Class
@@ -182,7 +195,6 @@ class Class {
     toJSON(implicit = true, filter = null) {
         // (implicit === true) ->
         // properties of all parent classes
-        // sub-properties of all properties ??
         // sub-classes and their subclasses
         // super-classes and their superclasses
         const result = {};
@@ -197,6 +209,7 @@ class Class {
         result.superClasses = this.getSuperClasses(implicit, filter);
         result.subClasses = this.getSubClasses(implicit, filter);
         result.properties = this.getProperties(implicit, filter);
+        result.rangeOf = this.isRangeOf(implicit, filter);
         return result;
     }
 }

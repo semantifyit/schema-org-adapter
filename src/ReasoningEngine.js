@@ -204,6 +204,40 @@ class ReasoningEngine {
         }
         return result;
     }
+
+    /**
+     * Infers all implicit and explicit properties that can have the given Class/Enumeration/DataType as range
+     *
+     * @param {string} rangeIRI - IRI of the range (Class/Enumeration/DataType)
+     * @returns {string[]} Array of IRI of all implicit and explicit properties that can use the given range
+     */
+    inferRangeOf(rangeIRI) {
+        const classObj = this.graph.classes[rangeIRI] || this.graph.enumerations[rangeIRI];
+        let result = [];
+        if (classObj) {
+            result.push(...classObj['soa:isRangeOf']);
+            let superClasses = this.inferSuperClasses(rangeIRI);
+            for (const superClass of superClasses) {
+                let superClassObj = this.graph.classes[superClass] || this.graph.enumerations[superClass];
+                if (superClassObj) {
+                    result.push(...superClassObj['soa:isRangeOf']);
+                }
+            }
+        } else {
+            const dataTypeObj = this.graph.dataTypes[rangeIRI];
+            if (dataTypeObj) {
+                result.push(...dataTypeObj['soa:isRangeOf']);
+                let superDataTypes = this.inferSuperDataTypes(rangeIRI);
+                for (const superDataType of superDataTypes) {
+                    let superDataTypeObj = this.graph.dataTypes[superDataType];
+                    if (superDataTypeObj) {
+                        result.push(...superDataTypeObj['soa:isRangeOf']);
+                    }
+                }
+            }
+        }
+        return util.uniquifyArray(result);
+    }
 }
 
 module.exports = ReasoningEngine;

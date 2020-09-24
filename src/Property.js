@@ -117,16 +117,13 @@ class Property {
         let result = [];
         result.push(...propertyObj['schema:rangeIncludes']);
         if (implicit) {
-            // add sub-classes from ranges
-            let inferredSubClasses = [];
+            // add sub-classes and sub-datatypes from ranges
             for (const actRes of result) {
-                inferredSubClasses.push(...this.graph.reasoner.inferSubClasses(actRes));
+                result.push(...this.graph.reasoner.inferSubDataTypes(actRes));
             }
-            result.push(...inferredSubClasses);
-            // remove "null" values from array (if range included data types)
-            result = result.filter(function(el) {
-                return el !== null;
-            });
+            for (const actRes of result) {
+                result.push(...this.graph.reasoner.inferSubClasses(actRes));
+            }
         }
         return util.applyFilter(util.uniquifyArray(result), filter, this.graph);
     }

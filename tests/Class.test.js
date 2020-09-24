@@ -117,6 +117,19 @@ describe('Class methods', () => {
         expect(lodgingBusiness.getSubClasses()).not.toContain('schema:Thing');
     });
 
+    test('isRangeOf()', async() => {
+        const mySA = await initAdapter();
+        const thing = mySA.getClass('schema:Thing');
+        expect(thing.isRangeOf()).toContain('schema:about');
+        expect(thing.isRangeOf(false)).toContain('schema:about');
+        expect(thing.isRangeOf().length === thing.isRangeOf(false).length).toBe(true);
+        const restaurant = mySA.getClass('schema:Restaurant');
+        expect(restaurant.isRangeOf()).toContain('schema:about');
+        expect(restaurant.isRangeOf(false)).not.toContain('schema:about');
+        const foodEstablishment = mySA.getClass('schema:FoodEstablishment');
+        expect(restaurant.isRangeOf().length === foodEstablishment.isRangeOf().length).toBe(true);
+    });
+
     test('toString()', async() => {
         const mySA = await initAdapter();
         const thing = mySA.getClass('schema:Thing');

@@ -1,3 +1,11 @@
+3.1.0 / 2020-09-24
+==================
+
+  * Added **.isRangeOf()** to Classes and DataTypes (retrieve properties for which this enumeration is a range).
+  * Added implicit and filter parameters to **.isRangeOf()**.
+  * Fixed a bug regarding the reasoning for ranges of properties that are data-types.
+  * Added functions **.getAllTerms()** and **.getListOfTerms()** to the SDOAdapter.js.
+  
 3.0.5 / 2020-09-22
 ==================
 

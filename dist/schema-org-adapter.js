@@ -17362,7 +17362,7 @@ class Class {
    *
    * @param {boolean} implicit - (default = true) retrieves also implicit properties (inheritance from super-classes)
    * @param {object|null} filter - (default = null) an optional filter for the properties
-   * @returns {Array} The properties of this Class
+   * @returns {string[]} The properties of this Class
    */
 
 
@@ -17375,10 +17375,7 @@ class Class {
 
     if (implicit) {
       // add properties from super-classes
-      result.push(...this.graph.reasoner.inferPropertiesFromSuperClasses(classObj['rdfs:subClassOf'])); // add sub-properties ?
-      // for (let p = 0; p < result.length; p++) {
-      //     result.push(... this.graph.reasoner.inferSubProperties(result[p]));
-      // }
+      result.push(...this.graph.reasoner.inferPropertiesFromSuperClasses(classObj['rdfs:subClassOf']));
     }
 
     return util.applyFilter(util.uniquifyArray(result), filter, this.graph);
@@ -17388,7 +17385,7 @@ class Class {
    *
    * @param {boolean} implicit - (default = true) retrieves also implicit super-classes (recursive from super-classes)
    * @param {object|null} filter - (default = null) an optional filter for the super-classes
-   * @returns {Array} The super-classes of this Class
+   * @returns {string[]} The super-classes of this Class
    */
 
 
@@ -17399,7 +17396,7 @@ class Class {
     var result = [];
 
     if (implicit) {
-      result.push(...this.graph.reasoner.inferImplicitSuperClasses(this.IRI));
+      result.push(...this.graph.reasoner.inferSuperClasses(this.IRI));
     } else {
       result.push(...classObj['rdfs:subClassOf']);
     }
@@ -17411,7 +17408,7 @@ class Class {
    *
    * @param {boolean} implicit - (default = true) retrieves also implicit sub-classes (recursive from sub-classes)
    * @param {object|null} filter - (default = null) an optional filter for the sub-classes
-   * @returns {Array} The sub-classes of this Class
+   * @returns {string[]} The sub-classes of this Class
    */
 
 
@@ -17422,9 +17419,31 @@ class Class {
     var result = [];
 
     if (implicit) {
-      result.push(...this.graph.reasoner.inferImplicitSubClasses(this.IRI));
+      result.push(...this.graph.reasoner.inferSubClasses(this.IRI));
     } else {
       result.push(...classObj['soa:superClassOf']);
+    }
+
+    return util.applyFilter(util.uniquifyArray(result), filter, this.graph);
+  }
+  /**
+   * Retrieves the properties that have this Class as a range
+   *
+   * @param {boolean} implicit - (default = true) includes also implicit data
+   * @param {object|null} filter - (default = null) an optional filter for the generated data
+   * @returns {Array} The properties that have this Class as a range
+   */
+
+
+  isRangeOf() {
+    var implicit = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : true;
+    var filter = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
+    var result = [];
+
+    if (implicit) {
+      result.push(...this.graph.reasoner.inferRangeOf(this.IRI));
+    } else {
+      result.push(...this.graph.classes[this.IRI]['soa:isRangeOf']);
     }
 
     return util.applyFilter(util.uniquifyArray(result), filter, this.graph);
@@ -17453,7 +17472,6 @@ class Class {
     var filter = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
     // (implicit === true) ->
     // properties of all parent classes
-    // sub-properties of all properties ??
     // sub-classes and their subclasses
     // super-classes and their superclasses
     var result = {};
@@ -17468,6 +17486,7 @@ class Class {
     result.superClasses = this.getSuperClasses(implicit, filter);
     result.subClasses = this.getSubClasses(implicit, filter);
     result.properties = this.getProperties(implicit, filter);
+    result.rangeOf = this.isRangeOf(implicit, filter);
     return result;
   }
 
@@ -17611,7 +17630,7 @@ class DataType {
    *
    * @param {boolean} implicit - (default = true) retrieves also implicit super-DataTypes (recursive from super-DataTypes)
    * @param {object|null} filter - (default = null) an optional filter for the super-DataTypes
-   * @returns {Array} The super-DataTypes of this DataType
+   * @returns {string[]} The super-DataTypes of this DataType
    */
 
 
@@ -17622,7 +17641,7 @@ class DataType {
     var result = [];
 
     if (implicit) {
-      result.push(...this.graph.reasoner.inferImplicitSuperDataTypes(this.IRI));
+      result.push(...this.graph.reasoner.inferSuperDataTypes(this.IRI));
     } else {
       result.push(...dataTypeObj['rdfs:subClassOf']);
     }
@@ -17634,7 +17653,7 @@ class DataType {
    *
    * @param {boolean} implicit - (default = true) retrieves also implicit sub-DataTypes (recursive from sub-DataTypes)
    * @param {object|null} filter - (default = null) an optional filter for the sub-DataTypes
-   * @returns {Array} The sub-DataTypes of this DataType
+   * @returns {string[]} The sub-DataTypes of this DataType
    */
 
 
@@ -17645,9 +17664,31 @@ class DataType {
     var result = [];
 
     if (implicit) {
-      result.push(...this.graph.reasoner.inferImplicitSubDataTypes(this.IRI));
+      result.push(...this.graph.reasoner.inferSubDataTypes(this.IRI));
     } else {
       result.push(...dataTypeObj['soa:superClassOf']);
+    }
+
+    return util.applyFilter(util.uniquifyArray(result), filter, this.graph);
+  }
+  /**
+   * Retrieves the properties that have this DataType as a range
+   *
+   * @param {boolean} implicit - (default = true) includes also implicit data
+   * @param {object|null} filter - (default = null) an optional filter for the generated data
+   * @returns {Array} The properties that have this DataType as a range
+   */
+
+
+  isRangeOf() {
+    var implicit = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : true;
+    var filter = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
+    var result = [];
+
+    if (implicit) {
+      result.push(...this.graph.reasoner.inferRangeOf(this.IRI));
+    } else {
+      result.push(...this.graph.dataTypes[this.IRI]['soa:isRangeOf']);
     }
 
     return util.applyFilter(util.uniquifyArray(result), filter, this.graph);
@@ -17685,6 +17726,7 @@ class DataType {
     result.description = this.getDescription();
     result.superDataTypes = this.getSuperDataTypes(implicit, filter);
     result.subDataTypes = this.getSubDataTypes(implicit, filter);
+    result.rangeOf = this.isRangeOf(implicit, filter);
     return result;
   }
 
@@ -17828,16 +17870,15 @@ class Enumeration {
    *
    * @param {boolean} implicit - (default = false) retrieves also implicit enumeration members (inheritance from sub-enumerations)
    * @param {object|null} filter - (default = null) an optional filter for the enumeration members
-   * @returns {Array} The enumeration members of this Enumeration
+   * @returns {string[]} The enumeration members of this Enumeration
    */
 
 
   getEnumerationMembers() {
     var implicit = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : false;
     var filter = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
-    var enumObj = this.graph.enumerations[this.IRI];
     var result = [];
-    result.push(...enumObj['soa:hasEnumerationMember']);
+    result.push(...this.graph.enumerations[this.IRI]['soa:hasEnumerationMember']);
 
     if (implicit) {
       var subClasses = this.getSubClasses(true, null);
@@ -17858,7 +17899,7 @@ class Enumeration {
    *
    * @param {boolean} implicit - (default = true) retrieves also implicit properties (inheritance from super-classes)
    * @param {object|null} filter - (default = null) an optional filter for the properties
-   * @returns {Array} The properties of this Enumeration
+   * @returns {string[]} The properties of this Enumeration
    */
 
 
@@ -17871,10 +17912,7 @@ class Enumeration {
 
     if (implicit) {
       // add properties from super-classes
-      result.push(...this.graph.reasoner.inferPropertiesFromSuperClasses(enumObj['rdfs:subClassOf'])); // add sub-properties ?
-      // for (let p = 0; p < result.length; p++) {
-      //     result.push(... this.graph.reasoner.inferSubProperties(result[p]));
-      // }
+      result.push(...this.graph.reasoner.inferPropertiesFromSuperClasses(enumObj['rdfs:subClassOf']));
     }
 
     return util.applyFilter(util.uniquifyArray(result), filter, this.graph);
@@ -17884,20 +17922,19 @@ class Enumeration {
    *
    * @param {boolean} implicit - (default = true) retrieves also implicit super-classes (recursive from super-classes)
    * @param {object|null} filter - (default = null) an optional filter for the super-classes
-   * @returns {Array} The super-classes of this Enumeration
+   * @returns {string[]} The super-classes of this Enumeration
    */
 
 
   getSuperClasses() {
     var implicit = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : true;
     var filter = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
-    var enumObj = this.graph.enumerations[this.IRI];
     var result = [];
 
     if (implicit) {
-      result.push(...this.graph.reasoner.inferImplicitSuperClasses(this.IRI));
+      result.push(...this.graph.reasoner.inferSuperClasses(this.IRI));
     } else {
-      result.push(...enumObj['rdfs:subClassOf']);
+      result.push(...this.graph.enumerations[this.IRI]['rdfs:subClassOf']);
     }
 
     return util.applyFilter(util.uniquifyArray(result), filter, this.graph);
@@ -17907,33 +17944,44 @@ class Enumeration {
    *
    * @param {boolean} implicit - (default = true) retrieves also implicit sub-classes (recursive from sub-classes)
    * @param {object|null} filter - (default = null) an optional filter for the sub-classes
-   * @returns {Array} The sub-classes of this Enumeration
+   * @returns {string[]} The sub-classes of this Enumeration
    */
 
 
   getSubClasses() {
     var implicit = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : true;
     var filter = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
-    var enumObj = this.graph.enumerations[this.IRI];
     var result = [];
 
     if (implicit) {
-      result.push(...this.graph.reasoner.inferImplicitSubClasses(this.IRI));
+      result.push(...this.graph.reasoner.inferSubClasses(this.IRI));
     } else {
-      result.push(...enumObj['soa:superClassOf']);
+      result.push(...this.graph.enumerations[this.IRI]['soa:superClassOf']);
     }
 
     return util.applyFilter(util.uniquifyArray(result), filter, this.graph);
   }
   /**
-   * Retrieves the properties which have this Enumeration as a range
+   * Retrieves the properties that have this Enumeration as a range
    *
-   * @returns {Array} The properties which have this Enumeration as a range
+   * @param {boolean} implicit - (default = true) includes also implicit data
+   * @param {object|null} filter - (default = null) an optional filter for the generated data
+   * @returns {Array} The properties that have this Enumeration as a range
    */
 
 
   isRangeOf() {
-    return this.graph.enumerations[this.IRI]['soa:isRangeOf'];
+    var implicit = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : true;
+    var filter = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
+    var result = [];
+
+    if (implicit) {
+      result.push(...this.graph.reasoner.inferRangeOf(this.IRI));
+    } else {
+      result.push(...this.graph.enumerations[this.IRI]['soa:isRangeOf']);
+    }
+
+    return util.applyFilter(util.uniquifyArray(result), filter, this.graph);
   }
   /**
    * Generates a string representation of this Enumeration (Based on its JSON representation)
@@ -17970,7 +18018,7 @@ class Enumeration {
     result.superClasses = this.getSuperClasses(implicit, filter);
     result.subClasses = this.getSubClasses(implicit, filter);
     result.properties = this.getProperties(implicit, filter);
-    result.rangeOf = this.isRangeOf();
+    result.rangeOf = this.isRangeOf(implicit, filter);
     return result;
   }
 
@@ -18114,7 +18162,7 @@ class EnumerationMember {
    *
    * @param {boolean} implicit - (default = false) retrieves also implicit domain enumerations (inheritance from super-enumerations)
    * @param {object|null} filter - (default = null) an optional filter for the domain enumerations
-   * @returns {Array} The domain enumerations of this EnumerationMember
+   * @returns {string[]} The domain enumerations of this EnumerationMember
    */
 
 
@@ -18129,7 +18177,7 @@ class EnumerationMember {
       var domainEnumerationsToCheck = JSON.parse(JSON.stringify(result));
 
       for (var actDE of domainEnumerationsToCheck) {
-        result.push(...this.graph.reasoner.inferImplicitSuperClasses(actDE));
+        result.push(...this.graph.reasoner.inferSuperClasses(actDE));
       }
 
       result = util.applyFilter(util.uniquifyArray(result), {
@@ -18600,6 +18648,14 @@ class Graph {
           }
         }
 
+        dataTypeKeys = Object.keys(_this.dataTypes);
+
+        for (var actDataTypeKey of dataTypeKeys) {
+          if (!_this.dataTypes[actDataTypeKey]['soa:isRangeOf']) {
+            _this.dataTypes[actDataTypeKey]['soa:isRangeOf'] = [];
+          }
+        }
+
         var enumMemKeys = Object.keys(_this.enumerationMembers);
 
         for (var actEnumMemKey of enumMemKeys) {
@@ -18607,8 +18663,10 @@ class Graph {
             _this.enumerationMembers[actEnumMemKey]['soa:enumerationDomainIncludes'] = [];
           }
         }
-        /* E.1) Add explicit hasProperty and isRangeOf to classes and enumerations
-        For each entry in the classes/enumeration memory, the properties field is added. This data field holds all properties which belong to this class (class/enumeration is domain for property). */
+        /* E.1) Add explicit hasProperty and isRangeOf to classes, enumerations, and data types
+        For each entry in the classes/enumeration/dataType memory, the soa:hasProperty field is added.
+        This data field holds all properties which belong to this class/enumeration (class/enumeration is domain for property).
+        Also the soa:isRangeOf field is added -> holds all properties which use to this class/enumeration/dataType as range (class/enumeration/dataType is range for property). */
 
 
         propertyKeys = Object.keys(_this.properties);
@@ -18634,11 +18692,7 @@ class Graph {
 
           if (util.isArray(rangeIncludesArray)) {
             for (var actRange of rangeIncludesArray) {
-              var _target = _this.classes[actRange];
-
-              if (!_target) {
-                _target = _this.enumerations[actRange];
-              }
+              var _target = _this.classes[actRange] || _this.enumerations[actRange] || _this.dataTypes[actRange];
 
               if (_target && util.isArray(_target['soa:isRangeOf']) && !_target['soa:isRangeOf'].includes(_actPropKey)) {
                 _target['soa:isRangeOf'].push(_actPropKey);
@@ -19310,7 +19364,7 @@ class Property {
    *
    * @param {boolean} implicit - (default = true) retrieves also implicit ranges (inheritance from sub-classes of the ranges)
    * @param {object|null} filter - (default = null) an optional filter for the ranges
-   * @returns {Array} The ranges of this Property
+   * @returns {string[]} The ranges of this Property
    */
 
 
@@ -19322,18 +19376,14 @@ class Property {
     result.push(...propertyObj['schema:rangeIncludes']);
 
     if (implicit) {
-      // add sub-classes from ranges
-      var inferredSubClasses = [];
-
+      // add sub-classes and sub-datatypes from ranges
       for (var actRes of result) {
-        inferredSubClasses.push(...this.graph.reasoner.inferImplicitSubClasses(actRes));
+        result.push(...this.graph.reasoner.inferSubDataTypes(actRes));
       }
 
-      result.push(...inferredSubClasses); // remove "null" values from array (if range included data types)
-
-      result = result.filter(function (el) {
-        return el !== null;
-      });
+      for (var _actRes of result) {
+        result.push(...this.graph.reasoner.inferSubClasses(_actRes));
+      }
     }
 
     return util.applyFilter(util.uniquifyArray(result), filter, this.graph);
@@ -19343,7 +19393,7 @@ class Property {
    *
    * @param {boolean} implicit - (default = true) retrieves also implicit domains (inheritance from sub-classes of the domains)
    * @param {object|null} filter - (default = null) an optional filter for the domains
-   * @returns {Array} The domains of this Property
+   * @returns {string[]} The domains of this Property
    */
 
 
@@ -19359,7 +19409,7 @@ class Property {
       var inferredSubClasses = [];
 
       for (var actRes of result) {
-        inferredSubClasses.push(...this.graph.reasoner.inferImplicitSubClasses(actRes));
+        inferredSubClasses.push(...this.graph.reasoner.inferSubClasses(actRes));
       }
 
       result.push(...inferredSubClasses);
@@ -19372,7 +19422,7 @@ class Property {
    *
    * @param {boolean} implicit - (default = true) retrieves also implicit super-properties (recursive from super-properties)
    * @param {object|null} filter - (default = null) an optional filter for the super-properties
-   * @returns {Array} The super-properties of this Property
+   * @returns {string[]} The super-properties of this Property
    */
 
 
@@ -19395,7 +19445,7 @@ class Property {
    *
    * @param {boolean} implicit - (default = true) retrieves also implicit sub-properties (recursive from sub-properties)
    * @param {object|null} filter - (default = null) an optional filter for the sub-properties
-   * @returns {Array} The sub-properties of this Property
+   * @returns {string[]} The sub-properties of this Property
    */
 
 
@@ -19474,24 +19524,29 @@ var util = _dereq_('./utilities');
 
 class ReasoningEngine {
   /**
+   * This internal js-class offers reasoning-related functions that can be used by the other js-classes of this library
+   *
    * @class
    * @param {Graph} graph The parent Graph-class to which this ReasoningEngine belongs
    */
   constructor(graph) {
     this.graph = graph;
   }
+  /**
+   * Infers all properties that can be used by the given classes and all their implicit and explicit superClasses
+   *
+   * @param {string[]} superClasses - Array with IRIs of classes/enumerations
+   * @returns {string[]} Array of IRIs of all properties from the given classes and their implicit and explicit superClasses
+   */
+
 
   inferPropertiesFromSuperClasses(superClasses) {
     var result = [];
 
-    for (var s = 0; s < superClasses.length; s++) {
-      var superClassObj = this.graph.classes[superClasses[s]];
+    for (var superClass of superClasses) {
+      var superClassObj = this.graph.classes[superClass] || this.graph.enumerations[superClass];
 
-      if (superClassObj === undefined) {
-        superClassObj = this.graph.enumerations[superClasses[s]];
-      }
-
-      if (superClassObj !== undefined) {
+      if (superClassObj) {
         result.push(...superClassObj['soa:hasProperty']);
 
         if (superClassObj['rdfs:subClassOf'].length !== 0) {
@@ -19502,30 +19557,29 @@ class ReasoningEngine {
 
     return util.uniquifyArray(result);
   }
+  /**
+   * Infers all implicit and explicit superClasses of a given Class/Enumeration
+   *
+   * @param {string} classIRI - IRI of a Class/Enumeration
+   * @returns {string[]} Array of IRI of all implicit and explicit superClasses
+   */
 
-  inferImplicitSuperClasses(classIRI) {
-    var classObj = this.graph.classes[classIRI];
+
+  inferSuperClasses(classIRI) {
     var result = [];
+    var classObj = this.graph.classes[classIRI] || this.graph.enumerations[classIRI];
 
-    if (classObj === undefined) {
-      classObj = this.graph.enumerations[classIRI];
-    }
-
-    if (classObj !== undefined) {
+    if (classObj) {
       result.push(...classObj['rdfs:subClassOf']);
       var addition = util.copByVal(result); // make a copy
 
       do {
         var newAddition = [];
 
-        for (var i = 0; i < addition.length; i++) {
-          var parentClassObj = this.graph.classes[addition[i]];
+        for (var curAdd of addition) {
+          var parentClassObj = this.graph.classes[curAdd] || this.graph.enumerations[curAdd];
 
-          if (parentClassObj === undefined) {
-            parentClassObj = this.graph.enumerations[addition[i]];
-          }
-
-          if (parentClassObj !== undefined) {
+          if (parentClassObj) {
             newAddition.push(...parentClassObj['rdfs:subClassOf']);
           }
         }
@@ -19540,30 +19594,29 @@ class ReasoningEngine {
 
     return result;
   }
+  /**
+   * Infers all implicit and explicit subClasses of a given Class/Enumeration
+   *
+   * @param {string} classIRI - IRI of a Class/Enumeration
+   * @returns {string[]} Array of IRI of all implicit and explicit subClasses
+   */
 
-  inferImplicitSubClasses(classIRI) {
-    var classObj = this.graph.classes[classIRI];
+
+  inferSubClasses(classIRI) {
     var result = [];
+    var classObj = this.graph.classes[classIRI] || this.graph.enumerations[classIRI];
 
-    if (classObj === undefined) {
-      classObj = this.graph.enumerations[classIRI];
-    }
-
-    if (classObj !== undefined) {
+    if (classObj) {
       result.push(...classObj['soa:superClassOf']);
       var addition = util.copByVal(result); // make a copy
 
       do {
         var newAddition = [];
 
-        for (var i = 0; i < addition.length; i++) {
-          var parentClassObj = this.graph.classes[addition[i]];
+        for (var curAdd of addition) {
+          var parentClassObj = this.graph.classes[curAdd] || this.graph.enumerations[curAdd];
 
-          if (parentClassObj === undefined) {
-            parentClassObj = this.graph.enumerations[addition[i]];
-          }
-
-          if (parentClassObj !== undefined) {
+          if (parentClassObj) {
             newAddition.push(...parentClassObj['soa:superClassOf']);
           }
         }
@@ -19574,27 +19627,33 @@ class ReasoningEngine {
       } while (addition.length !== 0);
 
       result = util.uniquifyArray(result);
-      return result;
     }
 
     return result;
   }
+  /**
+   * Infers all implicit and explicit superDataTypes of a given DataType
+   *
+   * @param {string} dataTypeIRI - IRI of a DataType
+   * @returns {string[]} Array of IRI of all implicit and explicit superDataTypes
+   */
 
-  inferImplicitSuperDataTypes(dataTypeIRI) {
-    var dataTypeObj = this.graph.dataTypes[dataTypeIRI];
+
+  inferSuperDataTypes(dataTypeIRI) {
     var result = [];
+    var dataTypeObj = this.graph.dataTypes[dataTypeIRI];
 
-    if (dataTypeObj !== undefined) {
+    if (dataTypeObj) {
       result.push(...dataTypeObj['rdfs:subClassOf']);
       var addition = util.copByVal(result); // make a copy
 
       do {
         var newAddition = [];
 
-        for (var i = 0; i < addition.length; i++) {
-          var parentDataTypeObj = this.graph.dataTypes[addition[i]];
+        for (var curAdd of addition) {
+          var parentDataTypeObj = this.graph.dataTypes[curAdd];
 
-          if (parentDataTypeObj !== undefined) {
+          if (parentDataTypeObj) {
             newAddition.push(...parentDataTypeObj['rdfs:subClassOf']);
           }
         }
@@ -19609,22 +19668,29 @@ class ReasoningEngine {
 
     return result;
   }
+  /**
+   * Infers all implicit and explicit subDataTypes of a given DataType
+   *
+   * @param {string} dataTypeIRI - IRI of a DataType
+   * @returns {string[]} Array of IRI of all implicit and explicit subDataTypes
+   */
 
-  inferImplicitSubDataTypes(dataTypeIRI) {
-    var dataTypeObj = this.graph.dataTypes[dataTypeIRI];
+
+  inferSubDataTypes(dataTypeIRI) {
     var result = [];
+    var dataTypeObj = this.graph.dataTypes[dataTypeIRI];
 
-    if (dataTypeObj !== undefined) {
+    if (dataTypeObj) {
       result.push(...dataTypeObj['soa:superClassOf']);
       var addition = util.copByVal(result); // make a copy
 
       do {
         var newAddition = [];
 
-        for (var i = 0; i < addition.length; i++) {
-          var childDataTypeObj = this.graph.dataTypes[addition[i]];
+        for (var curAdd of addition) {
+          var childDataTypeObj = this.graph.dataTypes[curAdd];
 
-          if (childDataTypeObj !== undefined) {
+          if (childDataTypeObj) {
             newAddition.push(...childDataTypeObj['soa:superClassOf']);
           }
         }
@@ -19639,22 +19705,66 @@ class ReasoningEngine {
 
     return result;
   }
+  /**
+   * Infers all implicit and explicit superProperties of a given Property
+   *
+   * @param {string} propertyIRI - IRI of a Property
+   * @returns {string[]} Array of IRI of all implicit and explicit superProperties
+   */
+
+
+  inferSuperProperties(propertyIRI) {
+    var result = [];
+    var propertyObj = this.graph.properties[propertyIRI];
+
+    if (propertyObj) {
+      result.push(...propertyObj['rdfs:subPropertyOf']);
+      var addition = util.copByVal(result); // make a copy
+
+      do {
+        var newAddition = [];
+
+        for (var curAdd of addition) {
+          var parentPropertyObj = this.graph.properties[curAdd];
+
+          if (parentPropertyObj) {
+            newAddition.push(...parentPropertyObj['rdfs:subPropertyOf']);
+          }
+        }
+
+        newAddition = util.uniquifyArray(newAddition);
+        addition = util.copByVal(newAddition);
+        result.push(...newAddition);
+      } while (addition.length !== 0);
+
+      result = util.uniquifyArray(result);
+    }
+
+    return result;
+  }
+  /**
+   * Infers all implicit and explicit subProperties of a given Property
+   *
+   * @param {string} propertyIRI - IRI of a Property
+   * @returns {string[]} Array of IRI of all implicit and explicit subProperties
+   */
+
 
   inferSubProperties(propertyIRI) {
-    var propertyObj = this.graph.properties[propertyIRI];
     var result = [];
+    var propertyObj = this.graph.properties[propertyIRI];
 
-    if (propertyObj !== undefined) {
+    if (propertyObj) {
       result.push(...propertyObj['soa:superPropertyOf']);
       var addition = util.copByVal(result); // make a copy
 
       do {
         var newAddition = [];
 
-        for (var i = 0; i < addition.length; i++) {
-          var parentPropertyObj = this.graph.properties[addition[i]];
+        for (var curAdd of addition) {
+          var parentPropertyObj = this.graph.properties[curAdd];
 
-          if (parentPropertyObj !== undefined) {
+          if (parentPropertyObj) {
             newAddition.push(...parentPropertyObj['soa:superPropertyOf']);
           }
         }
@@ -19669,35 +19779,47 @@ class ReasoningEngine {
 
     return result;
   }
+  /**
+   * Infers all implicit and explicit properties that can have the given Class/Enumeration/DataType as range
+   *
+   * @param {string} rangeIRI - IRI of the range (Class/Enumeration/DataType)
+   * @returns {string[]} Array of IRI of all implicit and explicit properties that can use the given range
+   */
 
-  inferSuperProperties(propertyIRI) {
-    var propertyObj = this.graph.properties[propertyIRI];
+
+  inferRangeOf(rangeIRI) {
+    var classObj = this.graph.classes[rangeIRI] || this.graph.enumerations[rangeIRI];
     var result = [];
 
-    if (propertyObj !== undefined) {
-      result.push(...propertyObj['rdfs:subPropertyOf']);
-      var addition = util.copByVal(result); // make a copy
+    if (classObj) {
+      result.push(...classObj['soa:isRangeOf']);
+      var superClasses = this.inferSuperClasses(rangeIRI);
 
-      do {
-        var newAddition = [];
+      for (var superClass of superClasses) {
+        var superClassObj = this.graph.classes[superClass] || this.graph.enumerations[superClass];
 
-        for (var i = 0; i < addition.length; i++) {
-          var parentPropertyObj = this.graph.properties[addition[i]];
+        if (superClassObj) {
+          result.push(...superClassObj['soa:isRangeOf']);
+        }
+      }
+    } else {
+      var dataTypeObj = this.graph.dataTypes[rangeIRI];
 
-          if (parentPropertyObj !== undefined) {
-            newAddition.push(...parentPropertyObj['rdfs:subPropertyOf']);
+      if (dataTypeObj) {
+        result.push(...dataTypeObj['soa:isRangeOf']);
+        var superDataTypes = this.inferSuperDataTypes(rangeIRI);
+
+        for (var superDataType of superDataTypes) {
+          var superDataTypeObj = this.graph.dataTypes[superDataType];
+
+          if (superDataTypeObj) {
+            result.push(...superDataTypeObj['soa:isRangeOf']);
           }
         }
-
-        newAddition = util.uniquifyArray(newAddition);
-        addition = util.copByVal(newAddition);
-        result.push(...newAddition);
-      } while (addition.length !== 0);
-
-      result = util.uniquifyArray(result);
+      }
     }
 
-    return result;
+    return util.uniquifyArray(result);
   }
 
 }
@@ -19740,8 +19862,8 @@ class SDOAdapter {
   /**
    * Adds vocabularies (in JSON-LD format or as URL) to the memory of this SDOAdapter. The function "constructSDOVocabularyURL()" helps you to construct URLs for the schema.org vocabulary
    *
-   * @param {Array.<string|object>|string|object} vocabArray - The vocabular(y/ies) to add the graph, in JSON-LD format. Given directly as JSON or by a URL to fetch.
-   * @returns {Promise.<void>} This is an async function
+   * @param {string[]|object[]|string|object} vocabArray - The vocabular(y/ies) to add the graph, in JSON-LD format. Given directly as JSON or by a URL to fetch.
+   * @returns {Promise<void>} This is an async function
    */
 
 
@@ -19785,6 +19907,13 @@ class SDOAdapter {
       }
     })();
   }
+  /**
+   * Fetches a vocabulary from the given URL.
+   *
+   * @param {string} url - the URL from which the vocabulary should be fetched
+   * @returns {Promise<object>} - the fetched vocabulary object
+   */
+
 
   fetchVocabularyFromURL(url) {
     return _asyncToGenerator(function* () {
@@ -19811,6 +19940,84 @@ class SDOAdapter {
     return this.graph.getTerm(id, filter);
   }
   /**
+   * Creates an array of JS-Classes for all vocabulary Terms (corresponding JS-Classes depending on the Term types)
+   *
+   * @param {object|null} filter - (default = null) an optional filter for the Term creation
+   * @returns {Class[]} An array of JS-Classes representing all vocabulary Terms
+   */
+
+
+  getAllTerms() {
+    var filter = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : null;
+    var result = [];
+    var classesIRIList = this.getListOfClasses(filter);
+    var enumerationsIRIList = this.getListOfEnumerations(filter);
+    var propertiesIRIList = this.getListOfProperties(filter);
+    var dataTypesIRIList = this.getListOfDataTypes(filter);
+    var enumerationMembersIRIList = this.getListOfEnumerationMembers(filter);
+
+    for (var c of classesIRIList) {
+      try {
+        result.push(this.getClass(c));
+      } catch (e) {
+        throw new Error('There is no class with the IRI ' + c);
+      }
+    }
+
+    for (var en of enumerationsIRIList) {
+      try {
+        result.push(this.getEnumeration(en));
+      } catch (e) {
+        throw new Error('There is no enumeration with the IRI ' + en);
+      }
+    }
+
+    for (var p of propertiesIRIList) {
+      try {
+        result.push(this.getProperty(p));
+      } catch (e) {
+        throw new Error('There is no property with the IRI ' + p);
+      }
+    }
+
+    for (var dt of dataTypesIRIList) {
+      try {
+        result.push(this.getDataType(dt));
+      } catch (e) {
+        throw new Error('There is no data type with the IRI ' + dt);
+      }
+    }
+
+    for (var enm of enumerationMembersIRIList) {
+      try {
+        result.push(this.getEnumerationMember(enm));
+      } catch (e) {
+        throw new Error('There is no enumeration member with the IRI ' + enm);
+      }
+    }
+
+    return result;
+  }
+  /**
+   * Creates an array of IRIs for all vocabulary Terms
+   *
+   * @param {object|null} filter - (default = null) an optional filter for the List creation
+   * @returns {string[]} An array of IRIs representing all vocabulary Terms
+   */
+
+
+  getListOfTerms() {
+    var filter = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : null;
+    // do not include enumerations
+    var result = [];
+    result.push(...Object.keys(this.graph.classes));
+    result.push(...Object.keys(this.graph.enumerations));
+    result.push(...Object.keys(this.graph.properties));
+    result.push(...Object.keys(this.graph.dataTypes));
+    result.push(...Object.keys(this.graph.enumerationMembers));
+    return util.applyFilter(result, filter, this.graph);
+  }
+  /**
    * Creates a JS-Class for a vocabulary Class by the given identifier (@id) or name
    *
    * @param {string} id - The identifier of the wished Class. It can be either a compact IRI -> "schema:Hotel", an absolute IRI -> "http://schema.org/Hotel", or the name (rdfs:label) -> "name" of the class (which may be ambiguous if multiple vocabularies/languages are used).
@@ -19828,20 +20035,20 @@ class SDOAdapter {
    * Creates an array of JS-Classes for all vocabulary Classes
    *
    * @param {object|null} filter - (default = null) an optional filter for the Class creation
-   * @returns {Array.<Class|Enumeration>} An array of JS-Classes representing all vocabulary Classes, does not include Enumerations
+   * @returns {Class[]} An array of JS-Classes representing all vocabulary Classes, does not include Enumerations
    */
 
 
   getAllClasses() {
     var filter = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : null;
-    var classesIRIList = this.getListOfClasses(filter);
     var result = [];
+    var classesIRIList = this.getListOfClasses(filter);
 
-    for (var i = 0; i < classesIRIList.length; i++) {
+    for (var c of classesIRIList) {
       try {
-        result.push(this.getClass(classesIRIList[i]));
+        result.push(this.getClass(c));
       } catch (e) {
-        throw new Error('There is no class with the IRI ' + classesIRIList[i]);
+        throw new Error('There is no class with the IRI ' + c);
       }
     }
 
@@ -19851,7 +20058,7 @@ class SDOAdapter {
    * Creates an array of IRIs for all vocabulary Classes
    *
    * @param {object|null} filter - (default = null) an optional filter for the List creation
-   * @returns {Array.<string>} An array of IRIs representing all vocabulary Classes, does not include Enumerations
+   * @returns {string[]} An array of IRIs representing all vocabulary Classes, does not include Enumerations
    */
 
 
@@ -19877,20 +20084,20 @@ class SDOAdapter {
    * Creates an array of JS-Classes for all vocabulary Properties
    *
    * @param {object|null} filter - (default = null) an optional filter for the Property creation
-   * @returns {Array.<Property>} An array of JS-Classes representing all vocabulary Properties
+   * @returns {Property[]} An array of JS-Classes representing all vocabulary Properties
    */
 
 
   getAllProperties() {
     var filter = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : null;
-    var propertiesIRIList = this.getListOfProperties(filter);
     var result = [];
+    var propertiesIRIList = this.getListOfProperties(filter);
 
-    for (var i = 0; i < propertiesIRIList.length; i++) {
+    for (var p of propertiesIRIList) {
       try {
-        result.push(this.getProperty(propertiesIRIList[i]));
+        result.push(this.getProperty(p));
       } catch (e) {
-        throw new Error('There is no property with the IRI ' + propertiesIRIList[i]);
+        throw new Error('There is no property with the IRI ' + p);
       }
     }
 
@@ -19900,7 +20107,7 @@ class SDOAdapter {
    * Creates an array of IRIs for all vocabulary Properties
    *
    * @param {object|null} filter - (default = null) an optional filter for the List creation
-   * @returns {Array.<string>} An array of IRIs representing all vocabulary Properties
+   * @returns {string[]} An array of IRIs representing all vocabulary Properties
    */
 
 
@@ -19925,20 +20132,20 @@ class SDOAdapter {
    * Creates an array of JS-Classes for all vocabulary DataTypes
    *
    * @param {object|null} filter - (default = null) an optional filter for the DataType creation
-   * @returns {Array.<DataType>} An array of JS-Classes representing all vocabulary DataTypes
+   * @returns {DataType[]} An array of JS-Classes representing all vocabulary DataTypes
    */
 
 
   getAllDataTypes() {
     var filter = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : null;
-    var dataTypesIRIList = this.getListOfDataTypes(filter);
     var result = [];
+    var dataTypesIRIList = this.getListOfDataTypes(filter);
 
-    for (var i = 0; i < dataTypesIRIList.length; i++) {
+    for (var dt of dataTypesIRIList) {
       try {
-        result.push(this.getDataType(dataTypesIRIList[i]));
+        result.push(this.getDataType(dt));
       } catch (e) {
-        throw new Error('There is no data type with the IRI ' + dataTypesIRIList[i]);
+        throw new Error('There is no data type with the IRI ' + dt);
       }
     }
 
@@ -19948,7 +20155,7 @@ class SDOAdapter {
    * Creates an array of IRIs for all vocabulary DataTypes
    *
    * @param {object|null} filter - (default = null) an optional filter for the List creation
-   * @returns {Array.<string>} An array of IRIs representing all vocabulary DataTypes
+   * @returns {string[]} An array of IRIs representing all vocabulary DataTypes
    */
 
 
@@ -19973,20 +20180,20 @@ class SDOAdapter {
    * Creates an array of JS-Classes for all vocabulary Enumerations
    *
    * @param {object|null} filter - (default = null) an optional filter for the Enumeration creation
-   * @returns {Array.<Enumeration>} An array of JS-Classes representing all vocabulary Enumerations
+   * @returns {Enumeration[]} An array of JS-Classes representing all vocabulary Enumerations
    */
 
 
   getAllEnumerations() {
     var filter = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : null;
-    var enumerationsIRIList = this.getListOfEnumerations(filter);
     var result = [];
+    var enumerationsIRIList = this.getListOfEnumerations(filter);
 
-    for (var i = 0; i < enumerationsIRIList.length; i++) {
+    for (var en of enumerationsIRIList) {
       try {
-        result.push(this.getEnumeration(enumerationsIRIList[i]));
+        result.push(this.getEnumeration(en));
       } catch (e) {
-        throw new Error('There is no enumeration with the IRI ' + enumerationsIRIList[i]);
+        throw new Error('There is no enumeration with the IRI ' + en);
       }
     }
 
@@ -19996,7 +20203,7 @@ class SDOAdapter {
    * Creates an array of IRIs for all vocabulary Enumerations
    *
    * @param {object|null} filter - (default = null) an optional filter for the List creation
-   * @returns {Array.<string>} An array of IRIs representing all vocabulary Enumerations
+   * @returns {string[]} An array of IRIs representing all vocabulary Enumerations
    */
 
 
@@ -20021,20 +20228,20 @@ class SDOAdapter {
    * Creates an array of JS-Classes for all vocabulary EnumerationMember
    *
    * @param {object|null} filter - (default = null) an optional filter for the EnumerationMember creation
-   * @returns {Array.<EnumerationMember>} An array of JS-Classes representing all vocabulary EnumerationMember
+   * @returns {EnumerationMember[]} An array of JS-Classes representing all vocabulary EnumerationMember
    */
 
 
   getAllEnumerationMembers() {
     var filter = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : null;
-    var enumerationMembersIRIList = this.getListOfEnumerationMembers(filter);
     var result = [];
+    var enumerationMembersIRIList = this.getListOfEnumerationMembers(filter);
 
-    for (var i = 0; i < enumerationMembersIRIList.length; i++) {
+    for (var enm of enumerationMembersIRIList) {
       try {
-        result.push(this.getEnumerationMember(enumerationMembersIRIList[i]));
+        result.push(this.getEnumerationMember(enm));
       } catch (e) {
-        throw new Error('There is no enumeration member with the IRI ' + enumerationMembersIRIList[i]);
+        throw new Error('There is no enumeration member with the IRI ' + enm);
       }
     }
 
@@ -20044,7 +20251,7 @@ class SDOAdapter {
    * Creates an array of IRIs for all vocabulary EnumerationMember
    *
    * @param {object|null} filter - (default = null) an optional filter for the List creation
-   * @returns {Array.<string>} An array of IRIs representing all vocabulary EnumerationMember
+   * @returns {string[]} An array of IRIs representing all vocabulary EnumerationMember
    */
 
 
@@ -20079,7 +20286,7 @@ class SDOAdapter {
    * To achieve this, the Schema.org version listing on https://raw.githubusercontent.com/schemaorg/schemaorg/main/versions.json is used.
    *
    * @param {?string} version - the wished Schema.org vocabulary version for the resulting URL (e.g. "5.0", "3.7", or "latest"). default: "latest"
-   * @returns {Promise.<string>} The URL to the Schema.org vocabulary
+   * @returns {Promise<string>} The URL to the Schema.org vocabulary
    */
 
 
@@ -20189,7 +20396,7 @@ class SDOAdapter {
    * Returns the latest version number of the schema.org vocabulary
    * To achieve this, the Schema.org version listing on https://raw.githubusercontent.com/schemaorg/schemaorg/main/versions.json is used.
    *
-   * @returns {Promise.<string>} The latest version of the schema.org vocabulary
+   * @returns {Promise<string>} The latest version of the schema.org vocabulary
    */
 
 
@@ -20207,6 +20414,8 @@ class SDOAdapter {
   }
   /**
    * Returns the base part of respective release URI
+   *
+   * @returns {string} the base part of respective release URI
    */
 
 
@@ -20215,6 +20424,8 @@ class SDOAdapter {
   }
   /**
    * Returns the URI of the respective versions file
+   *
+   * @returns {string} the URI of the respective versions file
    */
 
 
@@ -20237,10 +20448,10 @@ var jsonld = _dereq_('jsonld');
 /**
  * Applies a filter to the IRIs in the given Array
  *
- * @param {Array} dataArray - Array of IRIs that should be filtered
+ * @param {string[]} dataArray - Array of IRIs that should be filtered
  * @param {object} filter - The filter options, which can be: "isSuperseded": T/F, "termType": string/Array, "fromVocabulary": string/Array
  * @param {Graph} graph - the graph calling this function
- * @returns {Array} Array of IRIs that are in compliance with the given filter options
+ * @returns {string[]} Array of IRIs that are in compliance with the given filter options
  */
 
 

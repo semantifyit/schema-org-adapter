@@ -95,6 +95,95 @@ describe('SDO Adapter methods', () => {
         expect(Friday).toEqual(Friday2);
     });
 
+    test('getListOfTerms()', async() => {
+        const mySA = new SDOAdapter(global.commitBase);
+        await mySA.addVocabularies([VOC_OBJ_SDO3_7, VOC_OBJ_ZOO]);
+        const allTermsList = mySA.getListOfTerms();
+        expect(allTermsList.length > 1000).toBe(true);
+        expect(allTermsList.includes('schema:DayOfWeek')).toBe(true);
+        expect(allTermsList.includes('schema:Hotel')).toBe(true);
+        expect(allTermsList.includes('schema:address')).toBe(true);
+        expect(allTermsList.includes('schema:Text')).toBe(true);
+        expect(allTermsList.includes('schema:Monday')).toBe(true);
+        expect(allTermsList.includes('ex:Tiger')).toBe(true);
+    });
+
+    test('getAllTerms()', async() => {
+        const mySA = new SDOAdapter(global.commitBase);
+        await mySA.addVocabularies([VOC_OBJ_SDO3_7, VOC_OBJ_ZOO]);
+        const allTerms = mySA.getAllTerms();
+        expect(allTerms.length > 1000).toBe(true);
+        let count = {
+            c: 0,
+            p: 0,
+            en: 0,
+            enm: 0,
+            dt: 0
+        };
+        for (const actTerm of allTerms) {
+            switch (actTerm.getTermType()) {
+                case 'rdfs:Class':
+                    count.c++;
+                    break;
+                case 'rdf:Property':
+                    count.p++;
+                    break;
+                case 'schema:Enumeration':
+                    count.en++;
+                    break;
+                case 'soa:EnumerationMember':
+                    count.enm++;
+                    break;
+                case 'schema:DataType':
+                    count.dt++;
+                    break;
+            }
+        }
+        expect(count.c).toBe(mySA.getListOfClasses().length);
+        expect(count.p).toBe(mySA.getListOfProperties().length);
+        expect(count.en).toBe(mySA.getListOfEnumerations().length);
+        expect(count.enm).toBe(mySA.getListOfEnumerationMembers().length);
+        expect(count.dt).toBe(mySA.getListOfDataTypes().length);
+    });
+
+    test('getAllTerms() latest', async() => {
+        const mySA = new SDOAdapter(global.commitBase);
+        await mySA.addVocabularies([await mySA.constructSDOVocabularyURL('latest'), VOC_URL_ZOO]);
+        const allTerms = mySA.getAllTerms();
+        expect(allTerms.length > 1000).toBe(true);
+        let count = {
+            c: 0,
+            p: 0,
+            en: 0,
+            enm: 0,
+            dt: 0
+        };
+        for (const actTerm of allTerms) {
+            switch (actTerm.getTermType()) {
+                case 'rdfs:Class':
+                    count.c++;
+                    break;
+                case 'rdf:Property':
+                    count.p++;
+                    break;
+                case 'schema:Enumeration':
+                    count.en++;
+                    break;
+                case 'soa:EnumerationMember':
+                    count.enm++;
+                    break;
+                case 'schema:DataType':
+                    count.dt++;
+                    break;
+            }
+        }
+        expect(count.c).toBe(mySA.getListOfClasses().length);
+        expect(count.p).toBe(mySA.getListOfProperties().length);
+        expect(count.en).toBe(mySA.getListOfEnumerations().length);
+        expect(count.enm).toBe(mySA.getListOfEnumerationMembers().length);
+        expect(count.dt).toBe(mySA.getListOfDataTypes().length);
+    });
+
     test('getClass()', async() => {
         const mySA = new SDOAdapter(global.commitBase);
         await mySA.addVocabularies([VOC_URL_SDO5_0, VOC_URL_ZOO]);

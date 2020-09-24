@@ -1,6 +1,6 @@
 {
   "name": "schema-org-adapter",
-  "version": "3.0.5",
+  "version": "3.1.0",
   "description": "Fast, simple & flexible API for the Schema.org Vocabulary (and vocabulary extensions!) for Node and Browsers",
   "main": "src/SDOAdapter.js",
   "scripts": {

@@ -25,6 +25,8 @@
     * [.addVocabularies(vocabArray)](#SDOAdapter+addVocabularies) ⇒ <code>Promise.&lt;void&gt;</code>
     * [.fetchVocabularyFromURL(url)](#SDOAdapter+fetchVocabularyFromURL) ⇒ <code>Promise.&lt;object&gt;</code>
     * [.getTerm(id, filter)](#SDOAdapter+getTerm) ⇒ [<code>Class</code>](#Class) \| [<code>Property</code>](#Property) \| [<code>Enumeration</code>](#Enumeration) \| [<code>EnumerationMember</code>](#EnumerationMember) \| [<code>DataType</code>](#DataType)
+    * [.getAllTerms(filter)](#SDOAdapter+getAllTerms) ⇒ [<code>Array.&lt;Class&gt;</code>](#Class)
+    * [.getListOfTerms(filter)](#SDOAdapter+getListOfTerms) ⇒ <code>Array.&lt;string&gt;</code>
     * [.getClass(id, filter)](#SDOAdapter+getClass) ⇒ [<code>Class</code>](#Class) \| [<code>Enumeration</code>](#Enumeration)
     * [.getAllClasses(filter)](#SDOAdapter+getAllClasses) ⇒ [<code>Array.&lt;Class&gt;</code>](#Class)
     * [.getListOfClasses(filter)](#SDOAdapter+getListOfClasses) ⇒ <code>Array.&lt;string&gt;</code>
@@ -94,6 +96,30 @@ Creates a corresponding JS-Class for the given IRI, depending on its term-catego
 | --- | --- | --- | --- |
 | id | <code>string</code> |  | The id of the wished term, can be an IRI (absolute or compact) or a label |
 | filter | <code>object</code> | <code></code> | (optional) The filter settings to be applied on the result |
+
+<a name="SDOAdapter+getAllTerms"></a>
+
+### sdoAdapter.getAllTerms(filter) ⇒ [<code>Array.&lt;Class&gt;</code>](#Class)
+Creates an array of JS-Classes for all vocabulary Terms (corresponding JS-Classes depending on the Term types)
+
+**Kind**: instance method of [<code>SDOAdapter</code>](#SDOAdapter)  
+**Returns**: [<code>Array.&lt;Class&gt;</code>](#Class) - An array of JS-Classes representing all vocabulary Terms  
+
+| Param | Type | Default | Description |
+| --- | --- | --- | --- |
+| filter | <code>object</code> \| <code>null</code> | <code></code> | (default = null) an optional filter for the Term creation |
+
+<a name="SDOAdapter+getListOfTerms"></a>
+
+### sdoAdapter.getListOfTerms(filter) ⇒ <code>Array.&lt;string&gt;</code>
+Creates an array of IRIs for all vocabulary Terms
+
+**Kind**: instance method of [<code>SDOAdapter</code>](#SDOAdapter)  
+**Returns**: <code>Array.&lt;string&gt;</code> - An array of IRIs representing all vocabulary Terms  
+
+| Param | Type | Default | Description |
+| --- | --- | --- | --- |
+| filter | <code>object</code> \| <code>null</code> | <code></code> | (default = null) an optional filter for the List creation |
 
 <a name="SDOAdapter+getClass"></a>
 
@@ -360,6 +386,7 @@ Returns the URI of the respective versions file
     * [.getProperties(implicit, filter)](#Class+getProperties) ⇒ <code>Array.&lt;string&gt;</code>
     * [.getSuperClasses(implicit, filter)](#Class+getSuperClasses) ⇒ <code>Array.&lt;string&gt;</code>
     * [.getSubClasses(implicit, filter)](#Class+getSubClasses) ⇒ <code>Array.&lt;string&gt;</code>
+    * [.isRangeOf(implicit, filter)](#Class+isRangeOf) ⇒ <code>Array</code>
     * [.toString()](#Class+toString) ⇒ <code>string</code>
     * [.toJSON(implicit, filter)](#Class+toJSON) ⇒ <code>object</code>
 
@@ -476,6 +503,19 @@ Retrieves the explicit/implicit sub-classes (soa:superClassOf) of this Class
 | --- | --- | --- | --- |
 | implicit | <code>boolean</code> | <code>true</code> | (default = true) retrieves also implicit sub-classes (recursive from sub-classes) |
 | filter | <code>object</code> \| <code>null</code> | <code></code> | (default = null) an optional filter for the sub-classes |
+
+<a name="Class+isRangeOf"></a>
+
+### class.isRangeOf(implicit, filter) ⇒ <code>Array</code>
+Retrieves the properties that have this Class as a range
+
+**Kind**: instance method of [<code>Class</code>](#Class)  
+**Returns**: <code>Array</code> - The properties that have this Class as a range  
+
+| Param | Type | Default | Description |
+| --- | --- | --- | --- |
+| implicit | <code>boolean</code> | <code>true</code> | (default = true) includes also implicit data |
+| filter | <code>object</code> \| <code>null</code> | <code></code> | (default = null) an optional filter for the generated data |
 
 <a name="Class+toString"></a>
 
@@ -691,7 +731,7 @@ Generates an explicit/implicit JSON representation of this Property.
     * [.getProperties(implicit, filter)](#Enumeration+getProperties) ⇒ <code>Array.&lt;string&gt;</code>
     * [.getSuperClasses(implicit, filter)](#Enumeration+getSuperClasses) ⇒ <code>Array.&lt;string&gt;</code>
     * [.getSubClasses(implicit, filter)](#Enumeration+getSubClasses) ⇒ <code>Array.&lt;string&gt;</code>
-    * [.isRangeOf()](#Enumeration+isRangeOf) ⇒ <code>Array</code>
+    * [.isRangeOf(implicit, filter)](#Enumeration+isRangeOf) ⇒ <code>Array</code>
     * [.toString()](#Enumeration+toString) ⇒ <code>string</code>
     * [.toJSON(implicit, filter)](#Enumeration+toJSON) ⇒ <code>object</code>
 
@@ -824,11 +864,17 @@ Retrieves the explicit/implicit sub-classes (soa:superClassOf) of this Enumerati
 
 <a name="Enumeration+isRangeOf"></a>
 
-### enumeration.isRangeOf() ⇒ <code>Array</code>
-Retrieves the properties which have this Enumeration as a range
+### enumeration.isRangeOf(implicit, filter) ⇒ <code>Array</code>
+Retrieves the properties that have this Enumeration as a range
 
 **Kind**: instance method of [<code>Enumeration</code>](#Enumeration)  
-**Returns**: <code>Array</code> - The properties which have this Enumeration as a range  
+**Returns**: <code>Array</code> - The properties that have this Enumeration as a range  
+
+| Param | Type | Default | Description |
+| --- | --- | --- | --- |
+| implicit | <code>boolean</code> | <code>true</code> | (default = true) includes also implicit data |
+| filter | <code>object</code> \| <code>null</code> | <code></code> | (default = null) an optional filter for the generated data |
+
 <a name="Enumeration+toString"></a>
 
 ### enumeration.toString() ⇒ <code>string</code>
@@ -991,6 +1037,7 @@ Generates a JSON representation of this EnumerationMember
     * [.getDescription(language)](#DataType+getDescription) ⇒ <code>string</code> \| <code>null</code>
     * [.getSuperDataTypes(implicit, filter)](#DataType+getSuperDataTypes) ⇒ <code>Array.&lt;string&gt;</code>
     * [.getSubDataTypes(implicit, filter)](#DataType+getSubDataTypes) ⇒ <code>Array.&lt;string&gt;</code>
+    * [.isRangeOf(implicit, filter)](#DataType+isRangeOf) ⇒ <code>Array</code>
     * [.toString()](#DataType+toString) ⇒ <code>string</code>
     * [.toJSON(implicit, filter)](#DataType+toJSON) ⇒ <code>object</code>
 
@@ -1094,6 +1141,19 @@ Retrieves the explicit/implicit sub-DataTypes (soa:superClassOf) of this DataTyp
 | --- | --- | --- | --- |
 | implicit | <code>boolean</code> | <code>true</code> | (default = true) retrieves also implicit sub-DataTypes (recursive from sub-DataTypes) |
 | filter | <code>object</code> \| <code>null</code> | <code></code> | (default = null) an optional filter for the sub-DataTypes |
+
+<a name="DataType+isRangeOf"></a>
+
+### dataType.isRangeOf(implicit, filter) ⇒ <code>Array</code>
+Retrieves the properties that have this DataType as a range
+
+**Kind**: instance method of [<code>DataType</code>](#DataType)  
+**Returns**: <code>Array</code> - The properties that have this DataType as a range  
+
+| Param | Type | Default | Description |
+| --- | --- | --- | --- |
+| implicit | <code>boolean</code> | <code>true</code> | (default = true) includes also implicit data |
+| filter | <code>object</code> \| <code>null</code> | <code></code> | (default = null) an optional filter for the generated data |
 
 <a name="DataType+toString"></a>
 

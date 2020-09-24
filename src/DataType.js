@@ -142,6 +142,23 @@ class DataType {
     }
 
     /**
+     * Retrieves the properties that have this DataType as a range
+     *
+     * @param {boolean} implicit - (default = true) includes also implicit data
+     * @param {object|null} filter - (default = null) an optional filter for the generated data
+     * @returns {Array} The properties that have this DataType as a range
+     */
+    isRangeOf(implicit = true, filter = null) {
+        const result = [];
+        if (implicit) {
+            result.push(...this.graph.reasoner.inferRangeOf(this.IRI));
+        } else {
+            result.push(...this.graph.dataTypes[this.IRI]['soa:isRangeOf']);
+        }
+        return util.applyFilter(util.uniquifyArray(result), filter, this.graph);
+    }
+
+    /**
      * Generates a string representation of this DataType (Based on its JSON representation)
      *
      * @returns {string} The string representation of this DataType
@@ -169,6 +186,7 @@ class DataType {
         result.description = this.getDescription();
         result.superDataTypes = this.getSuperDataTypes(implicit, filter);
         result.subDataTypes = this.getSubDataTypes(implicit, filter);
+        result.rangeOf = this.isRangeOf(implicit, filter);
         return result;
     }
 }

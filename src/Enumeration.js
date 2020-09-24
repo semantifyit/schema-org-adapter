@@ -113,9 +113,8 @@ class Enumeration {
      * @returns {string[]} The enumeration members of this Enumeration
      */
     getEnumerationMembers(implicit = false, filter = null) {
-        const enumObj = this.graph.enumerations[this.IRI];
         const result = [];
-        result.push(...enumObj['soa:hasEnumerationMember']);
+        result.push(...this.graph.enumerations[this.IRI]['soa:hasEnumerationMember']);
         if (implicit) {
             const subClasses = this.getSubClasses(true, null);
             for (const actSubClass of subClasses) {
@@ -142,10 +141,6 @@ class Enumeration {
         if (implicit) {
             // add properties from super-classes
             result.push(...this.graph.reasoner.inferPropertiesFromSuperClasses(enumObj['rdfs:subClassOf']));
-            // add sub-properties ?
-            // for (let p = 0; p < result.length; p++) {
-            //     result.push(... this.graph.reasoner.inferSubProperties(result[p]));
-            // }
         }
         return util.applyFilter(util.uniquifyArray(result), filter, this.graph);
     }
@@ -158,12 +153,11 @@ class Enumeration {
      * @returns {string[]} The super-classes of this Enumeration
      */
     getSuperClasses(implicit = true, filter = null) {
-        const enumObj = this.graph.enumerations[this.IRI];
         const result = [];
         if (implicit) {
             result.push(...this.graph.reasoner.inferSuperClasses(this.IRI));
         } else {
-            result.push(...enumObj['rdfs:subClassOf']);
+            result.push(...this.graph.enumerations[this.IRI]['rdfs:subClassOf']);
         }
         return util.applyFilter(util.uniquifyArray(result), filter, this.graph);
     }
@@ -176,23 +170,30 @@ class Enumeration {
      * @returns {string[]} The sub-classes of this Enumeration
      */
     getSubClasses(implicit = true, filter = null) {
-        const enumObj = this.graph.enumerations[this.IRI];
         const result = [];
         if (implicit) {
             result.push(...this.graph.reasoner.inferSubClasses(this.IRI));
         } else {
-            result.push(...enumObj['soa:superClassOf']);
+            result.push(...this.graph.enumerations[this.IRI]['soa:superClassOf']);
         }
         return util.applyFilter(util.uniquifyArray(result), filter, this.graph);
     }
 
     /**
-     * Retrieves the properties which have this Enumeration as a range
+     * Retrieves the properties that have this Enumeration as a range
      *
-     * @returns {Array} The properties which have this Enumeration as a range
+     * @param {boolean} implicit - (default = true) includes also implicit data
+     * @param {object|null} filter - (default = null) an optional filter for the generated data
+     * @returns {Array} The properties that have this Enumeration as a range
      */
-    isRangeOf() {
-        return this.graph.enumerations[this.IRI]['soa:isRangeOf'];
+    isRangeOf(implicit = true, filter = null) {
+        const result = [];
+        if (implicit) {
+            result.push(...this.graph.reasoner.inferRangeOf(this.IRI));
+        } else {
+            result.push(...this.graph.enumerations[this.IRI]['soa:isRangeOf']);
+        }
+        return util.applyFilter(util.uniquifyArray(result), filter, this.graph);
     }
 
     /**
@@ -225,7 +226,7 @@ class Enumeration {
         result.superClasses = this.getSuperClasses(implicit, filter);
         result.subClasses = this.getSubClasses(implicit, filter);
         result.properties = this.getProperties(implicit, filter);
-        result.rangeOf = this.isRangeOf();
+        result.rangeOf = this.isRangeOf(implicit, filter);
         return result;
     }
 }

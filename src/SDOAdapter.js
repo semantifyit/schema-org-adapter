@@ -110,6 +110,78 @@ class SDOAdapter {
     }
 
     /**
+     * Creates an array of JS-Classes for all vocabulary Terms (corresponding JS-Classes depending on the Term types)
+     *
+     * @param {object|null} filter - (default = null) an optional filter for the Term creation
+     * @returns {Class[]} An array of JS-Classes representing all vocabulary Terms
+     */
+    getAllTerms(filter = null) {
+        const result = [];
+        const classesIRIList = this.getListOfClasses(filter);
+        const enumerationsIRIList = this.getListOfEnumerations(filter);
+        const propertiesIRIList = this.getListOfProperties(filter);
+        const dataTypesIRIList = this.getListOfDataTypes(filter);
+        const enumerationMembersIRIList = this.getListOfEnumerationMembers(filter);
+        for (let c of classesIRIList) {
+            try {
+                result.push(this.getClass(c));
+            } catch (e) {
+                throw new Error('There is no class with the IRI ' + c);
+            }
+        }
+        for (let en of enumerationsIRIList) {
+            try {
+                result.push(this.getEnumeration(en));
+            } catch (e) {
+                throw new Error('There is no enumeration with the IRI ' + en);
+            }
+        }
+        for (let p of propertiesIRIList) {
+            try {
+                result.push(this.getProperty(p));
+            } catch (e) {
+                throw new Error('There is no property with the IRI ' + p);
+            }
+        }
+        for (let dt of dataTypesIRIList) {
+            try {
+                result.push(this.getDataType(dt));
+            } catch (e) {
+                throw new Error('There is no data type with the IRI ' + dt);
+            }
+        }
+        for (let enm of enumerationMembersIRIList) {
+            try {
+                result.push(this.getEnumerationMember(enm));
+            } catch (e) {
+                throw new Error('There is no enumeration member with the IRI ' + enm);
+            }
+        }
+        return result;
+    }
+
+    /**
+     * Creates an array of IRIs for all vocabulary Terms
+     *
+     * @param {object|null} filter - (default = null) an optional filter for the List creation
+     * @returns {string[]} An array of IRIs representing all vocabulary Terms
+     */
+    getListOfTerms(filter = null) {
+        // do not include enumerations
+        let result = [];
+        result.push(...Object.keys(this.graph.classes));
+        result.push(...Object.keys(this.graph.enumerations));
+        result.push(...Object.keys(this.graph.properties));
+        result.push(...Object.keys(this.graph.dataTypes));
+        result.push(...Object.keys(this.graph.enumerationMembers));
+        return util.applyFilter(
+            result,
+            filter,
+            this.graph
+        );
+    }
+
+    /**
      * Creates a JS-Class for a vocabulary Class by the given identifier (@id) or name
      *
      * @param {string} id - The identifier of the wished Class. It can be either a compact IRI -> "schema:Hotel", an absolute IRI -> "http://schema.org/Hotel", or the name (rdfs:label) -> "name" of the class (which may be ambiguous if multiple vocabularies/languages are used).
@@ -128,13 +200,13 @@ class SDOAdapter {
      * @returns {Class[]} An array of JS-Classes representing all vocabulary Classes, does not include Enumerations
      */
     getAllClasses(filter = null) {
-        const classesIRIList = this.getListOfClasses(filter);
         const result = [];
-        for (let i = 0; i < classesIRIList.length; i++) {
+        const classesIRIList = this.getListOfClasses(filter);
+        for (let c of classesIRIList) {
             try {
-                result.push(this.getClass(classesIRIList[i]));
+                result.push(this.getClass(c));
             } catch (e) {
-                throw new Error('There is no class with the IRI ' + classesIRIList[i]);
+                throw new Error('There is no class with the IRI ' + c);
             }
         }
         return result;
@@ -173,13 +245,13 @@ class SDOAdapter {
      * @returns {Property[]} An array of JS-Classes representing all vocabulary Properties
      */
     getAllProperties(filter = null) {
-        const propertiesIRIList = this.getListOfProperties(filter);
         const result = [];
-        for (let i = 0; i < propertiesIRIList.length; i++) {
+        const propertiesIRIList = this.getListOfProperties(filter);
+        for (let p of propertiesIRIList) {
             try {
-                result.push(this.getProperty(propertiesIRIList[i]));
+                result.push(this.getProperty(p));
             } catch (e) {
-                throw new Error('There is no property with the IRI ' + propertiesIRIList[i]);
+                throw new Error('There is no property with the IRI ' + p);
             }
         }
         return result;
@@ -217,13 +289,13 @@ class SDOAdapter {
      * @returns {DataType[]} An array of JS-Classes representing all vocabulary DataTypes
      */
     getAllDataTypes(filter = null) {
-        const dataTypesIRIList = this.getListOfDataTypes(filter);
         const result = [];
-        for (let i = 0; i < dataTypesIRIList.length; i++) {
+        const dataTypesIRIList = this.getListOfDataTypes(filter);
+        for (let dt of dataTypesIRIList) {
             try {
-                result.push(this.getDataType(dataTypesIRIList[i]));
+                result.push(this.getDataType(dt));
             } catch (e) {
-                throw new Error('There is no data type with the IRI ' + dataTypesIRIList[i]);
+                throw new Error('There is no data type with the IRI ' + dt);
             }
         }
         return result;
@@ -261,13 +333,13 @@ class SDOAdapter {
      * @returns {Enumeration[]} An array of JS-Classes representing all vocabulary Enumerations
      */
     getAllEnumerations(filter = null) {
-        const enumerationsIRIList = this.getListOfEnumerations(filter);
         const result = [];
-        for (let i = 0; i < enumerationsIRIList.length; i++) {
+        const enumerationsIRIList = this.getListOfEnumerations(filter);
+        for (let en of enumerationsIRIList) {
             try {
-                result.push(this.getEnumeration(enumerationsIRIList[i]));
+                result.push(this.getEnumeration(en));
             } catch (e) {
-                throw new Error('There is no enumeration with the IRI ' + enumerationsIRIList[i]);
+                throw new Error('There is no enumeration with the IRI ' + en);
             }
         }
         return result;
@@ -305,13 +377,13 @@ class SDOAdapter {
      * @returns {EnumerationMember[]} An array of JS-Classes representing all vocabulary EnumerationMember
      */
     getAllEnumerationMembers(filter = null) {
-        const enumerationMembersIRIList = this.getListOfEnumerationMembers(filter);
         const result = [];
-        for (let i = 0; i < enumerationMembersIRIList.length; i++) {
+        const enumerationMembersIRIList = this.getListOfEnumerationMembers(filter);
+        for (let enm of enumerationMembersIRIList) {
             try {
-                result.push(this.getEnumerationMember(enumerationMembersIRIList[i]));
+                result.push(this.getEnumerationMember(enm));
             } catch (e) {
-                throw new Error('There is no enumeration member with the IRI ' + enumerationMembersIRIList[i]);
+                throw new Error('There is no enumeration member with the IRI ' + enm);
             }
         }
         return result;

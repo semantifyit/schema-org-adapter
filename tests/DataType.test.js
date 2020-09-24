@@ -81,6 +81,15 @@ describe('DataType methods', () => {
         expect(text.getSubDataTypes()).not.toContain('schema:Integer');
     });
 
+    test('isRangeOf()', async() => {
+        const mySA = await initAdapter();
+        const Integer = mySA.getDataType('schema:Integer');
+        expect(Integer.isRangeOf()).toContain('schema:numberOfSeasons');
+        expect(Integer.isRangeOf(false)).toContain('schema:numberOfSeasons');
+        expect(Integer.isRangeOf()).toContain('schema:elevation');
+        expect(Integer.isRangeOf(false)).not.toContain('schema:elevation');
+    });
+
     test('toString()', async() => {
         const mySA = await initAdapter();
         const text = mySA.getDataType('schema:Text');

@@ -86,6 +86,15 @@ describe('Property methods', () => {
         expect(startLocation.getRanges(true)).toContain('schema:Text');
         expect(startLocation.getRanges(true)).toContain('ex:AnimalLivingEnvironment');
         expect(startLocation.getRanges(true, { fromVocabulary: 'ex' })).not.toContain('schema:Text');
+        const elevation = mySA.getProperty('schema:elevation');
+        expect(elevation.getRanges(true)).toContain('schema:Number');
+        expect(elevation.getRanges(false)).toContain('schema:Number');
+        expect(elevation.getRanges(true)).toContain('schema:Text');
+        expect(elevation.getRanges(false)).toContain('schema:Text');
+        expect(elevation.getRanges(true)).toContain('schema:Integer');
+        expect(elevation.getRanges(false)).not.toContain('schema:Integer');
+        expect(elevation.getRanges(true)).toContain('schema:URL');
+        expect(elevation.getRanges(false)).not.toContain('schema:URL');
     });
 
     test('getDomains()', async() => {

@@ -120,6 +120,15 @@ describe('Enumeration methods', () => {
         expect(PaymentMethod.getSubClasses(false)).not.toContain('schema:CreditCard');
     });
 
+    test('isRangeOf()', async() => {
+        const mySA = await initAdapter();
+        const PaymentMethod = mySA.getEnumeration('schema:PaymentMethod');
+        expect(PaymentMethod.isRangeOf()).toContain('schema:paymentMethod');
+        expect(PaymentMethod.isRangeOf(false)).toContain('schema:paymentMethod');
+        expect(PaymentMethod.isRangeOf()).toContain('schema:itemReviewed');
+        expect(PaymentMethod.isRangeOf(false)).not.toContain('schema:itemReviewed');
+    });
+
     test('toString()', async() => {
         const mySA = await initAdapter();
         const PaymentMethod = mySA.getClass('schema:PaymentMethod');
