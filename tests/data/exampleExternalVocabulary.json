@@ -49,7 +49,7 @@
       "@id": "ex:AnimalLivingEnvironment",
       "@type": "rdfs:Class",
       "rdfs:comment": "An enumeration class that lists the possible living environments an animal can have.",
-      "rdfs:label": "Animal",
+      "rdfs:label": "AnimalLivingEnvironment",
       "rdfs:subClassOf": "schema:Enumeration"
     },
     {
