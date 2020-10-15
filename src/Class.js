@@ -26,7 +26,6 @@ class Class extends Term {
     /**
      * Retrieves the term object of this Class
      *
-     * @abstract
      * @returns {string} The term object of this Class
      */
     getTermObj() {
