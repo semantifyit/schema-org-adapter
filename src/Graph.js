@@ -570,7 +570,7 @@ class Graph {
      *
      * @param {string} id - The id of the wished term, can be an IRI (absolute or compact) or a label
      * @param {object} filter - (optional) The filter settings to be applied on the result
-     * @returns {Class|Property|Enumeration|EnumerationMember|DataType} the JS-Class for the given IRI
+     * @returns {Term} the JS-Class for the given IRI
      */
     getTerm(id, filter = null) {
         const compactIRI = this.discoverCompactIRI(id);

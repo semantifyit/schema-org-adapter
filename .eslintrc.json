@@ -62,6 +62,7 @@
   },
   "globals": {
     "Graph": true,
+    "Term": true,
     "Class": true,
     "Property": true,
     "DataType": true,
