@@ -6,7 +6,7 @@ class Term {
      * A vocabulary term. It is identified by its IRI.
      *
      * @class
-     * @param {string} IRI - The compacted IRI of this Term, e.g. "schema:Friday"
+     * @param {string} IRI - The compacted IRI of this Term
      * @param {Graph} graph - The underlying data graph to enable the methods of this Term
      */
     constructor(IRI, graph) {
@@ -41,7 +41,7 @@ class Term {
      * Retrieves the term object of this Term
      *
      * @abstract
-     * @returns {string} The term type of this Term
+     * @returns {string} The term object of this Term
      */
     getTermObj() {
         throw new Error('must be implemented by subclass!');
