@@ -1,6 +1,6 @@
 {
   "name": "schema-org-adapter",
-  "version": "3.1.0",
+  "version": "3.1.1",
   "description": "Fast, simple & flexible API for the Schema.org Vocabulary (and vocabulary extensions!) for Node and Browsers",
   "main": "src/SDOAdapter.js",
   "scripts": {
@@ -36,7 +36,7 @@
   },
   "dependencies": {
     "axios": "^0.20.0",
-    "jsonld": "^3.1.1"
+    "jsonld": "^3.2.0"
   },
   "devDependencies": {
     "@babel/preset-env": "^7.11.5",

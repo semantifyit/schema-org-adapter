@@ -1,3 +1,9 @@
+3.1.1 / 2020-10-15
+==================
+
+  * Restructuring of code. API stays the same.
+  * Update of dependency "jsonld".
+
 3.1.0 / 2020-09-24
 ==================
 

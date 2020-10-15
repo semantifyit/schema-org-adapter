@@ -3796,7 +3796,7 @@ api.process = async ({
         if(process) {
           try {
             await api.process({
-              activeCtx: rval,
+              activeCtx: rval.clone(),
               localCtx: ctx[key]['@context'],
               overrideProtected: true,
               options,
@@ -13825,99 +13825,6 @@ util.makeLink = function(path, query, fragment) {
 };
 
 /**
- * Follows a path of keys deep into an object hierarchy and set a value.
- * If a key does not exist or it's value is not an object, create an
- * object in it's place. This can be destructive to a object tree if
- * leaf nodes are given as non-final path keys.
- * Used to avoid exceptions from missing parts of the path.
- *
- * @param object the starting object.
- * @param keys an array of string keys.
- * @param value the value to set.
- */
-util.setPath = function(object, keys, value) {
-  // need to start at an object
-  if(typeof(object) === 'object' && object !== null) {
-    var i = 0;
-    var len = keys.length;
-    while(i < len) {
-      var next = keys[i++];
-      if(i == len) {
-        // last
-        object[next] = value;
-      } else {
-        // more
-        var hasNext = (next in object);
-        if(!hasNext ||
-          (hasNext && typeof(object[next]) !== 'object') ||
-          (hasNext && object[next] === null)) {
-          object[next] = {};
-        }
-        object = object[next];
-      }
-    }
-  }
-};
-
-/**
- * Follows a path of keys deep into an object hierarchy and return a value.
- * If a key does not exist, create an object in it's place.
- * Used to avoid exceptions from missing parts of the path.
- *
- * @param object the starting object.
- * @param keys an array of string keys.
- * @param _default value to return if path not found.
- *
- * @return the value at the path if found, else default if given, else
- *         undefined.
- */
-util.getPath = function(object, keys, _default) {
-  var i = 0;
-  var len = keys.length;
-  var hasNext = true;
-  while(hasNext && i < len &&
-    typeof(object) === 'object' && object !== null) {
-    var next = keys[i++];
-    hasNext = next in object;
-    if(hasNext) {
-      object = object[next];
-    }
-  }
-  return (hasNext ? object : _default);
-};
-
-/**
- * Follow a path of keys deep into an object hierarchy and delete the
- * last one. If a key does not exist, do nothing.
- * Used to avoid exceptions from missing parts of the path.
- *
- * @param object the starting object.
- * @param keys an array of string keys.
- */
-util.deletePath = function(object, keys) {
-  // need to start at an object
-  if(typeof(object) === 'object' && object !== null) {
-    var i = 0;
-    var len = keys.length;
-    while(i < len) {
-      var next = keys[i++];
-      if(i == len) {
-        // last
-        delete object[next];
-      } else {
-        // more
-        if(!(next in object) ||
-          (typeof(object[next]) !== 'object') ||
-          (object[next] === null)) {
-           break;
-        }
-        object = object[next];
-      }
-    }
-  }
-};
-
-/**
  * Check if an object is empty.
  *
  * Taken from:
@@ -14735,6 +14642,7 @@ module.exports = class MessageDigest {
  */
 'use strict';
 
+// eslint-disable-next-line no-unused-vars
 const TERMS = ['subject', 'predicate', 'object', 'graph'];
 const RDF = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#';
 const RDF_LANGSTRING = RDF + 'langString';
@@ -14991,8 +14899,8 @@ module.exports = class NQuads {
 
     const termTypeMap = {
       'blank node': 'BlankNode',
-      'IRI': 'NamedNode',
-      'literal': 'Literal'
+      IRI: 'NamedNode',
+      literal: 'Literal'
     };
 
     for(const graphName in dataset) {
@@ -15735,19 +15643,19 @@ module.exports = class URDNA2015 extends AsyncAlgorithm {
         const position = POSITIONS[key];
         self.hashRelatedBlankNode(
           related, quad, issuer, position, (err, hash) => {
-          if(err) {
-            return callback(err);
-          }
-          // 3.1.2) Add a mapping of hash to the blank node identifier for
-          // component to hash to related blank nodes map, adding an entry as
-          // necessary.
-          if(hash in hashToRelated) {
-            hashToRelated[hash].push(related);
-          } else {
-            hashToRelated[hash] = [related];
-          }
-          callback();
-        });
+            if(err) {
+              return callback(err);
+            }
+            // 3.1.2) Add a mapping of hash to the blank node identifier for
+            // component to hash to related blank nodes map, adding an entry as
+            // necessary.
+            if(hash in hashToRelated) {
+              hashToRelated[hash].push(related);
+            } else {
+              hashToRelated[hash] = [related];
+            }
+            callback();
+          });
       }, callback);
     }, err => callback(err, hashToRelated));
   }
@@ -16333,16 +16241,16 @@ module.exports = class URDNA2012 extends URDNA2015 {
       // nodes map, adding an entry as necessary.
       self.hashRelatedBlankNode(
         related, quad, issuer, position, (err, hash) => {
-        if(err) {
-          return callback(err);
-        }
-        if(hash in hashToRelated) {
-          hashToRelated[hash].push(related);
-        } else {
-          hashToRelated[hash] = [related];
-        }
-        callback();
-      });
+          if(err) {
+            return callback(err);
+          }
+          if(hash in hashToRelated) {
+            hashToRelated[hash].push(related);
+          } else {
+            hashToRelated[hash] = [related];
+          }
+          callback();
+        });
     }, err => callback(err, hashToRelated));
   }
 };
@@ -17232,7 +17140,9 @@ try {
 // the functions for a class Object
 var util = _dereq_('./utilities');
 
-class Class {
+var Term = _dereq_('./Term');
+
+class Class extends Term {
   /**
    * A Class represents an rdfs:Class. It is identified by its IRI
    *
@@ -17241,25 +17151,7 @@ class Class {
    * @param {Graph} graph - The underlying data graph to enable the methods of this Class
    */
   constructor(IRI, graph) {
-    this.IRI = IRI;
-    this.graph = graph;
-  }
-  /**
-   * Retrieves the IRI (@id) of this Class in compact/absolute form
-   *
-   * @param {boolean} compactForm - (default = false), if true -> return compact IRI -> "schema:Book", if false -> return absolute IRI -> "http://schema.org/Book"
-   * @returns {string} The IRI (@id) of this Class
-   */
-
-
-  getIRI() {
-    var compactForm = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : false;
-
-    if (compactForm) {
-      return this.IRI;
-    }
-
-    return util.toAbsoluteIRI(this.IRI, this.graph.context);
+    super(IRI, graph);
   }
   /**
    * Retrieves the term type (@type) of this Class (is always "rdfs:Class")
@@ -17272,90 +17164,14 @@ class Class {
     return 'rdfs:Class';
   }
   /**
-   * Retrieves the original vocabulary (schema:isPartOf) of this Class
+   * Retrieves the term object of this Class
    *
-   * @returns {string|null} The vocabulary IRI given by the "schema:isPartOf" of this Class
+   * @returns {string} The term object of this Class
    */
 
 
-  getVocabulary() {
-    var classObj = this.graph.classes[this.IRI];
-
-    if (!util.isNil(classObj['schema:isPartOf'])) {
-      return classObj['schema:isPartOf'];
-    }
-
-    return null;
-  }
-  /**
-   * Retrieves the source (dc:source) of this Class
-   *
-   * @returns {string|null} The source IRI given by the "dc:source" of this Class (null if none)
-   */
-
-
-  getSource() {
-    var classObj = this.graph.classes[this.IRI];
-
-    if (!util.isNil(classObj['dc:source'])) {
-      return classObj['dc:source'];
-    } else if (!util.isNil(classObj['schema:source'])) {
-      return classObj['schema:source'];
-    }
-
-    return null;
-  }
-  /**
-   * Retrieves the class superseding (schema:supersededBy) this Class
-   *
-   * @returns {string|null} The Class superseding this Class (null if none)
-   */
-
-
-  isSupersededBy() {
-    var classObj = this.graph.classes[this.IRI];
-
-    if (util.isString(classObj['schema:supersededBy'])) {
-      return classObj['schema:supersededBy'];
-    }
-
-    return null;
-  }
-  /**
-   * Retrieves the name (rdfs:label) of this Class in a wished language (optional)
-   *
-   * @param {string} language - (default = "en") the wished language for the name
-   * @returns {string|null} The name of this Class (null if not given for specified language)
-   */
-
-
-  getName() {
-    var language = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 'en';
-    var nameObj = this.graph.classes[this.IRI]['rdfs:label'];
-
-    if (util.isNil(nameObj) || util.isNil(nameObj[language])) {
-      return null;
-    }
-
-    return nameObj[language];
-  }
-  /**
-   * Retrieves the description (rdfs:comment) of this Class in a wished language (optional)
-   *
-   * @param {string} language - (default = "en") the wished language for the description
-   * @returns {string|null} The description of this Class (null if not given for specified language)
-   */
-
-
-  getDescription() {
-    var language = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 'en';
-    var descriptionObj = this.graph.classes[this.IRI]['rdfs:comment'];
-
-    if (util.isNil(descriptionObj) || util.isNil(descriptionObj[language])) {
-      return null;
-    }
-
-    return descriptionObj[language];
+  getTermObj() {
+    return this.graph.classes[this.IRI];
   }
   /**
    * Retrieves the explicit/implicit properties (soa:hasProperty) of this Class
@@ -17369,7 +17185,7 @@ class Class {
   getProperties() {
     var implicit = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : true;
     var filter = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
-    var classObj = this.graph.classes[this.IRI];
+    var classObj = this.getTermObj();
     var result = [];
     result.push(...classObj['soa:hasProperty']);
 
@@ -17392,7 +17208,7 @@ class Class {
   getSuperClasses() {
     var implicit = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : true;
     var filter = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
-    var classObj = this.graph.classes[this.IRI];
+    var classObj = this.getTermObj();
     var result = [];
 
     if (implicit) {
@@ -17415,7 +17231,7 @@ class Class {
   getSubClasses() {
     var implicit = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : true;
     var filter = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
-    var classObj = this.graph.classes[this.IRI];
+    var classObj = this.getTermObj();
     var result = [];
 
     if (implicit) {
@@ -17443,20 +17259,10 @@ class Class {
     if (implicit) {
       result.push(...this.graph.reasoner.inferRangeOf(this.IRI));
     } else {
-      result.push(...this.graph.classes[this.IRI]['soa:isRangeOf']);
+      result.push(...this.getTermObj()['soa:isRangeOf']);
     }
 
     return util.applyFilter(util.uniquifyArray(result), filter, this.graph);
-  }
-  /**
-   * Generates a string representation of this Class (Based on its JSON representation)
-   *
-   * @returns {string} The string representation of this Class
-   */
-
-
-  toString() {
-    return JSON.stringify(this.toJSON(false, null), null, 2);
   }
   /**
    * Generates an explicit/implicit JSON representation of this Class.
@@ -17474,15 +17280,7 @@ class Class {
     // properties of all parent classes
     // sub-classes and their subclasses
     // super-classes and their superclasses
-    var result = {};
-    result.id = this.getIRI(true);
-    result.IRI = this.getIRI();
-    result.type = this.getTermType();
-    result.vocabulary = this.getVocabulary();
-    result.source = this.getSource();
-    result.supersededBy = this.isSupersededBy();
-    result.name = this.getName();
-    result.description = this.getDescription();
+    var result = super.toJSON();
     result.superClasses = this.getSuperClasses(implicit, filter);
     result.subClasses = this.getSubClasses(implicit, filter);
     result.properties = this.getProperties(implicit, filter);
@@ -17494,13 +17292,15 @@ class Class {
 
 module.exports = Class;
 
-},{"./utilities":82}],75:[function(_dereq_,module,exports){
+},{"./Term":82,"./utilities":83}],75:[function(_dereq_,module,exports){
 "use strict";
 
 // the functions for a data type Object
 var util = _dereq_('./utilities');
 
-class DataType {
+var Term = _dereq_('./Term');
+
+class DataType extends Term {
   /**
    * A DataType represents an schema:DataType. It is identified by its IRI
    *
@@ -17509,25 +17309,7 @@ class DataType {
    * @param {Graph} graph - The underlying data graph to enable the methods of this DataType
    */
   constructor(IRI, graph) {
-    this.IRI = IRI;
-    this.graph = graph;
-  }
-  /**
-   * Retrieves the IRI (@id) of this DataType in compact/absolute form
-   *
-   * @param {boolean} compactForm - (default = false), if true -> return compact IRI -> "schema:Number", if false -> return absolute IRI -> "http://schema.org/Number"
-   * @returns {string} The IRI (@id) of this DataType
-   */
-
-
-  getIRI() {
-    var compactForm = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : false;
-
-    if (compactForm) {
-      return this.IRI;
-    }
-
-    return util.toAbsoluteIRI(this.IRI, this.graph.context);
+    super(IRI, graph);
   }
   /**
    * Retrieves the term type (@type) of this DataType (is always "schema:DataType")
@@ -17540,90 +17322,14 @@ class DataType {
     return 'schema:DataType';
   }
   /**
-   * Retrieves the original vocabulary (schema:isPartOf) of this DataType
+   * Retrieves the term object of this DataType
    *
-   * @returns {string|null} The vocabulary IRI given by the "schema:isPartOf" of this DataType
+   * @returns {string} The term object of this DataType
    */
 
 
-  getVocabulary() {
-    var dataTypeObj = this.graph.dataTypes[this.IRI];
-
-    if (!util.isNil(dataTypeObj['schema:isPartOf'])) {
-      return dataTypeObj['schema:isPartOf'];
-    }
-
-    return null;
-  }
-  /**
-   * Retrieves the source (dc:source) of this DataType
-   *
-   * @returns {string|null} The source IRI given by the "dc:source" of this DataType (null if none)
-   */
-
-
-  getSource() {
-    var dataTypeObj = this.graph.dataTypes[this.IRI];
-
-    if (!util.isNil(dataTypeObj['dc:source'])) {
-      return dataTypeObj['dc:source'];
-    } else if (!util.isNil(dataTypeObj['schema:source'])) {
-      return dataTypeObj['schema:source'];
-    }
-
-    return null;
-  }
-  /**
-   * Retrieves the DataType superseding (schema:supersededBy) this DataType
-   *
-   * @returns {string|null} The DataType superseding this DataType (null if none)
-   */
-
-
-  isSupersededBy() {
-    var dataTypeObj = this.graph.dataTypes[this.IRI];
-
-    if (util.isString(dataTypeObj['schema:supersededBy'])) {
-      return dataTypeObj['schema:supersededBy'];
-    }
-
-    return null;
-  }
-  /**
-   * Retrieves the name (rdfs:label) of this DataType in a wished language (optional)
-   *
-   * @param {string} language - (default = "en") the wished language for the name
-   * @returns {string|null} The name of this DataType (null if not given for specified language)
-   */
-
-
-  getName() {
-    var language = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 'en';
-    var nameObj = this.graph.dataTypes[this.IRI]['rdfs:label'];
-
-    if (util.isNil(nameObj) || util.isNil(nameObj[language])) {
-      return null;
-    }
-
-    return nameObj[language];
-  }
-  /**
-   * Retrieves the description (rdfs:comment) of this DataType in a wished language (optional)
-   *
-   * @param {string} language - (default = "en") the wished language for the description
-   * @returns {string|null} The description of this DataType (null if not given for specified language)
-   */
-
-
-  getDescription() {
-    var language = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 'en';
-    var descriptionObj = this.graph.dataTypes[this.IRI]['rdfs:comment'];
-
-    if (util.isNil(descriptionObj) || util.isNil(descriptionObj[language])) {
-      return null;
-    }
-
-    return descriptionObj[language];
+  getTermObj() {
+    return this.graph.dataTypes[this.IRI];
   }
   /**
    * Retrieves the explicit/implicit super-DataTypes (rdfs:subClassOf) of this DataType
@@ -17637,7 +17343,7 @@ class DataType {
   getSuperDataTypes() {
     var implicit = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : true;
     var filter = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
-    var dataTypeObj = this.graph.dataTypes[this.IRI];
+    var dataTypeObj = this.getTermObj();
     var result = [];
 
     if (implicit) {
@@ -17660,7 +17366,7 @@ class DataType {
   getSubDataTypes() {
     var implicit = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : true;
     var filter = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
-    var dataTypeObj = this.graph.dataTypes[this.IRI];
+    var dataTypeObj = this.getTermObj();
     var result = [];
 
     if (implicit) {
@@ -17688,20 +17394,10 @@ class DataType {
     if (implicit) {
       result.push(...this.graph.reasoner.inferRangeOf(this.IRI));
     } else {
-      result.push(...this.graph.dataTypes[this.IRI]['soa:isRangeOf']);
+      result.push(...this.getTermObj()['soa:isRangeOf']);
     }
 
     return util.applyFilter(util.uniquifyArray(result), filter, this.graph);
-  }
-  /**
-   * Generates a string representation of this DataType (Based on its JSON representation)
-   *
-   * @returns {string} The string representation of this DataType
-   */
-
-
-  toString() {
-    return JSON.stringify(this.toJSON(false, null), null, 2);
   }
   /**
    * Generates an explicit/implicit JSON representation of this DataType.
@@ -17715,15 +17411,7 @@ class DataType {
   toJSON() {
     var implicit = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : true;
     var filter = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
-    var result = {};
-    result.id = this.getIRI(true);
-    result.IRI = this.getIRI();
-    result.type = this.getTermType();
-    result.vocabulary = this.getVocabulary();
-    result.source = this.getSource();
-    result.supersededBy = this.isSupersededBy();
-    result.name = this.getName();
-    result.description = this.getDescription();
+    var result = super.toJSON();
     result.superDataTypes = this.getSuperDataTypes(implicit, filter);
     result.subDataTypes = this.getSubDataTypes(implicit, filter);
     result.rangeOf = this.isRangeOf(implicit, filter);
@@ -17734,13 +17422,15 @@ class DataType {
 
 module.exports = DataType;
 
-},{"./utilities":82}],76:[function(_dereq_,module,exports){
+},{"./Term":82,"./utilities":83}],76:[function(_dereq_,module,exports){
 "use strict";
 
 // the functions for a enumeration Object
 var util = _dereq_('./utilities');
 
-class Enumeration {
+var Class = _dereq_('./Class');
+
+class Enumeration extends Class {
   /**
    * An Enumeration represents a schema:Enumeration, which is also a sub-type of an rdfs:Class. It is identified by its IRI
    *
@@ -17749,25 +17439,7 @@ class Enumeration {
    * @param {Graph} graph - The underlying data graph to enable the methods of this Enumeration
    */
   constructor(IRI, graph) {
-    this.IRI = IRI;
-    this.graph = graph;
-  }
-  /**
-   * Retrieves the IRI (@id) of this Enumeration in compact/absolute form
-   *
-   * @param {boolean} compactForm - (default = false), if true -> return compact IRI -> "schema:DayOfWeek", if false -> return absolute IRI -> "http://schema.org/DayOfWeek"
-   * @returns {string} The IRI (@id) of this Enumeration
-   */
-
-
-  getIRI() {
-    var compactForm = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : false;
-
-    if (compactForm) {
-      return this.IRI;
-    }
-
-    return util.toAbsoluteIRI(this.IRI, this.graph.context);
+    super(IRI, graph);
   }
   /**
    * Retrieves the term type (@type) of this Enumeration (is always "schema:Enumeration")
@@ -17780,90 +17452,14 @@ class Enumeration {
     return 'schema:Enumeration';
   }
   /**
-   * Retrieves the original vocabulary (schema:isPartOf) of this Enumeration
+   * Retrieves the term object of this Enumeration
    *
-   * @returns {string|null} The vocabulary IRI given by the "schema:isPartOf" of this Enumeration
+   * @returns {string} The term object of this Enumeration
    */
 
 
-  getVocabulary() {
-    var enumObj = this.graph.enumerations[this.IRI];
-
-    if (!util.isNil(enumObj['schema:isPartOf'])) {
-      return enumObj['schema:isPartOf'];
-    }
-
-    return null;
-  }
-  /**
-   * Retrieves the source (dc:source) of this Enumeration
-   *
-   * @returns {string|null} The source IRI given by the "dc:source" of this Enumeration (null if none)
-   */
-
-
-  getSource() {
-    var enumObj = this.graph.enumerations[this.IRI];
-
-    if (!util.isNil(enumObj['dc:source'])) {
-      return enumObj['dc:source'];
-    } else if (!util.isNil(enumObj['schema:source'])) {
-      return enumObj['schema:source'];
-    }
-
-    return null;
-  }
-  /**
-   * Retrieves the Enumeration superseding (schema:supersededBy) this Enumeration
-   *
-   * @returns {string|null} The Enumeration superseding this Enumeration (null if none)
-   */
-
-
-  isSupersededBy() {
-    var enumObj = this.graph.enumerations[this.IRI];
-
-    if (util.isString(enumObj['schema:supersededBy'])) {
-      return enumObj['schema:supersededBy'];
-    }
-
-    return null;
-  }
-  /**
-   * Retrieves the name (rdfs:label) of this Enumeration in a wished language (optional)
-   *
-   * @param {string} language - (default = "en") the wished language for the name
-   * @returns {string|null} The name of this Enumeration (null if not given for specified language)
-   */
-
-
-  getName() {
-    var language = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 'en';
-    var nameObj = this.graph.enumerations[this.IRI]['rdfs:label'];
-
-    if (util.isNil(nameObj) || util.isNil(nameObj[language])) {
-      return null;
-    }
-
-    return nameObj[language];
-  }
-  /**
-   * Retrieves the description (rdfs:comment) of this Enumeration in a wished language (optional)
-   *
-   * @param {string} language - (default = "en") the wished language for the description
-   * @returns {string|null} The description of this Enumeration (null if not given for specified language)
-   */
-
-
-  getDescription() {
-    var language = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 'en';
-    var descriptionObj = this.graph.enumerations[this.IRI]['rdfs:comment'];
-
-    if (util.isNil(descriptionObj) || util.isNil(descriptionObj[language])) {
-      return null;
-    }
-
-    return descriptionObj[language];
+  getTermObj() {
+    return this.graph.enumerations[this.IRI];
   }
   /**
    * Retrieves the enumeration members (soa:hasEnumerationMember) of this Enumeration
@@ -17878,7 +17474,7 @@ class Enumeration {
     var implicit = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : false;
     var filter = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
     var result = [];
-    result.push(...this.graph.enumerations[this.IRI]['soa:hasEnumerationMember']);
+    result.push(...this.getTermObj()['soa:hasEnumerationMember']);
 
     if (implicit) {
       var subClasses = this.getSubClasses(true, null);
@@ -17895,105 +17491,6 @@ class Enumeration {
     return util.applyFilter(util.uniquifyArray(result), filter, this.graph);
   }
   /**
-   * Retrieves the explicit/implicit properties (soa:hasProperty) of this Enumeration
-   *
-   * @param {boolean} implicit - (default = true) retrieves also implicit properties (inheritance from super-classes)
-   * @param {object|null} filter - (default = null) an optional filter for the properties
-   * @returns {string[]} The properties of this Enumeration
-   */
-
-
-  getProperties() {
-    var implicit = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : true;
-    var filter = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
-    var enumObj = this.graph.enumerations[this.IRI];
-    var result = [];
-    result.push(...enumObj['soa:hasProperty']);
-
-    if (implicit) {
-      // add properties from super-classes
-      result.push(...this.graph.reasoner.inferPropertiesFromSuperClasses(enumObj['rdfs:subClassOf']));
-    }
-
-    return util.applyFilter(util.uniquifyArray(result), filter, this.graph);
-  }
-  /**
-   * Retrieves the explicit/implicit super-classes (rdfs:subClassOf) of this Enumeration
-   *
-   * @param {boolean} implicit - (default = true) retrieves also implicit super-classes (recursive from super-classes)
-   * @param {object|null} filter - (default = null) an optional filter for the super-classes
-   * @returns {string[]} The super-classes of this Enumeration
-   */
-
-
-  getSuperClasses() {
-    var implicit = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : true;
-    var filter = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
-    var result = [];
-
-    if (implicit) {
-      result.push(...this.graph.reasoner.inferSuperClasses(this.IRI));
-    } else {
-      result.push(...this.graph.enumerations[this.IRI]['rdfs:subClassOf']);
-    }
-
-    return util.applyFilter(util.uniquifyArray(result), filter, this.graph);
-  }
-  /**
-   * Retrieves the explicit/implicit sub-classes (soa:superClassOf) of this Enumeration
-   *
-   * @param {boolean} implicit - (default = true) retrieves also implicit sub-classes (recursive from sub-classes)
-   * @param {object|null} filter - (default = null) an optional filter for the sub-classes
-   * @returns {string[]} The sub-classes of this Enumeration
-   */
-
-
-  getSubClasses() {
-    var implicit = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : true;
-    var filter = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
-    var result = [];
-
-    if (implicit) {
-      result.push(...this.graph.reasoner.inferSubClasses(this.IRI));
-    } else {
-      result.push(...this.graph.enumerations[this.IRI]['soa:superClassOf']);
-    }
-
-    return util.applyFilter(util.uniquifyArray(result), filter, this.graph);
-  }
-  /**
-   * Retrieves the properties that have this Enumeration as a range
-   *
-   * @param {boolean} implicit - (default = true) includes also implicit data
-   * @param {object|null} filter - (default = null) an optional filter for the generated data
-   * @returns {Array} The properties that have this Enumeration as a range
-   */
-
-
-  isRangeOf() {
-    var implicit = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : true;
-    var filter = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
-    var result = [];
-
-    if (implicit) {
-      result.push(...this.graph.reasoner.inferRangeOf(this.IRI));
-    } else {
-      result.push(...this.graph.enumerations[this.IRI]['soa:isRangeOf']);
-    }
-
-    return util.applyFilter(util.uniquifyArray(result), filter, this.graph);
-  }
-  /**
-   * Generates a string representation of this Enumeration (Based on its JSON representation)
-   *
-   * @returns {string} The string representation of this Enumeration
-   */
-
-
-  toString() {
-    return JSON.stringify(this.toJSON(false, null), null, 2);
-  }
-  /**
    * Generates an explicit/implicit JSON representation of this Enumeration
    *
    * @param {boolean} implicit - (default = true) includes also implicit data
@@ -18005,20 +17502,8 @@ class Enumeration {
   toJSON() {
     var implicit = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : true;
     var filter = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
-    var result = {};
-    result.id = this.getIRI(true);
-    result.IRI = this.getIRI();
-    result.type = this.getTermType();
-    result.vocabulary = this.getVocabulary();
-    result.source = this.getSource();
-    result.supersededBy = this.isSupersededBy();
-    result.name = this.getName();
-    result.description = this.getDescription();
+    var result = super.toJSON(implicit, filter);
     result.enumerationMembers = this.getEnumerationMembers(implicit, filter);
-    result.superClasses = this.getSuperClasses(implicit, filter);
-    result.subClasses = this.getSubClasses(implicit, filter);
-    result.properties = this.getProperties(implicit, filter);
-    result.rangeOf = this.isRangeOf(implicit, filter);
     return result;
   }
 
@@ -18026,13 +17511,15 @@ class Enumeration {
 
 module.exports = Enumeration;
 
-},{"./utilities":82}],77:[function(_dereq_,module,exports){
+},{"./Class":74,"./utilities":83}],77:[function(_dereq_,module,exports){
 "use strict";
 
 // the functions for a enumeration member Object
 var util = _dereq_('./utilities');
 
-class EnumerationMember {
+var Term = _dereq_('./Term');
+
+class EnumerationMember extends Term {
   /**
    * An EnumerationMember represents a possible value for a schema:Enumeration. It is identified by its IRI
    *
@@ -18041,25 +17528,7 @@ class EnumerationMember {
    * @param {Graph} graph - The underlying data graph to enable the methods of this EnumerationMember
    */
   constructor(IRI, graph) {
-    this.IRI = IRI;
-    this.graph = graph;
-  }
-  /**
-   * Retrieves the IRI (@id) of this EnumerationMember in compact/absolute form
-   *
-   * @param {boolean} compactForm - (default = false), if true -> return compact IRI -> "schema:Friday", if false -> return absolute IRI -> "http://schema.org/Friday"
-   * @returns {string} The IRI (@id) of this EnumerationMember
-   */
-
-
-  getIRI() {
-    var compactForm = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : false;
-
-    if (compactForm) {
-      return this.IRI;
-    }
-
-    return util.toAbsoluteIRI(this.IRI, this.graph.context);
+    super(IRI, graph);
   }
   /**
    * Retrieves the term type (@type) of this EnumerationMember (is always "schema:Enumeration")
@@ -18072,90 +17541,14 @@ class EnumerationMember {
     return 'soa:EnumerationMember';
   }
   /**
-   * Retrieves the original vocabulary (schema:isPartOf) of this EnumerationMember
+   * Retrieves the term object of this Enumeration Member
    *
-   * @returns {string|null} The vocabulary IRI given by the "schema:isPartOf" of this EnumerationMember
+   * @returns {string} The term object of this Enumeration Member
    */
 
 
-  getVocabulary() {
-    var enumObj = this.graph.enumerationMembers[this.IRI];
-
-    if (!util.isNil(enumObj['schema:isPartOf'])) {
-      return enumObj['schema:isPartOf'];
-    }
-
-    return null;
-  }
-  /**
-   * Retrieves the source (dc:source) of this EnumerationMember
-   *
-   * @returns {string|Array|null} The source IRI given by the "dc:source" of this EnumerationMember (null if none)
-   */
-
-
-  getSource() {
-    var enumObj = this.graph.enumerationMembers[this.IRI];
-
-    if (!util.isNil(enumObj['dc:source'])) {
-      return enumObj['dc:source'];
-    } else if (!util.isNil(enumObj['schema:source'])) {
-      return enumObj['schema:source'];
-    }
-
-    return null;
-  }
-  /**
-   * Retrieves the EnumerationMember superseding (schema:supersededBy) this EnumerationMember
-   *
-   * @returns {string|null} The EnumerationMember superseding this EnumerationMember (null if none)
-   */
-
-
-  isSupersededBy() {
-    var enumObj = this.graph.enumerationMembers[this.IRI];
-
-    if (util.isString(enumObj['schema:supersededBy'])) {
-      return enumObj['schema:supersededBy'];
-    }
-
-    return null;
-  }
-  /**
-   * Retrieves the name (rdfs:label) of this EnumerationMember in a wished language (optional)
-   *
-   * @param {string} language - (default = "en") the wished language for the name
-   * @returns {string|null} The name of this EnumerationMember (null if not given for specified language)
-   */
-
-
-  getName() {
-    var language = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 'en';
-    var nameObj = this.graph.enumerationMembers[this.IRI]['rdfs:label'];
-
-    if (util.isNil(nameObj) || util.isNil(nameObj[language])) {
-      return null;
-    }
-
-    return nameObj[language];
-  }
-  /**
-   * Retrieves the description (rdfs:comment) of this EnumerationMember in a wished language (optional)
-   *
-   * @param {string} language - (default = "en") the wished language for the description
-   * @returns {string|null} The description of this EnumerationMember (null if not given for specified language)
-   */
-
-
-  getDescription() {
-    var language = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 'en';
-    var descriptionObj = this.graph.enumerationMembers[this.IRI]['rdfs:comment'];
-
-    if (util.isNil(descriptionObj) || util.isNil(descriptionObj[language])) {
-      return null;
-    }
-
-    return descriptionObj[language];
+  getTermObj() {
+    return this.graph.enumerationMembers[this.IRI];
   }
   /**
    * Retrieves the domain enumerations (soa:enumerationDomainIncludes) of this EnumerationMember
@@ -18169,7 +17562,7 @@ class EnumerationMember {
   getDomainEnumerations() {
     var implicit = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : false;
     var filter = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
-    var enumObj = this.graph.enumerationMembers[this.IRI];
+    var enumObj = this.getTermObj();
     var result = [];
     result.push(...enumObj['soa:enumerationDomainIncludes']);
 
@@ -18188,16 +17581,6 @@ class EnumerationMember {
     return util.applyFilter(util.uniquifyArray(result), filter, this.graph);
   }
   /**
-   * Generates a string representation of this EnumerationMember (Based on its JSON representation)
-   *
-   * @returns {string} The string representation of this EnumerationMember
-   */
-
-
-  toString() {
-    return JSON.stringify(this.toJSON(false, null), null, 2);
-  }
-  /**
    * Generates a JSON representation of this EnumerationMember
    *
    * @param {boolean} implicit - (default = false) includes also implicit data
@@ -18209,15 +17592,7 @@ class EnumerationMember {
   toJSON() {
     var implicit = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : false;
     var filter = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
-    var result = {};
-    result['id'] = this.getIRI(true);
-    result['IRI'] = this.getIRI();
-    result['type'] = this.getTermType();
-    result['vocabulary'] = this.getVocabulary();
-    result['source'] = this.getSource();
-    result['supersededBy'] = this.isSupersededBy();
-    result['name'] = this.getName();
-    result['description'] = this.getDescription();
+    var result = super.toJSON();
     result['domainEnumerations'] = this.getDomainEnumerations(implicit, filter);
     return result;
   }
@@ -18226,7 +17601,7 @@ class EnumerationMember {
 
 module.exports = EnumerationMember;
 
-},{"./utilities":82}],78:[function(_dereq_,module,exports){
+},{"./Term":82,"./utilities":83}],78:[function(_dereq_,module,exports){
 "use strict";
 
 function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { Promise.resolve(value).then(_next, _throw); } }
@@ -18910,7 +18285,7 @@ class Graph {
    *
    * @param {string} id - The id of the wished term, can be an IRI (absolute or compact) or a label
    * @param {object} filter - (optional) The filter settings to be applied on the result
-   * @returns {Class|Property|Enumeration|EnumerationMember|DataType} the JS-Class for the given IRI
+   * @returns {Term} the JS-Class for the given IRI
    */
 
 
@@ -19228,13 +18603,15 @@ class Graph {
 
 module.exports = Graph;
 
-},{"./Class":74,"./DataType":75,"./Enumeration":76,"./EnumerationMember":77,"./Property":79,"./ReasoningEngine":80,"./utilities":82}],79:[function(_dereq_,module,exports){
+},{"./Class":74,"./DataType":75,"./Enumeration":76,"./EnumerationMember":77,"./Property":79,"./ReasoningEngine":80,"./utilities":83}],79:[function(_dereq_,module,exports){
 "use strict";
 
 // the functions for a property Object
 var util = _dereq_('./utilities');
 
-class Property {
+var Term = _dereq_('./Term');
+
+class Property extends Term {
   /**
    * A Property represents an rdf:Property. It is identified by its IRI
    *
@@ -19243,25 +18620,7 @@ class Property {
    * @param {Graph} graph - The underlying data graph to enable the methods of this Property
    */
   constructor(IRI, graph) {
-    this.IRI = IRI;
-    this.graph = graph;
-  }
-  /**
-   * Retrieves the IRI (@id) of this Property in compact/absolute form
-   *
-   * @param {boolean} compactForm - (default = false), if true -> return compact IRI -> "schema:address", if false -> return absolute IRI -> "http://schema.org/address"
-   * @returns {string} The IRI (@id) of this Property
-   */
-
-
-  getIRI() {
-    var compactForm = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : false;
-
-    if (compactForm) {
-      return this.IRI;
-    }
-
-    return util.toAbsoluteIRI(this.IRI, this.graph.context);
+    super(IRI, graph);
   }
   /**
    * Retrieves the term type of this Property (is always "rdf:Property")
@@ -19274,90 +18633,14 @@ class Property {
     return 'rdf:Property';
   }
   /**
-   * Retrieves the original vocabulary (schema:isPartOf) of this Property
+   * Retrieves the term object of this Property
    *
-   * @returns {string|null} The vocabulary IRI given by the "schema:isPartOf" of this Property
+   * @returns {string} The term object of this Property
    */
 
 
-  getVocabulary() {
-    var propertyObj = this.graph.properties[this.IRI];
-
-    if (!util.isNil(propertyObj['schema:isPartOf'])) {
-      return propertyObj['schema:isPartOf'];
-    }
-
-    return null;
-  }
-  /**
-   * Retrieves the source (dc:source) of this Property
-   *
-   * @returns {string|null} The source IRI given by the "dc:source" of this Property (null if none)
-   */
-
-
-  getSource() {
-    var propertyObj = this.graph.properties[this.IRI];
-
-    if (!util.isNil(propertyObj['dc:source'])) {
-      return propertyObj['dc:source'];
-    } else if (!util.isNil(propertyObj['schema:source'])) {
-      return propertyObj['schema:source'];
-    }
-
-    return null;
-  }
-  /**
-   * Retrieves the Property superseding (schema:supersededBy) this Property
-   *
-   * @returns {string|null} The Property superseding this Property (null if none)
-   */
-
-
-  isSupersededBy() {
-    var propertyObj = this.graph.properties[this.IRI];
-
-    if (util.isString(propertyObj['schema:supersededBy'])) {
-      return propertyObj['schema:supersededBy'];
-    }
-
-    return null;
-  }
-  /**
-   * Retrieves the name (rdfs:label) of this Property in a wished language (optional)
-   *
-   * @param {string} language - (default = "en") the wished language for the name
-   * @returns {string|null} The name of this Property (null if not given for specified language)
-   */
-
-
-  getName() {
-    var language = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 'en';
-    var nameObj = this.graph.properties[this.IRI]['rdfs:label'];
-
-    if (util.isNil(nameObj) || util.isNil(nameObj[language])) {
-      return null;
-    }
-
-    return nameObj[language];
-  }
-  /**
-   * Retrieves the description (rdfs:comment) of this Property in a wished language (optional)
-   *
-   * @param {string} language - (default = "en") the wished language for the description
-   * @returns {string|null} The description of this Property (null if not given for specified language)
-   */
-
-
-  getDescription() {
-    var language = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 'en';
-    var descriptionObj = this.graph.properties[this.IRI]['rdfs:comment'];
-
-    if (util.isNil(descriptionObj) || util.isNil(descriptionObj[language])) {
-      return null;
-    }
-
-    return descriptionObj[language];
+  getTermObj() {
+    return this.graph.properties[this.IRI];
   }
   /**
    * Retrieves the explicit/implicit ranges (schema:rangeIncludes) of this Property
@@ -19371,7 +18654,7 @@ class Property {
   getRanges() {
     var implicit = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : true;
     var filter = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
-    var propertyObj = this.graph.properties[this.IRI];
+    var propertyObj = this.getTermObj();
     var result = [];
     result.push(...propertyObj['schema:rangeIncludes']);
 
@@ -19400,7 +18683,7 @@ class Property {
   getDomains() {
     var implicit = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : true;
     var filter = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
-    var propertyObj = this.graph.properties[this.IRI];
+    var propertyObj = this.getTermObj();
     var result = [];
     result.push(...propertyObj['schema:domainIncludes']);
 
@@ -19429,7 +18712,7 @@ class Property {
   getSuperProperties() {
     var implicit = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : true;
     var filter = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
-    var propertyObj = this.graph.properties[this.IRI];
+    var propertyObj = this.getTermObj();
     var result = [];
 
     if (implicit) {
@@ -19452,7 +18735,7 @@ class Property {
   getSubProperties() {
     var implicit = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : true;
     var filter = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
-    var propertyObj = this.graph.properties[this.IRI];
+    var propertyObj = this.getTermObj();
     var result = [];
 
     if (implicit) {
@@ -19471,18 +18754,8 @@ class Property {
 
 
   getInverseOf() {
-    var propertyObj = this.graph.properties[this.IRI];
+    var propertyObj = this.getTermObj();
     return propertyObj['schema:inverseOf'];
-  }
-  /**
-   * Generates a string representation of this Property (Based on its JSON representation)
-   *
-   * @returns {string} The string representation of this Property
-   */
-
-
-  toString() {
-    return JSON.stringify(this.toJSON(false, null), null, 2);
   }
   /**
    * Generates an explicit/implicit JSON representation of this Property.
@@ -19496,15 +18769,7 @@ class Property {
   toJSON() {
     var implicit = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : true;
     var filter = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
-    var result = {};
-    result['id'] = this.getIRI(true);
-    result['IRI'] = this.getIRI();
-    result['type'] = this.getTermType();
-    result['vocabulary'] = this.getVocabulary();
-    result['source'] = this.getSource();
-    result['supersededBy'] = this.isSupersededBy();
-    result['name'] = this.getName();
-    result['description'] = this.getDescription();
+    var result = super.toJSON();
     result['ranges'] = this.getRanges(implicit, filter);
     result['domains'] = this.getDomains(implicit, filter);
     result['superProperties'] = this.getSuperProperties(implicit, filter);
@@ -19517,7 +18782,7 @@ class Property {
 
 module.exports = Property;
 
-},{"./utilities":82}],80:[function(_dereq_,module,exports){
+},{"./Term":82,"./utilities":83}],80:[function(_dereq_,module,exports){
 "use strict";
 
 var util = _dereq_('./utilities');
@@ -19826,7 +19091,7 @@ class ReasoningEngine {
 
 module.exports = ReasoningEngine;
 
-},{"./utilities":82}],81:[function(_dereq_,module,exports){
+},{"./utilities":83}],81:[function(_dereq_,module,exports){
 "use strict";
 
 function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { Promise.resolve(value).then(_next, _throw); } }
@@ -19931,7 +19196,7 @@ class SDOAdapter {
    *
    * @param {string} id - The id of the wished term, can be an IRI (absolute or compact) or a label
    * @param {object} filter - (optional) The filter settings to be applied on the result
-   * @returns {Class|Property|Enumeration|EnumerationMember|DataType} the JS-Class for the given IRI
+   * @returns {Term} the JS-Class for the given IRI
    */
 
 
@@ -20437,7 +19702,184 @@ class SDOAdapter {
 
 module.exports = SDOAdapter;
 
-},{"./Graph":78,"./utilities":82,"axios":1}],82:[function(_dereq_,module,exports){
+},{"./Graph":78,"./utilities":83,"axios":1}],82:[function(_dereq_,module,exports){
+"use strict";
+
+// the functions for a term Object
+var util = _dereq_('./utilities');
+
+class Term {
+  /**
+   * A vocabulary term. It is identified by its IRI.
+   *
+   * @class
+   * @param {string} IRI - The compacted IRI of this Term
+   * @param {Graph} graph - The underlying data graph to enable the methods of this Term
+   */
+  constructor(IRI, graph) {
+    this.IRI = IRI;
+    this.graph = graph;
+  }
+  /**
+   * Retrieves the IRI (@id) of this Term in compact/absolute form
+   *
+   * @param {boolean} compactForm - (default = false), if true -> return compact IRI -> "schema:Friday", if false -> return absolute IRI -> "http://schema.org/Friday"
+   * @returns {string} The IRI (@id) of this Term
+   */
+
+
+  getIRI() {
+    var compactForm = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : false;
+
+    if (compactForm) {
+      return this.IRI;
+    }
+
+    return util.toAbsoluteIRI(this.IRI, this.graph.context);
+  }
+  /**
+   * Retrieves the term type (@type) of this Term
+   *
+   * @abstract
+   * @returns {string} The term type of this Term
+   */
+
+
+  getTermType() {
+    throw new Error('must be implemented by subclass!');
+  }
+  /**
+   * Retrieves the term object of this Term
+   *
+   * @abstract
+   * @returns {string} The term object of this Term
+   */
+
+
+  getTermObj() {
+    throw new Error('must be implemented by subclass!');
+  }
+  /**
+   * Retrieves the original vocabulary (schema:isPartOf) of this Term
+   *
+   * @returns {string|null} The vocabulary IRI given by the "schema:isPartOf" of this Term
+   */
+
+
+  getVocabulary() {
+    var termObj = this.getTermObj();
+
+    if (!util.isNil(termObj['schema:isPartOf'])) {
+      return termObj['schema:isPartOf'];
+    }
+
+    return null;
+  }
+  /**
+   * Retrieves the source (dc:source) of this Term
+   *
+   * @returns {string|Array|null} The source IRI given by the "dc:source" of this Term (null if none)
+   */
+
+
+  getSource() {
+    var termObj = this.getTermObj();
+
+    if (!util.isNil(termObj['dc:source'])) {
+      return termObj['dc:source'];
+    } else if (!util.isNil(termObj['schema:source'])) {
+      return termObj['schema:source'];
+    }
+
+    return null;
+  }
+  /**
+   * Retrieves the Term superseding (schema:supersededBy) this Term
+   *
+   * @returns {string|null} The Term superseding this Term (null if none)
+   */
+
+
+  isSupersededBy() {
+    var termObj = this.getTermObj();
+
+    if (util.isString(termObj['schema:supersededBy'])) {
+      return termObj['schema:supersededBy'];
+    }
+
+    return null;
+  }
+  /**
+   * Retrieves the name (rdfs:label) of this Term in a wished language (optional)
+   *
+   * @param {string} language - (default = "en") the wished language for the name
+   * @returns {string|null} The name of this Term (null if not given for specified language)
+   */
+
+
+  getName() {
+    var language = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 'en';
+    var termObj = this.getTermObj()['rdfs:label'];
+
+    if (util.isNil(termObj) || util.isNil(termObj[language])) {
+      return null;
+    }
+
+    return termObj[language];
+  }
+  /**
+   * Retrieves the description (rdfs:comment) of this Term in a wished language (optional)
+   *
+   * @param {string} language - (default = "en") the wished language for the description
+   * @returns {string|null} The description of this Term (null if not given for specified language)
+   */
+
+
+  getDescription() {
+    var language = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 'en';
+    var termObj = this.getTermObj()['rdfs:comment'];
+
+    if (util.isNil(termObj) || util.isNil(termObj[language])) {
+      return null;
+    }
+
+    return termObj[language];
+  }
+  /**
+   * Generates a string representation of this Term (Based on its JSON representation)
+   *
+   * @returns {string} The string representation of this Term
+   */
+
+
+  toString() {
+    return JSON.stringify(this.toJSON(false, null), null, 2);
+  }
+  /**
+   * Generates a JSON representation of this Term
+   *
+   * @returns {object} The JSON representation of this Term
+   */
+
+
+  toJSON() {
+    var result = {};
+    result['id'] = this.getIRI(true);
+    result['IRI'] = this.getIRI();
+    result['type'] = this.getTermType();
+    result['vocabulary'] = this.getVocabulary();
+    result['source'] = this.getSource();
+    result['supersededBy'] = this.isSupersededBy();
+    result['name'] = this.getName();
+    result['description'] = this.getDescription();
+    return result;
+  }
+
+}
+
+module.exports = Term;
+
+},{"./utilities":83}],83:[function(_dereq_,module,exports){
 "use strict";
 
 function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { Promise.resolve(value).then(_next, _throw); } }
