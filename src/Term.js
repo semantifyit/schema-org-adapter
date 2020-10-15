@@ -131,7 +131,7 @@ class Term {
      * @returns {object} The JSON representation of this Term
      */
     toJSON() {
-        let result = {};
+        const result = {};
         result['id'] = this.getIRI(true);
         result['IRI'] = this.getIRI();
         result['type'] = this.getTermType();
