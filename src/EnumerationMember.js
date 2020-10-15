@@ -1,7 +1,8 @@
 // the functions for a enumeration member Object
 const util = require('./utilities');
+const Term = require('./Term');
 
-class EnumerationMember {
+class EnumerationMember extends Term {
     /**
      * An EnumerationMember represents a possible value for a schema:Enumeration. It is identified by its IRI
      *
@@ -10,21 +11,7 @@ class EnumerationMember {
      * @param {Graph} graph - The underlying data graph to enable the methods of this EnumerationMember
      */
     constructor(IRI, graph) {
-        this.IRI = IRI;
-        this.graph = graph;
-    }
-
-    /**
-     * Retrieves the IRI (@id) of this EnumerationMember in compact/absolute form
-     *
-     * @param {boolean} compactForm - (default = false), if true -> return compact IRI -> "schema:Friday", if false -> return absolute IRI -> "http://schema.org/Friday"
-     * @returns {string} The IRI (@id) of this EnumerationMember
-     */
-    getIRI(compactForm = false) {
-        if (compactForm) {
-            return this.IRI;
-        }
-        return util.toAbsoluteIRI(this.IRI, this.graph.context);
+        super(IRI, graph);
     }
 
     /**
@@ -37,72 +24,12 @@ class EnumerationMember {
     }
 
     /**
-     * Retrieves the original vocabulary (schema:isPartOf) of this EnumerationMember
+     * Retrieves the term object of this Enumeration Member
      *
-     * @returns {string|null} The vocabulary IRI given by the "schema:isPartOf" of this EnumerationMember
+     * @returns {string} The term object of this Enumeration Member
      */
-    getVocabulary() {
-        let enumObj = this.graph.enumerationMembers[this.IRI];
-        if (!util.isNil(enumObj['schema:isPartOf'])) {
-            return enumObj['schema:isPartOf'];
-        }
-        return null;
-    }
-
-    /**
-     * Retrieves the source (dc:source) of this EnumerationMember
-     *
-     * @returns {string|Array|null} The source IRI given by the "dc:source" of this EnumerationMember (null if none)
-     */
-    getSource() {
-        let enumObj = this.graph.enumerationMembers[this.IRI];
-        if (!util.isNil(enumObj['dc:source'])) {
-            return enumObj['dc:source'];
-        } else if (!util.isNil(enumObj['schema:source'])) {
-            return enumObj['schema:source'];
-        }
-        return null;
-    }
-
-    /**
-     * Retrieves the EnumerationMember superseding (schema:supersededBy) this EnumerationMember
-     *
-     * @returns {string|null} The EnumerationMember superseding this EnumerationMember (null if none)
-     */
-    isSupersededBy() {
-        let enumObj = this.graph.enumerationMembers[this.IRI];
-        if (util.isString(enumObj['schema:supersededBy'])) {
-            return enumObj['schema:supersededBy'];
-        }
-        return null;
-    }
-
-    /**
-     * Retrieves the name (rdfs:label) of this EnumerationMember in a wished language (optional)
-     *
-     * @param {string} language - (default = "en") the wished language for the name
-     * @returns {string|null} The name of this EnumerationMember (null if not given for specified language)
-     */
-    getName(language = 'en') {
-        let nameObj = this.graph.enumerationMembers[this.IRI]['rdfs:label'];
-        if (util.isNil(nameObj) || util.isNil(nameObj[language])) {
-            return null;
-        }
-        return nameObj[language];
-    }
-
-    /**
-     * Retrieves the description (rdfs:comment) of this EnumerationMember in a wished language (optional)
-     *
-     * @param {string} language - (default = "en") the wished language for the description
-     * @returns {string|null} The description of this EnumerationMember (null if not given for specified language)
-     */
-    getDescription(language = 'en') {
-        let descriptionObj = this.graph.enumerationMembers[this.IRI]['rdfs:comment'];
-        if (util.isNil(descriptionObj) || util.isNil(descriptionObj[language])) {
-            return null;
-        }
-        return descriptionObj[language];
+    getTermObj() {
+        return this.graph.enumerationMembers[this.IRI];
     }
 
     /**
@@ -113,7 +40,7 @@ class EnumerationMember {
      * @returns {string[]} The domain enumerations of this EnumerationMember
      */
     getDomainEnumerations(implicit = false, filter = null) {
-        let enumObj = this.graph.enumerationMembers[this.IRI];
+        let enumObj = this.getTermObj();
         let result = [];
         result.push(...enumObj['soa:enumerationDomainIncludes']);
         if (implicit) {
@@ -127,15 +54,6 @@ class EnumerationMember {
     }
 
     /**
-     * Generates a string representation of this EnumerationMember (Based on its JSON representation)
-     *
-     * @returns {string} The string representation of this EnumerationMember
-     */
-    toString() {
-        return JSON.stringify(this.toJSON(false, null), null, 2);
-    }
-
-    /**
      * Generates a JSON representation of this EnumerationMember
      *
      * @param {boolean} implicit - (default = false) includes also implicit data
@@ -143,15 +61,7 @@ class EnumerationMember {
      * @returns {object} The JSON representation of this EnumerationMember
      */
     toJSON(implicit = false, filter = null) {
-        let result = {};
-        result['id'] = this.getIRI(true);
-        result['IRI'] = this.getIRI();
-        result['type'] = this.getTermType();
-        result['vocabulary'] = this.getVocabulary();
-        result['source'] = this.getSource();
-        result['supersededBy'] = this.isSupersededBy();
-        result['name'] = this.getName();
-        result['description'] = this.getDescription();
+        const result = super.toJSON();
         result['domainEnumerations'] = this.getDomainEnumerations(implicit, filter);
         return result;
     }

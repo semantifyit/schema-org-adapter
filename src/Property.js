@@ -1,7 +1,8 @@
 // the functions for a property Object
 const util = require('./utilities');
+const Term = require('./Term');
 
-class Property {
+class Property extends Term {
     /**
      * A Property represents an rdf:Property. It is identified by its IRI
      *
@@ -10,21 +11,7 @@ class Property {
      * @param {Graph} graph - The underlying data graph to enable the methods of this Property
      */
     constructor(IRI, graph) {
-        this.IRI = IRI;
-        this.graph = graph;
-    }
-
-    /**
-     * Retrieves the IRI (@id) of this Property in compact/absolute form
-     *
-     * @param {boolean} compactForm - (default = false), if true -> return compact IRI -> "schema:address", if false -> return absolute IRI -> "http://schema.org/address"
-     * @returns {string} The IRI (@id) of this Property
-     */
-    getIRI(compactForm = false) {
-        if (compactForm) {
-            return this.IRI;
-        }
-        return util.toAbsoluteIRI(this.IRI, this.graph.context);
+        super(IRI, graph);
     }
 
     /**
@@ -37,72 +24,12 @@ class Property {
     }
 
     /**
-     * Retrieves the original vocabulary (schema:isPartOf) of this Property
+     * Retrieves the term object of this Property
      *
-     * @returns {string|null} The vocabulary IRI given by the "schema:isPartOf" of this Property
+     * @returns {string} The term object of this Property
      */
-    getVocabulary() {
-        let propertyObj = this.graph.properties[this.IRI];
-        if (!util.isNil(propertyObj['schema:isPartOf'])) {
-            return propertyObj['schema:isPartOf'];
-        }
-        return null;
-    }
-
-    /**
-     * Retrieves the source (dc:source) of this Property
-     *
-     * @returns {string|null} The source IRI given by the "dc:source" of this Property (null if none)
-     */
-    getSource() {
-        let propertyObj = this.graph.properties[this.IRI];
-        if (!util.isNil(propertyObj['dc:source'])) {
-            return propertyObj['dc:source'];
-        } else if (!util.isNil(propertyObj['schema:source'])) {
-            return propertyObj['schema:source'];
-        }
-        return null;
-    }
-
-    /**
-     * Retrieves the Property superseding (schema:supersededBy) this Property
-     *
-     * @returns {string|null} The Property superseding this Property (null if none)
-     */
-    isSupersededBy() {
-        let propertyObj = this.graph.properties[this.IRI];
-        if (util.isString(propertyObj['schema:supersededBy'])) {
-            return propertyObj['schema:supersededBy'];
-        }
-        return null;
-    }
-
-    /**
-     * Retrieves the name (rdfs:label) of this Property in a wished language (optional)
-     *
-     * @param {string} language - (default = "en") the wished language for the name
-     * @returns {string|null} The name of this Property (null if not given for specified language)
-     */
-    getName(language = 'en') {
-        let nameObj = this.graph.properties[this.IRI]['rdfs:label'];
-        if (util.isNil(nameObj) || util.isNil(nameObj[language])) {
-            return null;
-        }
-        return nameObj[language];
-    }
-
-    /**
-     * Retrieves the description (rdfs:comment) of this Property in a wished language (optional)
-     *
-     * @param {string} language - (default = "en") the wished language for the description
-     * @returns {string|null} The description of this Property (null if not given for specified language)
-     */
-    getDescription(language = 'en') {
-        let descriptionObj = this.graph.properties[this.IRI]['rdfs:comment'];
-        if (util.isNil(descriptionObj) || util.isNil(descriptionObj[language])) {
-            return null;
-        }
-        return descriptionObj[language];
+    getTermObj() {
+        return this.graph.properties[this.IRI];
     }
 
     /**
@@ -113,7 +40,7 @@ class Property {
      * @returns {string[]} The ranges of this Property
      */
     getRanges(implicit = true, filter = null) {
-        let propertyObj = this.graph.properties[this.IRI];
+        let propertyObj = this.getTermObj();
         let result = [];
         result.push(...propertyObj['schema:rangeIncludes']);
         if (implicit) {
@@ -136,7 +63,7 @@ class Property {
      * @returns {string[]} The domains of this Property
      */
     getDomains(implicit = true, filter = null) {
-        let propertyObj = this.graph.properties[this.IRI];
+        let propertyObj = this.getTermObj();
         let result = [];
         result.push(...propertyObj['schema:domainIncludes']);
         if (implicit) {
@@ -158,7 +85,7 @@ class Property {
      * @returns {string[]} The super-properties of this Property
      */
     getSuperProperties(implicit = true, filter = null) {
-        let propertyObj = this.graph.properties[this.IRI];
+        let propertyObj = this.getTermObj();
         let result = [];
 
         if (implicit) {
@@ -177,7 +104,7 @@ class Property {
      * @returns {string[]} The sub-properties of this Property
      */
     getSubProperties(implicit = true, filter = null) {
-        let propertyObj = this.graph.properties[this.IRI];
+        let propertyObj = this.getTermObj();
         let result = [];
 
         if (implicit) {
@@ -194,17 +121,8 @@ class Property {
      * @returns {string} The IRI of the inverse Property of this Property
      */
     getInverseOf() {
-        let propertyObj = this.graph.properties[this.IRI];
+        let propertyObj = this.getTermObj();
         return propertyObj['schema:inverseOf'];
-    }
-
-    /**
-     * Generates a string representation of this Property (Based on its JSON representation)
-     *
-     * @returns {string} The string representation of this Property
-     */
-    toString() {
-        return JSON.stringify(this.toJSON(false, null), null, 2);
     }
 
     /**
@@ -215,15 +133,7 @@ class Property {
      * @returns {object} The JSON representation of this Class
      */
     toJSON(implicit = true, filter = null) {
-        let result = {};
-        result['id'] = this.getIRI(true);
-        result['IRI'] = this.getIRI();
-        result['type'] = this.getTermType();
-        result['vocabulary'] = this.getVocabulary();
-        result['source'] = this.getSource();
-        result['supersededBy'] = this.isSupersededBy();
-        result['name'] = this.getName();
-        result['description'] = this.getDescription();
+        const result = super.toJSON();
         result['ranges'] = this.getRanges(implicit, filter);
         result['domains'] = this.getDomains(implicit, filter);
         result['superProperties'] = this.getSuperProperties(implicit, filter);
