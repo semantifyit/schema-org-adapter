@@ -98,7 +98,7 @@ class Class extends Term {
         if (implicit) {
             result.push(...this.graph.reasoner.inferRangeOf(this.IRI));
         } else {
-            result.push(...this.graph.classes[this.IRI]['soa:isRangeOf']);
+            result.push(...this.getTermObj()['soa:isRangeOf']);
         }
         return util.applyFilter(util.uniquifyArray(result), filter, this.graph);
     }

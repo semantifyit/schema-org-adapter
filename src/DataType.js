@@ -40,7 +40,7 @@ class DataType extends Term {
      * @returns {string[]} The super-DataTypes of this DataType
      */
     getSuperDataTypes(implicit = true, filter = null) {
-        const dataTypeObj = this.graph.dataTypes[this.IRI];
+        const dataTypeObj = this.getTermObj();
         const result = [];
         if (implicit) {
             result.push(...this.graph.reasoner.inferSuperDataTypes(this.IRI));
@@ -58,7 +58,7 @@ class DataType extends Term {
      * @returns {string[]} The sub-DataTypes of this DataType
      */
     getSubDataTypes(implicit = true, filter = null) {
-        const dataTypeObj = this.graph.dataTypes[this.IRI];
+        const dataTypeObj = this.getTermObj();
         const result = [];
         if (implicit) {
             result.push(...this.graph.reasoner.inferSubDataTypes(this.IRI));
@@ -80,7 +80,7 @@ class DataType extends Term {
         if (implicit) {
             result.push(...this.graph.reasoner.inferRangeOf(this.IRI));
         } else {
-            result.push(...this.graph.dataTypes[this.IRI]['soa:isRangeOf']);
+            result.push(...this.getTermObj()['soa:isRangeOf']);
         }
         return util.applyFilter(util.uniquifyArray(result), filter, this.graph);
     }
