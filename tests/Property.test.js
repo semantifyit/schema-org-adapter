@@ -133,6 +133,9 @@ describe('Property methods', () => {
         const subOrganization = mySA.getProperty('schema:subOrganization');
         console.log(subOrganization.getInverseOf());
         expect(subOrganization.getInverseOf()).toBe('schema:parentOrganization');
+        const name = mySA.getProperty('schema:name');
+        console.log(name.getInverseOf());
+        expect(name.getInverseOf()).toBe(null);
     });
 
     test('getInverseOf() - Bijection', async() => {
@@ -153,6 +156,10 @@ describe('Property methods', () => {
     test('toString()', async() => {
         const mySA = await initAdapter();
         const subOrganization = mySA.getProperty('schema:subOrganization');
+        console.log(subOrganization.toString());
         expect(util.isObject(JSON.parse(subOrganization.toString()))).toBe(true);
+        const name = mySA.getProperty('schema:name');
+        console.log(name.toString());
+        expect(util.isObject(JSON.parse(name.toString()))).toBe(true);
     });
 });

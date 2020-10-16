@@ -1,3 +1,8 @@
+3.1.2 / 2020-10-16
+==================
+
+  * Added "null" as default value for schema:inverseOf for properties.
+
 3.1.1 / 2020-10-15
 ==================
 

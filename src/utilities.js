@@ -395,6 +395,9 @@ function curateVocabNode(vocabNode, vocabularies) {
     } else if (vocabNode['schema:rangeIncludes'] === undefined && vocabNode['@type'] === 'rdf:Property') {
         vocabNode['schema:rangeIncludes'] = [];
     }
+    if (vocabNode['schema:inverseOf'] === undefined && vocabNode['@type'] === 'rdf:Property') {
+        vocabNode['schema:inverseOf'] = null;
+    }
     if (!isString(vocabNode['schema:isPartOf'])) {
         const vocabKeys = Object.keys(vocabularies);
         let vocab;

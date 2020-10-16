@@ -24,7 +24,7 @@
     * [new SDOAdapter(commitBase)](#new_SDOAdapter_new)
     * [.addVocabularies(vocabArray)](#SDOAdapter+addVocabularies) ⇒ <code>Promise.&lt;void&gt;</code>
     * [.fetchVocabularyFromURL(url)](#SDOAdapter+fetchVocabularyFromURL) ⇒ <code>Promise.&lt;object&gt;</code>
-    * [.getTerm(id, filter)](#SDOAdapter+getTerm) ⇒ [<code>Class</code>](#Class) \| [<code>Property</code>](#Property) \| [<code>Enumeration</code>](#Enumeration) \| [<code>EnumerationMember</code>](#EnumerationMember) \| [<code>DataType</code>](#DataType)
+    * [.getTerm(id, filter)](#SDOAdapter+getTerm) ⇒ <code>Term</code>
     * [.getAllTerms(filter)](#SDOAdapter+getAllTerms) ⇒ [<code>Array.&lt;Class&gt;</code>](#Class)
     * [.getListOfTerms(filter)](#SDOAdapter+getListOfTerms) ⇒ <code>Array.&lt;string&gt;</code>
     * [.getClass(id, filter)](#SDOAdapter+getClass) ⇒ [<code>Class</code>](#Class) \| [<code>Enumeration</code>](#Enumeration)
@@ -86,11 +86,11 @@ Fetches a vocabulary from the given URL.
 
 <a name="SDOAdapter+getTerm"></a>
 
-### sdoAdapter.getTerm(id, filter) ⇒ [<code>Class</code>](#Class) \| [<code>Property</code>](#Property) \| [<code>Enumeration</code>](#Enumeration) \| [<code>EnumerationMember</code>](#EnumerationMember) \| [<code>DataType</code>](#DataType)
+### sdoAdapter.getTerm(id, filter) ⇒ <code>Term</code>
 Creates a corresponding JS-Class for the given IRI, depending on its term-category
 
 **Kind**: instance method of [<code>SDOAdapter</code>](#SDOAdapter)  
-**Returns**: [<code>Class</code>](#Class) \| [<code>Property</code>](#Property) \| [<code>Enumeration</code>](#Enumeration) \| [<code>EnumerationMember</code>](#EnumerationMember) \| [<code>DataType</code>](#DataType) - the JS-Class for the given IRI  
+**Returns**: <code>Term</code> - the JS-Class for the given IRI  
 
 | Param | Type | Default | Description |
 | --- | --- | --- | --- |
@@ -376,18 +376,12 @@ Returns the URI of the respective versions file
 
 * [Class](#Class)
     * [new Class(IRI, graph)](#new_Class_new)
-    * [.getIRI(compactForm)](#Class+getIRI) ⇒ <code>string</code>
     * [.getTermType()](#Class+getTermType) ⇒ <code>string</code>
-    * [.getVocabulary()](#Class+getVocabulary) ⇒ <code>string</code> \| <code>null</code>
-    * [.getSource()](#Class+getSource) ⇒ <code>string</code> \| <code>null</code>
-    * [.isSupersededBy()](#Class+isSupersededBy) ⇒ <code>string</code> \| <code>null</code>
-    * [.getName(language)](#Class+getName) ⇒ <code>string</code> \| <code>null</code>
-    * [.getDescription(language)](#Class+getDescription) ⇒ <code>string</code> \| <code>null</code>
+    * [.getTermObj()](#Class+getTermObj) ⇒ <code>string</code>
     * [.getProperties(implicit, filter)](#Class+getProperties) ⇒ <code>Array.&lt;string&gt;</code>
     * [.getSuperClasses(implicit, filter)](#Class+getSuperClasses) ⇒ <code>Array.&lt;string&gt;</code>
     * [.getSubClasses(implicit, filter)](#Class+getSubClasses) ⇒ <code>Array.&lt;string&gt;</code>
     * [.isRangeOf(implicit, filter)](#Class+isRangeOf) ⇒ <code>Array</code>
-    * [.toString()](#Class+toString) ⇒ <code>string</code>
     * [.toJSON(implicit, filter)](#Class+toJSON) ⇒ <code>object</code>
 
 <a name="new_Class_new"></a>
@@ -401,18 +395,6 @@ A Class represents an rdfs:Class. It is identified by its IRI
 | IRI | <code>string</code> | The compacted IRI of this Class, e.g. "schema:Book" |
 | graph | <code>Graph</code> | The underlying data graph to enable the methods of this Class |
 
-<a name="Class+getIRI"></a>
-
-### class.getIRI(compactForm) ⇒ <code>string</code>
-Retrieves the IRI (@id) of this Class in compact/absolute form
-
-**Kind**: instance method of [<code>Class</code>](#Class)  
-**Returns**: <code>string</code> - The IRI (@id) of this Class  
-
-| Param | Type | Default | Description |
-| --- | --- | --- | --- |
-| compactForm | <code>boolean</code> | <code>false</code> | (default = false), if true -> return compact IRI -> "schema:Book", if false -> return absolute IRI -> "http://schema.org/Book" |
-
 <a name="Class+getTermType"></a>
 
 ### class.getTermType() ⇒ <code>string</code>
@@ -420,51 +402,13 @@ Retrieves the term type (@type) of this Class (is always "rdfs:Class")
 
 **Kind**: instance method of [<code>Class</code>](#Class)  
 **Returns**: <code>string</code> - The term type of this Class -> "rdfs:Class"  
-<a name="Class+getVocabulary"></a>
+<a name="Class+getTermObj"></a>
 
-### class.getVocabulary() ⇒ <code>string</code> \| <code>null</code>
-Retrieves the original vocabulary (schema:isPartOf) of this Class
-
-**Kind**: instance method of [<code>Class</code>](#Class)  
-**Returns**: <code>string</code> \| <code>null</code> - The vocabulary IRI given by the "schema:isPartOf" of this Class  
-<a name="Class+getSource"></a>
-
-### class.getSource() ⇒ <code>string</code> \| <code>null</code>
-Retrieves the source (dc:source) of this Class
+### class.getTermObj() ⇒ <code>string</code>
+Retrieves the term object of this Class
 
 **Kind**: instance method of [<code>Class</code>](#Class)  
-**Returns**: <code>string</code> \| <code>null</code> - The source IRI given by the "dc:source" of this Class (null if none)  
-<a name="Class+isSupersededBy"></a>
-
-### class.isSupersededBy() ⇒ <code>string</code> \| <code>null</code>
-Retrieves the class superseding (schema:supersededBy) this Class
-
-**Kind**: instance method of [<code>Class</code>](#Class)  
-**Returns**: <code>string</code> \| <code>null</code> - The Class superseding this Class (null if none)  
-<a name="Class+getName"></a>
-
-### class.getName(language) ⇒ <code>string</code> \| <code>null</code>
-Retrieves the name (rdfs:label) of this Class in a wished language (optional)
-
-**Kind**: instance method of [<code>Class</code>](#Class)  
-**Returns**: <code>string</code> \| <code>null</code> - The name of this Class (null if not given for specified language)  
-
-| Param | Type | Default | Description |
-| --- | --- | --- | --- |
-| language | <code>string</code> | <code>&quot;en&quot;</code> | (default = "en") the wished language for the name |
-
-<a name="Class+getDescription"></a>
-
-### class.getDescription(language) ⇒ <code>string</code> \| <code>null</code>
-Retrieves the description (rdfs:comment) of this Class in a wished language (optional)
-
-**Kind**: instance method of [<code>Class</code>](#Class)  
-**Returns**: <code>string</code> \| <code>null</code> - The description of this Class (null if not given for specified language)  
-
-| Param | Type | Default | Description |
-| --- | --- | --- | --- |
-| language | <code>string</code> | <code>&quot;en&quot;</code> | (default = "en") the wished language for the description |
-
+**Returns**: <code>string</code> - The term object of this Class  
 <a name="Class+getProperties"></a>
 
 ### class.getProperties(implicit, filter) ⇒ <code>Array.&lt;string&gt;</code>
@@ -517,13 +461,6 @@ Retrieves the properties that have this Class as a range
 | implicit | <code>boolean</code> | <code>true</code> | (default = true) includes also implicit data |
 | filter | <code>object</code> \| <code>null</code> | <code></code> | (default = null) an optional filter for the generated data |
 
-<a name="Class+toString"></a>
-
-### class.toString() ⇒ <code>string</code>
-Generates a string representation of this Class (Based on its JSON representation)
-
-**Kind**: instance method of [<code>Class</code>](#Class)  
-**Returns**: <code>string</code> - The string representation of this Class  
 <a name="Class+toJSON"></a>
 
 ### class.toJSON(implicit, filter) ⇒ <code>object</code>
@@ -544,19 +481,13 @@ Generates an explicit/implicit JSON representation of this Class.
 
 * [Property](#Property)
     * [new Property(IRI, graph)](#new_Property_new)
-    * [.getIRI(compactForm)](#Property+getIRI) ⇒ <code>string</code>
     * [.getTermType()](#Property+getTermType) ⇒ <code>string</code>
-    * [.getVocabulary()](#Property+getVocabulary) ⇒ <code>string</code> \| <code>null</code>
-    * [.getSource()](#Property+getSource) ⇒ <code>string</code> \| <code>null</code>
-    * [.isSupersededBy()](#Property+isSupersededBy) ⇒ <code>string</code> \| <code>null</code>
-    * [.getName(language)](#Property+getName) ⇒ <code>string</code> \| <code>null</code>
-    * [.getDescription(language)](#Property+getDescription) ⇒ <code>string</code> \| <code>null</code>
+    * [.getTermObj()](#Property+getTermObj) ⇒ <code>string</code>
     * [.getRanges(implicit, filter)](#Property+getRanges) ⇒ <code>Array.&lt;string&gt;</code>
     * [.getDomains(implicit, filter)](#Property+getDomains) ⇒ <code>Array.&lt;string&gt;</code>
     * [.getSuperProperties(implicit, filter)](#Property+getSuperProperties) ⇒ <code>Array.&lt;string&gt;</code>
     * [.getSubProperties(implicit, filter)](#Property+getSubProperties) ⇒ <code>Array.&lt;string&gt;</code>
     * [.getInverseOf()](#Property+getInverseOf) ⇒ <code>string</code>
-    * [.toString()](#Property+toString) ⇒ <code>string</code>
     * [.toJSON(implicit, filter)](#Property+toJSON) ⇒ <code>object</code>
 
 <a name="new_Property_new"></a>
@@ -570,18 +501,6 @@ A Property represents an rdf:Property. It is identified by its IRI
 | IRI | <code>string</code> | The compacted IRI of this Property, e.g. "schema:address" |
 | graph | <code>Graph</code> | The underlying data graph to enable the methods of this Property |
 
-<a name="Property+getIRI"></a>
-
-### property.getIRI(compactForm) ⇒ <code>string</code>
-Retrieves the IRI (@id) of this Property in compact/absolute form
-
-**Kind**: instance method of [<code>Property</code>](#Property)  
-**Returns**: <code>string</code> - The IRI (@id) of this Property  
-
-| Param | Type | Default | Description |
-| --- | --- | --- | --- |
-| compactForm | <code>boolean</code> | <code>false</code> | (default = false), if true -> return compact IRI -> "schema:address", if false -> return absolute IRI -> "http://schema.org/address" |
-
 <a name="Property+getTermType"></a>
 
 ### property.getTermType() ⇒ <code>string</code>
@@ -589,51 +508,13 @@ Retrieves the term type of this Property (is always "rdf:Property")
 
 **Kind**: instance method of [<code>Property</code>](#Property)  
 **Returns**: <code>string</code> - The term type of this Property -> "rdf:Property"  
-<a name="Property+getVocabulary"></a>
+<a name="Property+getTermObj"></a>
 
-### property.getVocabulary() ⇒ <code>string</code> \| <code>null</code>
-Retrieves the original vocabulary (schema:isPartOf) of this Property
-
-**Kind**: instance method of [<code>Property</code>](#Property)  
-**Returns**: <code>string</code> \| <code>null</code> - The vocabulary IRI given by the "schema:isPartOf" of this Property  
-<a name="Property+getSource"></a>
-
-### property.getSource() ⇒ <code>string</code> \| <code>null</code>
-Retrieves the source (dc:source) of this Property
+### property.getTermObj() ⇒ <code>string</code>
+Retrieves the term object of this Property
 
 **Kind**: instance method of [<code>Property</code>](#Property)  
-**Returns**: <code>string</code> \| <code>null</code> - The source IRI given by the "dc:source" of this Property (null if none)  
-<a name="Property+isSupersededBy"></a>
-
-### property.isSupersededBy() ⇒ <code>string</code> \| <code>null</code>
-Retrieves the Property superseding (schema:supersededBy) this Property
-
-**Kind**: instance method of [<code>Property</code>](#Property)  
-**Returns**: <code>string</code> \| <code>null</code> - The Property superseding this Property (null if none)  
-<a name="Property+getName"></a>
-
-### property.getName(language) ⇒ <code>string</code> \| <code>null</code>
-Retrieves the name (rdfs:label) of this Property in a wished language (optional)
-
-**Kind**: instance method of [<code>Property</code>](#Property)  
-**Returns**: <code>string</code> \| <code>null</code> - The name of this Property (null if not given for specified language)  
-
-| Param | Type | Default | Description |
-| --- | --- | --- | --- |
-| language | <code>string</code> | <code>&quot;en&quot;</code> | (default = "en") the wished language for the name |
-
-<a name="Property+getDescription"></a>
-
-### property.getDescription(language) ⇒ <code>string</code> \| <code>null</code>
-Retrieves the description (rdfs:comment) of this Property in a wished language (optional)
-
-**Kind**: instance method of [<code>Property</code>](#Property)  
-**Returns**: <code>string</code> \| <code>null</code> - The description of this Property (null if not given for specified language)  
-
-| Param | Type | Default | Description |
-| --- | --- | --- | --- |
-| language | <code>string</code> | <code>&quot;en&quot;</code> | (default = "en") the wished language for the description |
-
+**Returns**: <code>string</code> - The term object of this Property  
 <a name="Property+getRanges"></a>
 
 ### property.getRanges(implicit, filter) ⇒ <code>Array.&lt;string&gt;</code>
@@ -693,13 +574,6 @@ Retrieves the inverse Property (schema:inverseOf) of this Property
 
 **Kind**: instance method of [<code>Property</code>](#Property)  
 **Returns**: <code>string</code> - The IRI of the inverse Property of this Property  
-<a name="Property+toString"></a>
-
-### property.toString() ⇒ <code>string</code>
-Generates a string representation of this Property (Based on its JSON representation)
-
-**Kind**: instance method of [<code>Property</code>](#Property)  
-**Returns**: <code>string</code> - The string representation of this Property  
 <a name="Property+toJSON"></a>
 
 ### property.toJSON(implicit, filter) ⇒ <code>object</code>
@@ -720,19 +594,9 @@ Generates an explicit/implicit JSON representation of this Property.
 
 * [Enumeration](#Enumeration)
     * [new Enumeration(IRI, graph)](#new_Enumeration_new)
-    * [.getIRI(compactForm)](#Enumeration+getIRI) ⇒ <code>string</code>
     * [.getTermType()](#Enumeration+getTermType) ⇒ <code>string</code>
-    * [.getVocabulary()](#Enumeration+getVocabulary) ⇒ <code>string</code> \| <code>null</code>
-    * [.getSource()](#Enumeration+getSource) ⇒ <code>string</code> \| <code>null</code>
-    * [.isSupersededBy()](#Enumeration+isSupersededBy) ⇒ <code>string</code> \| <code>null</code>
-    * [.getName(language)](#Enumeration+getName) ⇒ <code>string</code> \| <code>null</code>
-    * [.getDescription(language)](#Enumeration+getDescription) ⇒ <code>string</code> \| <code>null</code>
+    * [.getTermObj()](#Enumeration+getTermObj) ⇒ <code>string</code>
     * [.getEnumerationMembers(implicit, filter)](#Enumeration+getEnumerationMembers) ⇒ <code>Array.&lt;string&gt;</code>
-    * [.getProperties(implicit, filter)](#Enumeration+getProperties) ⇒ <code>Array.&lt;string&gt;</code>
-    * [.getSuperClasses(implicit, filter)](#Enumeration+getSuperClasses) ⇒ <code>Array.&lt;string&gt;</code>
-    * [.getSubClasses(implicit, filter)](#Enumeration+getSubClasses) ⇒ <code>Array.&lt;string&gt;</code>
-    * [.isRangeOf(implicit, filter)](#Enumeration+isRangeOf) ⇒ <code>Array</code>
-    * [.toString()](#Enumeration+toString) ⇒ <code>string</code>
     * [.toJSON(implicit, filter)](#Enumeration+toJSON) ⇒ <code>object</code>
 
 <a name="new_Enumeration_new"></a>
@@ -746,18 +610,6 @@ An Enumeration represents a schema:Enumeration, which is also a sub-type of an r
 | IRI | <code>string</code> | The compacted IRI of this Enumeration, e.g. "schema:DayOfWeek" |
 | graph | <code>Graph</code> | The underlying data graph to enable the methods of this Enumeration |
 
-<a name="Enumeration+getIRI"></a>
-
-### enumeration.getIRI(compactForm) ⇒ <code>string</code>
-Retrieves the IRI (@id) of this Enumeration in compact/absolute form
-
-**Kind**: instance method of [<code>Enumeration</code>](#Enumeration)  
-**Returns**: <code>string</code> - The IRI (@id) of this Enumeration  
-
-| Param | Type | Default | Description |
-| --- | --- | --- | --- |
-| compactForm | <code>boolean</code> | <code>false</code> | (default = false), if true -> return compact IRI -> "schema:DayOfWeek", if false -> return absolute IRI -> "http://schema.org/DayOfWeek" |
-
 <a name="Enumeration+getTermType"></a>
 
 ### enumeration.getTermType() ⇒ <code>string</code>
@@ -765,51 +617,13 @@ Retrieves the term type (@type) of this Enumeration (is always "schema:Enumerati
 
 **Kind**: instance method of [<code>Enumeration</code>](#Enumeration)  
 **Returns**: <code>string</code> - The term type of this Enumeration -> "schema:Enumeration"  
-<a name="Enumeration+getVocabulary"></a>
+<a name="Enumeration+getTermObj"></a>
 
-### enumeration.getVocabulary() ⇒ <code>string</code> \| <code>null</code>
-Retrieves the original vocabulary (schema:isPartOf) of this Enumeration
-
-**Kind**: instance method of [<code>Enumeration</code>](#Enumeration)  
-**Returns**: <code>string</code> \| <code>null</code> - The vocabulary IRI given by the "schema:isPartOf" of this Enumeration  
-<a name="Enumeration+getSource"></a>
-
-### enumeration.getSource() ⇒ <code>string</code> \| <code>null</code>
-Retrieves the source (dc:source) of this Enumeration
+### enumeration.getTermObj() ⇒ <code>string</code>
+Retrieves the term object of this Enumeration
 
 **Kind**: instance method of [<code>Enumeration</code>](#Enumeration)  
-**Returns**: <code>string</code> \| <code>null</code> - The source IRI given by the "dc:source" of this Enumeration (null if none)  
-<a name="Enumeration+isSupersededBy"></a>
-
-### enumeration.isSupersededBy() ⇒ <code>string</code> \| <code>null</code>
-Retrieves the Enumeration superseding (schema:supersededBy) this Enumeration
-
-**Kind**: instance method of [<code>Enumeration</code>](#Enumeration)  
-**Returns**: <code>string</code> \| <code>null</code> - The Enumeration superseding this Enumeration (null if none)  
-<a name="Enumeration+getName"></a>
-
-### enumeration.getName(language) ⇒ <code>string</code> \| <code>null</code>
-Retrieves the name (rdfs:label) of this Enumeration in a wished language (optional)
-
-**Kind**: instance method of [<code>Enumeration</code>](#Enumeration)  
-**Returns**: <code>string</code> \| <code>null</code> - The name of this Enumeration (null if not given for specified language)  
-
-| Param | Type | Default | Description |
-| --- | --- | --- | --- |
-| language | <code>string</code> | <code>&quot;en&quot;</code> | (default = "en") the wished language for the name |
-
-<a name="Enumeration+getDescription"></a>
-
-### enumeration.getDescription(language) ⇒ <code>string</code> \| <code>null</code>
-Retrieves the description (rdfs:comment) of this Enumeration in a wished language (optional)
-
-**Kind**: instance method of [<code>Enumeration</code>](#Enumeration)  
-**Returns**: <code>string</code> \| <code>null</code> - The description of this Enumeration (null if not given for specified language)  
-
-| Param | Type | Default | Description |
-| --- | --- | --- | --- |
-| language | <code>string</code> | <code>&quot;en&quot;</code> | (default = "en") the wished language for the description |
-
+**Returns**: <code>string</code> - The term object of this Enumeration  
 <a name="Enumeration+getEnumerationMembers"></a>
 
 ### enumeration.getEnumerationMembers(implicit, filter) ⇒ <code>Array.&lt;string&gt;</code>
@@ -823,65 +637,6 @@ Retrieves the enumeration members (soa:hasEnumerationMember) of this Enumeration
 | implicit | <code>boolean</code> | <code>false</code> | (default = false) retrieves also implicit enumeration members (inheritance from sub-enumerations) |
 | filter | <code>object</code> \| <code>null</code> | <code></code> | (default = null) an optional filter for the enumeration members |
 
-<a name="Enumeration+getProperties"></a>
-
-### enumeration.getProperties(implicit, filter) ⇒ <code>Array.&lt;string&gt;</code>
-Retrieves the explicit/implicit properties (soa:hasProperty) of this Enumeration
-
-**Kind**: instance method of [<code>Enumeration</code>](#Enumeration)  
-**Returns**: <code>Array.&lt;string&gt;</code> - The properties of this Enumeration  
-
-| Param | Type | Default | Description |
-| --- | --- | --- | --- |
-| implicit | <code>boolean</code> | <code>true</code> | (default = true) retrieves also implicit properties (inheritance from super-classes) |
-| filter | <code>object</code> \| <code>null</code> | <code></code> | (default = null) an optional filter for the properties |
-
-<a name="Enumeration+getSuperClasses"></a>
-
-### enumeration.getSuperClasses(implicit, filter) ⇒ <code>Array.&lt;string&gt;</code>
-Retrieves the explicit/implicit super-classes (rdfs:subClassOf) of this Enumeration
-
-**Kind**: instance method of [<code>Enumeration</code>](#Enumeration)  
-**Returns**: <code>Array.&lt;string&gt;</code> - The super-classes of this Enumeration  
-
-| Param | Type | Default | Description |
-| --- | --- | --- | --- |
-| implicit | <code>boolean</code> | <code>true</code> | (default = true) retrieves also implicit super-classes (recursive from super-classes) |
-| filter | <code>object</code> \| <code>null</code> | <code></code> | (default = null) an optional filter for the super-classes |
-
-<a name="Enumeration+getSubClasses"></a>
-
-### enumeration.getSubClasses(implicit, filter) ⇒ <code>Array.&lt;string&gt;</code>
-Retrieves the explicit/implicit sub-classes (soa:superClassOf) of this Enumeration
-
-**Kind**: instance method of [<code>Enumeration</code>](#Enumeration)  
-**Returns**: <code>Array.&lt;string&gt;</code> - The sub-classes of this Enumeration  
-
-| Param | Type | Default | Description |
-| --- | --- | --- | --- |
-| implicit | <code>boolean</code> | <code>true</code> | (default = true) retrieves also implicit sub-classes (recursive from sub-classes) |
-| filter | <code>object</code> \| <code>null</code> | <code></code> | (default = null) an optional filter for the sub-classes |
-
-<a name="Enumeration+isRangeOf"></a>
-
-### enumeration.isRangeOf(implicit, filter) ⇒ <code>Array</code>
-Retrieves the properties that have this Enumeration as a range
-
-**Kind**: instance method of [<code>Enumeration</code>](#Enumeration)  
-**Returns**: <code>Array</code> - The properties that have this Enumeration as a range  
-
-| Param | Type | Default | Description |
-| --- | --- | --- | --- |
-| implicit | <code>boolean</code> | <code>true</code> | (default = true) includes also implicit data |
-| filter | <code>object</code> \| <code>null</code> | <code></code> | (default = null) an optional filter for the generated data |
-
-<a name="Enumeration+toString"></a>
-
-### enumeration.toString() ⇒ <code>string</code>
-Generates a string representation of this Enumeration (Based on its JSON representation)
-
-**Kind**: instance method of [<code>Enumeration</code>](#Enumeration)  
-**Returns**: <code>string</code> - The string representation of this Enumeration  
 <a name="Enumeration+toJSON"></a>
 
 ### enumeration.toJSON(implicit, filter) ⇒ <code>object</code>
@@ -902,15 +657,9 @@ Generates an explicit/implicit JSON representation of this Enumeration
 
 * [EnumerationMember](#EnumerationMember)
     * [new EnumerationMember(IRI, graph)](#new_EnumerationMember_new)
-    * [.getIRI(compactForm)](#EnumerationMember+getIRI) ⇒ <code>string</code>
     * [.getTermType()](#EnumerationMember+getTermType) ⇒ <code>string</code>
-    * [.getVocabulary()](#EnumerationMember+getVocabulary) ⇒ <code>string</code> \| <code>null</code>
-    * [.getSource()](#EnumerationMember+getSource) ⇒ <code>string</code> \| <code>Array</code> \| <code>null</code>
-    * [.isSupersededBy()](#EnumerationMember+isSupersededBy) ⇒ <code>string</code> \| <code>null</code>
-    * [.getName(language)](#EnumerationMember+getName) ⇒ <code>string</code> \| <code>null</code>
-    * [.getDescription(language)](#EnumerationMember+getDescription) ⇒ <code>string</code> \| <code>null</code>
+    * [.getTermObj()](#EnumerationMember+getTermObj) ⇒ <code>string</code>
     * [.getDomainEnumerations(implicit, filter)](#EnumerationMember+getDomainEnumerations) ⇒ <code>Array.&lt;string&gt;</code>
-    * [.toString()](#EnumerationMember+toString) ⇒ <code>string</code>
     * [.toJSON(implicit, filter)](#EnumerationMember+toJSON) ⇒ <code>object</code>
 
 <a name="new_EnumerationMember_new"></a>
@@ -924,18 +673,6 @@ An EnumerationMember represents a possible value for a schema:Enumeration. It is
 | IRI | <code>string</code> | The compacted IRI of this EnumerationMember, e.g. "schema:Friday" |
 | graph | <code>Graph</code> | The underlying data graph to enable the methods of this EnumerationMember |
 
-<a name="EnumerationMember+getIRI"></a>
-
-### enumerationMember.getIRI(compactForm) ⇒ <code>string</code>
-Retrieves the IRI (@id) of this EnumerationMember in compact/absolute form
-
-**Kind**: instance method of [<code>EnumerationMember</code>](#EnumerationMember)  
-**Returns**: <code>string</code> - The IRI (@id) of this EnumerationMember  
-
-| Param | Type | Default | Description |
-| --- | --- | --- | --- |
-| compactForm | <code>boolean</code> | <code>false</code> | (default = false), if true -> return compact IRI -> "schema:Friday", if false -> return absolute IRI -> "http://schema.org/Friday" |
-
 <a name="EnumerationMember+getTermType"></a>
 
 ### enumerationMember.getTermType() ⇒ <code>string</code>
@@ -943,51 +680,13 @@ Retrieves the term type (@type) of this EnumerationMember (is always "schema:Enu
 
 **Kind**: instance method of [<code>EnumerationMember</code>](#EnumerationMember)  
 **Returns**: <code>string</code> - The term type of this EnumerationMember -> "soa:EnumerationMember" //there is no explicit type for enumeration members in the Schema.org Meta, so we use our own definition  
-<a name="EnumerationMember+getVocabulary"></a>
+<a name="EnumerationMember+getTermObj"></a>
 
-### enumerationMember.getVocabulary() ⇒ <code>string</code> \| <code>null</code>
-Retrieves the original vocabulary (schema:isPartOf) of this EnumerationMember
-
-**Kind**: instance method of [<code>EnumerationMember</code>](#EnumerationMember)  
-**Returns**: <code>string</code> \| <code>null</code> - The vocabulary IRI given by the "schema:isPartOf" of this EnumerationMember  
-<a name="EnumerationMember+getSource"></a>
-
-### enumerationMember.getSource() ⇒ <code>string</code> \| <code>Array</code> \| <code>null</code>
-Retrieves the source (dc:source) of this EnumerationMember
+### enumerationMember.getTermObj() ⇒ <code>string</code>
+Retrieves the term object of this Enumeration Member
 
 **Kind**: instance method of [<code>EnumerationMember</code>](#EnumerationMember)  
-**Returns**: <code>string</code> \| <code>Array</code> \| <code>null</code> - The source IRI given by the "dc:source" of this EnumerationMember (null if none)  
-<a name="EnumerationMember+isSupersededBy"></a>
-
-### enumerationMember.isSupersededBy() ⇒ <code>string</code> \| <code>null</code>
-Retrieves the EnumerationMember superseding (schema:supersededBy) this EnumerationMember
-
-**Kind**: instance method of [<code>EnumerationMember</code>](#EnumerationMember)  
-**Returns**: <code>string</code> \| <code>null</code> - The EnumerationMember superseding this EnumerationMember (null if none)  
-<a name="EnumerationMember+getName"></a>
-
-### enumerationMember.getName(language) ⇒ <code>string</code> \| <code>null</code>
-Retrieves the name (rdfs:label) of this EnumerationMember in a wished language (optional)
-
-**Kind**: instance method of [<code>EnumerationMember</code>](#EnumerationMember)  
-**Returns**: <code>string</code> \| <code>null</code> - The name of this EnumerationMember (null if not given for specified language)  
-
-| Param | Type | Default | Description |
-| --- | --- | --- | --- |
-| language | <code>string</code> | <code>&quot;en&quot;</code> | (default = "en") the wished language for the name |
-
-<a name="EnumerationMember+getDescription"></a>
-
-### enumerationMember.getDescription(language) ⇒ <code>string</code> \| <code>null</code>
-Retrieves the description (rdfs:comment) of this EnumerationMember in a wished language (optional)
-
-**Kind**: instance method of [<code>EnumerationMember</code>](#EnumerationMember)  
-**Returns**: <code>string</code> \| <code>null</code> - The description of this EnumerationMember (null if not given for specified language)  
-
-| Param | Type | Default | Description |
-| --- | --- | --- | --- |
-| language | <code>string</code> | <code>&quot;en&quot;</code> | (default = "en") the wished language for the description |
-
+**Returns**: <code>string</code> - The term object of this Enumeration Member  
 <a name="EnumerationMember+getDomainEnumerations"></a>
 
 ### enumerationMember.getDomainEnumerations(implicit, filter) ⇒ <code>Array.&lt;string&gt;</code>
@@ -1001,13 +700,6 @@ Retrieves the domain enumerations (soa:enumerationDomainIncludes) of this Enumer
 | implicit | <code>boolean</code> | <code>false</code> | (default = false) retrieves also implicit domain enumerations (inheritance from super-enumerations) |
 | filter | <code>object</code> \| <code>null</code> | <code></code> | (default = null) an optional filter for the domain enumerations |
 
-<a name="EnumerationMember+toString"></a>
-
-### enumerationMember.toString() ⇒ <code>string</code>
-Generates a string representation of this EnumerationMember (Based on its JSON representation)
-
-**Kind**: instance method of [<code>EnumerationMember</code>](#EnumerationMember)  
-**Returns**: <code>string</code> - The string representation of this EnumerationMember  
 <a name="EnumerationMember+toJSON"></a>
 
 ### enumerationMember.toJSON(implicit, filter) ⇒ <code>object</code>
@@ -1028,17 +720,11 @@ Generates a JSON representation of this EnumerationMember
 
 * [DataType](#DataType)
     * [new DataType(IRI, graph)](#new_DataType_new)
-    * [.getIRI(compactForm)](#DataType+getIRI) ⇒ <code>string</code>
     * [.getTermType()](#DataType+getTermType) ⇒ <code>string</code>
-    * [.getVocabulary()](#DataType+getVocabulary) ⇒ <code>string</code> \| <code>null</code>
-    * [.getSource()](#DataType+getSource) ⇒ <code>string</code> \| <code>null</code>
-    * [.isSupersededBy()](#DataType+isSupersededBy) ⇒ <code>string</code> \| <code>null</code>
-    * [.getName(language)](#DataType+getName) ⇒ <code>string</code> \| <code>null</code>
-    * [.getDescription(language)](#DataType+getDescription) ⇒ <code>string</code> \| <code>null</code>
+    * [.getTermObj()](#DataType+getTermObj) ⇒ <code>string</code>
     * [.getSuperDataTypes(implicit, filter)](#DataType+getSuperDataTypes) ⇒ <code>Array.&lt;string&gt;</code>
     * [.getSubDataTypes(implicit, filter)](#DataType+getSubDataTypes) ⇒ <code>Array.&lt;string&gt;</code>
     * [.isRangeOf(implicit, filter)](#DataType+isRangeOf) ⇒ <code>Array</code>
-    * [.toString()](#DataType+toString) ⇒ <code>string</code>
     * [.toJSON(implicit, filter)](#DataType+toJSON) ⇒ <code>object</code>
 
 <a name="new_DataType_new"></a>
@@ -1052,18 +738,6 @@ A DataType represents an schema:DataType. It is identified by its IRI
 | IRI | <code>string</code> | The compacted IRI of this DataType, e.g. "schema:Number" |
 | graph | <code>Graph</code> | The underlying data graph to enable the methods of this DataType |
 
-<a name="DataType+getIRI"></a>
-
-### dataType.getIRI(compactForm) ⇒ <code>string</code>
-Retrieves the IRI (@id) of this DataType in compact/absolute form
-
-**Kind**: instance method of [<code>DataType</code>](#DataType)  
-**Returns**: <code>string</code> - The IRI (@id) of this DataType  
-
-| Param | Type | Default | Description |
-| --- | --- | --- | --- |
-| compactForm | <code>boolean</code> | <code>false</code> | (default = false), if true -> return compact IRI -> "schema:Number", if false -> return absolute IRI -> "http://schema.org/Number" |
-
 <a name="DataType+getTermType"></a>
 
 ### dataType.getTermType() ⇒ <code>string</code>
@@ -1071,51 +745,13 @@ Retrieves the term type (@type) of this DataType (is always "schema:DataType")
 
 **Kind**: instance method of [<code>DataType</code>](#DataType)  
 **Returns**: <code>string</code> - The term type of this DataType -> "schema:DataType"  
-<a name="DataType+getVocabulary"></a>
+<a name="DataType+getTermObj"></a>
 
-### dataType.getVocabulary() ⇒ <code>string</code> \| <code>null</code>
-Retrieves the original vocabulary (schema:isPartOf) of this DataType
-
-**Kind**: instance method of [<code>DataType</code>](#DataType)  
-**Returns**: <code>string</code> \| <code>null</code> - The vocabulary IRI given by the "schema:isPartOf" of this DataType  
-<a name="DataType+getSource"></a>
-
-### dataType.getSource() ⇒ <code>string</code> \| <code>null</code>
-Retrieves the source (dc:source) of this DataType
+### dataType.getTermObj() ⇒ <code>string</code>
+Retrieves the term object of this DataType
 
 **Kind**: instance method of [<code>DataType</code>](#DataType)  
-**Returns**: <code>string</code> \| <code>null</code> - The source IRI given by the "dc:source" of this DataType (null if none)  
-<a name="DataType+isSupersededBy"></a>
-
-### dataType.isSupersededBy() ⇒ <code>string</code> \| <code>null</code>
-Retrieves the DataType superseding (schema:supersededBy) this DataType
-
-**Kind**: instance method of [<code>DataType</code>](#DataType)  
-**Returns**: <code>string</code> \| <code>null</code> - The DataType superseding this DataType (null if none)  
-<a name="DataType+getName"></a>
-
-### dataType.getName(language) ⇒ <code>string</code> \| <code>null</code>
-Retrieves the name (rdfs:label) of this DataType in a wished language (optional)
-
-**Kind**: instance method of [<code>DataType</code>](#DataType)  
-**Returns**: <code>string</code> \| <code>null</code> - The name of this DataType (null if not given for specified language)  
-
-| Param | Type | Default | Description |
-| --- | --- | --- | --- |
-| language | <code>string</code> | <code>&quot;en&quot;</code> | (default = "en") the wished language for the name |
-
-<a name="DataType+getDescription"></a>
-
-### dataType.getDescription(language) ⇒ <code>string</code> \| <code>null</code>
-Retrieves the description (rdfs:comment) of this DataType in a wished language (optional)
-
-**Kind**: instance method of [<code>DataType</code>](#DataType)  
-**Returns**: <code>string</code> \| <code>null</code> - The description of this DataType (null if not given for specified language)  
-
-| Param | Type | Default | Description |
-| --- | --- | --- | --- |
-| language | <code>string</code> | <code>&quot;en&quot;</code> | (default = "en") the wished language for the description |
-
+**Returns**: <code>string</code> - The term object of this DataType  
 <a name="DataType+getSuperDataTypes"></a>
 
 ### dataType.getSuperDataTypes(implicit, filter) ⇒ <code>Array.&lt;string&gt;</code>
@@ -1155,13 +791,6 @@ Retrieves the properties that have this DataType as a range
 | implicit | <code>boolean</code> | <code>true</code> | (default = true) includes also implicit data |
 | filter | <code>object</code> \| <code>null</code> | <code></code> | (default = null) an optional filter for the generated data |
 
-<a name="DataType+toString"></a>
-
-### dataType.toString() ⇒ <code>string</code>
-Generates a string representation of this DataType (Based on its JSON representation)
-
-**Kind**: instance method of [<code>DataType</code>](#DataType)  
-**Returns**: <code>string</code> - The string representation of this DataType  
 <a name="DataType+toJSON"></a>
 
 ### dataType.toJSON(implicit, filter) ⇒ <code>object</code>
