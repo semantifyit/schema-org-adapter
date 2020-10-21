@@ -88,7 +88,11 @@ class SDOAdapter {
     async fetchVocabularyFromURL(url) {
         return new Promise(function(resolve, reject) {
             axios
-                .get(url)
+                .get(url, {
+                    headers: {
+                        'Accept': 'application/ld+json, application/json'
+                    }
+                })
                 .then(function(res) {
                     resolve(res.data);
                 })

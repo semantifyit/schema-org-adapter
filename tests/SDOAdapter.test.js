@@ -444,10 +444,14 @@ describe('SDO Adapter methods', () => {
 
     test('fetch vocab by URL - direct URL', async() => {
         const mySA = new SDOAdapter(global.commitBase);
-        await mySA.addVocabularies([VOC_URL_SDO5_0_DIRECT]);
+        await mySA.addVocabularies([VOC_URL_SDO5_0_DIRECT, VOC_URL_ZOO]);
         const data1a = mySA.getAllProperties();
         console.log(data1a.length);
         expect(data1a.length > 1000).toEqual(true);
+        const Place = mySA.getClass('schema:Thing');
+        console.log(Place.getSubClasses(false));
+        expect(Place.getSubClasses(false).length).toBe(11);
+        expect(Place.getSubClasses(false)).toContain('ex:Animal');
     });
 
     test('construct SDO URL', async() => {

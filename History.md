@@ -1,3 +1,8 @@
+3.2.0 / 2020-10-21
+==================
+
+  * Added http-header for the fetchVocabularyByURL() function -> accept: jsonld or json (json was default before).
+
 3.1.2 / 2020-10-16
 ==================
 

@@ -19183,7 +19183,11 @@ class SDOAdapter {
   fetchVocabularyFromURL(url) {
     return _asyncToGenerator(function* () {
       return new Promise(function (resolve, reject) {
-        axios.get(url).then(function (res) {
+        axios.get(url, {
+          headers: {
+            'Accept': 'application/ld+json, application/json'
+          }
+        }).then(function (res) {
           resolve(res.data);
         }).catch(function (err) {
           reject('Could not find any resource at the given URL.');
@@ -20340,6 +20344,10 @@ function curateVocabNode(vocabNode, vocabularies) {
     vocabNode['schema:rangeIncludes'] = [vocabNode['schema:rangeIncludes']];
   } else if (vocabNode['schema:rangeIncludes'] === undefined && vocabNode['@type'] === 'rdf:Property') {
     vocabNode['schema:rangeIncludes'] = [];
+  }
+
+  if (vocabNode['schema:inverseOf'] === undefined && vocabNode['@type'] === 'rdf:Property') {
+    vocabNode['schema:inverseOf'] = null;
   }
 
   if (!isString(vocabNode['schema:isPartOf'])) {
