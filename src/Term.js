@@ -27,6 +27,11 @@ class Term {
         return util.toAbsoluteIRI(this.IRI, this.graph.context);
     }
 
+    getVocabURLs() {
+        let termObj = this.getTermObj();
+        return termObj['vocabURLs'];
+    }
+
     /**
      * Retrieves the term type (@type) of this Term
      *
@@ -134,6 +139,7 @@ class Term {
         const result = {};
         result['id'] = this.getIRI(true);
         result['IRI'] = this.getIRI();
+        result['vocabURLs'] = this.getVocabURLs();
         result['type'] = this.getTermType();
         result['vocabulary'] = this.getVocabulary();
         result['source'] = this.getSource();

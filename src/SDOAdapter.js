@@ -45,7 +45,7 @@ class SDOAdapter {
                             const fetchedVocab = await this.fetchVocabularyFromURL(
                                 vocabArray[i]
                             );
-                            await this.graph.addVocabulary(fetchedVocab);
+                            await this.graph.addVocabulary(fetchedVocab, vocabArray[i]);
                         } catch (e) {
                             throw new Error(
                                 'The given URL ' +
