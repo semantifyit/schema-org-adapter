@@ -99,6 +99,7 @@ class Graph {
 
     /**
      * Adds a new vocabulary (in JSON-LD format) to the graph data
+     *
      * @param {object} vocab - The vocabulary to add the graph, in JSON-LD format
      * @param {string|null} vocabURL - The URL of the vocabulary
      * @returns {boolean} returns true on success
