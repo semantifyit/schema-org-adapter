@@ -27,11 +27,6 @@ class Term {
         return util.toAbsoluteIRI(this.IRI, this.graph.context);
     }
 
-    getVocabURLs() {
-        let termObj = this.getTermObj();
-        return termObj['vocabURLs'];
-    }
-
     /**
      * Retrieves the term type (@type) of this Term
      *
@@ -50,6 +45,19 @@ class Term {
      */
     getTermObj() {
         throw new Error('must be implemented by subclass!');
+    }
+
+    /**
+     * Retrieves the original vocabulary urls of this Term
+     *
+     * @returns {Array|null} The original vocabulary urls of this Term
+     */
+    getVocabURLs() {
+        let termObj = this.getTermObj();
+        if (!util.isNil(termObj['vocabURLs'])) {
+            return termObj['vocabURLs'];
+        }
+        return null;
     }
 
     /**
