@@ -147,8 +147,8 @@ class Term {
         const result = {};
         result['id'] = this.getIRI(true);
         result['IRI'] = this.getIRI();
-        result['vocabURLs'] = this.getVocabURLs();
         result['type'] = this.getTermType();
+        result['vocabURLs'] = this.getVocabURLs();
         result['vocabulary'] = this.getVocabulary();
         result['source'] = this.getSource();
         result['supersededBy'] = this.isSupersededBy();
