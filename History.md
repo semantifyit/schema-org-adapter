@@ -1,3 +1,8 @@
+3.3.0 / 2020-11-10
+==================
+
+  * Added "vocabURLs" to the term's data-model. This should make it possible to recognize from which URL a specific term-node originates.
+
 3.2.0 / 2020-10-21
 ==================
 

@@ -17720,14 +17720,18 @@ class Graph {
    * Adds a new vocabulary (in JSON-LD format) to the graph data
    *
    * @param {object} vocab - The vocabulary to add the graph, in JSON-LD format
+   * @param {string|null} vocabURL - The URL of the vocabulary
    * @returns {boolean} returns true on success
    */
 
 
   addVocabulary(vocab) {
-    var _this = this;
+    var _arguments = arguments,
+        _this = this;
 
     return _asyncToGenerator(function* () {
+      var vocabURL = _arguments.length > 1 && _arguments[1] !== undefined ? _arguments[1] : null;
+
       // this algorithm is well-documented in /docu/algorithm.md
       try {
         // A) Pre-process Vocabulary
@@ -17758,18 +17762,18 @@ class Graph {
           if (util.isString(curNode['@type'])) {
             switch (curNode['@type']) {
               case 'rdfs:Class':
-                _this.addGraphNode(_this.classes, curNode);
+                _this.addGraphNode(_this.classes, curNode, vocabURL);
 
                 break;
 
               case 'rdf:Property':
-                _this.addGraphNode(_this.properties, curNode);
+                _this.addGraphNode(_this.properties, curNode, vocabURL);
 
                 break;
 
               default:
                 // @type is not something expected -> assume enumerationMember
-                _this.addGraphNode(_this.enumerationMembers, curNode);
+                _this.addGraphNode(_this.enumerationMembers, curNode, vocabURL);
 
                 break;
             }
@@ -17785,10 +17789,10 @@ class Graph {
             // ]
             if (curNode['@type'].includes('rdfs:Class') && curNode['@type'].includes('schema:DataType')) {
               // datatype
-              _this.addGraphNode(_this.dataTypes, curNode);
+              _this.addGraphNode(_this.dataTypes, curNode, vocabURL);
             } else {
               // enumeration member
-              _this.addGraphNode(_this.enumerationMembers, curNode);
+              _this.addGraphNode(_this.enumerationMembers, curNode, vocabURL);
             }
           } else {
             console.log('unexpected @type format for the following node:');
@@ -18118,14 +18122,21 @@ class Graph {
    *
    * @param {object} memory - The memory object where the new node should be added (Classes, Properties, Enumerations, EnumerationMembers, DataTypes)
    * @param {object} newNode - The node in JSON-LD format to be added
+   * @param {string|null} vocabURL - The vocabulary URL of the node
    * @returns {boolean} returns true on success
    */
 
 
   addGraphNode(memory, newNode) {
+    var vocabURL = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : null;
+
     try {
       if (!memory[newNode['@id']]) {
         memory[newNode['@id']] = newNode;
+
+        if (vocabURL) {
+          memory[newNode['@id']]['vocabURLs'] = [vocabURL];
+        }
       } else {
         // merging algorithm
         var oldNode = memory[newNode['@id']]; // @id stays the same
@@ -18270,6 +18281,16 @@ class Graph {
               // add new entry
               oldNode['schema:superPropertyOf'].push(_actProp3);
             }
+          }
+        }
+
+        if (vocabURL) {
+          if (oldNode['vocabURLs']) {
+            if (!oldNode['vocabURLs'].includes(vocabURL)) {
+              oldNode['vocabURLs'].push(vocabURL);
+            }
+          } else {
+            oldNode['vocabURLs'] = [vocabURL];
           }
         }
       }
@@ -19148,7 +19169,7 @@ class SDOAdapter {
               // assume it is a URL
               try {
                 var fetchedVocab = yield _this.fetchVocabularyFromURL(vocabArray[i]);
-                yield _this.graph.addVocabulary(fetchedVocab);
+                yield _this.graph.addVocabulary(fetchedVocab, vocabArray[i]);
               } catch (e) {
                 throw new Error('The given URL ' + vocabArray[i] + ' did not contain a valid JSON-LD vocabulary.');
               }
@@ -19764,6 +19785,22 @@ class Term {
     throw new Error('must be implemented by subclass!');
   }
   /**
+   * Retrieves the original vocabulary urls of this Term
+   *
+   * @returns {Array|null} The original vocabulary urls of this Term
+   */
+
+
+  getVocabURLs() {
+    var termObj = this.getTermObj();
+
+    if (!util.isNil(termObj['vocabURLs'])) {
+      return termObj['vocabURLs'];
+    }
+
+    return null;
+  }
+  /**
    * Retrieves the original vocabulary (schema:isPartOf) of this Term
    *
    * @returns {string|null} The vocabulary IRI given by the "schema:isPartOf" of this Term
@@ -19871,6 +19908,7 @@ class Term {
     result['id'] = this.getIRI(true);
     result['IRI'] = this.getIRI();
     result['type'] = this.getTermType();
+    result['vocabURLs'] = this.getVocabURLs();
     result['vocabulary'] = this.getVocabulary();
     result['source'] = this.getSource();
     result['supersededBy'] = this.isSupersededBy();
