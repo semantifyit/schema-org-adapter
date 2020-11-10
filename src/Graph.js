@@ -101,9 +101,10 @@ class Graph {
      * Adds a new vocabulary (in JSON-LD format) to the graph data
      *
      * @param {object} vocab - The vocabulary to add the graph, in JSON-LD format
+     * @param {string|null} vocabURL - The URL of the vocabulary
      * @returns {boolean} returns true on success
      */
-    async addVocabulary(vocab) {
+    async addVocabulary(vocab, vocabURL = null) {
         // this algorithm is well-documented in /docu/algorithm.md
         try {
             // A) Pre-process Vocabulary
@@ -129,14 +130,14 @@ class Graph {
                 if (util.isString(curNode['@type'])) {
                     switch (curNode['@type']) {
                         case 'rdfs:Class':
-                            this.addGraphNode(this.classes, curNode);
+                            this.addGraphNode(this.classes, curNode, vocabURL);
                             break;
                         case 'rdf:Property':
-                            this.addGraphNode(this.properties, curNode);
+                            this.addGraphNode(this.properties, curNode, vocabURL);
                             break;
                         default:
                             // @type is not something expected -> assume enumerationMember
-                            this.addGraphNode(this.enumerationMembers, curNode);
+                            this.addGraphNode(this.enumerationMembers, curNode, vocabURL);
                             break;
                     }
                 } else if (util.isArray(curNode['@type'])) {
@@ -151,10 +152,10 @@ class Graph {
                     // ]
                     if (curNode['@type'].includes('rdfs:Class') && curNode['@type'].includes('schema:DataType')) {
                         // datatype
-                        this.addGraphNode(this.dataTypes, curNode);
+                        this.addGraphNode(this.dataTypes, curNode, vocabURL);
                     } else {
                         // enumeration member
-                        this.addGraphNode(this.enumerationMembers, curNode);
+                        this.addGraphNode(this.enumerationMembers, curNode, vocabURL);
                     }
                 } else {
                     console.log('unexpected @type format for the following node:');
@@ -423,12 +424,16 @@ class Graph {
      *
      * @param {object} memory - The memory object where the new node should be added (Classes, Properties, Enumerations, EnumerationMembers, DataTypes)
      * @param {object} newNode - The node in JSON-LD format to be added
+     * @param {string|null} vocabURL - The vocabulary URL of the node
      * @returns {boolean} returns true on success
      */
-    addGraphNode(memory, newNode) {
+    addGraphNode(memory, newNode, vocabURL = null) {
         try {
             if (!memory[newNode['@id']]) {
                 memory[newNode['@id']] = newNode;
+                if (vocabURL) {
+                    memory[newNode['@id']]['vocabURLs'] = [vocabURL];
+                }
             } else {
                 // merging algorithm
                 const oldNode = memory[newNode['@id']];
@@ -557,7 +562,18 @@ class Graph {
                         }
                     }
                 }
+
+                if (vocabURL) {
+                    if (oldNode['vocabURLs']) {
+                        if (!oldNode['vocabURLs'].includes(vocabURL)) {
+                            oldNode['vocabURLs'].push(vocabURL);
+                        }
+                    } else {
+                        oldNode['vocabURLs'] = [vocabURL];
+                    }
+                }
             }
+
             return true;
         } catch (e) {
             console.log(e);

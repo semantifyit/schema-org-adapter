@@ -48,6 +48,19 @@ class Term {
     }
 
     /**
+     * Retrieves the original vocabulary urls of this Term
+     *
+     * @returns {Array|null} The original vocabulary urls of this Term
+     */
+    getVocabURLs() {
+        let termObj = this.getTermObj();
+        if (!util.isNil(termObj['vocabURLs'])) {
+            return termObj['vocabURLs'];
+        }
+        return null;
+    }
+
+    /**
      * Retrieves the original vocabulary (schema:isPartOf) of this Term
      *
      * @returns {string|null} The vocabulary IRI given by the "schema:isPartOf" of this Term
@@ -135,6 +148,7 @@ class Term {
         result['id'] = this.getIRI(true);
         result['IRI'] = this.getIRI();
         result['type'] = this.getTermType();
+        result['vocabURLs'] = this.getVocabURLs();
         result['vocabulary'] = this.getVocabulary();
         result['source'] = this.getSource();
         result['supersededBy'] = this.isSupersededBy();
