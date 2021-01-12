@@ -21,19 +21,12 @@ module.exports = function xhrAdapter(config) {
       delete requestHeaders['Content-Type']; // Let the browser set it
     }
 
-    if (
-      (utils.isBlob(requestData) || utils.isFile(requestData)) &&
-      requestData.type
-    ) {
-      delete requestHeaders['Content-Type']; // Let the browser set it
-    }
-
     var request = new XMLHttpRequest();
 
     // HTTP basic authentication
     if (config.auth) {
       var username = config.auth.username || '';
-      var password = unescape(encodeURIComponent(config.auth.password)) || '';
+      var password = config.auth.password ? unescape(encodeURIComponent(config.auth.password)) : '';
       requestHeaders.Authorization = 'Basic ' + btoa(username + ':' + password);
     }
 
@@ -188,7 +181,7 @@ module.exports = function xhrAdapter(config) {
   });
 };
 
-},{"../core/buildFullPath":9,"../core/createError":10,"./../core/settle":14,"./../helpers/buildURL":18,"./../helpers/cookies":20,"./../helpers/isURLSameOrigin":22,"./../helpers/parseHeaders":24,"./../utils":26}],3:[function(_dereq_,module,exports){
+},{"../core/buildFullPath":9,"../core/createError":10,"./../core/settle":14,"./../helpers/buildURL":18,"./../helpers/cookies":20,"./../helpers/isURLSameOrigin":23,"./../helpers/parseHeaders":25,"./../utils":27}],3:[function(_dereq_,module,exports){
 'use strict';
 
 var utils = _dereq_('./utils');
@@ -238,12 +231,15 @@ axios.all = function all(promises) {
 };
 axios.spread = _dereq_('./helpers/spread');
 
+// Expose isAxiosError
+axios.isAxiosError = _dereq_('./helpers/isAxiosError');
+
 module.exports = axios;
 
 // Allow use of default import syntax in TypeScript
 module.exports.default = axios;
 
-},{"./cancel/Cancel":4,"./cancel/CancelToken":5,"./cancel/isCancel":6,"./core/Axios":7,"./core/mergeConfig":13,"./defaults":16,"./helpers/bind":17,"./helpers/spread":25,"./utils":26}],4:[function(_dereq_,module,exports){
+},{"./cancel/Cancel":4,"./cancel/CancelToken":5,"./cancel/isCancel":6,"./core/Axios":7,"./core/mergeConfig":13,"./defaults":16,"./helpers/bind":17,"./helpers/isAxiosError":22,"./helpers/spread":26,"./utils":27}],4:[function(_dereq_,module,exports){
 'use strict';
 
 /**
@@ -408,7 +404,8 @@ utils.forEach(['delete', 'get', 'head', 'options'], function forEachMethodNoData
   Axios.prototype[method] = function(url, config) {
     return this.request(mergeConfig(config || {}, {
       method: method,
-      url: url
+      url: url,
+      data: (config || {}).data
     }));
   };
 });
@@ -426,7 +423,7 @@ utils.forEach(['post', 'put', 'patch'], function forEachMethodWithData(method) {
 
 module.exports = Axios;
 
-},{"../helpers/buildURL":18,"./../utils":26,"./InterceptorManager":8,"./dispatchRequest":11,"./mergeConfig":13}],8:[function(_dereq_,module,exports){
+},{"../helpers/buildURL":18,"./../utils":27,"./InterceptorManager":8,"./dispatchRequest":11,"./mergeConfig":13}],8:[function(_dereq_,module,exports){
 'use strict';
 
 var utils = _dereq_('./../utils');
@@ -480,7 +477,7 @@ InterceptorManager.prototype.forEach = function forEach(fn) {
 
 module.exports = InterceptorManager;
 
-},{"./../utils":26}],9:[function(_dereq_,module,exports){
+},{"./../utils":27}],9:[function(_dereq_,module,exports){
 'use strict';
 
 var isAbsoluteURL = _dereq_('../helpers/isAbsoluteURL');
@@ -603,7 +600,7 @@ module.exports = function dispatchRequest(config) {
   });
 };
 
-},{"../cancel/isCancel":6,"../defaults":16,"./../utils":26,"./transformData":15}],12:[function(_dereq_,module,exports){
+},{"../cancel/isCancel":6,"../defaults":16,"./../utils":27,"./transformData":15}],12:[function(_dereq_,module,exports){
 'use strict';
 
 /**
@@ -736,7 +733,7 @@ module.exports = function mergeConfig(config1, config2) {
   return config;
 };
 
-},{"../utils":26}],14:[function(_dereq_,module,exports){
+},{"../utils":27}],14:[function(_dereq_,module,exports){
 'use strict';
 
 var createError = _dereq_('./createError');
@@ -785,7 +782,7 @@ module.exports = function transformData(data, headers, fns) {
   return data;
 };
 
-},{"./../utils":26}],16:[function(_dereq_,module,exports){
+},{"./../utils":27}],16:[function(_dereq_,module,exports){
 (function (process){
 'use strict';
 
@@ -887,7 +884,7 @@ utils.forEach(['post', 'put', 'patch'], function forEachMethodWithData(method) {
 module.exports = defaults;
 
 }).call(this,_dereq_('_process'))
-},{"./adapters/http":2,"./adapters/xhr":2,"./helpers/normalizeHeaderName":23,"./utils":26,"_process":59}],17:[function(_dereq_,module,exports){
+},{"./adapters/http":2,"./adapters/xhr":2,"./helpers/normalizeHeaderName":24,"./utils":27,"_process":60}],17:[function(_dereq_,module,exports){
 'use strict';
 
 module.exports = function bind(fn, thisArg) {
@@ -972,7 +969,7 @@ module.exports = function buildURL(url, params, paramsSerializer) {
   return url;
 };
 
-},{"./../utils":26}],19:[function(_dereq_,module,exports){
+},{"./../utils":27}],19:[function(_dereq_,module,exports){
 'use strict';
 
 /**
@@ -1043,7 +1040,7 @@ module.exports = (
     })()
 );
 
-},{"./../utils":26}],21:[function(_dereq_,module,exports){
+},{"./../utils":27}],21:[function(_dereq_,module,exports){
 'use strict';
 
 /**
@@ -1060,6 +1057,19 @@ module.exports = function isAbsoluteURL(url) {
 };
 
 },{}],22:[function(_dereq_,module,exports){
+'use strict';
+
+/**
+ * Determines whether the payload is an error thrown by Axios
+ *
+ * @param {*} payload The value to test
+ * @returns {boolean} True if the payload is an error thrown by Axios, otherwise false
+ */
+module.exports = function isAxiosError(payload) {
+  return (typeof payload === 'object') && (payload.isAxiosError === true);
+};
+
+},{}],23:[function(_dereq_,module,exports){
 'use strict';
 
 var utils = _dereq_('./../utils');
@@ -1129,7 +1139,7 @@ module.exports = (
     })()
 );
 
-},{"./../utils":26}],23:[function(_dereq_,module,exports){
+},{"./../utils":27}],24:[function(_dereq_,module,exports){
 'use strict';
 
 var utils = _dereq_('../utils');
@@ -1143,7 +1153,7 @@ module.exports = function normalizeHeaderName(headers, normalizedName) {
   });
 };
 
-},{"../utils":26}],24:[function(_dereq_,module,exports){
+},{"../utils":27}],25:[function(_dereq_,module,exports){
 'use strict';
 
 var utils = _dereq_('./../utils');
@@ -1198,7 +1208,7 @@ module.exports = function parseHeaders(headers) {
   return parsed;
 };
 
-},{"./../utils":26}],25:[function(_dereq_,module,exports){
+},{"./../utils":27}],26:[function(_dereq_,module,exports){
 'use strict';
 
 /**
@@ -1227,7 +1237,7 @@ module.exports = function spread(callback) {
   };
 };
 
-},{}],26:[function(_dereq_,module,exports){
+},{}],27:[function(_dereq_,module,exports){
 'use strict';
 
 var bind = _dereq_('./helpers/bind');
@@ -1580,9 +1590,9 @@ module.exports = {
   stripBOM: stripBOM
 };
 
-},{"./helpers/bind":17}],27:[function(_dereq_,module,exports){
+},{"./helpers/bind":17}],28:[function(_dereq_,module,exports){
 
-},{}],28:[function(_dereq_,module,exports){
+},{}],29:[function(_dereq_,module,exports){
 /* jshint esversion: 6 */
 /* jslint node: true */
 'use strict';
@@ -1620,7 +1630,7 @@ module.exports = function (object) {
   }
 };
 
-},{}],29:[function(_dereq_,module,exports){
+},{}],30:[function(_dereq_,module,exports){
 /*
  * Copyright (c) 2019 Digital Bazaar, Inc. All rights reserved.
  */
@@ -1883,7 +1893,7 @@ function _resolveContextUrls({context, base}) {
   }
 }
 
-},{"./JsonLdError":30,"./ResolvedContext":35,"./types":49,"./url":50,"./util":51}],30:[function(_dereq_,module,exports){
+},{"./JsonLdError":31,"./ResolvedContext":36,"./types":50,"./url":51,"./util":52}],31:[function(_dereq_,module,exports){
 /*
  * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
  */
@@ -1908,7 +1918,7 @@ module.exports = class JsonLdError extends Error {
   }
 };
 
-},{}],31:[function(_dereq_,module,exports){
+},{}],32:[function(_dereq_,module,exports){
 /*
  * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
  */
@@ -1962,7 +1972,7 @@ module.exports = jsonld => {
   return JsonLdProcessor;
 };
 
-},{}],32:[function(_dereq_,module,exports){
+},{}],33:[function(_dereq_,module,exports){
 /*
  * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
  */
@@ -1971,7 +1981,7 @@ module.exports = jsonld => {
 // TODO: move `NQuads` to its own package
 module.exports = _dereq_('rdf-canonize').NQuads;
 
-},{"rdf-canonize":69}],33:[function(_dereq_,module,exports){
+},{"rdf-canonize":70}],34:[function(_dereq_,module,exports){
 /*
  * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
  */
@@ -2113,7 +2123,7 @@ function getXMLSerializerClass() {
   return XMLSerializer;
 }
 
-},{"./constants":37,"xmldom":27}],34:[function(_dereq_,module,exports){
+},{"./constants":38,"xmldom":28}],35:[function(_dereq_,module,exports){
 /*
  * Copyright (c) 2017-2019 Digital Bazaar, Inc. All rights reserved.
  */
@@ -2153,7 +2163,7 @@ module.exports = class RequestQueue {
   }
 };
 
-},{}],35:[function(_dereq_,module,exports){
+},{}],36:[function(_dereq_,module,exports){
 /*
  * Copyright (c) 2019 Digital Bazaar, Inc. All rights reserved.
  */
@@ -2185,7 +2195,7 @@ module.exports = class ResolvedContext {
   }
 };
 
-},{"lru-cache":52}],36:[function(_dereq_,module,exports){
+},{"lru-cache":53}],37:[function(_dereq_,module,exports){
 /*
  * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
  */
@@ -3365,7 +3375,7 @@ function _checkNestProperty(activeCtx, nestProperty, options) {
   }
 }
 
-},{"./JsonLdError":30,"./context":38,"./graphTypes":45,"./types":49,"./url":50,"./util":51}],37:[function(_dereq_,module,exports){
+},{"./JsonLdError":31,"./context":39,"./graphTypes":46,"./types":50,"./url":51,"./util":52}],38:[function(_dereq_,module,exports){
 /*
  * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
  */
@@ -3399,7 +3409,7 @@ module.exports = {
   XSD_STRING: XSD + 'string',
 };
 
-},{}],38:[function(_dereq_,module,exports){
+},{}],39:[function(_dereq_,module,exports){
 /*
  * Copyright (c) 2017-2019 Digital Bazaar, Inc. All rights reserved.
  */
@@ -4871,7 +4881,7 @@ function _deepCompare(x1, x2) {
   return true;
 }
 
-},{"./JsonLdError":30,"./types":49,"./url":50,"./util":51}],39:[function(_dereq_,module,exports){
+},{"./JsonLdError":31,"./types":50,"./url":51,"./util":52}],40:[function(_dereq_,module,exports){
 /*
  * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
  */
@@ -5048,7 +5058,7 @@ function _request(request, options) {
   });
 }
 
-},{"../JsonLdError":30,"../RequestQueue":34,"../constants":37,"../url":50,"../util":51,"http":27,"request":27}],40:[function(_dereq_,module,exports){
+},{"../JsonLdError":31,"../RequestQueue":35,"../constants":38,"../url":51,"../util":52,"http":28,"request":28}],41:[function(_dereq_,module,exports){
 /*
  * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
  */
@@ -5167,7 +5177,7 @@ function _get(xhr, url, headers) {
   });
 }
 
-},{"../JsonLdError":30,"../RequestQueue":34,"../constants":37,"../url":50,"../util":51}],41:[function(_dereq_,module,exports){
+},{"../JsonLdError":31,"../RequestQueue":35,"../constants":38,"../url":51,"../util":52}],42:[function(_dereq_,module,exports){
 /*
  * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
  */
@@ -6284,7 +6294,7 @@ async function _expandIndexMap(
   return rval;
 }
 
-},{"./JsonLdError":30,"./context":38,"./graphTypes":45,"./types":49,"./url":50,"./util":51}],42:[function(_dereq_,module,exports){
+},{"./JsonLdError":31,"./context":39,"./graphTypes":46,"./types":50,"./url":51,"./util":52}],43:[function(_dereq_,module,exports){
 /*
  * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
  */
@@ -6324,7 +6334,7 @@ api.flatten = input => {
   return flattened;
 };
 
-},{"./graphTypes":45,"./nodeMap":47}],43:[function(_dereq_,module,exports){
+},{"./graphTypes":46,"./nodeMap":48}],44:[function(_dereq_,module,exports){
 /*
  * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
  */
@@ -7151,7 +7161,7 @@ function _valueMatch(pattern, value) {
   return true;
 }
 
-},{"./JsonLdError":30,"./context":38,"./graphTypes":45,"./nodeMap":47,"./types":49,"./url":50,"./util":51}],44:[function(_dereq_,module,exports){
+},{"./JsonLdError":31,"./context":39,"./graphTypes":46,"./nodeMap":48,"./types":50,"./url":51,"./util":52}],45:[function(_dereq_,module,exports){
 /*
  * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
  */
@@ -7500,7 +7510,7 @@ function _RDFToObject(o, useNativeTypes, rdfDirection) {
   return rval;
 }
 
-},{"./JsonLdError":30,"./constants":37,"./graphTypes":45,"./types":49,"./util":51}],45:[function(_dereq_,module,exports){
+},{"./JsonLdError":31,"./constants":38,"./graphTypes":46,"./types":50,"./util":52}],46:[function(_dereq_,module,exports){
 /*
  * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
  */
@@ -7621,7 +7631,7 @@ api.isBlankNode = v => {
   return false;
 };
 
-},{"./types":49}],46:[function(_dereq_,module,exports){
+},{"./types":50}],47:[function(_dereq_,module,exports){
 (function (process,global){
 /**
  * A JavaScript implementation of the JSON-LD API.
@@ -8679,7 +8689,7 @@ wrapper(factory);
 module.exports = factory;
 
 }).call(this,_dereq_('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./ContextResolver":29,"./JsonLdError":30,"./JsonLdProcessor":31,"./NQuads":32,"./Rdfa":33,"./RequestQueue":34,"./compact":36,"./context":38,"./documentLoaders/node":39,"./documentLoaders/xhr":40,"./expand":41,"./flatten":42,"./frame":43,"./fromRdf":44,"./graphTypes":45,"./nodeMap":47,"./toRdf":48,"./types":49,"./url":50,"./util":51,"_process":59,"lru-cache":52,"rdf-canonize":69}],47:[function(_dereq_,module,exports){
+},{"./ContextResolver":30,"./JsonLdError":31,"./JsonLdProcessor":32,"./NQuads":33,"./Rdfa":34,"./RequestQueue":35,"./compact":37,"./context":39,"./documentLoaders/node":40,"./documentLoaders/xhr":41,"./expand":42,"./flatten":43,"./frame":44,"./fromRdf":45,"./graphTypes":46,"./nodeMap":48,"./toRdf":49,"./types":50,"./url":51,"./util":52,"_process":60,"lru-cache":53,"rdf-canonize":70}],48:[function(_dereq_,module,exports){
 /*
  * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
  */
@@ -8971,7 +8981,7 @@ api.mergeNodeMaps = graphs => {
   return defaultGraph;
 };
 
-},{"./JsonLdError":30,"./context":38,"./graphTypes":45,"./types":49,"./util":51}],48:[function(_dereq_,module,exports){
+},{"./JsonLdError":31,"./context":39,"./graphTypes":46,"./types":50,"./util":52}],49:[function(_dereq_,module,exports){
 /*
  * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
  */
@@ -9253,7 +9263,7 @@ function _objectToRDF(item, issuer, dataset, graphTerm, rdfDirection) {
   return object;
 }
 
-},{"./constants":37,"./context":38,"./graphTypes":45,"./nodeMap":47,"./types":49,"./url":50,"./util":51,"canonicalize":28}],49:[function(_dereq_,module,exports){
+},{"./constants":38,"./context":39,"./graphTypes":46,"./nodeMap":48,"./types":50,"./url":51,"./util":52,"canonicalize":29}],50:[function(_dereq_,module,exports){
 /*
  * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
  */
@@ -9347,7 +9357,7 @@ api.isString = v => (typeof v === 'string' ||
  */
 api.isUndefined = v => typeof v === 'undefined';
 
-},{}],50:[function(_dereq_,module,exports){
+},{}],51:[function(_dereq_,module,exports){
 /*
  * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
  */
@@ -9650,7 +9660,7 @@ api.isAbsolute = v => types.isString(v) && isAbsoluteRegex.test(v);
  */
 api.isRelative = v => types.isString(v);
 
-},{"./types":49}],51:[function(_dereq_,module,exports){
+},{"./types":50}],52:[function(_dereq_,module,exports){
 /*
  * Copyright (c) 2017-2019 Digital Bazaar, Inc. All rights reserved.
  */
@@ -10103,7 +10113,7 @@ function _labelBlankNodes(issuer, element) {
   return element;
 }
 
-},{"./JsonLdError":30,"./graphTypes":45,"./types":49,"rdf-canonize":69}],52:[function(_dereq_,module,exports){
+},{"./JsonLdError":31,"./graphTypes":46,"./types":50,"rdf-canonize":70}],53:[function(_dereq_,module,exports){
 'use strict'
 
 // A linked list to keep track of recently-used-ness
@@ -10439,7 +10449,7 @@ const forEachStep = (self, fn, node, thisp) => {
 
 module.exports = LRUCache
 
-},{"yallist":73}],53:[function(_dereq_,module,exports){
+},{"yallist":74}],54:[function(_dereq_,module,exports){
 (function (Buffer){
 /**
  * Base-N/Base-X encoding/decoding functions.
@@ -10629,7 +10639,7 @@ function _encodeWithByteBuffer(input, alphabet) {
 }
 
 }).call(this,_dereq_("buffer").Buffer)
-},{"buffer":27}],54:[function(_dereq_,module,exports){
+},{"buffer":28}],55:[function(_dereq_,module,exports){
 /**
  * Node.js module for Forge.
  *
@@ -10644,7 +10654,7 @@ module.exports = {
   }
 };
 
-},{}],55:[function(_dereq_,module,exports){
+},{}],56:[function(_dereq_,module,exports){
 /**
  * Node.js module for Forge message digests.
  *
@@ -10657,7 +10667,7 @@ var forge = _dereq_('./forge');
 module.exports = forge.md = forge.md || {};
 forge.md.algorithms = forge.md.algorithms || {};
 
-},{"./forge":54}],56:[function(_dereq_,module,exports){
+},{"./forge":55}],57:[function(_dereq_,module,exports){
 /**
  * Secure Hash Algorithm with 160-bit digest (SHA-1) implementation.
  *
@@ -10978,7 +10988,7 @@ function _update(s, w, bytes) {
   }
 }
 
-},{"./forge":54,"./md":55,"./util":58}],57:[function(_dereq_,module,exports){
+},{"./forge":55,"./md":56,"./util":59}],58:[function(_dereq_,module,exports){
 /**
  * Secure Hash Algorithm with 256-bit digest (SHA-256) implementation.
  *
@@ -11307,7 +11317,7 @@ function _update(s, w, bytes) {
   }
 }
 
-},{"./forge":54,"./md":55,"./util":58}],58:[function(_dereq_,module,exports){
+},{"./forge":55,"./md":56,"./util":59}],59:[function(_dereq_,module,exports){
 (function (process,global,Buffer,__argument0,__argument1,__argument2,__argument3,setImmediate){
 /**
  * Utility functions for web applications.
@@ -14218,7 +14228,7 @@ util.estimateCores = function(options, callback) {
 };
 
 }).call(this,_dereq_('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {},_dereq_("buffer").Buffer,arguments[3],arguments[4],arguments[5],arguments[6],_dereq_("timers").setImmediate)
-},{"./baseN":53,"./forge":54,"_process":59,"buffer":27,"timers":71}],59:[function(_dereq_,module,exports){
+},{"./baseN":54,"./forge":55,"_process":60,"buffer":28,"timers":72}],60:[function(_dereq_,module,exports){
 // shim for using process in browser
 var process = module.exports = {};
 
@@ -14404,7 +14414,7 @@ process.chdir = function (dir) {
 };
 process.umask = function() { return 0; };
 
-},{}],60:[function(_dereq_,module,exports){
+},{}],61:[function(_dereq_,module,exports){
 /**
  * Copyright (c) 2016-2017 Digital Bazaar, Inc. All rights reserved.
  */
@@ -14533,7 +14543,7 @@ module.exports = class AsyncAlgorithm {
   }
 };
 
-},{"./util":70}],61:[function(_dereq_,module,exports){
+},{"./util":71}],62:[function(_dereq_,module,exports){
 /*
  * Copyright (c) 2016-2017 Digital Bazaar, Inc. All rights reserved.
  */
@@ -14606,7 +14616,7 @@ module.exports = class IdentifierIssuer {
   }
 };
 
-},{"./util":70}],62:[function(_dereq_,module,exports){
+},{"./util":71}],63:[function(_dereq_,module,exports){
 /*
  * Copyright (c) 2016-2017 Digital Bazaar, Inc. All rights reserved.
  */
@@ -14636,7 +14646,7 @@ module.exports = class MessageDigest {
   }
 };
 
-},{"node-forge/lib/forge":54,"node-forge/lib/md":55,"node-forge/lib/sha1":56,"node-forge/lib/sha256":57}],63:[function(_dereq_,module,exports){
+},{"node-forge/lib/forge":55,"node-forge/lib/md":56,"node-forge/lib/sha1":57,"node-forge/lib/sha256":58}],64:[function(_dereq_,module,exports){
 /*
  * Copyright (c) 2016-2017 Digital Bazaar, Inc. All rights reserved.
  */
@@ -15018,7 +15028,7 @@ function _unescape(s) {
   });
 }
 
-},{}],64:[function(_dereq_,module,exports){
+},{}],65:[function(_dereq_,module,exports){
 /*
  * Copyright (c) 2016-2017 Digital Bazaar, Inc. All rights reserved.
  */
@@ -15105,7 +15115,7 @@ module.exports = class Permutator {
 };
 
 
-},{}],65:[function(_dereq_,module,exports){
+},{}],66:[function(_dereq_,module,exports){
 /*
  * Copyright (c) 2016-2017 Digital Bazaar, Inc. All rights reserved.
  */
@@ -15672,7 +15682,7 @@ module.exports = class URDNA2015 extends AsyncAlgorithm {
   }
 };
 
-},{"./AsyncAlgorithm":60,"./IdentifierIssuer":61,"./MessageDigest":62,"./NQuads":63,"./Permutator":64,"./util":70}],66:[function(_dereq_,module,exports){
+},{"./AsyncAlgorithm":61,"./IdentifierIssuer":62,"./MessageDigest":63,"./NQuads":64,"./Permutator":65,"./util":71}],67:[function(_dereq_,module,exports){
 /*
  * Copyright (c) 2016 Digital Bazaar, Inc. All rights reserved.
  */
@@ -16166,7 +16176,7 @@ module.exports = class URDNA2015Sync {
   }
 };
 
-},{"./IdentifierIssuer":61,"./MessageDigest":62,"./NQuads":63,"./Permutator":64,"./util":70}],67:[function(_dereq_,module,exports){
+},{"./IdentifierIssuer":62,"./MessageDigest":63,"./NQuads":64,"./Permutator":65,"./util":71}],68:[function(_dereq_,module,exports){
 /*
  * Copyright (c) 2016-2017 Digital Bazaar, Inc. All rights reserved.
  */
@@ -16255,7 +16265,7 @@ module.exports = class URDNA2012 extends URDNA2015 {
   }
 };
 
-},{"./URDNA2015":65,"./util":70}],68:[function(_dereq_,module,exports){
+},{"./URDNA2015":66,"./util":71}],69:[function(_dereq_,module,exports){
 /*
  * Copyright (c) 2016 Digital Bazaar, Inc. All rights reserved.
  */
@@ -16341,7 +16351,7 @@ module.exports = class URDNA2012Sync extends URDNA2015Sync {
   }
 };
 
-},{"./URDNA2015Sync":66,"./util":70}],69:[function(_dereq_,module,exports){
+},{"./URDNA2015Sync":67,"./util":71}],70:[function(_dereq_,module,exports){
 /**
  * An implementation of the RDF Dataset Normalization specification.
  * This library works in the browser and node.js.
@@ -16503,7 +16513,7 @@ api.canonizeSync = function(dataset, options) {
     'Invalid RDF Dataset Canonicalization algorithm: ' + options.algorithm);
 };
 
-},{"./IdentifierIssuer":61,"./NQuads":63,"./URDNA2015":65,"./URDNA2015Sync":66,"./URGNA2012":67,"./URGNA2012Sync":68,"./util":70,"rdf-canonize-native":27}],70:[function(_dereq_,module,exports){
+},{"./IdentifierIssuer":62,"./NQuads":64,"./URDNA2015":66,"./URDNA2015Sync":67,"./URGNA2012":68,"./URGNA2012Sync":69,"./util":71,"rdf-canonize-native":28}],71:[function(_dereq_,module,exports){
 (function (process,setImmediate){
 /*
  * Copyright (c) 2016-2017 Digital Bazaar, Inc. All rights reserved.
@@ -16617,7 +16627,7 @@ function _invokeCallback(callback, err, result) {
 }
 
 }).call(this,_dereq_('_process'),_dereq_("timers").setImmediate)
-},{"_process":59,"timers":71}],71:[function(_dereq_,module,exports){
+},{"_process":60,"timers":72}],72:[function(_dereq_,module,exports){
 (function (setImmediate,clearImmediate){
 var nextTick = _dereq_('process/browser.js').nextTick;
 var apply = Function.prototype.apply;
@@ -16696,7 +16706,7 @@ exports.clearImmediate = typeof clearImmediate === "function" ? clearImmediate :
   delete immediateIds[id];
 };
 }).call(this,_dereq_("timers").setImmediate,_dereq_("timers").clearImmediate)
-},{"process/browser.js":59,"timers":71}],72:[function(_dereq_,module,exports){
+},{"process/browser.js":60,"timers":72}],73:[function(_dereq_,module,exports){
 'use strict'
 module.exports = function (Yallist) {
   Yallist.prototype[Symbol.iterator] = function* () {
@@ -16706,7 +16716,7 @@ module.exports = function (Yallist) {
   }
 }
 
-},{}],73:[function(_dereq_,module,exports){
+},{}],74:[function(_dereq_,module,exports){
 'use strict'
 module.exports = Yallist
 
@@ -17134,7 +17144,7 @@ try {
   _dereq_('./iterator.js')(Yallist)
 } catch (er) {}
 
-},{"./iterator.js":72}],74:[function(_dereq_,module,exports){
+},{"./iterator.js":73}],75:[function(_dereq_,module,exports){
 "use strict";
 
 // the functions for a class Object
@@ -17292,7 +17302,7 @@ class Class extends Term {
 
 module.exports = Class;
 
-},{"./Term":82,"./utilities":83}],75:[function(_dereq_,module,exports){
+},{"./Term":83,"./utilities":84}],76:[function(_dereq_,module,exports){
 "use strict";
 
 // the functions for a data type Object
@@ -17422,7 +17432,7 @@ class DataType extends Term {
 
 module.exports = DataType;
 
-},{"./Term":82,"./utilities":83}],76:[function(_dereq_,module,exports){
+},{"./Term":83,"./utilities":84}],77:[function(_dereq_,module,exports){
 "use strict";
 
 // the functions for a enumeration Object
@@ -17511,7 +17521,7 @@ class Enumeration extends Class {
 
 module.exports = Enumeration;
 
-},{"./Class":74,"./utilities":83}],77:[function(_dereq_,module,exports){
+},{"./Class":75,"./utilities":84}],78:[function(_dereq_,module,exports){
 "use strict";
 
 // the functions for a enumeration member Object
@@ -17601,7 +17611,7 @@ class EnumerationMember extends Term {
 
 module.exports = EnumerationMember;
 
-},{"./Term":82,"./utilities":83}],78:[function(_dereq_,module,exports){
+},{"./Term":83,"./utilities":84}],79:[function(_dereq_,module,exports){
 "use strict";
 
 function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { Promise.resolve(value).then(_next, _throw); } }
@@ -18624,7 +18634,7 @@ class Graph {
 
 module.exports = Graph;
 
-},{"./Class":74,"./DataType":75,"./Enumeration":76,"./EnumerationMember":77,"./Property":79,"./ReasoningEngine":80,"./utilities":83}],79:[function(_dereq_,module,exports){
+},{"./Class":75,"./DataType":76,"./Enumeration":77,"./EnumerationMember":78,"./Property":80,"./ReasoningEngine":81,"./utilities":84}],80:[function(_dereq_,module,exports){
 "use strict";
 
 // the functions for a property Object
@@ -18803,7 +18813,7 @@ class Property extends Term {
 
 module.exports = Property;
 
-},{"./Term":82,"./utilities":83}],80:[function(_dereq_,module,exports){
+},{"./Term":83,"./utilities":84}],81:[function(_dereq_,module,exports){
 "use strict";
 
 var util = _dereq_('./utilities');
@@ -19112,7 +19122,7 @@ class ReasoningEngine {
 
 module.exports = ReasoningEngine;
 
-},{"./utilities":83}],81:[function(_dereq_,module,exports){
+},{"./utilities":84}],82:[function(_dereq_,module,exports){
 "use strict";
 
 function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { Promise.resolve(value).then(_next, _throw); } }
@@ -19727,7 +19737,7 @@ class SDOAdapter {
 
 module.exports = SDOAdapter;
 
-},{"./Graph":78,"./utilities":83,"axios":1}],82:[function(_dereq_,module,exports){
+},{"./Graph":79,"./utilities":84,"axios":1}],83:[function(_dereq_,module,exports){
 "use strict";
 
 // the functions for a term Object
@@ -19921,7 +19931,7 @@ class Term {
 
 module.exports = Term;
 
-},{"./utilities":83}],83:[function(_dereq_,module,exports){
+},{"./utilities":84}],84:[function(_dereq_,module,exports){
 "use strict";
 
 function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { Promise.resolve(value).then(_next, _throw); } }
@@ -20540,5 +20550,5 @@ module.exports = {
   getFileNameForSchemaOrgVersion
 };
 
-},{"jsonld":46}]},{},[81])(81)
+},{"jsonld":47}]},{},[82])(82)
 });
