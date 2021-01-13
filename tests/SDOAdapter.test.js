@@ -4,7 +4,6 @@ const VOC_OBJ_SDO3_7 = require('./data/schema_3.7');
 const VOC_OBJ_GWON = require('./data/graph_with_one_node');
 const VOC_URL_ZOO = 'https://raw.githubusercontent.com/semantifyit/schema-org-adapter/master/tests/data/exampleExternalVocabulary.json';
 const VOC_URL_SDO5_0 = 'https://raw.githubusercontent.com/semantifyit/schemaorg/main/data/releases/5.0/all-layers.jsonld';
-const VOC_URL_SDO5_0_DIRECT = 'https://schema.org/version/5.0/all-layers.jsonld'; // expected to work in node, but not in browser (because of redirect)
 
 /**
  *  Tests regarding the JS-Class for "SDOAdapter"
@@ -444,7 +443,7 @@ describe('SDO Adapter methods', () => {
 
     test('fetch vocab by URL - direct URL', async() => {
         const mySA = new SDOAdapter(global.commitBase);
-        await mySA.addVocabularies([VOC_URL_SDO5_0_DIRECT, VOC_URL_ZOO]);
+        await mySA.addVocabularies([VOC_URL_SDO5_0, VOC_URL_ZOO]);
         const data1a = mySA.getAllProperties();
         console.log(data1a.length);
         expect(data1a.length > 1000).toEqual(true);

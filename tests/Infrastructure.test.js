@@ -37,7 +37,7 @@ describe('Infrastructure testing', () => {
         console.log('Latest version by schema-org-adapter: ' + mySA.retrievalMemory.latest);
         expect(sortedVersionsArray[0][0] === mySA.retrievalMemory.latest).toBe(true);
         // Check if the latest version is also officially declared on the schema.org website - if error -> does not exist
-        await axios.get('https://schema.org/version/' + sortedVersionsArray[0][0]);
+        await axios.get('https://github.com/schemaorg/schemaorg/tree/main/data/releases/' + sortedVersionsArray[0][0]);
     });
 
     // Checks if the version files returned from getFileNameForSchemaOrgVersion() really exist (if they can be fetched)
