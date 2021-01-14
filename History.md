@@ -1,3 +1,9 @@
+3.4.0 / 2021-01-14
+==================
+
+* Update of dependencies.
+* Adapted test suite to the latest schema.org vocabulary and website changes
+
 3.3.0 / 2020-11-10
 ==================
 
