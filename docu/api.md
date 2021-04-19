@@ -21,7 +21,7 @@
 **Kind**: global class  
 
 * [SDOAdapter](#SDOAdapter)
-    * [new SDOAdapter(commitBase)](#new_SDOAdapter_new)
+    * [new SDOAdapter(parameterObject)](#new_SDOAdapter_new)
     * [.addVocabularies(vocabArray)](#SDOAdapter+addVocabularies) ⇒ <code>Promise.&lt;void&gt;</code>
     * [.fetchVocabularyFromURL(url)](#SDOAdapter+fetchVocabularyFromURL) ⇒ <code>Promise.&lt;object&gt;</code>
     * [.getTerm(id, filter)](#SDOAdapter+getTerm) ⇒ <code>Term</code>
@@ -52,13 +52,13 @@
 
 <a name="new_SDOAdapter_new"></a>
 
-### new SDOAdapter(commitBase)
+### new SDOAdapter(parameterObject)
 The SDOAdapter is a JS-Class that represents the interface between the user and this library. Its methods enable to add vocabularies to its memory as well as retrieving vocabulary items. It is possible to create multiple instances of this JS-Class which use different vocabularies.
 
 
 | Param | Type | Default | Description |
 | --- | --- | --- | --- |
-| commitBase | <code>string</code> \| <code>null</code> | <code>null</code> | The commit from https://github.com/schemaorg/schemaorg which is the base for the adapter (if not given, we take the latest commit of our fork at https://github.com/semantifyit/schemaorg) |
+| parameterObject | <code>object</code> \| <code>null</code> | <code></code> | an object with optional parameters for the constructor. There is 'commitBase': The commit string from https://github.com/schemaorg/schemaorg which is the base for the adapter (if not given, we take the latest commit of our fork at https://github.com/semantifyit/schemaorg). There is 'onError': A callback function(string) that is called when an unexpected error happens. There is 'schemaHttps': a boolean flag - use the https version of the schema.org vocabulary, it defaults to true. Only available if for schema.org version 9.0 upwards |
 
 <a name="SDOAdapter+addVocabularies"></a>
 

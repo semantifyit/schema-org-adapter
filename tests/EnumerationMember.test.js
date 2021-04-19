@@ -5,7 +5,7 @@ const util = require('../src/utilities');
  *  @returns {SDOAdapter} - the initialized SDO-Adapter ready for testing.
  */
 async function initAdapter() {
-    const mySA = new SDOAdapter(global.commitBase);
+    const mySA = new SDOAdapter({commitBase: global.commitBase});
     const mySDOUrl = await mySA.constructSDOVocabularyURL('latest');
     await mySA.addVocabularies([mySDOUrl]);
     return mySA;
@@ -30,15 +30,15 @@ describe('EnumerationMember methods', () => {
     test('getVocabulary()', async() => {
         const mySA = await initAdapter();
         const Friday = mySA.getEnumerationMember('schema:Friday');
-        expect(Friday.getVocabulary()).toBe('http://schema.org');
+        expect(Friday.getVocabulary()).toBe('https://schema.org');
         const DrivingSchoolVehicleUsage = mySA.getEnumerationMember('schema:DrivingSchoolVehicleUsage');
-        expect(DrivingSchoolVehicleUsage.getVocabulary()).toBe('http://auto.schema.org');
+        expect(DrivingSchoolVehicleUsage.getVocabulary()).toBe('https://auto.schema.org');
     });
 
     test('getIRI()', async() => {
         const mySA = await initAdapter();
         const Friday = mySA.getEnumerationMember('schema:Friday');
-        expect(Friday.getIRI()).toBe('http://schema.org/Friday');
+        expect(Friday.getIRI()).toBe('https://schema.org/Friday');
         expect(Friday.getIRI(true)).toBe('schema:Friday');
         expect(Friday.getIRI()).toBe(Friday.getIRI(false));
     });

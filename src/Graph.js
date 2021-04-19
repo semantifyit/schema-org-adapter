@@ -22,12 +22,16 @@ class Graph {
         // soa:hasEnumerationMember is used for enumerations to list all its enumeration members (their @type includes the @id of the enumeration)
         // soa:enumerationDomainIncludes is an inverse of soa:hasEnumerationMember
         // soa:EnumerationMember is introduced as meta type for the members of an schema:Enumeration
+        let schemaURI = 'http://schema.org/';
+        if(this.sdoAdapter.schemaHttps){
+            schemaURI = 'https://schema.org/';
+        }
         this.context = {
             rdf: 'http://www.w3.org/1999/02/22-rdf-syntax-ns#',
             rdfs: 'http://www.w3.org/2000/01/rdf-schema#',
             xsd: 'http://www.w3.org/2001/XMLSchema#',
             dc: 'http://purl.org/dc/terms/',
-            schema: 'http://schema.org/',
+            schema: schemaURI,
             soa: 'http://schema-org-adapter.at/vocabTerms/',
             'soa:superClassOf': {
                 '@id': 'soa:superClassOf',
@@ -121,8 +125,8 @@ class Graph {
              Classify every @graph node based on its @type. The node is transformed to another data-model based on the @type and stored in a new memory storage for an easier further usage. This is the first of two steps for an exact classification of the node, since the @type is not enough for a correct classification. The mapping of our data model and the @type(s) of the corresponding @graph nodes are as follows:
              classes ("@type" = "rdfs:Class")
              properties ("@type" = "rdf:Property")
-             dataTypes ("@type" = "rdfs:Class" + "http://schema.org/DataType")
-             enumerations ("@type" = "rdfs:Class", has "http://schema.org/Enumeration" as implicit super-class)
+             dataTypes ("@type" = "rdfs:Class" + "schema:DataType")
+             enumerations ("@type" = "rdfs:Class", has "schema:Enumeration" as implicit super-class)
              enumerationMembers ("@type" = @id(s) of enumeration(s))
              */
             for (let i = 0; i < vocab['@graph'].length; i++) {
@@ -158,8 +162,7 @@ class Graph {
                         this.addGraphNode(this.enumerationMembers, curNode, vocabURL);
                     }
                 } else {
-                    console.log('unexpected @type format for the following node:');
-                    console.log(JSON.stringify(curNode, null, 2));
+                    this.sdoAdapter.onError('unexpected @type format for the following node: ' + JSON.stringify(curNode, null, 2));
                 }
             }
             // C) Classification cleaning
@@ -414,7 +417,7 @@ class Graph {
             }
             return true;
         } catch (e) {
-            console.log(e);
+            this.sdoAdapter.onError(e);
             return false;
         }
     }
@@ -576,7 +579,7 @@ class Graph {
 
             return true;
         } catch (e) {
-            console.log(e);
+            this.sdoAdapter.onError(e);
             return false;
         }
     }

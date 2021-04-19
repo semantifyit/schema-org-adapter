@@ -6,7 +6,7 @@ const util = require('../src/utilities');
  *  @returns {SDOAdapter} - the initialized SDO-Adapter ready for testing.
  */
 async function initAdapter() {
-    const mySA = new SDOAdapter(global.commitBase);
+    const mySA = new SDOAdapter({commitBase: global.commitBase});
     const mySDOUrl = await mySA.constructSDOVocabularyURL('latest');
     await mySA.addVocabularies([mySDOUrl, VOC_OBJ_ZOO]);
     return mySA;
@@ -33,9 +33,9 @@ describe('Class methods', () => {
     test('getVocabulary()', async() => {
         const mySA = await initAdapter();
         const Hotel = mySA.getClass('schema:Hotel');
-        expect(Hotel.getVocabulary()).toBe('http://schema.org');
+        expect(Hotel.getVocabulary()).toBe('https://schema.org');
         const Class = mySA.getClass('schema:Class');
-        expect(Class.getVocabulary()).toBe('http://meta.schema.org');
+        expect(Class.getVocabulary()).toBe('https://meta.schema.org');
         const Tiger = mySA.getClass('ex:Tiger');
         expect(Tiger.getVocabulary()).toBe('https://example-vocab.ex');
     });
@@ -43,7 +43,7 @@ describe('Class methods', () => {
     test('getIRI()', async() => {
         const mySA = await initAdapter();
         const hospital = mySA.getClass('schema:Hospital');
-        expect(hospital.getIRI()).toBe('http://schema.org/Hospital');
+        expect(hospital.getIRI()).toBe('https://schema.org/Hospital');
         expect(hospital.getIRI(true)).toBe('schema:Hospital');
         expect(hospital.getIRI()).toBe(hospital.getIRI(false));
         const Tiger = mySA.getClass('ex:Tiger');

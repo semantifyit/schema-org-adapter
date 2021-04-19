@@ -6,7 +6,7 @@ const VOC_OBJ_ZOO = require('./data/exampleExternalVocabulary');
  *  @returns {SDOAdapter} - the initialized SDO-Adapter ready for testing.
  */
 async function initAdapter() {
-    const mySA = new SDOAdapter(global.commitBase);
+    const mySA = new SDOAdapter({commitBase: global.commitBase});
     const mySDOUrl = await mySA.constructSDOVocabularyURL('latest');
     await mySA.addVocabularies([mySDOUrl, VOC_OBJ_ZOO]);
     return mySA;
@@ -43,8 +43,8 @@ describe('utilities testing', () => {
         const filter6 = { isSuperseded: true };
         const filter7 = { termType: ['Property', 'Class'] };
         const filter8 = { termType: ['Enumeration', 'Class'] };
-        const filter9 = { termType: ['Property'], fromVocabulary: ['http://schema.org/'] };
-        const filter9b = { termType: ['Property'], fromVocabulary: 'http://schema.org/' };
+        const filter9 = { termType: ['Property'], fromVocabulary: ['https://schema.org/'] };
+        const filter9b = { termType: ['Property'], fromVocabulary: 'https://schema.org/' };
         const filter10 = { termType: ['Property'], fromVocabulary: 'ex' };
         const filter11 = { termType: ['Property'], fromVocabulary: ['schema', 'ex'] };
         const filter12 = { termType: ['SomeThingFalse'] };
@@ -81,7 +81,8 @@ describe('utilities testing', () => {
         // 3.1 - 8.0 have all-layers.jsonld
         // 9.0 + have schemaorg-all-http.jsonld
         const expectedFileMapping = {
-            '9.0': 'schemaorg-all-http.jsonld',
+            '10.0': 'schemaorg-all-https.jsonld',
+            '9.0': 'schemaorg-all-https.jsonld',
             '8.0': 'all-layers.jsonld',
             '7.04': 'all-layers.jsonld',
             '7.03': 'all-layers.jsonld',

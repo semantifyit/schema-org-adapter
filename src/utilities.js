@@ -478,9 +478,10 @@ function sortReleaseEntriesByDate(releaseLog) {
  * Returns the jsonld filename that holds the schema.org vocabulary for a given version.
  *
  * @param {string} version - the schema.org version
+ * @param {boolean} schemaHttps - use https as protocol for the schema.org vocabulary - works only from version 9.0 upwards
  * @returns {string} - the corresponding jsonld filename
  */
-function getFileNameForSchemaOrgVersion(version) {
+function getFileNameForSchemaOrgVersion(version, schemaHttps = true) {
     switch (version) {
         case '2.0':
         case '2.1':
@@ -507,9 +508,18 @@ function getFileNameForSchemaOrgVersion(version) {
         case '8.0':
             return 'all-layers.jsonld';
         case '9.0':
-            return 'schemaorg-all-http.jsonld';
+            if (schemaHttps) {
+                return 'schemaorg-all-https.jsonld';
+            } else {
+                return 'schemaorg-all-http.jsonld';
+            }
         default:
-            return 'schemaorg-all-http.jsonld'; // this is expected for newer releases that are not covered yet
+            // this is expected for newer releases that are not covered yet
+            if (schemaHttps) {
+                return 'schemaorg-all-https.jsonld';
+            } else {
+                return 'schemaorg-all-http.jsonld';
+            }
     }
 }
 

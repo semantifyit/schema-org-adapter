@@ -8,7 +8,7 @@ let VOC_OBJ_LATEST;
  *  @returns {SDOAdapter} - the initialized SDO-Adapter ready for testing.
  */
 async function initGraph() {
-    const mySA = new SDOAdapter(global.commitBase);
+    const mySA = new SDOAdapter({commitBase: global.commitBase});
     VOC_URL_LATEST = await mySA.constructSDOVocabularyURL('latest');
     VOC_OBJ_LATEST = await mySA.fetchVocabularyFromURL(VOC_URL_LATEST);
     return new Graph(mySA);
@@ -74,23 +74,23 @@ describe('Graph methods', () => {
         // Class
         expect(myGraph.discoverCompactIRI('Hotel')).toBe('schema:Hotel');
         expect(myGraph.discoverCompactIRI('schema:Hotel')).toBe('schema:Hotel');
-        expect(myGraph.discoverCompactIRI('http://schema.org/Hotel')).toBe('schema:Hotel');
+        expect(myGraph.discoverCompactIRI('https://schema.org/Hotel')).toBe('schema:Hotel');
         // Property
         expect(myGraph.discoverCompactIRI('name')).toBe('schema:name');
         expect(myGraph.discoverCompactIRI('schema:name')).toBe('schema:name');
-        expect(myGraph.discoverCompactIRI('http://schema.org/name')).toBe('schema:name');
+        expect(myGraph.discoverCompactIRI('https://schema.org/name')).toBe('schema:name');
         // DataType
         expect(myGraph.discoverCompactIRI('Text')).toBe('schema:Text');
         expect(myGraph.discoverCompactIRI('schema:Text')).toBe('schema:Text');
-        expect(myGraph.discoverCompactIRI('http://schema.org/Text')).toBe('schema:Text');
+        expect(myGraph.discoverCompactIRI('https://schema.org/Text')).toBe('schema:Text');
         // Enumeration
         expect(myGraph.discoverCompactIRI('DayOfWeek')).toBe('schema:DayOfWeek');
         expect(myGraph.discoverCompactIRI('schema:DayOfWeek')).toBe('schema:DayOfWeek');
-        expect(myGraph.discoverCompactIRI('http://schema.org/DayOfWeek')).toBe('schema:DayOfWeek');
+        expect(myGraph.discoverCompactIRI('https://schema.org/DayOfWeek')).toBe('schema:DayOfWeek');
         // EnumerationMember
         expect(myGraph.discoverCompactIRI('Friday')).toBe('schema:Friday');
         expect(myGraph.discoverCompactIRI('schema:Friday')).toBe('schema:Friday');
-        expect(myGraph.discoverCompactIRI('http://schema.org/Friday')).toBe('schema:Friday');
+        expect(myGraph.discoverCompactIRI('https://schema.org/Friday')).toBe('schema:Friday');
         // Not valid
         expect(myGraph.discoverCompactIRI('SomeBS')).toBe(null);
     });

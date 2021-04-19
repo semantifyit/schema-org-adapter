@@ -5,7 +5,7 @@ const util = require('../src/utilities');
  *  @returns {SDOAdapter} - the initialized SDO-Adapter ready for testing.
  */
 async function initAdapter() {
-    const mySA = new SDOAdapter(global.commitBase);
+    const mySA = new SDOAdapter({commitBase: global.commitBase});
     const mySDOUrl = await mySA.constructSDOVocabularyURL('latest');
     await mySA.addVocabularies([mySDOUrl]);
     return mySA;
@@ -32,13 +32,13 @@ describe('DataType methods', () => {
     test('getVocabulary()', async() => {
         const mySA = await initAdapter();
         const number = mySA.getDataType('schema:Number');
-        expect(number.getVocabulary()).toBe('http://schema.org');
+        expect(number.getVocabulary()).toBe('https://schema.org');
     });
 
     test('getIRI()', async() => {
         const mySA = await initAdapter();
         const CssSelectorType = mySA.getDataType('schema:CssSelectorType');
-        expect(CssSelectorType.getIRI()).toBe('http://schema.org/CssSelectorType');
+        expect(CssSelectorType.getIRI()).toBe('https://schema.org/CssSelectorType');
         expect(CssSelectorType.getIRI(true)).toBe('schema:CssSelectorType');
         expect(CssSelectorType.getIRI()).toBe(CssSelectorType.getIRI(false));
     });

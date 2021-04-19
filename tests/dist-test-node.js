@@ -1,6 +1,5 @@
 const SDOAdapter = require('../src/SDOAdapter');
 const VOC_OBJ_ZOO = require('./data/exampleExternalVocabulary');
-// const VOC_URL_ZOO = 'https://raw.githubusercontent.com/semantifyit/schema-org-adapter/master/tests/data/exampleExternalVocabulary.json'
 const mySA = new SDOAdapter();
 main();
 
@@ -11,7 +10,7 @@ async function main() {
     const mySDOUrl = await mySA.constructSDOVocabularyURL('latest');
     console.log('The latest version is ' + mySDOUrl);
     await mySA.addVocabularies([mySDOUrl, VOC_OBJ_ZOO]);
-    let testClass = mySA.getClass('http://schema.org/Person');
+    let testClass = mySA.getClass('https://schema.org/Person');
     console.log(mySA.getVocabularies());
     console.log('getIRI() ' + testClass.getIRI());
     console.log('getIRI(true) ' + testClass.getIRI(true));

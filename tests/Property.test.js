@@ -6,7 +6,7 @@ const util = require('../src/utilities');
  *  @returns {SDOAdapter} - the initialized SDO-Adapter ready for testing.
  */
 async function initAdapter() {
-    const mySA = new SDOAdapter(global.commitBase);
+    const mySA = new SDOAdapter({commitBase: global.commitBase});
     const mySDOUrl = await mySA.constructSDOVocabularyURL('latest');
     await mySA.addVocabularies([mySDOUrl, VOC_OBJ_Zoo]);
     return mySA;
@@ -33,9 +33,9 @@ describe('Property methods', () => {
     test('getVocabulary()', async() => {
         const mySA = await initAdapter();
         const address = mySA.getProperty('schema:address');
-        expect(address.getVocabulary()).toBe('http://schema.org');
+        expect(address.getVocabulary()).toBe('https://schema.org');
         const accelerationTime = mySA.getProperty('schema:accelerationTime');
-        expect(accelerationTime.getVocabulary()).toBe('http://auto.schema.org');
+        expect(accelerationTime.getVocabulary()).toBe('https://auto.schema.org');
         const startLocation = mySA.getProperty('ex:animalLivingEnvironment');
         expect(startLocation.getVocabulary()).toBe('https://example-vocab.ex');
     });
@@ -43,7 +43,7 @@ describe('Property methods', () => {
     test('getIRI()', async() => {
         const mySA = await initAdapter();
         const address = mySA.getProperty('schema:address');
-        expect(address.getIRI()).toBe('http://schema.org/address');
+        expect(address.getIRI()).toBe('https://schema.org/address');
         expect(address.getIRI(true)).toBe('schema:address');
         expect(address.getIRI()).toBe(address.getIRI(false));
         const startLocation = mySA.getProperty('ex:animalLivingEnvironment');

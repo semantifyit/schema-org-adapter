@@ -11,15 +11,34 @@ class SDOAdapter {
      * The SDOAdapter is a JS-Class that represents the interface between the user and this library. Its methods enable to add vocabularies to its memory as well as retrieving vocabulary items. It is possible to create multiple instances of this JS-Class which use different vocabularies.
      *
      * @class
-     * @param {string|null} commitBase - The commit from https://github.com/schemaorg/schemaorg which is the base for the adapter (if not given, we take the latest commit of our fork at https://github.com/semantifyit/schemaorg)
+     * @param {object|null} parameterObject - an object with optional parameters for the constructor. There is 'commitBase': The commit string from https://github.com/schemaorg/schemaorg which is the base for the adapter (if not given, we take the latest commit of our fork at https://github.com/semantifyit/schemaorg). There is 'onError': A callback function(string) that is called when an unexpected error happens. There is 'schemaHttps': a boolean flag - use the https version of the schema.org vocabulary, it defaults to true. Only available if for schema.org version 9.0 upwards
      */
-    constructor(commitBase = null) {
-        this.graph = new Graph(this);
+    constructor(parameterObject = null) {
         this.retrievalMemory = {
             versionsFile: null,
             latest: null
         };
-        this.commitBase = commitBase;
+        // option commitBase - defaults to null
+        if (parameterObject && parameterObject.commitBase) {
+            this.commitBase = parameterObject.commitBase;
+        } else {
+            this.commitBase = null;
+        }
+        // option onError - defaults to a function that does nothing
+        if (parameterObject && typeof parameterObject.onError === 'function') {
+            this.onError = parameterObject.onError;
+        } else {
+            this.onError = function() {
+                // do nothing;
+            };
+        }
+        // option commitBase - defaults to true
+        if (parameterObject && parameterObject.schemaHttps !== undefined) {
+            this.schemaHttps = parameterObject.schemaHttps;
+        } else {
+            this.schemaHttps = true;
+        }
+        this.graph = new Graph(this);
     }
 
     /**
@@ -96,7 +115,7 @@ class SDOAdapter {
                 .then(function(res) {
                     resolve(res.data);
                 })
-                .catch(function(err) {
+                .catch(function() {
                     reject('Could not find any resource at the given URL.');
                 });
         });
@@ -446,7 +465,7 @@ class SDOAdapter {
                 throw e;
             }
         }
-        const fileName = util.getFileNameForSchemaOrgVersion(version); // This can throw an error if the version is <= 3.0
+        const fileName = util.getFileNameForSchemaOrgVersion(version, this.schemaHttps); // This can throw an error if the version is <= 3.0
         return this.getReleasesURI() + version + '/' + fileName;
         // e.g. "https://raw.githubusercontent.com/schemaorg/schemaorg/main/data/releases/3.9/all-layers.jsonld";
     }
@@ -464,7 +483,7 @@ class SDOAdapter {
         try {
             versionFile = await axios.get(this.getVersionFileURI());
         } catch (e) {
-            console.log('Unable to retrieve the schema.org versions file at ' + this.getVersionFileURI());
+            this.onError('Unable to retrieve the schema.org versions file at ' + this.getVersionFileURI());
             throw(e);
         }
         // 2. determine the latest valid version
@@ -487,14 +506,14 @@ class SDOAdapter {
                     }
                     if (!this.retrievalMemory.latest) {
                         let errMsg = 'Could not find any valid vocabulary file in the Schema.org versions file (to be declared as "latest".';
-                        console.log(errMsg);
+                        this.onError(errMsg);
                         throw new Error(errMsg);
                     }
                 }
                 return;
             }
             let errMsg = 'Schema.org versions file has an unexpected structure!';
-            console.log(errMsg + ' -> ' + this.getVersionFileURI());
+            this.onError(errMsg + ' -> ' + this.getVersionFileURI());
             throw new Error(errMsg);
         }
     }

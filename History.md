@@ -1,3 +1,9 @@
+4.0.0 / 2021-04-16
+==================
+
+* Major Update of dependencies.
+* Breaking API change for the SDOAdapter() constructor: now a parameter object can be passed, with the old option `commitBase`, and the new option `onError` that provides a callback in the case an error happens that hasn't been handled properly yet. Additionally, there is the new option `schemaHttps` with a boolean value (default: true) that specifies if the https version of the schema.org vocabulary should be used, if available for the given vocabulary version.
+
 3.5.0 / 2021-03-17
 ==================
 

@@ -5,7 +5,7 @@ const util = require('../src/utilities');
  *  @returns {SDOAdapter} - the initialized SDO-Adapter ready for testing.
  */
 async function initAdapter() {
-    const mySA = new SDOAdapter(global.commitBase);
+    const mySA = new SDOAdapter({commitBase: global.commitBase});
     const mySDOUrl = await mySA.constructSDOVocabularyURL('latest');
     await mySA.addVocabularies([mySDOUrl]);
     return mySA;
@@ -40,15 +40,15 @@ describe('Enumeration methods', () => {
     test('getVocabulary()', async() => {
         const mySA = await initAdapter();
         const DayOfWeek = mySA.getEnumeration('schema:DayOfWeek');
-        expect(DayOfWeek.getVocabulary()).toBe('http://schema.org');
+        expect(DayOfWeek.getVocabulary()).toBe('https://schema.org');
         const MedicalEnumeration = mySA.getEnumeration('schema:MedicalEnumeration');
-        expect(MedicalEnumeration.getVocabulary()).toBe('http://health-lifesci.schema.org');
+        expect(MedicalEnumeration.getVocabulary()).toBe('https://health-lifesci.schema.org');
     });
 
     test('getIRI()', async() => {
         const mySA = await initAdapter();
         const DayOfWeek = mySA.getEnumeration('schema:DayOfWeek');
-        expect(DayOfWeek.getIRI()).toBe('http://schema.org/DayOfWeek');
+        expect(DayOfWeek.getIRI()).toBe('https://schema.org/DayOfWeek');
         expect(DayOfWeek.getIRI(true)).toBe('schema:DayOfWeek');
         expect(DayOfWeek.getIRI()).toBe(DayOfWeek.getIRI(false));
     });

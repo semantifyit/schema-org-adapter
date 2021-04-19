@@ -1971,7 +1971,7 @@ module.exports = jsonld => {
 // TODO: move `NQuads` to its own package
 module.exports = _dereq_('rdf-canonize').NQuads;
 
-},{"rdf-canonize":62}],34:[function(_dereq_,module,exports){
+},{"rdf-canonize":54}],34:[function(_dereq_,module,exports){
 /*
  * Copyright (c) 2017-2019 Digital Bazaar, Inc. All rights reserved.
  */
@@ -3223,7 +3223,7 @@ function _checkNestProperty(activeCtx, nestProperty, options) {
   }
 }
 
-},{"./JsonLdError":31,"./context":38,"./graphTypes":45,"./types":49,"./url":50,"./util":51}],37:[function(_dereq_,module,exports){
+},{"./JsonLdError":31,"./context":38,"./graphTypes":44,"./types":49,"./url":50,"./util":51}],37:[function(_dereq_,module,exports){
 /*
  * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
  */
@@ -4181,7 +4181,8 @@ api.createTermDefinition = ({
       const protectedMode = (options && options.protectedMode) || 'error';
       if(protectedMode === 'error') {
         throw new JsonLdError(
-          `Invalid JSON-LD syntax; tried to redefine "${term}" which is a protected term.`,
+          `Invalid JSON-LD syntax; tried to redefine "${term}" which is a ` +
+          'protected term.',
           'jsonld.SyntaxError',
           {code: 'protected term redefinition', context: localCtx, term});
       } else if(protectedMode === 'warn') {
@@ -4740,183 +4741,6 @@ const JsonLdError = _dereq_('../JsonLdError');
 const RequestQueue = _dereq_('../RequestQueue');
 const {prependBase} = _dereq_('../url');
 
-/**
- * Creates a built-in node document loader.
- *
- * @param options the options to use:
- *          secure: require all URLs to use HTTPS.
- *          strictSSL: true to require SSL certificates to be valid,
- *            false not to (default: true).
- *          maxRedirects: the maximum number of redirects to permit, none by
- *            default.
- *          request: the object which will make the request, default is
- *            provided by `https://www.npmjs.com/package/request`.
- *          headers: an object (map) of headers which will be passed as request
- *            headers for the requested document. Accept is not allowed.
- *
- * @return the node document loader.
- */
-module.exports = ({
-  secure,
-  strictSSL = true,
-  maxRedirects = -1,
-  request,
-  headers = {}
-} = {strictSSL: true, maxRedirects: -1, headers: {}}) => {
-  headers = buildHeaders(headers);
-  // TODO: use `axios`
-  request = request || _dereq_('request');
-  const http = _dereq_('http');
-
-  const queue = new RequestQueue();
-  return queue.wrapLoader(function(url) {
-    return loadDocument(url, []);
-  });
-
-  async function loadDocument(url, redirects) {
-    if(url.indexOf('http:') !== 0 && url.indexOf('https:') !== 0) {
-      throw new JsonLdError(
-        'URL could not be dereferenced; only "http" and "https" URLs are ' +
-        'supported.',
-        'jsonld.InvalidUrl', {code: 'loading document failed', url});
-    }
-    if(secure && url.indexOf('https') !== 0) {
-      throw new JsonLdError(
-        'URL could not be dereferenced; secure mode is enabled and ' +
-        'the URL\'s scheme is not "https".',
-        'jsonld.InvalidUrl', {code: 'loading document failed', url});
-    }
-    // TODO: disable cache until HTTP caching implemented
-    let doc = null;//cache.get(url);
-    if(doc !== null) {
-      return doc;
-    }
-
-    let result;
-    let alternate = null;
-    try {
-      result = await _request(request, {
-        url,
-        headers,
-        strictSSL,
-        followRedirect: false
-      });
-    } catch(e) {
-      throw new JsonLdError(
-        'URL could not be dereferenced, an error occurred.',
-        'jsonld.LoadDocumentError',
-        {code: 'loading document failed', url, cause: e});
-    }
-
-    const {res, body} = result;
-
-    doc = {contextUrl: null, documentUrl: url, document: body || null};
-
-    // handle error
-    const statusText = http.STATUS_CODES[res.statusCode];
-    if(res.statusCode >= 400) {
-      throw new JsonLdError(
-        `URL "${url}" could not be dereferenced: ${statusText}`,
-        'jsonld.InvalidUrl', {
-          code: 'loading document failed',
-          url,
-          httpStatusCode: res.statusCode
-        });
-    }
-
-    // handle Link Header
-    if(res.headers.link &&
-      res.headers['content-type'] !== 'application/ld+json') {
-      // only 1 related link header permitted
-      const linkHeaders = parseLinkHeader(res.headers.link);
-      const linkedContext = linkHeaders[LINK_HEADER_CONTEXT];
-      if(Array.isArray(linkedContext)) {
-        throw new JsonLdError(
-          'URL could not be dereferenced, it has more than one associated ' +
-          'HTTP Link Header.',
-          'jsonld.InvalidUrl',
-          {code: 'multiple context link headers', url});
-      }
-      if(linkedContext) {
-        doc.contextUrl = linkedContext.target;
-      }
-
-      // "alternate" link header is a redirect
-      alternate = linkHeaders['alternate'];
-      if(alternate &&
-        alternate.type == 'application/ld+json' &&
-        !(res.headers['content-type'] || '')
-          .match(/^application\/(\w*\+)?json$/)) {
-        res.headers.location = prependBase(url, alternate.target);
-      }
-    }
-
-    // handle redirect
-    if((alternate ||
-      res.statusCode >= 300 && res.statusCode < 400) && res.headers.location) {
-      if(redirects.length === maxRedirects) {
-        throw new JsonLdError(
-          'URL could not be dereferenced; there were too many redirects.',
-          'jsonld.TooManyRedirects', {
-            code: 'loading document failed',
-            url,
-            httpStatusCode: res.statusCode,
-            redirects
-          });
-      }
-      if(redirects.indexOf(url) !== -1) {
-        throw new JsonLdError(
-          'URL could not be dereferenced; infinite redirection was detected.',
-          'jsonld.InfiniteRedirectDetected', {
-            code: 'recursive context inclusion',
-            url,
-            httpStatusCode: res.statusCode,
-            redirects
-          });
-      }
-      redirects.push(url);
-      return loadDocument(res.headers.location, redirects);
-    }
-
-    // cache for each redirected URL
-    redirects.push(url);
-    // TODO: disable cache until HTTP caching implemented
-    /*
-    for(let i = 0; i < redirects.length; ++i) {
-      cache.set(
-        redirects[i],
-        {contextUrl: null, documentUrl: redirects[i], document: body});
-    }
-    */
-
-    return doc;
-  }
-};
-
-function _request(request, options) {
-  return new Promise((resolve, reject) => {
-    request(options, (err, res, body) => {
-      if(err) {
-        reject(err);
-      } else {
-        resolve({res, body});
-      }
-    });
-  });
-}
-
-},{"../JsonLdError":31,"../RequestQueue":34,"../constants":37,"../url":50,"../util":51,"http":28,"request":28}],40:[function(_dereq_,module,exports){
-/*
- * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
- */
-'use strict';
-
-const {parseLinkHeader, buildHeaders} = _dereq_('../util');
-const {LINK_HEADER_CONTEXT} = _dereq_('../constants');
-const JsonLdError = _dereq_('../JsonLdError');
-const RequestQueue = _dereq_('../RequestQueue');
-const {prependBase} = _dereq_('../url');
-
 const REGEX_LINK_HEADER = /(^|(\r\n))link:/i;
 
 /**
@@ -5024,7 +4848,7 @@ function _get(xhr, url, headers) {
   });
 }
 
-},{"../JsonLdError":31,"../RequestQueue":34,"../constants":37,"../url":50,"../util":51}],41:[function(_dereq_,module,exports){
+},{"../JsonLdError":31,"../RequestQueue":34,"../constants":37,"../url":50,"../util":51}],40:[function(_dereq_,module,exports){
 /*
  * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
  */
@@ -6141,7 +5965,7 @@ async function _expandIndexMap(
   return rval;
 }
 
-},{"./JsonLdError":31,"./context":38,"./graphTypes":45,"./types":49,"./url":50,"./util":51}],42:[function(_dereq_,module,exports){
+},{"./JsonLdError":31,"./context":38,"./graphTypes":44,"./types":49,"./url":50,"./util":51}],41:[function(_dereq_,module,exports){
 /*
  * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
  */
@@ -6181,7 +6005,7 @@ api.flatten = input => {
   return flattened;
 };
 
-},{"./graphTypes":45,"./nodeMap":47}],43:[function(_dereq_,module,exports){
+},{"./graphTypes":44,"./nodeMap":46}],42:[function(_dereq_,module,exports){
 /*
  * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
  */
@@ -7008,7 +6832,7 @@ function _valueMatch(pattern, value) {
   return true;
 }
 
-},{"./JsonLdError":31,"./context":38,"./graphTypes":45,"./nodeMap":47,"./types":49,"./url":50,"./util":51}],44:[function(_dereq_,module,exports){
+},{"./JsonLdError":31,"./context":38,"./graphTypes":44,"./nodeMap":46,"./types":49,"./url":50,"./util":51}],43:[function(_dereq_,module,exports){
 /*
  * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
  */
@@ -7357,7 +7181,7 @@ function _RDFToObject(o, useNativeTypes, rdfDirection) {
   return rval;
 }
 
-},{"./JsonLdError":31,"./constants":37,"./graphTypes":45,"./types":49,"./util":51}],45:[function(_dereq_,module,exports){
+},{"./JsonLdError":31,"./constants":37,"./graphTypes":44,"./types":49,"./util":51}],44:[function(_dereq_,module,exports){
 /*
  * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
  */
@@ -7478,8 +7302,7 @@ api.isBlankNode = v => {
   return false;
 };
 
-},{"./types":49}],46:[function(_dereq_,module,exports){
-(function (process,global){(function (){
+},{"./types":49}],45:[function(_dereq_,module,exports){
 /**
  * A JavaScript implementation of the JSON-LD API.
  *
@@ -7516,6 +7339,7 @@ api.isBlankNode = v => {
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 const canonize = _dereq_('rdf-canonize');
+const platform = _dereq_('./platform');
 const util = _dereq_('./util');
 const ContextResolver = _dereq_('./ContextResolver');
 const IdentifierIssuer = util.IdentifierIssuer;
@@ -7560,12 +7384,6 @@ const {
   createMergedNodeMap: _createMergedNodeMap,
   mergeNodeMaps: _mergeNodeMaps
 } = _dereq_('./nodeMap');
-
-// determine if in-browser or using Node.js
-const _nodejs = (
-  typeof process !== 'undefined' && process.versions && process.versions.node);
-const _browser = !_nodejs &&
-  (typeof window !== 'undefined' || typeof self !== 'undefined');
 
 /* eslint-disable indent */
 // attaches jsonld API to the given object
@@ -8163,7 +7981,7 @@ jsonld.toRDF = async function(input, options) {
   if(options.format) {
     if(options.format === 'application/n-quads' ||
       options.format === 'application/nquads') {
-      return await NQuads.serialize(dataset);
+      return NQuads.serialize(dataset);
     }
     throw new JsonLdError(
       'Unknown output format.',
@@ -8420,8 +8238,6 @@ jsonld.getContextValue = _dereq_('./context').getContextValue;
  * Document loaders.
  */
 jsonld.documentLoaders = {};
-jsonld.documentLoaders.node = _dereq_('./documentLoaders/node');
-jsonld.documentLoaders.xhr = _dereq_('./documentLoaders/xhr');
 
 /**
  * Assigns the default document loader for external document URLs to a built-in
@@ -8487,24 +8303,8 @@ jsonld.RequestQueue = _dereq_('./RequestQueue');
 /* WebIDL API */
 jsonld.JsonLdProcessor = _dereq_('./JsonLdProcessor')(jsonld);
 
-// setup browser global JsonLdProcessor
-if(_browser && typeof global.JsonLdProcessor === 'undefined') {
-  Object.defineProperty(global, 'JsonLdProcessor', {
-    writable: true,
-    enumerable: false,
-    configurable: true,
-    value: jsonld.JsonLdProcessor
-  });
-}
-
-// set platform-specific defaults/APIs
-if(_nodejs) {
-  // use node document loader by default
-  jsonld.useDocumentLoader('node');
-} else if(typeof XMLHttpRequest !== 'undefined') {
-  // use xhr document loader by default
-  jsonld.useDocumentLoader('xhr');
-}
+platform.setupGlobals(jsonld);
+platform.setupDocumentLoaders(jsonld);
 
 function _setDefaults(options, {
   documentLoader = jsonld.documentLoader,
@@ -8531,8 +8331,7 @@ wrapper(factory);
 // export API
 module.exports = factory;
 
-}).call(this)}).call(this,_dereq_('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./ContextResolver":30,"./JsonLdError":31,"./JsonLdProcessor":32,"./NQuads":33,"./RequestQueue":34,"./compact":36,"./context":38,"./documentLoaders/node":39,"./documentLoaders/xhr":40,"./expand":41,"./flatten":42,"./frame":43,"./fromRdf":44,"./graphTypes":45,"./nodeMap":47,"./toRdf":48,"./types":49,"./url":50,"./util":51,"_process":53,"lru-cache":52,"rdf-canonize":62}],47:[function(_dereq_,module,exports){
+},{"./ContextResolver":30,"./JsonLdError":31,"./JsonLdProcessor":32,"./NQuads":33,"./RequestQueue":34,"./compact":36,"./context":38,"./expand":40,"./flatten":41,"./frame":42,"./fromRdf":43,"./graphTypes":44,"./nodeMap":46,"./platform":47,"./toRdf":48,"./types":49,"./url":50,"./util":51,"lru-cache":52,"rdf-canonize":54}],46:[function(_dereq_,module,exports){
 /*
  * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
  */
@@ -8824,7 +8623,48 @@ api.mergeNodeMaps = graphs => {
   return defaultGraph;
 };
 
-},{"./JsonLdError":31,"./context":38,"./graphTypes":45,"./types":49,"./util":51}],48:[function(_dereq_,module,exports){
+},{"./JsonLdError":31,"./context":38,"./graphTypes":44,"./types":49,"./util":51}],47:[function(_dereq_,module,exports){
+/*
+ * Copyright (c) 2021 Digital Bazaar, Inc. All rights reserved.
+ */
+'use strict';
+
+const xhrLoader = _dereq_('./documentLoaders/xhr');
+
+const api = {};
+module.exports = api;
+
+/**
+ * Setup browser document loaders.
+ *
+ * @param jsonld the jsonld api.
+ */
+api.setupDocumentLoaders = function(jsonld) {
+  if(typeof XMLHttpRequest !== 'undefined') {
+    jsonld.documentLoaders.xhr = xhrLoader;
+    // use xhr document loader by default
+    jsonld.useDocumentLoader('xhr');
+  }
+};
+
+/**
+ * Setup browser globals.
+ *
+ * @param jsonld the jsonld api.
+ */
+api.setupGlobals = function(jsonld) {
+  // setup browser global JsonLdProcessor
+  if(typeof globalThis.JsonLdProcessor === 'undefined') {
+    Object.defineProperty(globalThis, 'JsonLdProcessor', {
+      writable: true,
+      enumerable: false,
+      configurable: true,
+      value: jsonld.JsonLdProcessor
+    });
+  }
+};
+
+},{"./documentLoaders/xhr":39}],48:[function(_dereq_,module,exports){
 /*
  * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
  */
@@ -9106,7 +8946,7 @@ function _objectToRDF(item, issuer, dataset, graphTerm, rdfDirection) {
   return object;
 }
 
-},{"./constants":37,"./context":38,"./graphTypes":45,"./nodeMap":47,"./types":49,"./url":50,"./util":51,"canonicalize":29}],49:[function(_dereq_,module,exports){
+},{"./constants":37,"./context":38,"./graphTypes":44,"./nodeMap":46,"./types":49,"./url":50,"./util":51,"canonicalize":29}],49:[function(_dereq_,module,exports){
 /*
  * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
  */
@@ -9956,7 +9796,7 @@ function _labelBlankNodes(issuer, element) {
   return element;
 }
 
-},{"./JsonLdError":31,"./graphTypes":45,"./types":49,"rdf-canonize":62}],52:[function(_dereq_,module,exports){
+},{"./JsonLdError":31,"./graphTypes":44,"./types":49,"rdf-canonize":54}],52:[function(_dereq_,module,exports){
 'use strict'
 
 // A linked list to keep track of recently-used-ness
@@ -10292,7 +10132,7 @@ const forEachStep = (self, fn, node, thisp) => {
 
 module.exports = LRUCache
 
-},{"yallist":66}],53:[function(_dereq_,module,exports){
+},{"yallist":67}],53:[function(_dereq_,module,exports){
 // shim for using process in browser
 var process = module.exports = {};
 
@@ -10479,8 +10319,18 @@ process.chdir = function (dir) {
 process.umask = function() { return 0; };
 
 },{}],54:[function(_dereq_,module,exports){
+/**
+ * An implementation of the RDF Dataset Normalization specification.
+ *
+ * @author Dave Longley
+ *
+ * Copyright 2010-2021 Digital Bazaar, Inc.
+ */
+module.exports = _dereq_('./lib');
+
+},{"./lib":63}],55:[function(_dereq_,module,exports){
 /*
- * Copyright (c) 2016-2020 Digital Bazaar, Inc. All rights reserved.
+ * Copyright (c) 2016-2021 Digital Bazaar, Inc. All rights reserved.
  */
 'use strict';
 
@@ -10560,9 +10410,9 @@ module.exports = class IdentifierIssuer {
   }
 };
 
-},{}],55:[function(_dereq_,module,exports){
+},{}],56:[function(_dereq_,module,exports){
 /*
- * Copyright (c) 2016-2020 Digital Bazaar, Inc. All rights reserved.
+ * Copyright (c) 2016-2021 Digital Bazaar, Inc. All rights reserved.
  */
 'use strict';
 
@@ -10611,9 +10461,9 @@ module.exports = class MessageDigest {
   }
 };
 
-},{"setimmediate":63}],56:[function(_dereq_,module,exports){
+},{"setimmediate":64}],57:[function(_dereq_,module,exports){
 /*
- * Copyright (c) 2016-2020 Digital Bazaar, Inc. All rights reserved.
+ * Copyright (c) 2016-2021 Digital Bazaar, Inc. All rights reserved.
  */
 'use strict';
 
@@ -11006,9 +10856,9 @@ function _unescape(s) {
   });
 }
 
-},{}],57:[function(_dereq_,module,exports){
+},{}],58:[function(_dereq_,module,exports){
 /*
- * Copyright (c) 2016-2020 Digital Bazaar, Inc. All rights reserved.
+ * Copyright (c) 2016-2021 Digital Bazaar, Inc. All rights reserved.
  */
 'use strict';
 
@@ -11093,10 +10943,10 @@ module.exports = class Permuter {
   }
 };
 
-},{}],58:[function(_dereq_,module,exports){
+},{}],59:[function(_dereq_,module,exports){
 (function (setImmediate){(function (){
 /*
- * Copyright (c) 2016-2020 Digital Bazaar, Inc. All rights reserved.
+ * Copyright (c) 2016-2021 Digital Bazaar, Inc. All rights reserved.
  */
 'use strict';
 
@@ -11607,9 +11457,9 @@ function _stringHashCompare(a, b) {
 }
 
 }).call(this)}).call(this,_dereq_("timers").setImmediate)
-},{"./IdentifierIssuer":54,"./MessageDigest":55,"./NQuads":56,"./Permuter":57,"timers":64}],59:[function(_dereq_,module,exports){
+},{"./IdentifierIssuer":55,"./MessageDigest":56,"./NQuads":57,"./Permuter":58,"timers":65}],60:[function(_dereq_,module,exports){
 /*
- * Copyright (c) 2016-2020 Digital Bazaar, Inc. All rights reserved.
+ * Copyright (c) 2016-2021 Digital Bazaar, Inc. All rights reserved.
  */
 'use strict';
 
@@ -12097,9 +11947,9 @@ function _stringHashCompare(a, b) {
   return a.hash < b.hash ? -1 : a.hash > b.hash ? 1 : 0;
 }
 
-},{"./IdentifierIssuer":54,"./MessageDigest":55,"./NQuads":56,"./Permuter":57}],60:[function(_dereq_,module,exports){
+},{"./IdentifierIssuer":55,"./MessageDigest":56,"./NQuads":57,"./Permuter":58}],61:[function(_dereq_,module,exports){
 /*
- * Copyright (c) 2016-2020 Digital Bazaar, Inc. All rights reserved.
+ * Copyright (c) 2016-2021 Digital Bazaar, Inc. All rights reserved.
  */
 'use strict';
 
@@ -12189,9 +12039,9 @@ module.exports = class URDNA2012 extends URDNA2015 {
   }
 };
 
-},{"./URDNA2015":58}],61:[function(_dereq_,module,exports){
+},{"./URDNA2015":59}],62:[function(_dereq_,module,exports){
 /*
- * Copyright (c) 2016-2020 Digital Bazaar, Inc. All rights reserved.
+ * Copyright (c) 2016-2021 Digital Bazaar, Inc. All rights reserved.
  */
 'use strict';
 
@@ -12275,13 +12125,13 @@ module.exports = class URDNA2012Sync extends URDNA2015Sync {
   }
 };
 
-},{"./URDNA2015Sync":59}],62:[function(_dereq_,module,exports){
+},{"./URDNA2015Sync":60}],63:[function(_dereq_,module,exports){
 /**
  * An implementation of the RDF Dataset Normalization specification.
  * This library works in the browser and node.js.
  *
  * BSD 3-Clause License
- * Copyright (c) 2016-2020 Digital Bazaar, Inc.
+ * Copyright (c) 2016-2021 Digital Bazaar, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -12422,7 +12272,7 @@ api._canonizeSync = function(dataset, options) {
     'Invalid RDF Dataset Canonicalization algorithm: ' + options.algorithm);
 };
 
-},{"./IdentifierIssuer":54,"./NQuads":56,"./URDNA2015":58,"./URDNA2015Sync":59,"./URGNA2012":60,"./URGNA2012Sync":61,"rdf-canonize-native":28}],63:[function(_dereq_,module,exports){
+},{"./IdentifierIssuer":55,"./NQuads":57,"./URDNA2015":59,"./URDNA2015Sync":60,"./URGNA2012":61,"./URGNA2012Sync":62,"rdf-canonize-native":28}],64:[function(_dereq_,module,exports){
 (function (process,global){(function (){
 (function (global, undefined) {
     "use strict";
@@ -12612,7 +12462,7 @@ api._canonizeSync = function(dataset, options) {
 }(typeof self === "undefined" ? typeof global === "undefined" ? this : global : self));
 
 }).call(this)}).call(this,_dereq_('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"_process":53}],64:[function(_dereq_,module,exports){
+},{"_process":53}],65:[function(_dereq_,module,exports){
 (function (setImmediate,clearImmediate){(function (){
 var nextTick = _dereq_('process/browser.js').nextTick;
 var apply = Function.prototype.apply;
@@ -12691,7 +12541,7 @@ exports.clearImmediate = typeof clearImmediate === "function" ? clearImmediate :
   delete immediateIds[id];
 };
 }).call(this)}).call(this,_dereq_("timers").setImmediate,_dereq_("timers").clearImmediate)
-},{"process/browser.js":53,"timers":64}],65:[function(_dereq_,module,exports){
+},{"process/browser.js":53,"timers":65}],66:[function(_dereq_,module,exports){
 'use strict'
 module.exports = function (Yallist) {
   Yallist.prototype[Symbol.iterator] = function* () {
@@ -12701,7 +12551,7 @@ module.exports = function (Yallist) {
   }
 }
 
-},{}],66:[function(_dereq_,module,exports){
+},{}],67:[function(_dereq_,module,exports){
 'use strict'
 module.exports = Yallist
 
@@ -13024,7 +12874,7 @@ Yallist.prototype.sliceReverse = function (from, to) {
   return ret
 }
 
-Yallist.prototype.splice = function (start, deleteCount /*, ...nodes */) {
+Yallist.prototype.splice = function (start, deleteCount, ...nodes) {
   if (start > this.length) {
     start = this.length - 1
   }
@@ -13049,8 +12899,8 @@ Yallist.prototype.splice = function (start, deleteCount /*, ...nodes */) {
     walker = walker.prev
   }
 
-  for (var i = 2; i < arguments.length; i++) {
-    walker = insert(this, walker, arguments[i])
+  for (var i = 0; i < nodes.length; i++) {
+    walker = insert(this, walker, nodes[i])
   }
   return ret;
 }
@@ -13129,7 +12979,7 @@ try {
   _dereq_('./iterator.js')(Yallist)
 } catch (er) {}
 
-},{"./iterator.js":65}],67:[function(_dereq_,module,exports){
+},{"./iterator.js":66}],68:[function(_dereq_,module,exports){
 "use strict";
 
 // the functions for a class Object
@@ -13287,7 +13137,7 @@ class Class extends Term {
 
 module.exports = Class;
 
-},{"./Term":75,"./utilities":76}],68:[function(_dereq_,module,exports){
+},{"./Term":76,"./utilities":77}],69:[function(_dereq_,module,exports){
 "use strict";
 
 // the functions for a data type Object
@@ -13417,7 +13267,7 @@ class DataType extends Term {
 
 module.exports = DataType;
 
-},{"./Term":75,"./utilities":76}],69:[function(_dereq_,module,exports){
+},{"./Term":76,"./utilities":77}],70:[function(_dereq_,module,exports){
 "use strict";
 
 // the functions for a enumeration Object
@@ -13506,7 +13356,7 @@ class Enumeration extends Class {
 
 module.exports = Enumeration;
 
-},{"./Class":67,"./utilities":76}],70:[function(_dereq_,module,exports){
+},{"./Class":68,"./utilities":77}],71:[function(_dereq_,module,exports){
 "use strict";
 
 // the functions for a enumeration member Object
@@ -13596,7 +13446,7 @@ class EnumerationMember extends Term {
 
 module.exports = EnumerationMember;
 
-},{"./Term":75,"./utilities":76}],71:[function(_dereq_,module,exports){
+},{"./Term":76,"./utilities":77}],72:[function(_dereq_,module,exports){
 "use strict";
 
 function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { Promise.resolve(value).then(_next, _throw); } }
@@ -13633,12 +13483,18 @@ class Graph {
     // soa:enumerationDomainIncludes is an inverse of soa:hasEnumerationMember
     // soa:EnumerationMember is introduced as meta type for the members of an schema:Enumeration
 
+    var schemaURI = 'http://schema.org/';
+
+    if (this.sdoAdapter.schemaHttps) {
+      schemaURI = 'https://schema.org/';
+    }
+
     this.context = {
       rdf: 'http://www.w3.org/1999/02/22-rdf-syntax-ns#',
       rdfs: 'http://www.w3.org/2000/01/rdf-schema#',
       xsd: 'http://www.w3.org/2001/XMLSchema#',
       dc: 'http://purl.org/dc/terms/',
-      schema: 'http://schema.org/',
+      schema: schemaURI,
       soa: 'http://schema-org-adapter.at/vocabTerms/',
       'soa:superClassOf': {
         '@id': 'soa:superClassOf',
@@ -13745,8 +13601,8 @@ class Graph {
          Classify every @graph node based on its @type. The node is transformed to another data-model based on the @type and stored in a new memory storage for an easier further usage. This is the first of two steps for an exact classification of the node, since the @type is not enough for a correct classification. The mapping of our data model and the @type(s) of the corresponding @graph nodes are as follows:
          classes ("@type" = "rdfs:Class")
          properties ("@type" = "rdf:Property")
-         dataTypes ("@type" = "rdfs:Class" + "http://schema.org/DataType")
-         enumerations ("@type" = "rdfs:Class", has "http://schema.org/Enumeration" as implicit super-class)
+         dataTypes ("@type" = "rdfs:Class" + "schema:DataType")
+         enumerations ("@type" = "rdfs:Class", has "schema:Enumeration" as implicit super-class)
          enumerationMembers ("@type" = @id(s) of enumeration(s))
          */
 
@@ -13790,8 +13646,7 @@ class Graph {
               _this.addGraphNode(_this.enumerationMembers, curNode, vocabURL);
             }
           } else {
-            console.log('unexpected @type format for the following node:');
-            console.log(JSON.stringify(curNode, null, 2));
+            _this.sdoAdapter.onError('unexpected @type format for the following node: ' + JSON.stringify(curNode, null, 2));
           }
         } // C) Classification cleaning
 
@@ -14107,7 +13962,8 @@ class Graph {
 
         return true;
       } catch (e) {
-        console.log(e);
+        _this.sdoAdapter.onError(e);
+
         return false;
       }
     })();
@@ -14292,7 +14148,7 @@ class Graph {
 
       return true;
     } catch (e) {
-      console.log(e);
+      this.sdoAdapter.onError(e);
       return false;
     }
   }
@@ -14619,7 +14475,7 @@ class Graph {
 
 module.exports = Graph;
 
-},{"./Class":67,"./DataType":68,"./Enumeration":69,"./EnumerationMember":70,"./Property":72,"./ReasoningEngine":73,"./utilities":76}],72:[function(_dereq_,module,exports){
+},{"./Class":68,"./DataType":69,"./Enumeration":70,"./EnumerationMember":71,"./Property":73,"./ReasoningEngine":74,"./utilities":77}],73:[function(_dereq_,module,exports){
 "use strict";
 
 // the functions for a property Object
@@ -14798,7 +14654,7 @@ class Property extends Term {
 
 module.exports = Property;
 
-},{"./Term":75,"./utilities":76}],73:[function(_dereq_,module,exports){
+},{"./Term":76,"./utilities":77}],74:[function(_dereq_,module,exports){
 "use strict";
 
 var util = _dereq_('./utilities');
@@ -15107,7 +14963,7 @@ class ReasoningEngine {
 
 module.exports = ReasoningEngine;
 
-},{"./utilities":76}],74:[function(_dereq_,module,exports){
+},{"./utilities":77}],75:[function(_dereq_,module,exports){
 "use strict";
 
 function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { Promise.resolve(value).then(_next, _throw); } }
@@ -15129,16 +14985,37 @@ class SDOAdapter {
    * The SDOAdapter is a JS-Class that represents the interface between the user and this library. Its methods enable to add vocabularies to its memory as well as retrieving vocabulary items. It is possible to create multiple instances of this JS-Class which use different vocabularies.
    *
    * @class
-   * @param {string|null} commitBase - The commit from https://github.com/schemaorg/schemaorg which is the base for the adapter (if not given, we take the latest commit of our fork at https://github.com/semantifyit/schemaorg)
+   * @param {object|null} parameterObject - an object with optional parameters for the constructor. There is 'commitBase': The commit string from https://github.com/schemaorg/schemaorg which is the base for the adapter (if not given, we take the latest commit of our fork at https://github.com/semantifyit/schemaorg). There is 'onError': A callback function(string) that is called when an unexpected error happens. There is 'schemaHttps': a boolean flag - use the https version of the schema.org vocabulary, it defaults to true. Only available if for schema.org version 9.0 upwards
    */
   constructor() {
-    var commitBase = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : null;
-    this.graph = new Graph(this);
+    var parameterObject = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : null;
     this.retrievalMemory = {
       versionsFile: null,
       latest: null
-    };
-    this.commitBase = commitBase;
+    }; // option commitBase - defaults to null
+
+    if (parameterObject && parameterObject.commitBase) {
+      this.commitBase = parameterObject.commitBase;
+    } else {
+      this.commitBase = null;
+    } // option onError - defaults to a function that does nothing
+
+
+    if (parameterObject && typeof parameterObject.onError === 'function') {
+      this.onError = parameterObject.onError;
+    } else {
+      this.onError = function () {// do nothing;
+      };
+    } // option commitBase - defaults to true
+
+
+    if (parameterObject && parameterObject.schemaHttps !== undefined) {
+      this.schemaHttps = parameterObject.schemaHttps;
+    } else {
+      this.schemaHttps = true;
+    }
+
+    this.graph = new Graph(this);
   }
   /**
    * Adds vocabularies (in JSON-LD format or as URL) to the memory of this SDOAdapter. The function "constructSDOVocabularyURL()" helps you to construct URLs for the schema.org vocabulary
@@ -15205,7 +15082,7 @@ class SDOAdapter {
           }
         }).then(function (res) {
           resolve(res.data);
-        }).catch(function (err) {
+        }).catch(function () {
           reject('Could not find any resource at the given URL.');
         });
       });
@@ -15596,7 +15473,7 @@ class SDOAdapter {
         }
       }
 
-      var fileName = util.getFileNameForSchemaOrgVersion(version); // This can throw an error if the version is <= 3.0
+      var fileName = util.getFileNameForSchemaOrgVersion(version, _this2.schemaHttps); // This can throw an error if the version is <= 3.0
 
       return _this2.getReleasesURI() + version + '/' + fileName; // e.g. "https://raw.githubusercontent.com/schemaorg/schemaorg/main/data/releases/3.9/all-layers.jsonld";
     })();
@@ -15619,7 +15496,8 @@ class SDOAdapter {
       try {
         versionFile = yield axios.get(_this3.getVersionFileURI());
       } catch (e) {
-        console.log('Unable to retrieve the schema.org versions file at ' + _this3.getVersionFileURI());
+        _this3.onError('Unable to retrieve the schema.org versions file at ' + _this3.getVersionFileURI());
+
         throw e;
       } // 2. determine the latest valid version
 
@@ -15645,7 +15523,9 @@ class SDOAdapter {
 
             if (!_this3.retrievalMemory.latest) {
               var _errMsg = 'Could not find any valid vocabulary file in the Schema.org versions file (to be declared as "latest".';
-              console.log(_errMsg);
+
+              _this3.onError(_errMsg);
+
               throw new Error(_errMsg);
             }
           }
@@ -15654,7 +15534,9 @@ class SDOAdapter {
         }
 
         var errMsg = 'Schema.org versions file has an unexpected structure!';
-        console.log(errMsg + ' -> ' + _this3.getVersionFileURI());
+
+        _this3.onError(errMsg + ' -> ' + _this3.getVersionFileURI());
+
         throw new Error(errMsg);
       }
     })();
@@ -15722,7 +15604,7 @@ class SDOAdapter {
 
 module.exports = SDOAdapter;
 
-},{"./Graph":71,"./utilities":76,"axios":1}],75:[function(_dereq_,module,exports){
+},{"./Graph":72,"./utilities":77,"axios":1}],76:[function(_dereq_,module,exports){
 "use strict";
 
 // the functions for a term Object
@@ -15916,7 +15798,7 @@ class Term {
 
 module.exports = Term;
 
-},{"./utilities":76}],76:[function(_dereq_,module,exports){
+},{"./utilities":77}],77:[function(_dereq_,module,exports){
 "use strict";
 
 function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { Promise.resolve(value).then(_next, _throw); } }
@@ -16477,11 +16359,14 @@ function sortReleaseEntriesByDate(releaseLog) {
  * Returns the jsonld filename that holds the schema.org vocabulary for a given version.
  *
  * @param {string} version - the schema.org version
+ * @param {boolean} schemaHttps - use https as protocol for the schema.org vocabulary - works only from version 9.0 upwards
  * @returns {string} - the corresponding jsonld filename
  */
 
 
 function getFileNameForSchemaOrgVersion(version) {
+  var schemaHttps = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : true;
+
   switch (version) {
     case '2.0':
     case '2.1':
@@ -16510,11 +16395,20 @@ function getFileNameForSchemaOrgVersion(version) {
       return 'all-layers.jsonld';
 
     case '9.0':
-      return 'schemaorg-all-http.jsonld';
+      if (schemaHttps) {
+        return 'schemaorg-all-https.jsonld';
+      } else {
+        return 'schemaorg-all-http.jsonld';
+      }
 
     default:
-      return 'schemaorg-all-http.jsonld';
-    // this is expected for newer releases that are not covered yet
+      // this is expected for newer releases that are not covered yet
+      if (schemaHttps) {
+        return 'schemaorg-all-https.jsonld';
+      } else {
+        return 'schemaorg-all-http.jsonld';
+      }
+
   }
 }
 
@@ -16535,5 +16429,5 @@ module.exports = {
   getFileNameForSchemaOrgVersion
 };
 
-},{"jsonld":46}]},{},[74])(74)
+},{"jsonld":45}]},{},[75])(75)
 });
