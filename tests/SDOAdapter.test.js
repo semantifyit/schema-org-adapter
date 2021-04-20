@@ -4,7 +4,7 @@ const VOC_OBJ_SDO3_7 = require('./data/schema_3.7');
 const VOC_OBJ_SDO10_0 = require('./data/schema_10.0.json');
 const VOC_OBJ_GWON = require('./data/graph_with_one_node');
 const VOC_URL_ZOO = 'https://raw.githubusercontent.com/semantifyit/schema-org-adapter/master/tests/data/exampleExternalVocabulary.json';
-const VOC_URL_SDO5_0 = 'https://raw.githubusercontent.com/semantifyit/schemaorg/main/data/releases/5.0/all-layers.jsonld';
+const VOC_URL_SDO10_0 = 'https://raw.githubusercontent.com/semantifyit/schemaorg/main/data/releases/10.0/schemaorg-all-https.jsonld';
 
 /**
  *  Tests regarding the JS-Class for "SDOAdapter"
@@ -443,8 +443,8 @@ describe('SDO Adapter methods', () => {
     });
 
     test('fetch vocab by URL - direct URL', async() => {
-        const mySA = new SDOAdapter({ commitBase: global.commitBase, schemaHttps: false });
-        await mySA.addVocabularies([VOC_URL_SDO5_0, VOC_URL_ZOO]);
+        const mySA = new SDOAdapter({ commitBase: global.commitBase, schemaHttps: true });
+        await mySA.addVocabularies([VOC_URL_SDO10_0, VOC_URL_ZOO]);
         const data1a = mySA.getAllProperties();
         console.log(data1a.length);
         expect(data1a.length > 1000).toEqual(true);
