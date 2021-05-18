@@ -3,6 +3,8 @@
 <dl>
 <dt><a href="#SDOAdapter">SDOAdapter</a></dt>
 <dd></dd>
+<dt><a href="#Term">Term</a></dt>
+<dd></dd>
 <dt><a href="#Class">Class</a></dt>
 <dd></dd>
 <dt><a href="#Property">Property</a></dt>
@@ -24,7 +26,7 @@
     * [new SDOAdapter(parameterObject)](#new_SDOAdapter_new)
     * [.addVocabularies(vocabArray)](#SDOAdapter+addVocabularies) ⇒ <code>Promise.&lt;void&gt;</code>
     * [.fetchVocabularyFromURL(url)](#SDOAdapter+fetchVocabularyFromURL) ⇒ <code>Promise.&lt;object&gt;</code>
-    * [.getTerm(id, filter)](#SDOAdapter+getTerm) ⇒ <code>Term</code>
+    * [.getTerm(id, filter)](#SDOAdapter+getTerm) ⇒ [<code>Term</code>](#Term)
     * [.getAllTerms(filter)](#SDOAdapter+getAllTerms) ⇒ [<code>Array.&lt;Class&gt;</code>](#Class)
     * [.getListOfTerms(filter)](#SDOAdapter+getListOfTerms) ⇒ <code>Array.&lt;string&gt;</code>
     * [.getClass(id, filter)](#SDOAdapter+getClass) ⇒ [<code>Class</code>](#Class) \| [<code>Enumeration</code>](#Enumeration)
@@ -86,11 +88,11 @@ Fetches a vocabulary from the given URL.
 
 <a name="SDOAdapter+getTerm"></a>
 
-### sdoAdapter.getTerm(id, filter) ⇒ <code>Term</code>
+### sdoAdapter.getTerm(id, filter) ⇒ [<code>Term</code>](#Term)
 Creates a corresponding JS-Class for the given IRI, depending on its term-category
 
 **Kind**: instance method of [<code>SDOAdapter</code>](#SDOAdapter)  
-**Returns**: <code>Term</code> - the JS-Class for the given IRI  
+**Returns**: [<code>Term</code>](#Term) - the JS-Class for the given IRI  
 
 | Param | Type | Default | Description |
 | --- | --- | --- | --- |
@@ -369,6 +371,128 @@ Returns the URI of the respective versions file
 
 **Kind**: instance method of [<code>SDOAdapter</code>](#SDOAdapter)  
 **Returns**: <code>string</code> - the URI of the respective versions file  
+<a name="Term"></a>
+
+## Term
+**Kind**: global class  
+
+* [Term](#Term)
+    * [new Term(IRI, graph)](#new_Term_new)
+    * [.getIRI(compactForm)](#Term+getIRI) ⇒ <code>string</code>
+    * *[.getTermType()](#Term+getTermType) ⇒ <code>string</code>*
+    * *[.getTermObj()](#Term+getTermObj) ⇒ <code>string</code>*
+    * [.getVocabURLs()](#Term+getVocabURLs) ⇒ <code>Array</code> \| <code>null</code>
+    * [.getVocabulary()](#Term+getVocabulary) ⇒ <code>string</code> \| <code>null</code>
+    * [.getSource()](#Term+getSource) ⇒ <code>string</code> \| <code>Array</code> \| <code>null</code>
+    * [.isSupersededBy()](#Term+isSupersededBy) ⇒ <code>string</code> \| <code>null</code>
+    * [.getName(language)](#Term+getName) ⇒ <code>string</code> \| <code>null</code>
+    * [.getDescription(language)](#Term+getDescription) ⇒ <code>string</code> \| <code>null</code>
+    * [.toString()](#Term+toString) ⇒ <code>string</code>
+    * [.toJSON()](#Term+toJSON) ⇒ <code>object</code>
+
+<a name="new_Term_new"></a>
+
+### new Term(IRI, graph)
+A vocabulary term. It is identified by its IRI.
+
+
+| Param | Type | Description |
+| --- | --- | --- |
+| IRI | <code>string</code> | The compacted IRI of this Term |
+| graph | <code>Graph</code> | The underlying data graph to enable the methods of this Term |
+
+<a name="Term+getIRI"></a>
+
+### term.getIRI(compactForm) ⇒ <code>string</code>
+Retrieves the IRI (@id) of this Term in compact/absolute form
+
+**Kind**: instance method of [<code>Term</code>](#Term)  
+**Returns**: <code>string</code> - The IRI (@id) of this Term  
+
+| Param | Type | Default | Description |
+| --- | --- | --- | --- |
+| compactForm | <code>boolean</code> | <code>false</code> | (default = false), if true -> return compact IRI -> "schema:Friday", if false -> return absolute IRI -> "http://schema.org/Friday" |
+
+<a name="Term+getTermType"></a>
+
+### *term.getTermType() ⇒ <code>string</code>*
+Retrieves the term type (@type) of this Term
+
+**Kind**: instance abstract method of [<code>Term</code>](#Term)  
+**Returns**: <code>string</code> - The term type of this Term  
+<a name="Term+getTermObj"></a>
+
+### *term.getTermObj() ⇒ <code>string</code>*
+Retrieves the term object of this Term
+
+**Kind**: instance abstract method of [<code>Term</code>](#Term)  
+**Returns**: <code>string</code> - The term object of this Term  
+<a name="Term+getVocabURLs"></a>
+
+### term.getVocabURLs() ⇒ <code>Array</code> \| <code>null</code>
+Retrieves the original vocabulary urls of this Term
+
+**Kind**: instance method of [<code>Term</code>](#Term)  
+**Returns**: <code>Array</code> \| <code>null</code> - The original vocabulary urls of this Term  
+<a name="Term+getVocabulary"></a>
+
+### term.getVocabulary() ⇒ <code>string</code> \| <code>null</code>
+Retrieves the original vocabulary (schema:isPartOf) of this Term
+
+**Kind**: instance method of [<code>Term</code>](#Term)  
+**Returns**: <code>string</code> \| <code>null</code> - The vocabulary IRI given by the "schema:isPartOf" of this Term  
+<a name="Term+getSource"></a>
+
+### term.getSource() ⇒ <code>string</code> \| <code>Array</code> \| <code>null</code>
+Retrieves the source (dc:source) of this Term
+
+**Kind**: instance method of [<code>Term</code>](#Term)  
+**Returns**: <code>string</code> \| <code>Array</code> \| <code>null</code> - The source IRI given by the "dc:source" of this Term (null if none)  
+<a name="Term+isSupersededBy"></a>
+
+### term.isSupersededBy() ⇒ <code>string</code> \| <code>null</code>
+Retrieves the Term superseding (schema:supersededBy) this Term
+
+**Kind**: instance method of [<code>Term</code>](#Term)  
+**Returns**: <code>string</code> \| <code>null</code> - The Term superseding this Term (null if none)  
+<a name="Term+getName"></a>
+
+### term.getName(language) ⇒ <code>string</code> \| <code>null</code>
+Retrieves the name (rdfs:label) of this Term in a wished language (optional)
+
+**Kind**: instance method of [<code>Term</code>](#Term)  
+**Returns**: <code>string</code> \| <code>null</code> - The name of this Term (null if not given for specified language)  
+
+| Param | Type | Default | Description |
+| --- | --- | --- | --- |
+| language | <code>string</code> | <code>&quot;en&quot;</code> | (default = "en") the wished language for the name |
+
+<a name="Term+getDescription"></a>
+
+### term.getDescription(language) ⇒ <code>string</code> \| <code>null</code>
+Retrieves the description (rdfs:comment) of this Term in a wished language (optional)
+
+**Kind**: instance method of [<code>Term</code>](#Term)  
+**Returns**: <code>string</code> \| <code>null</code> - The description of this Term (null if not given for specified language)  
+
+| Param | Type | Default | Description |
+| --- | --- | --- | --- |
+| language | <code>string</code> | <code>&quot;en&quot;</code> | (default = "en") the wished language for the description |
+
+<a name="Term+toString"></a>
+
+### term.toString() ⇒ <code>string</code>
+Generates a string representation of this Term (Based on its JSON representation)
+
+**Kind**: instance method of [<code>Term</code>](#Term)  
+**Returns**: <code>string</code> - The string representation of this Term  
+<a name="Term+toJSON"></a>
+
+### term.toJSON() ⇒ <code>object</code>
+Generates a JSON representation of this Term
+
+**Kind**: instance method of [<code>Term</code>](#Term)  
+**Returns**: <code>object</code> - The JSON representation of this Term  
 <a name="Class"></a>
 
 ## Class

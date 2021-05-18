@@ -12,7 +12,7 @@
     "badges": "jest-coverage-badges",
     "test:badges": "npm run-script test && npm run-script badges",
     "genJsDoc": "jsdoc src/ --destination ./jsDoc",
-    "getJsDocMD": "jsdoc2md src/SDOAdapter.js src/Class.js src/Property.js src/Enumeration.js src/EnumerationMember.js src/DataType.js > docu/api.md",
+    "getJsDocMD": "jsdoc2md src/SDOAdapter.js src/Term.js src/Class.js src/Property.js src/Enumeration.js src/EnumerationMember.js src/DataType.js > docu/api.md",
     "eslint check": "eslint src/*.js tests/*.js"
   },
   "author": {
