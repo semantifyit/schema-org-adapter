@@ -13412,7 +13412,7 @@ class EnumerationMember extends Term {
     result.push(...enumObj['soa:enumerationDomainIncludes']);
 
     if (implicit) {
-      var domainEnumerationsToCheck = JSON.parse(JSON.stringify(result));
+      var domainEnumerationsToCheck = util.copByVal(result);
 
       for (var actDE of domainEnumerationsToCheck) {
         result.push(...this.graph.reasoner.inferSuperClasses(actDE));
@@ -13483,18 +13483,12 @@ class Graph {
     // soa:enumerationDomainIncludes is an inverse of soa:hasEnumerationMember
     // soa:EnumerationMember is introduced as meta type for the members of an schema:Enumeration
 
-    var schemaURI = 'http://schema.org/';
-
-    if (this.sdoAdapter.schemaHttps) {
-      schemaURI = 'https://schema.org/';
-    }
-
     this.context = {
       rdf: 'http://www.w3.org/1999/02/22-rdf-syntax-ns#',
       rdfs: 'http://www.w3.org/2000/01/rdf-schema#',
       xsd: 'http://www.w3.org/2001/XMLSchema#',
       dc: 'http://purl.org/dc/terms/',
-      schema: schemaURI,
+      // schema: 'http://schema.org/', this entry will be generated the first time a vocabulary is added to the graph
       soa: 'http://schema-org-adapter.at/vocabTerms/',
       'soa:superClassOf': {
         '@id': 'soa:superClassOf',
@@ -13583,10 +13577,43 @@ class Graph {
     return _asyncToGenerator(function* () {
       var vocabURL = _arguments.length > 1 && _arguments[1] !== undefined ? _arguments[1] : null;
 
-      // this algorithm is well-documented in /docu/algorithm.md
+      // check which protocol version of schema.org is used in the first vocabulary given to the graph, set that version as the namespace for "schema" in the standard @context
+      if (_this.context.schema === undefined) {
+        _this.context.schema = util.discoverUsedSchemaOrgProtocol(vocab) + '://schema.org/';
+      } // this algorithm is well-documented in /docu/algorithm.md
+
+
       try {
         // A) Pre-process Vocabulary
-        // create new context
+        // New: In the following any added vocabularies are slightly changed, if the "equateVocabularyProtocols" option is used and the vocabulary includes namespaces that meet the requirements
+        if (_this.sdoAdapter.equateVocabularyProtocols) {
+          // 1. Check if any namespaces from this.context are used in vocab (context and content) with another protocol (http/https). Create a List of those
+          var equateNamespaces = util.discoverEquateNamespaces(_this.context, vocab); // 2. If the List is not empty, then the vocab needs to be adapted
+
+          if (equateNamespaces.length > 0) {
+            //  - Create adapted context for vocab, which includes IRIs from vocab context + IRIs from the List, use vocab indicators from this.context
+            var adaptedContext = util.copByVal(vocab['@context']);
+            equateNamespaces.forEach(function (ens) {
+              var usedKeyToDelete = Object.keys(adaptedContext).find(el => adaptedContext[el] === ens);
+
+              if (usedKeyToDelete) {
+                delete adaptedContext[usedKeyToDelete];
+              }
+
+              var keyToUse = Object.keys(this.context).find(el => this.context[el] === util.switchIRIProtocol(ens));
+              adaptedContext[keyToUse] = ens;
+            }, _this); //  - jsonld compact vocab with adapted context
+
+            vocab = yield util.preProcessVocab(vocab, adaptedContext); //  - manually change entries of compacted vocab context, so that they use the same protocol as in this.context (the vocab indicators should already be the same)
+
+            equateNamespaces.forEach(function (ens) {
+              var keyToUse = Object.keys(this.context).find(el => this.context[el] === util.switchIRIProtocol(ens));
+              vocab['@context'][keyToUse] = this.context[keyToUse];
+            }, _this);
+          }
+        } // create new context
+
+
         _this.context = util.generateContext(_this.context, vocab['@context']); // pre-process new vocab
 
         vocab = yield util.preProcessVocab(vocab, _this.context); // adapt @graph to new context
@@ -13608,7 +13635,7 @@ class Graph {
 
 
         for (var i = 0; i < vocab['@graph'].length; i++) {
-          var curNode = JSON.parse(JSON.stringify(vocab['@graph'][i]));
+          var curNode = util.copByVal(vocab['@graph'][i]);
 
           if (util.isString(curNode['@type'])) {
             switch (curNode['@type']) {
@@ -13675,7 +13702,7 @@ class Graph {
                 if (actSubClass === 'schema:Enumeration' || _enumKeys.includes(actSubClass)) {
                   if (_this.classes[actClassKey] && !_this.enumerations[actClassKey]) {
                     newEnum = true;
-                    _this.enumerations[actClassKey] = JSON.parse(JSON.stringify(_this.classes[actClassKey]));
+                    _this.enumerations[actClassKey] = util.copByVal(_this.classes[actClassKey]);
                     delete _this.classes[actClassKey];
                   }
                 }
@@ -13702,7 +13729,7 @@ class Graph {
                 if (_actSubClass === 'schema:DataType' || _dtKeys.includes(_actSubClass)) {
                   if (_this.classes[_actClassKey] && !_this.dataTypes[_actClassKey]) {
                     newDatatype = true;
-                    _this.dataTypes[_actClassKey] = JSON.parse(JSON.stringify(_this.classes[_actClassKey]));
+                    _this.dataTypes[_actClassKey] = util.copByVal(_this.classes[_actClassKey]);
                     delete _this.classes[_actClassKey];
                   }
                 }
@@ -14391,7 +14418,7 @@ class Graph {
 
 
   discoverCompactIRI(input) {
-    if (input.indexOf(':') !== -1) {
+    if (input.includes(':')) {
       // is iri
       var terms = Object.keys(this.context);
 
@@ -14402,9 +14429,9 @@ class Graph {
           if (input.startsWith(actTerm)) {
             // is compactIRI
             return input;
-          } else if (input.startsWith(absoluteIRI)) {
+          } else if (input.startsWith(absoluteIRI) || this.sdoAdapter.equateVocabularyProtocols && input.startsWith(util.switchIRIProtocol(absoluteIRI))) {
             // is absoluteIRI
-            return util.toCompactIRI(input, this.context);
+            return util.toCompactIRI(input, this.context, this.sdoAdapter.equateVocabularyProtocols);
           }
         }
       }
@@ -14985,7 +15012,7 @@ class SDOAdapter {
    * The SDOAdapter is a JS-Class that represents the interface between the user and this library. Its methods enable to add vocabularies to its memory as well as retrieving vocabulary items. It is possible to create multiple instances of this JS-Class which use different vocabularies.
    *
    * @class
-   * @param {object|null} parameterObject - an object with optional parameters for the constructor. There is 'commitBase': The commit string from https://github.com/schemaorg/schemaorg which is the base for the adapter (if not given, we take the latest commit of our fork at https://github.com/semantifyit/schemaorg). There is 'onError': A callback function(string) that is called when an unexpected error happens. There is 'schemaHttps': a boolean flag - use the https version of the schema.org vocabulary, it defaults to true. Only available if for schema.org version 9.0 upwards
+   * @param {object|null} parameterObject - an object with optional parameters for the constructor. There is 'commitBase': The commit string from https://github.com/schemaorg/schemaorg which is the base for the adapter (if not given, we take the latest commit of our fork at https://github.com/semantifyit/schemaorg). There is 'onError': A callback function(string) that is called when an unexpected error happens. There is 'schemaHttps': a boolean flag - use the https version of the schema.org vocabulary, it defaults to true. Only available if for schema.org version 9.0 upwards There is 'equateVocabularyProtocols': a boolean flag - treats namespaces as equal even if their protocols (http/https) are different, it defaults to false.
    */
   constructor() {
     var parameterObject = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : null;
@@ -15004,15 +15031,22 @@ class SDOAdapter {
     if (parameterObject && typeof parameterObject.onError === 'function') {
       this.onError = parameterObject.onError;
     } else {
-      this.onError = function () {// do nothing;
+      this.onError = function () {// do nothing; The users should pass their own function to handle errors, they have else no way to hide automatic error messages once the SDO Adapter is compiled
       };
-    } // option commitBase - defaults to true
+    } // option schemaHttps - defaults to true
 
 
     if (parameterObject && parameterObject.schemaHttps !== undefined) {
       this.schemaHttps = parameterObject.schemaHttps;
     } else {
       this.schemaHttps = true;
+    } // option equateVocabularyProtocols - defaults to false
+
+
+    if (parameterObject && parameterObject.equateVocabularyProtocols !== undefined) {
+      this.equateVocabularyProtocols = parameterObject.equateVocabularyProtocols;
+    } else {
+      this.equateVocabularyProtocols = false;
     }
 
     this.graph = new Graph(this);
@@ -15035,26 +15069,26 @@ class SDOAdapter {
 
       if (util.isArray(vocabArray)) {
         // check every vocab if it is a valid JSON-LD. If string -> try to JSON.parse()
-        for (var i = 0; i < vocabArray.length; i++) {
-          if (util.isString(vocabArray[i])) {
-            if (vocabArray[i].startsWith('www') || vocabArray[i].startsWith('http')) {
+        for (var vocab of vocabArray) {
+          if (util.isString(vocab)) {
+            if (vocab.startsWith('www') || vocab.startsWith('http')) {
               // assume it is a URL
               try {
-                var fetchedVocab = yield _this.fetchVocabularyFromURL(vocabArray[i]);
-                yield _this.graph.addVocabulary(fetchedVocab, vocabArray[i]);
+                var fetchedVocab = yield _this.fetchVocabularyFromURL(vocab);
+                yield _this.graph.addVocabulary(fetchedVocab, vocab);
               } catch (e) {
-                throw new Error('The given URL ' + vocabArray[i] + ' did not contain a valid JSON-LD vocabulary.');
+                throw new Error('The given URL ' + vocab + ' did not contain a valid JSON-LD vocabulary.');
               }
             } else {
               // assume it is a string-version of a JSON-LD
               try {
-                yield _this.graph.addVocabulary(JSON.parse(vocabArray[i]));
+                yield _this.graph.addVocabulary(JSON.parse(vocab));
               } catch (e) {
                 throw new Error('Parsing of vocabulary string produced an invalid JSON-LD.');
               }
             }
-          } else if (util.isObject(vocabArray[i])) {
-            yield _this.graph.addVocabulary(vocabArray[i]);
+          } else if (util.isObject(vocab)) {
+            yield _this.graph.addVocabulary(vocab);
           } else {
             // invalid argument type!
             throw new Error('The first argument of the function must be an Array of vocabularies or a single vocabulary (JSON-LD as Object/String)');
@@ -15480,7 +15514,7 @@ class SDOAdapter {
   }
   /**
    * Retrieves the schema.org version listing at https://raw.githubusercontent.com/schemaorg/schemaorg/main/versions.json
-   * and saves it in the local memory. Also sends head-requests to determine if the 'latest' version is really 'fetchable'.
+   * and saves it in the local memory. Also sends head-requests to determine if the 'latest' version is really 'fetch-able'.
    * If not, this head-requests are done again for older versions until the latest valid version is determined and saved in the memory.
    *
    * @returns {Promise<void>} Returns void when the process ends (signalizing the process ending).
@@ -16037,18 +16071,16 @@ function generateContext(currentContext, newContext) {
   var keysCurrentContext = Object.keys(currentContext);
   var keysNewContext = Object.keys(newContext); // add all of the old context
 
-  var resultContext = JSON.parse(JSON.stringify(currentContext)); // add vocabs of new context that are not already used (value is URI)
+  var resultContext = copByVal(currentContext); // add vocabs of new context that are not already used (value is URI)
 
-  for (var i = 0; i < keysNewContext.length; i++) {
-    var actKey = keysNewContext[i];
-
-    if (isString(newContext[actKey])) {
+  for (var keyNC of keysNewContext) {
+    if (isString(newContext[keyNC])) {
       // first: check if the URI is already used, with any indicator
       var foundMatch = false;
 
-      for (var k = 0; k < keysCurrentContext.length; k++) {
-        if (isString(resultContext[keysCurrentContext[k]])) {
-          if (resultContext[keysCurrentContext[k]] === newContext[actKey]) {
+      for (var keyCC of keysCurrentContext) {
+        if (isString(resultContext[keyCC])) {
+          if (resultContext[keyCC] === newContext[keyNC]) {
             // found match, the URI is already covered
             foundMatch = true;
             break;
@@ -16060,21 +16092,21 @@ function generateContext(currentContext, newContext) {
         continue; // URI is already covered, continue with next
       }
 
-      if (!resultContext[actKey]) {
+      if (!resultContext[keyNC]) {
         // add new vocab indicator
-        resultContext[actKey] = newContext[actKey];
+        resultContext[keyNC] = newContext[keyNC];
       } else {
         // check if the URI is the same, if not: add new uri under new vocab indicator
-        if (resultContext[actKey] !== newContext[actKey]) {
+        if (resultContext[keyNC] !== newContext[keyNC]) {
           var foundFreeName = false;
           var counter = 1;
 
           while (foundFreeName === false) {
-            var newVocabIndicator = actKey + counter++;
+            var newVocabIndicator = keyNC + counter++;
 
             if (!resultContext[newVocabIndicator]) {
               foundFreeName = true;
-              resultContext[newVocabIndicator] = newContext[actKey];
+              resultContext[newVocabIndicator] = newContext[keyNC];
             }
           }
         }
@@ -16092,16 +16124,16 @@ function generateContext(currentContext, newContext) {
   var keysResultContext = Object.keys(resultContext);
   var orderedResultContext = {}; // add the Vocab Indicators (value = string)
 
-  for (var _i = 0; _i < keysResultContext.length; _i++) {
-    if (isString(resultContext[keysResultContext[_i]])) {
-      orderedResultContext[keysResultContext[_i]] = resultContext[keysResultContext[_i]];
+  for (var keyRC of keysResultContext) {
+    if (isString(resultContext[keyRC])) {
+      orderedResultContext[keyRC] = resultContext[keyRC];
     }
   } // add the term handlers (value = object)
 
 
-  for (var _i2 = 0; _i2 < keysResultContext.length; _i2++) {
-    if (isObject(resultContext[keysResultContext[_i2]])) {
-      orderedResultContext[keysResultContext[_i2]] = resultContext[keysResultContext[_i2]];
+  for (var _keyRC of keysResultContext) {
+    if (isObject(resultContext[_keyRC])) {
+      orderedResultContext[_keyRC] = resultContext[_keyRC];
     }
   }
 
@@ -16148,14 +16180,12 @@ function _preProcessVocab() {
       }
 
       vocab['@graph'] = copByVal(newGraph);
-    } while (foundInnerGraph === true); // expand to remove the old context
-
-
-    var expandedVocab = yield jsonld.expand(vocab); // compact to apply the new context (which is supposed to have been merged before with the old context through the function generateContext())
+    } while (foundInnerGraph === true); // compact to apply the new context (which is supposed to have been merged before with the old context through the function generateContext())
     // option "graph": true not feasible here, because then vocabs with "@id" result in inner @graphs again
     // solution: edge case handling (see below)
 
-    var compactedVocab = yield jsonld.compact(expandedVocab, newContext); // edge case: @graph had only one node, so values of @graph are in outermost layer
+
+    var compactedVocab = yield jsonld.compact(vocab, newContext); // edge case: @graph had only one node, so values of @graph are in outermost layer
 
     if (compactedVocab['@graph'] === undefined) {
       delete compactedVocab['@context'];
@@ -16224,9 +16254,9 @@ function curateVocabNode(vocabNode, vocabularies) {
       // }]
       var _newVal3 = {};
 
-      for (var _i3 = 0; _i3 < vocabNode['rdfs:label'].length; _i3++) {
-        if (isObject(vocabNode['rdfs:label'][_i3])) {
-          _newVal3[vocabNode['rdfs:label'][_i3]['@language']] = vocabNode['rdfs:label'][_i3]['@value'];
+      for (var _i = 0; _i < vocabNode['rdfs:label'].length; _i++) {
+        if (isObject(vocabNode['rdfs:label'][_i])) {
+          _newVal3[vocabNode['rdfs:label'][_i]['@language']] = vocabNode['rdfs:label'][_i]['@value'];
         }
       }
 
@@ -16269,9 +16299,9 @@ function curateVocabNode(vocabNode, vocabularies) {
     var vocabKeys = Object.keys(vocabularies);
     var vocab;
 
-    for (var _i4 = 0; _i4 < vocabKeys.length; _i4++) {
-      if (vocabNode['@id'].substring(0, vocabNode['@id'].indexOf(':')) === vocabKeys[_i4]) {
-        vocab = vocabularies[vocabKeys[_i4]];
+    for (var _i2 = 0; _i2 < vocabKeys.length; _i2++) {
+      if (vocabNode['@id'].substring(0, vocabNode['@id'].indexOf(':')) === vocabKeys[_i2]) {
+        vocab = vocabularies[vocabKeys[_i2]];
         break;
       }
     }
@@ -16304,18 +16334,27 @@ prefix - A prefix is the first component of a compact IRI which comes from a ter
  *
  * @param {string} absoluteIRI - the absolute IRI to transform
  * @param {object} context - the context object holding key-value pairs that represent indicator-namespace pairs
+ * @param {boolean} equateVocabularyProtocols - treats namespaces as equal even if their protocols (http/https) are different, it defaults to false.
  * @returns {?string} the compact IRI (null, if given context does not contain the used namespace)
  */
 
 
 function toCompactIRI(absoluteIRI, context) {
-  var terms = Object.keys(context);
+  var equateVocabularyProtocols = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : false;
 
-  for (var i = 0; i < terms.length; i++) {
-    var vocabIRI = context[terms[i]];
+  for (var contextTerm of Object.keys(context)) {
+    var vocabIRI = context[contextTerm];
 
     if (isString(vocabIRI) && absoluteIRI.startsWith(vocabIRI)) {
-      return terms[i] + ':' + absoluteIRI.substring(vocabIRI.length);
+      return contextTerm + ':' + absoluteIRI.substring(vocabIRI.length);
+    }
+
+    if (equateVocabularyProtocols && isString(vocabIRI)) {
+      var protocolSwitchedIRI = switchIRIProtocol(vocabIRI);
+
+      if (absoluteIRI.startsWith(protocolSwitchedIRI)) {
+        return contextTerm + ':' + absoluteIRI.substring(protocolSwitchedIRI.length);
+      }
     }
   }
 
@@ -16411,6 +16450,153 @@ function getFileNameForSchemaOrgVersion(version) {
 
   }
 }
+/**
+ * Returns the protocol version used for schema.org in the given vocabulary. Returns "https" as the default
+ *
+ * @param {object} vocabulary - the vocabulary in question
+ * @returns {?string} - the corresponding protocol version, either "http" or "https"
+ */
+
+
+function discoverUsedSchemaOrgProtocol(vocabulary) {
+  var httpsIRI = 'https://schema.org/';
+  var httpIRI = 'http://schema.org/'; // 1. check if namespace is used in @context
+
+  if (vocabulary['@context']) {
+    for (var contextEntry of Object.values(vocabulary['@context'])) {
+      if (isObject(contextEntry) && contextEntry['@vocab']) {
+        if (contextEntry['@vocab'] === httpsIRI) {
+          return 'https';
+        } else if (contextEntry['@vocab'] === httpIRI) {
+          return 'http';
+        }
+      } else if (isString(contextEntry)) {
+        if (contextEntry === httpsIRI) {
+          return 'https';
+        } else if (contextEntry === httpIRI) {
+          return 'http';
+        }
+      }
+    }
+  } // 2. easiest way -> make a string and count occurrences for each protocol version
+
+
+  var stringifiedVocab = JSON.stringify(vocabulary);
+  var amountHttps = stringifiedVocab.split(httpsIRI).length - 1;
+  var amountHttp = stringifiedVocab.split(httpIRI).length - 1;
+
+  if (amountHttps > amountHttp) {
+    return 'https';
+  } else if (amountHttp > amountHttps) {
+    return 'http';
+  } else {
+    return httpsIRI; // default case
+  }
+}
+/**
+ * Checks if the given vocabulary uses terms (in context or content) that are present in the current given context but with another protocol (http/https), and returns those in a list
+ *
+ * @param {object} currentContext - the current context
+ * @param {object} vocabulary - the vocabulary to be analyzed
+ * @returns {string[]} - an array with the found equate namespaces
+ */
+
+
+function discoverEquateNamespaces(currentContext, vocabulary) {
+  var result = new Set(); // 1. Make List of protocol switched namespaces from the current context
+
+  var protocolSwitchedNamespaces = [];
+  Object.values(currentContext).forEach(function (el) {
+    if (isString(el)) {
+      protocolSwitchedNamespaces.push(switchIRIProtocol(el));
+    }
+  }); // 2. Look in vocabulary context if any protocol switched namespaces are present
+
+  if (vocabulary['@context']) {
+    Object.values(vocabulary['@context']).forEach(function (el) {
+      if (isString(el) && protocolSwitchedNamespaces.includes(el)) {
+        result.add(el);
+      }
+    });
+  } // 3. Look in vocabulary content if any protocol switched namespaces are present (everywhere, where @ids are expected)
+
+
+  if (Array.isArray(vocabulary['@graph'])) {
+    vocabulary['@graph'].forEach(function (vocabNode) {
+      checkIfNamespaceFromListIsUsed(vocabNode['@id'], protocolSwitchedNamespaces, result);
+      checkIfNamespaceFromListIsUsed(vocabNode['@type'], protocolSwitchedNamespaces, result); // super class
+
+      checkIfNamespaceFromListIsUsed(vocabNode['rdfs:subClassOf'], protocolSwitchedNamespaces, result);
+      checkIfNamespaceFromListIsUsed(vocabNode['http://www.w3.org/2000/01/rdf-schema#subClassOf'], protocolSwitchedNamespaces, result); // domain class
+
+      checkIfNamespaceFromListIsUsed(vocabNode['schema:domainIncludes'], protocolSwitchedNamespaces, result);
+      checkIfNamespaceFromListIsUsed(vocabNode['http://schema.org/domainIncludes'], protocolSwitchedNamespaces, result);
+      checkIfNamespaceFromListIsUsed(vocabNode['https://schema.org/domainIncludes'], protocolSwitchedNamespaces, result); // range class
+
+      checkIfNamespaceFromListIsUsed(vocabNode['schema:rangeIncludes'], protocolSwitchedNamespaces, result);
+      checkIfNamespaceFromListIsUsed(vocabNode['http://schema.org/rangeIncludes'], protocolSwitchedNamespaces, result);
+      checkIfNamespaceFromListIsUsed(vocabNode['https://schema.org/rangeIncludes'], protocolSwitchedNamespaces, result); // super property
+
+      checkIfNamespaceFromListIsUsed(vocabNode['rdfs:subPropertyOf'], protocolSwitchedNamespaces, result);
+      checkIfNamespaceFromListIsUsed(vocabNode['http://www.w3.org/2000/01/rdf-schema#subPropertyOf'], protocolSwitchedNamespaces, result); // inverse property
+
+      checkIfNamespaceFromListIsUsed(vocabNode['schema:inverseOf'], protocolSwitchedNamespaces, result);
+      checkIfNamespaceFromListIsUsed(vocabNode['http://schema.org/inverseOf'], protocolSwitchedNamespaces, result);
+      checkIfNamespaceFromListIsUsed(vocabNode['https://schema.org/inverseOf'], protocolSwitchedNamespaces, result);
+    });
+  }
+
+  return Array.from(result);
+}
+/**
+ * Checks if the value includes an absolute IRI that is present in the given namespaceArray. If so, that match is added to the given result Set.
+ *
+ * @param {any} value - the value to check, is expected to be either an array, an object, or a string.
+ * @param {string[]} namespaceArray - an array of IRIs to search for
+ * @param {Set} result - a Set to save the found matches
+ */
+
+
+function checkIfNamespaceFromListIsUsed(value, namespaceArray, result) {
+  if (Array.isArray(value)) {
+    value.forEach(function (val) {
+      checkIfNamespaceFromListIsUsed(val, namespaceArray, result);
+    });
+  } else {
+    var toCheck;
+
+    if (isObject(value) && isString(value['@id'])) {
+      toCheck = value['@id'];
+    } else if (isString(value)) {
+      toCheck = value;
+    }
+
+    if (isString(toCheck) && toCheck.startsWith('http')) {
+      var match = namespaceArray.find(el => toCheck.startsWith(el));
+
+      if (match && !result.has(match)) {
+        result.add(match);
+      }
+    }
+  }
+}
+/**
+ * Returns the given absolute IRI, but with the opposite protocol (http vs. https)
+ *
+ * @param  {string}IRI - the IRI that should be transformed
+ * @returns {string} - the resulting transformed IRI
+ */
+
+
+function switchIRIProtocol(IRI) {
+  if (IRI.startsWith('https://')) {
+    return 'http' + IRI.substring(5);
+  } else if (IRI.startsWith('http://')) {
+    return 'https' + IRI.substring(4);
+  }
+
+  return IRI;
+}
 
 module.exports = {
   applyFilter,
@@ -16426,7 +16612,10 @@ module.exports = {
   toCompactIRI,
   toAbsoluteIRI,
   sortReleaseEntriesByDate,
-  getFileNameForSchemaOrgVersion
+  getFileNameForSchemaOrgVersion,
+  discoverUsedSchemaOrgProtocol,
+  discoverEquateNamespaces,
+  switchIRIProtocol
 };
 
 },{"jsonld":45}]},{},[75])(75)

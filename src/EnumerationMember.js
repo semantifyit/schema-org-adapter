@@ -44,7 +44,7 @@ class EnumerationMember extends Term {
         let result = [];
         result.push(...enumObj['soa:enumerationDomainIncludes']);
         if (implicit) {
-            let domainEnumerationsToCheck = JSON.parse(JSON.stringify(result));
+            let domainEnumerationsToCheck = util.copByVal(result);
             for (const actDE of domainEnumerationsToCheck) {
                 result.push(...this.graph.reasoner.inferSuperClasses(actDE));
             }

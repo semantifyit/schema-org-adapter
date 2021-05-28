@@ -3,12 +3,13 @@ const Graph = require('../src/Graph');
 const VOC_OBJ_ZOO = require('./data/exampleExternalVocabulary');
 let VOC_URL_LATEST;
 let VOC_OBJ_LATEST;
+const { debugFuncErr } = require('./testUtility');
 
 /**
  *  @returns {SDOAdapter} - the initialized SDO-Adapter ready for testing.
  */
 async function initGraph() {
-    const mySA = new SDOAdapter({commitBase: global.commitBase});
+    const mySA = new SDOAdapter({ commitBase: global.commitBase, onError: debugFuncErr });
     VOC_URL_LATEST = await mySA.constructSDOVocabularyURL('latest');
     VOC_OBJ_LATEST = await mySA.fetchVocabularyFromURL(VOC_URL_LATEST);
     return new Graph(mySA);

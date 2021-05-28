@@ -1,12 +1,13 @@
 const SDOAdapter = require('../src/SDOAdapter');
 const VOC_OBJ_Zoo = require('./data/exampleExternalVocabulary');
 const util = require('../src/utilities');
+const { debugFunc, debugFuncErr } = require('./testUtility');
 
 /**
  *  @returns {SDOAdapter} - the initialized SDO-Adapter ready for testing.
  */
 async function initAdapter() {
-    const mySA = new SDOAdapter({commitBase: global.commitBase});
+    const mySA = new SDOAdapter({ commitBase: global.commitBase, onError: debugFuncErr });
     const mySDOUrl = await mySA.constructSDOVocabularyURL('latest');
     await mySA.addVocabularies([mySDOUrl, VOC_OBJ_Zoo]);
     return mySA;
@@ -131,10 +132,10 @@ describe('Property methods', () => {
     test('getInverseOf()', async() => {
         const mySA = await initAdapter();
         const subOrganization = mySA.getProperty('schema:subOrganization');
-        console.log(subOrganization.getInverseOf());
+        debugFunc(subOrganization.getInverseOf());
         expect(subOrganization.getInverseOf()).toBe('schema:parentOrganization');
         const name = mySA.getProperty('schema:name');
-        console.log(name.getInverseOf());
+        debugFunc(name.getInverseOf());
         expect(name.getInverseOf()).toBe(null);
     });
 
@@ -147,7 +148,8 @@ describe('Property methods', () => {
             if (thisInverse) {
                 let inverseProp = mySA.getProperty(thisInverse, null);
                 let inversePropInverse = inverseProp.getInverseOf();
-                console.log(thisProp + ' -> ' + thisInverse + ' -> ' + inversePropInverse);
+                debugFunc(thisProp + ' -> ' + thisInverse + ' -> ' + inversePropInverse);
+                // eslint-disable-next-line jest/no-conditional-expect
                 expect(inversePropInverse).toBe(thisProp);
             }
         }
@@ -156,10 +158,10 @@ describe('Property methods', () => {
     test('toString()', async() => {
         const mySA = await initAdapter();
         const subOrganization = mySA.getProperty('schema:subOrganization');
-        console.log(subOrganization.toString());
+        debugFunc(subOrganization.toString());
         expect(util.isObject(JSON.parse(subOrganization.toString()))).toBe(true);
         const name = mySA.getProperty('schema:name');
-        console.log(name.toString());
+        debugFunc(name.toString());
         expect(util.isObject(JSON.parse(name.toString()))).toBe(true);
     });
 });

@@ -1,12 +1,13 @@
 const SDOAdapter = require('../src/SDOAdapter');
 const VOC_OBJ_ZOO = require('./data/exampleExternalVocabulary');
 const util = require('../src/utilities');
+const { debugFunc, debugFuncErr } = require('./testUtility');
 
 /**
  *  @returns {SDOAdapter} - the initialized SDO-Adapter ready for testing.
  */
 async function initAdapter() {
-    const mySA = new SDOAdapter({commitBase: global.commitBase});
+    const mySA = new SDOAdapter({ commitBase: global.commitBase, onError: debugFuncErr });
     const mySDOUrl = await mySA.constructSDOVocabularyURL('latest');
     await mySA.addVocabularies([mySDOUrl, VOC_OBJ_ZOO]);
     return mySA;
@@ -61,7 +62,7 @@ describe('Class methods', () => {
     test('getDescription()', async() => {
         const mySA = await initAdapter();
         const hotel = mySA.getClass('schema:Hotel');
-        expect(hotel.getDescription().includes("A hotel")).toBe(true);
+        expect(hotel.getDescription().includes('A hotel')).toBe(true);
     });
 
     test('isSupersededBy()', async() => {
@@ -127,6 +128,7 @@ describe('Class methods', () => {
     test('toString()', async() => {
         const mySA = await initAdapter();
         const thing = mySA.getClass('schema:Thing');
+        debugFunc(thing.toString());
         expect(util.isObject(JSON.parse(thing.toString()))).toBe(true);
     });
 });

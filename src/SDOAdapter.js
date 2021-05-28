@@ -11,7 +11,7 @@ class SDOAdapter {
      * The SDOAdapter is a JS-Class that represents the interface between the user and this library. Its methods enable to add vocabularies to its memory as well as retrieving vocabulary items. It is possible to create multiple instances of this JS-Class which use different vocabularies.
      *
      * @class
-     * @param {object|null} parameterObject - an object with optional parameters for the constructor. There is 'commitBase': The commit string from https://github.com/schemaorg/schemaorg which is the base for the adapter (if not given, we take the latest commit of our fork at https://github.com/semantifyit/schemaorg). There is 'onError': A callback function(string) that is called when an unexpected error happens. There is 'schemaHttps': a boolean flag - use the https version of the schema.org vocabulary, it defaults to true. Only available if for schema.org version 9.0 upwards
+     * @param {object|null} parameterObject - an object with optional parameters for the constructor. There is 'commitBase': The commit string from https://github.com/schemaorg/schemaorg which is the base for the adapter (if not given, we take the latest commit of our fork at https://github.com/semantifyit/schemaorg). There is 'onError': A callback function(string) that is called when an unexpected error happens. There is 'schemaHttps': a boolean flag - use the https version of the schema.org vocabulary, it defaults to true. Only available if for schema.org version 9.0 upwards There is 'equateVocabularyProtocols': a boolean flag - treats namespaces as equal even if their protocols (http/https) are different, it defaults to false.
      */
     constructor(parameterObject = null) {
         this.retrievalMemory = {
@@ -29,14 +29,20 @@ class SDOAdapter {
             this.onError = parameterObject.onError;
         } else {
             this.onError = function() {
-                // do nothing;
+                // do nothing; The users should pass their own function to handle errors, they have else no way to hide automatic error messages once the SDO Adapter is compiled
             };
         }
-        // option commitBase - defaults to true
+        // option schemaHttps - defaults to true
         if (parameterObject && parameterObject.schemaHttps !== undefined) {
             this.schemaHttps = parameterObject.schemaHttps;
         } else {
             this.schemaHttps = true;
+        }
+        // option equateVocabularyProtocols - defaults to false
+        if (parameterObject && parameterObject.equateVocabularyProtocols !== undefined) {
+            this.equateVocabularyProtocols = parameterObject.equateVocabularyProtocols;
+        } else {
+            this.equateVocabularyProtocols = false;
         }
         this.graph = new Graph(this);
     }
@@ -53,48 +59,33 @@ class SDOAdapter {
         }
         if (util.isArray(vocabArray)) {
             // check every vocab if it is a valid JSON-LD. If string -> try to JSON.parse()
-            for (let i = 0; i < vocabArray.length; i++) {
-                if (util.isString(vocabArray[i])) {
-                    if (
-                        vocabArray[i].startsWith('www') ||
-                        vocabArray[i].startsWith('http')
-                    ) {
+            for (const vocab of vocabArray) {
+                if (util.isString(vocab)) {
+                    if (vocab.startsWith('www') || vocab.startsWith('http')) {
                         // assume it is a URL
                         try {
-                            const fetchedVocab = await this.fetchVocabularyFromURL(
-                                vocabArray[i]
-                            );
-                            await this.graph.addVocabulary(fetchedVocab, vocabArray[i]);
+                            const fetchedVocab = await this.fetchVocabularyFromURL(vocab);
+                            await this.graph.addVocabulary(fetchedVocab, vocab);
                         } catch (e) {
-                            throw new Error(
-                                'The given URL ' +
-                                vocabArray[i] +
-                                ' did not contain a valid JSON-LD vocabulary.'
-                            );
+                            throw new Error('The given URL ' + vocab + ' did not contain a valid JSON-LD vocabulary.');
                         }
                     } else {
                         // assume it is a string-version of a JSON-LD
                         try {
-                            await this.graph.addVocabulary(JSON.parse(vocabArray[i]));
+                            await this.graph.addVocabulary(JSON.parse(vocab));
                         } catch (e) {
-                            throw new Error(
-                                'Parsing of vocabulary string produced an invalid JSON-LD.'
-                            );
+                            throw new Error('Parsing of vocabulary string produced an invalid JSON-LD.');
                         }
                     }
-                } else if (util.isObject(vocabArray[i])) {
-                    await this.graph.addVocabulary(vocabArray[i]);
+                } else if (util.isObject(vocab)) {
+                    await this.graph.addVocabulary(vocab);
                 } else {
                     // invalid argument type!
-                    throw new Error(
-                        'The first argument of the function must be an Array of vocabularies or a single vocabulary (JSON-LD as Object/String)'
-                    );
+                    throw new Error('The first argument of the function must be an Array of vocabularies or a single vocabulary (JSON-LD as Object/String)');
                 }
             }
         } else {
-            throw new Error(
-                'The first argument of the function must be an Array of vocabularies or a single vocabulary (JSON-LD as Object/String)'
-            );
+            throw new Error('The first argument of the function must be an Array of vocabularies or a single vocabulary (JSON-LD as Object/String)');
         }
     }
 
@@ -197,11 +188,7 @@ class SDOAdapter {
         result.push(...Object.keys(this.graph.properties));
         result.push(...Object.keys(this.graph.dataTypes));
         result.push(...Object.keys(this.graph.enumerationMembers));
-        return util.applyFilter(
-            result,
-            filter,
-            this.graph
-        );
+        return util.applyFilter(result, filter, this.graph);
     }
 
     /**
@@ -243,11 +230,7 @@ class SDOAdapter {
      */
     getListOfClasses(filter = null) {
         // do not include enumerations
-        return util.applyFilter(
-            Object.keys(this.graph.classes),
-            filter,
-            this.graph
-        );
+        return util.applyFilter(Object.keys(this.graph.classes), filter, this.graph);
     }
 
     /**
@@ -287,11 +270,7 @@ class SDOAdapter {
      * @returns {string[]} An array of IRIs representing all vocabulary Properties
      */
     getListOfProperties(filter = null) {
-        return util.applyFilter(
-            Object.keys(this.graph.properties),
-            filter,
-            this.graph
-        );
+        return util.applyFilter(Object.keys(this.graph.properties), filter, this.graph);
     }
 
     /**
@@ -331,11 +310,7 @@ class SDOAdapter {
      * @returns {string[]} An array of IRIs representing all vocabulary DataTypes
      */
     getListOfDataTypes(filter = null) {
-        return util.applyFilter(
-            Object.keys(this.graph.dataTypes),
-            filter,
-            this.graph
-        );
+        return util.applyFilter(Object.keys(this.graph.dataTypes), filter, this.graph);
     }
 
     /**
@@ -375,11 +350,7 @@ class SDOAdapter {
      * @returns {string[]} An array of IRIs representing all vocabulary Enumerations
      */
     getListOfEnumerations(filter = null) {
-        return util.applyFilter(
-            Object.keys(this.graph.enumerations),
-            filter,
-            this.graph
-        );
+        return util.applyFilter(Object.keys(this.graph.enumerations), filter, this.graph);
     }
 
     /**
@@ -419,11 +390,7 @@ class SDOAdapter {
      * @returns {string[]} An array of IRIs representing all vocabulary EnumerationMember
      */
     getListOfEnumerationMembers(filter = null) {
-        return util.applyFilter(
-            Object.keys(this.graph.enumerationMembers),
-            filter,
-            this.graph
-        );
+        return util.applyFilter(Object.keys(this.graph.enumerationMembers), filter, this.graph);
     }
 
     /**
@@ -472,7 +439,7 @@ class SDOAdapter {
 
     /**
      * Retrieves the schema.org version listing at https://raw.githubusercontent.com/schemaorg/schemaorg/main/versions.json
-     * and saves it in the local memory. Also sends head-requests to determine if the 'latest' version is really 'fetchable'.
+     * and saves it in the local memory. Also sends head-requests to determine if the 'latest' version is really 'fetch-able'.
      * If not, this head-requests are done again for older versions until the latest valid version is determined and saved in the memory.
      *
      * @returns {Promise<void>} Returns void when the process ends (signalizing the process ending).

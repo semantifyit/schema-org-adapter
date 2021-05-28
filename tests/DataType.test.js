@@ -1,11 +1,12 @@
 const SDOAdapter = require('../src/SDOAdapter');
 const util = require('../src/utilities');
+const { debugFunc, debugFuncErr } = require('./testUtility');
 
 /**
  *  @returns {SDOAdapter} - the initialized SDO-Adapter ready for testing.
  */
 async function initAdapter() {
-    const mySA = new SDOAdapter({commitBase: global.commitBase});
+    const mySA = new SDOAdapter({ commitBase: global.commitBase, onError: debugFuncErr });
     const mySDOUrl = await mySA.constructSDOVocabularyURL('latest');
     await mySA.addVocabularies([mySDOUrl]);
     return mySA;
@@ -93,6 +94,7 @@ describe('DataType methods', () => {
     test('toString()', async() => {
         const mySA = await initAdapter();
         const text = mySA.getDataType('schema:Text');
+        debugFunc(text.toString());
         expect(util.isObject(JSON.parse(text.toString()))).toBe(true);
     });
 });

@@ -199,16 +199,15 @@ function generateContext(currentContext, newContext) {
     const keysCurrentContext = Object.keys(currentContext);
     const keysNewContext = Object.keys(newContext);
     // add all of the old context
-    let resultContext = JSON.parse(JSON.stringify(currentContext));
+    let resultContext = copByVal(currentContext);
     // add vocabs of new context that are not already used (value is URI)
-    for (let i = 0; i < keysNewContext.length; i++) {
-        const actKey = keysNewContext[i];
-        if (isString(newContext[actKey])) {
+    for (const keyNC of keysNewContext) {
+        if (isString(newContext[keyNC])) {
             // first: check if the URI is already used, with any indicator
             let foundMatch = false;
-            for (let k = 0; k < keysCurrentContext.length; k++) {
-                if (isString(resultContext[keysCurrentContext[k]])) {
-                    if (resultContext[keysCurrentContext[k]] === newContext[actKey]) {
+            for (const keyCC of keysCurrentContext) {
+                if (isString(resultContext[keyCC])) {
+                    if (resultContext[keyCC] === newContext[keyNC]) {
                         // found match, the URI is already covered
                         foundMatch = true;
                         break;
@@ -218,19 +217,19 @@ function generateContext(currentContext, newContext) {
             if (foundMatch) {
                 continue; // URI is already covered, continue with next
             }
-            if (!resultContext[actKey]) {
+            if (!resultContext[keyNC]) {
                 // add new vocab indicator
-                resultContext[actKey] = newContext[actKey];
+                resultContext[keyNC] = newContext[keyNC];
             } else {
                 // check if the URI is the same, if not: add new uri under new vocab indicator
-                if (resultContext[actKey] !== newContext[actKey]) {
+                if (resultContext[keyNC] !== newContext[keyNC]) {
                     let foundFreeName = false;
                     let counter = 1;
                     while (foundFreeName === false) {
-                        const newVocabIndicator = actKey + counter++;
+                        const newVocabIndicator = keyNC + counter++;
                         if (!resultContext[newVocabIndicator]) {
                             foundFreeName = true;
-                            resultContext[newVocabIndicator] = newContext[actKey];
+                            resultContext[newVocabIndicator] = newContext[keyNC];
                         }
                     }
                 }
@@ -247,15 +246,15 @@ function generateContext(currentContext, newContext) {
     const keysResultContext = Object.keys(resultContext);
     const orderedResultContext = {};
     // add the Vocab Indicators (value = string)
-    for (let i = 0; i < keysResultContext.length; i++) {
-        if (isString(resultContext[keysResultContext[i]])) {
-            orderedResultContext[keysResultContext[i]] = resultContext[keysResultContext[i]];
+    for (const keyRC of keysResultContext) {
+        if (isString(resultContext[keyRC])) {
+            orderedResultContext[keyRC] = resultContext[keyRC];
         }
     }
     // add the term handlers (value = object)
-    for (let i = 0; i < keysResultContext.length; i++) {
-        if (isObject(resultContext[keysResultContext[i]])) {
-            orderedResultContext[keysResultContext[i]] = resultContext[keysResultContext[i]];
+    for (const keyRC of keysResultContext) {
+        if (isObject(resultContext[keyRC])) {
+            orderedResultContext[keyRC] = resultContext[keyRC];
         }
     }
     return orderedResultContext;
@@ -285,13 +284,10 @@ async function preProcessVocab(vocab, newContext) {
         vocab['@graph'] = copByVal(newGraph);
     } while (foundInnerGraph === true);
 
-    // expand to remove the old context
-    const expandedVocab = await jsonld.expand(vocab);
-
     // compact to apply the new context (which is supposed to have been merged before with the old context through the function generateContext())
     // option "graph": true not feasible here, because then vocabs with "@id" result in inner @graphs again
     // solution: edge case handling (see below)
-    const compactedVocab = await jsonld.compact(expandedVocab, newContext);
+    const compactedVocab = await jsonld.compact(vocab, newContext);
 
     // edge case: @graph had only one node, so values of @graph are in outermost layer
     if (compactedVocab['@graph'] === undefined) {
@@ -432,14 +428,20 @@ prefix - A prefix is the first component of a compact IRI which comes from a ter
  *
  * @param {string} absoluteIRI - the absolute IRI to transform
  * @param {object} context - the context object holding key-value pairs that represent indicator-namespace pairs
+ * @param {boolean} equateVocabularyProtocols - treats namespaces as equal even if their protocols (http/https) are different, it defaults to false.
  * @returns {?string} the compact IRI (null, if given context does not contain the used namespace)
  */
-function toCompactIRI(absoluteIRI, context) {
-    const terms = Object.keys(context);
-    for (let i = 0; i < terms.length; i++) {
-        const vocabIRI = context[terms[i]];
+function toCompactIRI(absoluteIRI, context, equateVocabularyProtocols = false) {
+    for (const contextTerm of Object.keys(context)) {
+        const vocabIRI = context[contextTerm];
         if (isString(vocabIRI) && absoluteIRI.startsWith(vocabIRI)) {
-            return terms[i] + ':' + absoluteIRI.substring(vocabIRI.length);
+            return contextTerm + ':' + absoluteIRI.substring(vocabIRI.length);
+        }
+        if (equateVocabularyProtocols && isString(vocabIRI)) {
+            const protocolSwitchedIRI = switchIRIProtocol(vocabIRI);
+            if (absoluteIRI.startsWith(protocolSwitchedIRI)) {
+                return contextTerm + ':' + absoluteIRI.substring(protocolSwitchedIRI.length);
+            }
         }
     }
     return null;
@@ -523,6 +525,141 @@ function getFileNameForSchemaOrgVersion(version, schemaHttps = true) {
     }
 }
 
+/**
+ * Returns the protocol version used for schema.org in the given vocabulary. Returns "https" as the default
+ *
+ * @param {object} vocabulary - the vocabulary in question
+ * @returns {?string} - the corresponding protocol version, either "http" or "https"
+ */
+function discoverUsedSchemaOrgProtocol(vocabulary) {
+    const httpsIRI = 'https://schema.org/';
+    const httpIRI = 'http://schema.org/';
+    // 1. check if namespace is used in @context
+    if (vocabulary['@context']) {
+        for (const contextEntry of Object.values(vocabulary['@context'])) {
+            if (isObject(contextEntry) && contextEntry['@vocab']) {
+                if (contextEntry['@vocab'] === httpsIRI) {
+                    return 'https';
+                } else if (contextEntry['@vocab'] === httpIRI) {
+                    return 'http';
+                }
+            } else if (isString(contextEntry)) {
+                if (contextEntry === httpsIRI) {
+                    return 'https';
+                } else if (contextEntry === httpIRI) {
+                    return 'http';
+                }
+            }
+        }
+    }
+    // 2. easiest way -> make a string and count occurrences for each protocol version
+    const stringifiedVocab = JSON.stringify(vocabulary);
+    const amountHttps = stringifiedVocab.split(httpsIRI).length - 1;
+    const amountHttp = stringifiedVocab.split(httpIRI).length - 1;
+    if (amountHttps > amountHttp) {
+        return 'https';
+    } else if (amountHttp > amountHttps) {
+        return 'http';
+    } else {
+        return httpsIRI; // default case
+    }
+}
+
+/**
+ * Checks if the given vocabulary uses terms (in context or content) that are present in the current given context but with another protocol (http/https), and returns those in a list
+ *
+ * @param {object} currentContext - the current context
+ * @param {object} vocabulary - the vocabulary to be analyzed
+ * @returns {string[]} - an array with the found equate namespaces
+ */
+function discoverEquateNamespaces(currentContext, vocabulary) {
+    let result = new Set();
+    // 1. Make List of protocol switched namespaces from the current context
+    let protocolSwitchedNamespaces = [];
+    Object.values(currentContext).forEach(function(el) {
+        if (isString(el)) {
+            protocolSwitchedNamespaces.push(switchIRIProtocol(el));
+        }
+    });
+    // 2. Look in vocabulary context if any protocol switched namespaces are present
+    if (vocabulary['@context']) {
+        Object.values(vocabulary['@context']).forEach(function(el) {
+            if (isString(el) && protocolSwitchedNamespaces.includes(el)) {
+                result.add(el);
+            }
+        });
+    }
+    // 3. Look in vocabulary content if any protocol switched namespaces are present (everywhere, where @ids are expected)
+    if (Array.isArray(vocabulary['@graph'])) {
+        vocabulary['@graph'].forEach(function(vocabNode) {
+            checkIfNamespaceFromListIsUsed(vocabNode['@id'], protocolSwitchedNamespaces, result);
+            checkIfNamespaceFromListIsUsed(vocabNode['@type'], protocolSwitchedNamespaces, result);
+            // super class
+            checkIfNamespaceFromListIsUsed(vocabNode['rdfs:subClassOf'], protocolSwitchedNamespaces, result);
+            checkIfNamespaceFromListIsUsed(vocabNode['http://www.w3.org/2000/01/rdf-schema#subClassOf'], protocolSwitchedNamespaces, result);
+            // domain class
+            checkIfNamespaceFromListIsUsed(vocabNode['schema:domainIncludes'], protocolSwitchedNamespaces, result);
+            checkIfNamespaceFromListIsUsed(vocabNode['http://schema.org/domainIncludes'], protocolSwitchedNamespaces, result);
+            checkIfNamespaceFromListIsUsed(vocabNode['https://schema.org/domainIncludes'], protocolSwitchedNamespaces, result);
+            // range class
+            checkIfNamespaceFromListIsUsed(vocabNode['schema:rangeIncludes'], protocolSwitchedNamespaces, result);
+            checkIfNamespaceFromListIsUsed(vocabNode['http://schema.org/rangeIncludes'], protocolSwitchedNamespaces, result);
+            checkIfNamespaceFromListIsUsed(vocabNode['https://schema.org/rangeIncludes'], protocolSwitchedNamespaces, result);
+            // super property
+            checkIfNamespaceFromListIsUsed(vocabNode['rdfs:subPropertyOf'], protocolSwitchedNamespaces, result);
+            checkIfNamespaceFromListIsUsed(vocabNode['http://www.w3.org/2000/01/rdf-schema#subPropertyOf'], protocolSwitchedNamespaces, result);
+            // inverse property
+            checkIfNamespaceFromListIsUsed(vocabNode['schema:inverseOf'], protocolSwitchedNamespaces, result);
+            checkIfNamespaceFromListIsUsed(vocabNode['http://schema.org/inverseOf'], protocolSwitchedNamespaces, result);
+            checkIfNamespaceFromListIsUsed(vocabNode['https://schema.org/inverseOf'], protocolSwitchedNamespaces, result);
+        });
+    }
+    return Array.from(result);
+}
+
+/**
+ * Checks if the value includes an absolute IRI that is present in the given namespaceArray. If so, that match is added to the given result Set.
+ *
+ * @param {any} value - the value to check, is expected to be either an array, an object, or a string.
+ * @param {string[]} namespaceArray - an array of IRIs to search for
+ * @param {Set} result - a Set to save the found matches
+ */
+function checkIfNamespaceFromListIsUsed(value, namespaceArray, result) {
+    if (Array.isArray(value)) {
+        value.forEach(function(val) {
+            checkIfNamespaceFromListIsUsed(val, namespaceArray, result);
+        });
+    } else {
+        let toCheck;
+        if (isObject(value) && isString(value['@id'])) {
+            toCheck = value['@id'];
+        } else if (isString(value)) {
+            toCheck = value;
+        }
+        if (isString(toCheck) && toCheck.startsWith('http')) {
+            let match = namespaceArray.find(el => toCheck.startsWith(el));
+            if (match && !result.has(match)) {
+                result.add(match);
+            }
+        }
+    }
+}
+
+/**
+ * Returns the given absolute IRI, but with the opposite protocol (http vs. https)
+ *
+ * @param  {string}IRI - the IRI that should be transformed
+ * @returns {string} - the resulting transformed IRI
+ */
+function switchIRIProtocol(IRI) {
+    if (IRI.startsWith('https://')) {
+        return 'http' + IRI.substring(5);
+    } else if (IRI.startsWith('http://')) {
+        return 'https' + IRI.substring(4);
+    }
+    return IRI;
+}
+
 module.exports = {
     applyFilter,
     copByVal,
@@ -537,5 +674,8 @@ module.exports = {
     toCompactIRI,
     toAbsoluteIRI,
     sortReleaseEntriesByDate,
-    getFileNameForSchemaOrgVersion
+    getFileNameForSchemaOrgVersion,
+    discoverUsedSchemaOrgProtocol,
+    discoverEquateNamespaces,
+    switchIRIProtocol
 };

@@ -1,12 +1,17 @@
 const util = require('./../src/utilities');
 const SDOAdapter = require('../src/SDOAdapter');
 const VOC_OBJ_ZOO = require('./data/exampleExternalVocabulary');
+const VOC_OBJ_SDO_3_7 = require('./data/schema_3.7.json');
+const VOC_OBJ_SDO_10 = require('./data/schema_10.0.json');
+const VOC_OBJ_ZOO_2 = require('./data/exampleExternalVocabulary_noSchemaInContext.json');
+// eslint-disable-next-line no-unused-vars
+const { debugFunc, debugFuncErr } = require('./testUtility');
 
 /**
  *  @returns {SDOAdapter} - the initialized SDO-Adapter ready for testing.
  */
 async function initAdapter() {
-    const mySA = new SDOAdapter({commitBase: global.commitBase});
+    const mySA = new SDOAdapter({ commitBase: global.commitBase, onError: debugFuncErr });
     const mySDOUrl = await mySA.constructSDOVocabularyURL('latest');
     await mySA.addVocabularies([mySDOUrl, VOC_OBJ_ZOO]);
     return mySA;
@@ -22,10 +27,36 @@ describe('utilities testing', () => {
         const newContext2 = util.generateContext(testContext, testContext2);
         expect(newContext2).not.toEqual(testContext);
     });
+    test('generateContext() - extended', async() => {
+        const contextA = {
+            'schema': 'https://schema.org/'
+        };
+        const contextB = {
+            'schema2': 'https://schema.org/'
+        };
+        const contextC = {
+            'schema': 'http://schema.org/'
+        };
+        const contextD = {
+            'schema2': 'http://schema.org/'
+        };
+        expect(util.generateContext(contextA, contextA)).toEqual(contextA);
+        expect(util.generateContext(contextA, contextB)).toEqual(contextA);
+        expect(util.generateContext(contextB, contextA)).toEqual(contextB);
+        expect(util.generateContext(contextA, contextC)).toEqual({
+            'schema': 'https://schema.org/',
+            'schema1': 'http://schema.org/'
+        });
+        expect(util.generateContext(contextA, contextD)).toEqual({
+            'schema': 'https://schema.org/',
+            'schema2': 'http://schema.org/'
+        });
+    });
     test('toCompactIRI()', async() => {
-        const input = 'http://schema.org/Book';
-        const expectedOutcome = 'schema:Book';
-        expect(util.toCompactIRI(input, testContext)).toBe(expectedOutcome);
+        expect(util.toCompactIRI('http://schema.org/Book', testContext)).toBe('schema:Book');
+        expect(util.toCompactIRI('http://schema.org/Book', testContext, false)).toBe('schema:Book');
+        expect(util.toCompactIRI('https://schema.org/Book', testContext, true)).toBe('schema:Book');
+        expect(util.toCompactIRI('https://schema.org/Book', testContext, false)).toBe(null);
     });
     test('toAbsoluteIRI()', async() => {
         const input = 'schema:Hotel';
@@ -74,6 +105,22 @@ describe('utilities testing', () => {
         expect(() => mySA.getListOfProperties(filter12)).toThrow();
         expect(mySA.getListOfDataTypes(filter13)).toContain('schema:Text');
     });
+    test('discoverUsedSchemaOrgProtocol()', async() => {
+        expect(util.discoverUsedSchemaOrgProtocol(VOC_OBJ_ZOO)).toBe('https');
+        expect(util.discoverUsedSchemaOrgProtocol(VOC_OBJ_ZOO_2)).toBe('https');
+        expect(util.discoverUsedSchemaOrgProtocol(VOC_OBJ_SDO_3_7)).toBe('http');
+        expect(util.discoverUsedSchemaOrgProtocol(VOC_OBJ_SDO_10)).toBe('https');
+        expect(util.discoverUsedSchemaOrgProtocol(testContext)).toBe('http');
+        expect(util.discoverUsedSchemaOrgProtocol(testContext2)).toBe('http');
+    });
+    test('discoverEquateNamespaces()', async() => {
+        expect(Array.isArray(util.discoverEquateNamespaces(testContext, VOC_OBJ_ZOO))).toBe(true);
+        expect(util.discoverEquateNamespaces(testContext, VOC_OBJ_ZOO).length).toBe(1);
+        expect(util.discoverEquateNamespaces(testContext, VOC_OBJ_ZOO)[0]).toBe('https://schema.org/');
+        expect(util.discoverEquateNamespaces(testContext, VOC_OBJ_ZOO_2).length).toBe(1);
+        expect(util.discoverEquateNamespaces(testContext, VOC_OBJ_ZOO_2)[0]).toBe('https://schema.org/');
+        expect(util.discoverEquateNamespaces(VOC_OBJ_ZOO['@context'], VOC_OBJ_SDO_3_7)[0]).toBe('http://schema.org/');
+    });
 
     // Checks if the function getFileNameForSchemaOrgVersion() retrieves filenames (only jsonld) for the corresponding schema.org versions as expected
     test('getFileNameForSchemaOrgVersion()', async() => {
@@ -107,11 +154,13 @@ describe('utilities testing', () => {
             '2.0': null
         };
         for (const currVersion of Object.entries(expectedFileMapping)) {
-            // console.log(currVersion[0] + ' expected -> ' + currVersion[1]);
+            // debugFunc(currVersion[0] + ' expected -> ' + currVersion[1]);
             if (currVersion[1] === null) {
                 // expect to fail (You must wrap the code in a function, otherwise the error will not be caught and the assertion will fail.)
+                // eslint-disable-next-line jest/no-conditional-expect
                 expect(() => {util.getFileNameForSchemaOrgVersion(currVersion[0]);}).toThrow();
             } else {
+                // eslint-disable-next-line jest/no-conditional-expect
                 expect(util.getFileNameForSchemaOrgVersion(currVersion[0])).toBe(currVersion[1]);
             }
         }

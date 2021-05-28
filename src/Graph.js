@@ -22,16 +22,12 @@ class Graph {
         // soa:hasEnumerationMember is used for enumerations to list all its enumeration members (their @type includes the @id of the enumeration)
         // soa:enumerationDomainIncludes is an inverse of soa:hasEnumerationMember
         // soa:EnumerationMember is introduced as meta type for the members of an schema:Enumeration
-        let schemaURI = 'http://schema.org/';
-        if(this.sdoAdapter.schemaHttps){
-            schemaURI = 'https://schema.org/';
-        }
         this.context = {
             rdf: 'http://www.w3.org/1999/02/22-rdf-syntax-ns#',
             rdfs: 'http://www.w3.org/2000/01/rdf-schema#',
             xsd: 'http://www.w3.org/2001/XMLSchema#',
             dc: 'http://purl.org/dc/terms/',
-            schema: schemaURI,
+            // schema: 'http://schema.org/', this entry will be generated the first time a vocabulary is added to the graph
             soa: 'http://schema-org-adapter.at/vocabTerms/',
             'soa:superClassOf': {
                 '@id': 'soa:superClassOf',
@@ -109,9 +105,38 @@ class Graph {
      * @returns {boolean} returns true on success
      */
     async addVocabulary(vocab, vocabURL = null) {
+        // check which protocol version of schema.org is used in the first vocabulary given to the graph, set that version as the namespace for "schema" in the standard @context
+        if (this.context.schema === undefined) {
+            this.context.schema = util.discoverUsedSchemaOrgProtocol(vocab) + '://schema.org/';
+        }
         // this algorithm is well-documented in /docu/algorithm.md
         try {
             // A) Pre-process Vocabulary
+            // New: In the following any added vocabularies are slightly changed, if the "equateVocabularyProtocols" option is used and the vocabulary includes namespaces that meet the requirements
+            if (this.sdoAdapter.equateVocabularyProtocols) {
+                // 1. Check if any namespaces from this.context are used in vocab (context and content) with another protocol (http/https). Create a List of those
+                const equateNamespaces = util.discoverEquateNamespaces(this.context, vocab);
+                // 2. If the List is not empty, then the vocab needs to be adapted
+                if (equateNamespaces.length > 0) {
+                    //  - Create adapted context for vocab, which includes IRIs from vocab context + IRIs from the List, use vocab indicators from this.context
+                    let adaptedContext = util.copByVal(vocab['@context']);
+                    equateNamespaces.forEach(function(ens) {
+                        let usedKeyToDelete = Object.keys(adaptedContext).find(el => adaptedContext[el] === ens);
+                        if (usedKeyToDelete) {
+                            delete adaptedContext[usedKeyToDelete];
+                        }
+                        let keyToUse = Object.keys(this.context).find(el => this.context[el] === util.switchIRIProtocol(ens));
+                        adaptedContext[keyToUse] = ens;
+                    }, this);
+                    //  - jsonld compact vocab with adapted context
+                    vocab = await util.preProcessVocab(vocab, adaptedContext);
+                    //  - manually change entries of compacted vocab context, so that they use the same protocol as in this.context (the vocab indicators should already be the same)
+                    equateNamespaces.forEach(function(ens) {
+                        let keyToUse = Object.keys(this.context).find(el => this.context[el] === util.switchIRIProtocol(ens));
+                        vocab['@context'][keyToUse] = this.context[keyToUse];
+                    }, this);
+                }
+            }
             // create new context
             this.context = util.generateContext(this.context, vocab['@context']);
             // pre-process new vocab
@@ -130,7 +155,7 @@ class Graph {
              enumerationMembers ("@type" = @id(s) of enumeration(s))
              */
             for (let i = 0; i < vocab['@graph'].length; i++) {
-                const curNode = JSON.parse(JSON.stringify(vocab['@graph'][i]));
+                const curNode = util.copByVal(vocab['@graph'][i]);
                 if (util.isString(curNode['@type'])) {
                     switch (curNode['@type']) {
                         case 'rdfs:Class':
@@ -185,7 +210,7 @@ class Graph {
                             if (actSubClass === 'schema:Enumeration' || enumKeys.includes(actSubClass)) {
                                 if (this.classes[actClassKey] && !this.enumerations[actClassKey]) {
                                     newEnum = true;
-                                    this.enumerations[actClassKey] = JSON.parse(JSON.stringify(this.classes[actClassKey]));
+                                    this.enumerations[actClassKey] = util.copByVal(this.classes[actClassKey]);
                                     delete this.classes[actClassKey];
                                 }
                             }
@@ -206,7 +231,7 @@ class Graph {
                             if (actSubClass === 'schema:DataType' || dtKeys.includes(actSubClass)) {
                                 if (this.classes[actClassKey] && !this.dataTypes[actClassKey]) {
                                     newDatatype = true;
-                                    this.dataTypes[actClassKey] = JSON.parse(JSON.stringify(this.classes[actClassKey]));
+                                    this.dataTypes[actClassKey] = util.copByVal(this.classes[actClassKey]);
                                     delete this.classes[actClassKey];
                                 }
                             }
@@ -777,7 +802,7 @@ class Graph {
      * @returns {string|null} the corresponding compact IRI (null if input is not valid)
      */
     discoverCompactIRI(input) {
-        if (input.indexOf(':') !== -1) {
+        if (input.includes(':')) {
             // is iri
             const terms = Object.keys(this.context);
             for (const actTerm of terms) {
@@ -786,9 +811,9 @@ class Graph {
                     if (input.startsWith(actTerm)) {
                         // is compactIRI
                         return input;
-                    } else if (input.startsWith(absoluteIRI)) {
+                    } else if (input.startsWith(absoluteIRI) || (this.sdoAdapter.equateVocabularyProtocols && input.startsWith(util.switchIRIProtocol(absoluteIRI)))) {
                         // is absoluteIRI
-                        return util.toCompactIRI(input, this.context);
+                        return util.toCompactIRI(input, this.context, this.sdoAdapter.equateVocabularyProtocols);
                     }
                 }
             }

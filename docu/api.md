@@ -60,7 +60,7 @@ The SDOAdapter is a JS-Class that represents the interface between the user and 
 
 | Param | Type | Default | Description |
 | --- | --- | --- | --- |
-| parameterObject | <code>object</code> \| <code>null</code> | <code></code> | an object with optional parameters for the constructor. There is 'commitBase': The commit string from https://github.com/schemaorg/schemaorg which is the base for the adapter (if not given, we take the latest commit of our fork at https://github.com/semantifyit/schemaorg). There is 'onError': A callback function(string) that is called when an unexpected error happens. There is 'schemaHttps': a boolean flag - use the https version of the schema.org vocabulary, it defaults to true. Only available if for schema.org version 9.0 upwards |
+| parameterObject | <code>object</code> \| <code>null</code> | <code></code> | an object with optional parameters for the constructor. There is 'commitBase': The commit string from https://github.com/schemaorg/schemaorg which is the base for the adapter (if not given, we take the latest commit of our fork at https://github.com/semantifyit/schemaorg). There is 'onError': A callback function(string) that is called when an unexpected error happens. There is 'schemaHttps': a boolean flag - use the https version of the schema.org vocabulary, it defaults to true. Only available if for schema.org version 9.0 upwards There is 'equateVocabularyProtocols': a boolean flag - treats namespaces as equal even if their protocols (http/https) are different, it defaults to false. |
 
 <a name="SDOAdapter+addVocabularies"></a>
 
@@ -332,7 +332,7 @@ To achieve this, the Schema.org version listing on https://raw.githubusercontent
 
 ### sdoAdapter.getSDOVersionFile() ⇒ <code>Promise.&lt;void&gt;</code>
 Retrieves the schema.org version listing at https://raw.githubusercontent.com/schemaorg/schemaorg/main/versions.json
-and saves it in the local memory. Also sends head-requests to determine if the 'latest' version is really 'fetchable'.
+and saves it in the local memory. Also sends head-requests to determine if the 'latest' version is really 'fetch-able'.
 If not, this head-requests are done again for older versions until the latest valid version is determined and saved in the memory.
 
 **Kind**: instance method of [<code>SDOAdapter</code>](#SDOAdapter)  
