@@ -639,4 +639,11 @@ describe('SDO Adapter methods', () => {
         expect(() => {mySA.getClass('schema:Thing');}).toThrow(); // there is no schema:Thing because the sdo vocabulary does not use the same protocol as specified in the first vocabulary
     });
 
+    test('getVersionFileURI()', async() => {
+        const mySA = new SDOAdapter({
+            onError: debugFuncErr
+        });
+        expect(mySA.getVersionFileURI()).toBe('https://raw.githubusercontent.com/semantifyit/schemaorg/main/versions.json');
+    });
+
 });
