@@ -23,15 +23,15 @@ describe('Graph methods', () => {
         const myGraph = await initGraph();
         await myGraph.addVocabulary(VOC_OBJ_LATEST);
         const Place = myGraph.getClass('schema:Thing');
-        expect(Place.getSubClasses(false).length).toBe(10);
+        const placeSubClassesSize = Place.getSubClasses(false).length;
         expect(Place.getSubClasses(false)).not.toContain('ex:Tiger');
         await myGraph.addVocabulary(VOC_OBJ_ZOO);
-        expect(Place.getSubClasses(false).length).toBe(11);
+        expect(Place.getSubClasses(false).length).toBe(placeSubClassesSize + 1);
         expect(Place.getSubClasses(false)).toContain('ex:Animal');
         await myGraph.addVocabulary(VOC_OBJ_LATEST); // Try adding same vocab again
         await myGraph.addVocabulary(VOC_OBJ_ZOO); // Try adding same vocab again
         const Place2 = myGraph.getClass('schema:Thing');
-        expect(Place2.getSubClasses(false).length).toBe(11);
+        expect(Place.getSubClasses(false).length).toBe(placeSubClassesSize + 1);
         expect(Place2.getSubClasses(false)).toContain('ex:Animal');
     });
 

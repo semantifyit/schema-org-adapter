@@ -17,7 +17,8 @@ set -x
 
 echo "Compare schema.org Github repository and fork"
 
-SDO_COMMIT=$(curl -s https://api.github.com/repos/schemaorg/schemaorg/commits/main | jq -r '.sha')
+# Take the official Release commit from https://github.com/schemaorg/schemaorg/releases
+SDO_COMMIT=$(curl -s https://api.github.com/repos/schemaorg/schemaorg/commits/9a3ba46 | jq -r '.sha')
 SEMANTIFY_COMMIT=$(curl -s https://api.github.com/repos/semantifyit/schemaorg/commits/main | jq -r '.sha')
 
 if [[ "$SDO_COMMIT" == "$SEMANTIFY_COMMIT" ]];
