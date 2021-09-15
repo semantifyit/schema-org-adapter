@@ -10,7 +10,7 @@
 <a href="https://github.com/semantifyit/schema-org-adapter/issues"><img src="https://img.shields.io/github/issues/semantifyit/schema-org-adapter.svg" alt="Issues open" /></a>
 <img src="https://raw.githubusercontent.com/semantifyit/schema-org-adapter/master/coverage/badge-functions.svg?sanitize=true" alt="Jest Test Coverage Functions" />
 <br>
-<a href="https://creativecommons.org/licenses/by-sa/4.0/"><img src="https://img.shields.io/badge/License-CC%20BY--SA%204.0-lightgrey.svg" alt="License: CC BY-SA 4.0" /></a>
+<a href="https://www.apache.org/licenses/LICENSE-2.0"><img src="https://img.shields.io/badge/License-Apache%202.0-blue.svg" alt="License: CC BY-SA 4.0" /></a>
 </div>
 <br>
 
