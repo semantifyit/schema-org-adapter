@@ -1,3 +1,11 @@
+4.2.0 / 2021-09-15
+==================
+
+* Added support for TypeScript (.d.ts files).
+* Major Update of dependencies.
+* License changed to Apache 2.0.
+
+
 4.1.0 / 2021-05-28
 ==================
 

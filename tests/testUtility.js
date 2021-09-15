@@ -1,4 +1,4 @@
-const CONSOLE_OUTPUT = true; // Change to "true" if you want to see console.log and console.error outputs for the tests
+const CONSOLE_OUTPUT = false; // Change to "true" if you want to see console.log and console.error outputs for the tests
 
 /**
  * console.log() output, only if CONSOLE_OUTPUT is set to "true" in file testUtility.js

@@ -16,6 +16,7 @@ module.exports = function xhrAdapter(config) {
   return new Promise(function dispatchXhrRequest(resolve, reject) {
     var requestData = config.data;
     var requestHeaders = config.headers;
+    var responseType = config.responseType;
 
     if (utils.isFormData(requestData)) {
       delete requestHeaders['Content-Type']; // Let the browser set it
@@ -36,23 +37,14 @@ module.exports = function xhrAdapter(config) {
     // Set the request timeout in MS
     request.timeout = config.timeout;
 
-    // Listen for ready state
-    request.onreadystatechange = function handleLoad() {
-      if (!request || request.readyState !== 4) {
+    function onloadend() {
+      if (!request) {
         return;
       }
-
-      // The request errored out and we didn't get a response, this will be
-      // handled by onerror instead
-      // With one exception: request that using file: protocol, most browsers
-      // will return status as 0 even though it's a successful request
-      if (request.status === 0 && !(request.responseURL && request.responseURL.indexOf('file:') === 0)) {
-        return;
-      }
-
       // Prepare the response
       var responseHeaders = 'getAllResponseHeaders' in request ? parseHeaders(request.getAllResponseHeaders()) : null;
-      var responseData = !config.responseType || config.responseType === 'text' ? request.responseText : request.response;
+      var responseData = !responseType || responseType === 'text' ||  responseType === 'json' ?
+        request.responseText : request.response;
       var response = {
         data: responseData,
         status: request.status,
@@ -66,7 +58,30 @@ module.exports = function xhrAdapter(config) {
 
       // Clean up request
       request = null;
-    };
+    }
+
+    if ('onloadend' in request) {
+      // Use onloadend if available
+      request.onloadend = onloadend;
+    } else {
+      // Listen for ready state to emulate onloadend
+      request.onreadystatechange = function handleLoad() {
+        if (!request || request.readyState !== 4) {
+          return;
+        }
+
+        // The request errored out and we didn't get a response, this will be
+        // handled by onerror instead
+        // With one exception: request that using file: protocol, most browsers
+        // will return status as 0 even though it's a successful request
+        if (request.status === 0 && !(request.responseURL && request.responseURL.indexOf('file:') === 0)) {
+          return;
+        }
+        // readystate handler is calling before onerror or ontimeout handlers,
+        // so we should call onloadend on the next 'tick'
+        setTimeout(onloadend);
+      };
+    }
 
     // Handle browser request cancellation (as opposed to a manual cancellation)
     request.onabort = function handleAbort() {
@@ -96,7 +111,10 @@ module.exports = function xhrAdapter(config) {
       if (config.timeoutErrorMessage) {
         timeoutErrorMessage = config.timeoutErrorMessage;
       }
-      reject(createError(timeoutErrorMessage, config, 'ECONNABORTED',
+      reject(createError(
+        timeoutErrorMessage,
+        config,
+        config.transitional && config.transitional.clarifyTimeoutError ? 'ETIMEDOUT' : 'ECONNABORTED',
         request));
 
       // Clean up request
@@ -136,16 +154,8 @@ module.exports = function xhrAdapter(config) {
     }
 
     // Add responseType to request if needed
-    if (config.responseType) {
-      try {
-        request.responseType = config.responseType;
-      } catch (e) {
-        // Expected DOMException thrown by browsers not compatible XMLHttpRequest Level 2.
-        // But, this can be suppressed for 'json' type as it can be parsed by default 'transformResponse' function.
-        if (config.responseType !== 'json') {
-          throw e;
-        }
-      }
+    if (responseType && responseType !== 'json') {
+      request.responseType = config.responseType;
     }
 
     // Handle progress if needed
@@ -181,7 +191,7 @@ module.exports = function xhrAdapter(config) {
   });
 };
 
-},{"../core/buildFullPath":9,"../core/createError":10,"./../core/settle":14,"./../helpers/buildURL":18,"./../helpers/cookies":20,"./../helpers/isURLSameOrigin":23,"./../helpers/parseHeaders":25,"./../utils":27}],3:[function(_dereq_,module,exports){
+},{"../core/buildFullPath":9,"../core/createError":10,"./../core/settle":14,"./../helpers/buildURL":18,"./../helpers/cookies":20,"./../helpers/isURLSameOrigin":23,"./../helpers/parseHeaders":25,"./../utils":28}],3:[function(_dereq_,module,exports){
 'use strict';
 
 var utils = _dereq_('./utils');
@@ -239,7 +249,7 @@ module.exports = axios;
 // Allow use of default import syntax in TypeScript
 module.exports.default = axios;
 
-},{"./cancel/Cancel":4,"./cancel/CancelToken":5,"./cancel/isCancel":6,"./core/Axios":7,"./core/mergeConfig":13,"./defaults":16,"./helpers/bind":17,"./helpers/isAxiosError":22,"./helpers/spread":26,"./utils":27}],4:[function(_dereq_,module,exports){
+},{"./cancel/Cancel":4,"./cancel/CancelToken":5,"./cancel/isCancel":6,"./core/Axios":7,"./core/mergeConfig":13,"./defaults":16,"./helpers/bind":17,"./helpers/isAxiosError":22,"./helpers/spread":26,"./utils":28}],4:[function(_dereq_,module,exports){
 'use strict';
 
 /**
@@ -334,7 +344,9 @@ var buildURL = _dereq_('../helpers/buildURL');
 var InterceptorManager = _dereq_('./InterceptorManager');
 var dispatchRequest = _dereq_('./dispatchRequest');
 var mergeConfig = _dereq_('./mergeConfig');
+var validator = _dereq_('../helpers/validator');
 
+var validators = validator.validators;
 /**
  * Create a new instance of Axios
  *
@@ -374,20 +386,71 @@ Axios.prototype.request = function request(config) {
     config.method = 'get';
   }
 
-  // Hook up interceptors middleware
-  var chain = [dispatchRequest, undefined];
-  var promise = Promise.resolve(config);
+  var transitional = config.transitional;
 
+  if (transitional !== undefined) {
+    validator.assertOptions(transitional, {
+      silentJSONParsing: validators.transitional(validators.boolean, '1.0.0'),
+      forcedJSONParsing: validators.transitional(validators.boolean, '1.0.0'),
+      clarifyTimeoutError: validators.transitional(validators.boolean, '1.0.0')
+    }, false);
+  }
+
+  // filter out skipped interceptors
+  var requestInterceptorChain = [];
+  var synchronousRequestInterceptors = true;
   this.interceptors.request.forEach(function unshiftRequestInterceptors(interceptor) {
-    chain.unshift(interceptor.fulfilled, interceptor.rejected);
+    if (typeof interceptor.runWhen === 'function' && interceptor.runWhen(config) === false) {
+      return;
+    }
+
+    synchronousRequestInterceptors = synchronousRequestInterceptors && interceptor.synchronous;
+
+    requestInterceptorChain.unshift(interceptor.fulfilled, interceptor.rejected);
   });
 
+  var responseInterceptorChain = [];
   this.interceptors.response.forEach(function pushResponseInterceptors(interceptor) {
-    chain.push(interceptor.fulfilled, interceptor.rejected);
+    responseInterceptorChain.push(interceptor.fulfilled, interceptor.rejected);
   });
 
-  while (chain.length) {
-    promise = promise.then(chain.shift(), chain.shift());
+  var promise;
+
+  if (!synchronousRequestInterceptors) {
+    var chain = [dispatchRequest, undefined];
+
+    Array.prototype.unshift.apply(chain, requestInterceptorChain);
+    chain = chain.concat(responseInterceptorChain);
+
+    promise = Promise.resolve(config);
+    while (chain.length) {
+      promise = promise.then(chain.shift(), chain.shift());
+    }
+
+    return promise;
+  }
+
+
+  var newConfig = config;
+  while (requestInterceptorChain.length) {
+    var onFulfilled = requestInterceptorChain.shift();
+    var onRejected = requestInterceptorChain.shift();
+    try {
+      newConfig = onFulfilled(newConfig);
+    } catch (error) {
+      onRejected(error);
+      break;
+    }
+  }
+
+  try {
+    promise = dispatchRequest(newConfig);
+  } catch (error) {
+    return Promise.reject(error);
+  }
+
+  while (responseInterceptorChain.length) {
+    promise = promise.then(responseInterceptorChain.shift(), responseInterceptorChain.shift());
   }
 
   return promise;
@@ -423,7 +486,7 @@ utils.forEach(['post', 'put', 'patch'], function forEachMethodWithData(method) {
 
 module.exports = Axios;
 
-},{"../helpers/buildURL":18,"./../utils":27,"./InterceptorManager":8,"./dispatchRequest":11,"./mergeConfig":13}],8:[function(_dereq_,module,exports){
+},{"../helpers/buildURL":18,"../helpers/validator":27,"./../utils":28,"./InterceptorManager":8,"./dispatchRequest":11,"./mergeConfig":13}],8:[function(_dereq_,module,exports){
 'use strict';
 
 var utils = _dereq_('./../utils');
@@ -440,10 +503,12 @@ function InterceptorManager() {
  *
  * @return {Number} An ID used to remove interceptor later
  */
-InterceptorManager.prototype.use = function use(fulfilled, rejected) {
+InterceptorManager.prototype.use = function use(fulfilled, rejected, options) {
   this.handlers.push({
     fulfilled: fulfilled,
-    rejected: rejected
+    rejected: rejected,
+    synchronous: options ? options.synchronous : false,
+    runWhen: options ? options.runWhen : null
   });
   return this.handlers.length - 1;
 };
@@ -477,7 +542,7 @@ InterceptorManager.prototype.forEach = function forEach(fn) {
 
 module.exports = InterceptorManager;
 
-},{"./../utils":27}],9:[function(_dereq_,module,exports){
+},{"./../utils":28}],9:[function(_dereq_,module,exports){
 'use strict';
 
 var isAbsoluteURL = _dereq_('../helpers/isAbsoluteURL');
@@ -549,7 +614,8 @@ module.exports = function dispatchRequest(config) {
   config.headers = config.headers || {};
 
   // Transform request data
-  config.data = transformData(
+  config.data = transformData.call(
+    config,
     config.data,
     config.headers,
     config.transformRequest
@@ -575,7 +641,8 @@ module.exports = function dispatchRequest(config) {
     throwIfCancellationRequested(config);
 
     // Transform response data
-    response.data = transformData(
+    response.data = transformData.call(
+      config,
       response.data,
       response.headers,
       config.transformResponse
@@ -588,7 +655,8 @@ module.exports = function dispatchRequest(config) {
 
       // Transform response data
       if (reason && reason.response) {
-        reason.response.data = transformData(
+        reason.response.data = transformData.call(
+          config,
           reason.response.data,
           reason.response.headers,
           config.transformResponse
@@ -600,7 +668,7 @@ module.exports = function dispatchRequest(config) {
   });
 };
 
-},{"../cancel/isCancel":6,"../defaults":16,"./../utils":27,"./transformData":15}],12:[function(_dereq_,module,exports){
+},{"../cancel/isCancel":6,"../defaults":16,"./../utils":28,"./transformData":15}],12:[function(_dereq_,module,exports){
 'use strict';
 
 /**
@@ -733,7 +801,7 @@ module.exports = function mergeConfig(config1, config2) {
   return config;
 };
 
-},{"../utils":27}],14:[function(_dereq_,module,exports){
+},{"../utils":28}],14:[function(_dereq_,module,exports){
 'use strict';
 
 var createError = _dereq_('./createError');
@@ -764,6 +832,7 @@ module.exports = function settle(resolve, reject, response) {
 'use strict';
 
 var utils = _dereq_('./../utils');
+var defaults = _dereq_('./../defaults');
 
 /**
  * Transform the data for a request or a response
@@ -774,20 +843,22 @@ var utils = _dereq_('./../utils');
  * @returns {*} The resulting transformed data
  */
 module.exports = function transformData(data, headers, fns) {
+  var context = this || defaults;
   /*eslint no-param-reassign:0*/
   utils.forEach(fns, function transform(fn) {
-    data = fn(data, headers);
+    data = fn.call(context, data, headers);
   });
 
   return data;
 };
 
-},{"./../utils":27}],16:[function(_dereq_,module,exports){
+},{"./../defaults":16,"./../utils":28}],16:[function(_dereq_,module,exports){
 (function (process){(function (){
 'use strict';
 
 var utils = _dereq_('./utils');
 var normalizeHeaderName = _dereq_('./helpers/normalizeHeaderName');
+var enhanceError = _dereq_('./core/enhanceError');
 
 var DEFAULT_CONTENT_TYPE = {
   'Content-Type': 'application/x-www-form-urlencoded'
@@ -811,12 +882,35 @@ function getDefaultAdapter() {
   return adapter;
 }
 
+function stringifySafely(rawValue, parser, encoder) {
+  if (utils.isString(rawValue)) {
+    try {
+      (parser || JSON.parse)(rawValue);
+      return utils.trim(rawValue);
+    } catch (e) {
+      if (e.name !== 'SyntaxError') {
+        throw e;
+      }
+    }
+  }
+
+  return (encoder || JSON.stringify)(rawValue);
+}
+
 var defaults = {
+
+  transitional: {
+    silentJSONParsing: true,
+    forcedJSONParsing: true,
+    clarifyTimeoutError: false
+  },
+
   adapter: getDefaultAdapter(),
 
   transformRequest: [function transformRequest(data, headers) {
     normalizeHeaderName(headers, 'Accept');
     normalizeHeaderName(headers, 'Content-Type');
+
     if (utils.isFormData(data) ||
       utils.isArrayBuffer(data) ||
       utils.isBuffer(data) ||
@@ -833,20 +927,32 @@ var defaults = {
       setContentTypeIfUnset(headers, 'application/x-www-form-urlencoded;charset=utf-8');
       return data.toString();
     }
-    if (utils.isObject(data)) {
-      setContentTypeIfUnset(headers, 'application/json;charset=utf-8');
-      return JSON.stringify(data);
+    if (utils.isObject(data) || (headers && headers['Content-Type'] === 'application/json')) {
+      setContentTypeIfUnset(headers, 'application/json');
+      return stringifySafely(data);
     }
     return data;
   }],
 
   transformResponse: [function transformResponse(data) {
-    /*eslint no-param-reassign:0*/
-    if (typeof data === 'string') {
+    var transitional = this.transitional;
+    var silentJSONParsing = transitional && transitional.silentJSONParsing;
+    var forcedJSONParsing = transitional && transitional.forcedJSONParsing;
+    var strictJSONParsing = !silentJSONParsing && this.responseType === 'json';
+
+    if (strictJSONParsing || (forcedJSONParsing && utils.isString(data) && data.length)) {
       try {
-        data = JSON.parse(data);
-      } catch (e) { /* Ignore */ }
+        return JSON.parse(data);
+      } catch (e) {
+        if (strictJSONParsing) {
+          if (e.name === 'SyntaxError') {
+            throw enhanceError(e, this, 'E_JSON_PARSE');
+          }
+          throw e;
+        }
+      }
     }
+
     return data;
   }],
 
@@ -884,7 +990,7 @@ utils.forEach(['post', 'put', 'patch'], function forEachMethodWithData(method) {
 module.exports = defaults;
 
 }).call(this)}).call(this,_dereq_('_process'))
-},{"./adapters/http":2,"./adapters/xhr":2,"./helpers/normalizeHeaderName":24,"./utils":27,"_process":53}],17:[function(_dereq_,module,exports){
+},{"./adapters/http":2,"./adapters/xhr":2,"./core/enhanceError":12,"./helpers/normalizeHeaderName":24,"./utils":28,"_process":55}],17:[function(_dereq_,module,exports){
 'use strict';
 
 module.exports = function bind(fn, thisArg) {
@@ -969,7 +1075,7 @@ module.exports = function buildURL(url, params, paramsSerializer) {
   return url;
 };
 
-},{"./../utils":27}],19:[function(_dereq_,module,exports){
+},{"./../utils":28}],19:[function(_dereq_,module,exports){
 'use strict';
 
 /**
@@ -1040,7 +1146,7 @@ module.exports = (
     })()
 );
 
-},{"./../utils":27}],21:[function(_dereq_,module,exports){
+},{"./../utils":28}],21:[function(_dereq_,module,exports){
 'use strict';
 
 /**
@@ -1139,7 +1245,7 @@ module.exports = (
     })()
 );
 
-},{"./../utils":27}],24:[function(_dereq_,module,exports){
+},{"./../utils":28}],24:[function(_dereq_,module,exports){
 'use strict';
 
 var utils = _dereq_('../utils');
@@ -1153,7 +1259,7 @@ module.exports = function normalizeHeaderName(headers, normalizedName) {
   });
 };
 
-},{"../utils":27}],25:[function(_dereq_,module,exports){
+},{"../utils":28}],25:[function(_dereq_,module,exports){
 'use strict';
 
 var utils = _dereq_('./../utils');
@@ -1208,7 +1314,7 @@ module.exports = function parseHeaders(headers) {
   return parsed;
 };
 
-},{"./../utils":27}],26:[function(_dereq_,module,exports){
+},{"./../utils":28}],26:[function(_dereq_,module,exports){
 'use strict';
 
 /**
@@ -1240,9 +1346,114 @@ module.exports = function spread(callback) {
 },{}],27:[function(_dereq_,module,exports){
 'use strict';
 
-var bind = _dereq_('./helpers/bind');
+var pkg = _dereq_('./../../package.json');
 
-/*global toString:true*/
+var validators = {};
+
+// eslint-disable-next-line func-names
+['object', 'boolean', 'number', 'function', 'string', 'symbol'].forEach(function(type, i) {
+  validators[type] = function validator(thing) {
+    return typeof thing === type || 'a' + (i < 1 ? 'n ' : ' ') + type;
+  };
+});
+
+var deprecatedWarnings = {};
+var currentVerArr = pkg.version.split('.');
+
+/**
+ * Compare package versions
+ * @param {string} version
+ * @param {string?} thanVersion
+ * @returns {boolean}
+ */
+function isOlderVersion(version, thanVersion) {
+  var pkgVersionArr = thanVersion ? thanVersion.split('.') : currentVerArr;
+  var destVer = version.split('.');
+  for (var i = 0; i < 3; i++) {
+    if (pkgVersionArr[i] > destVer[i]) {
+      return true;
+    } else if (pkgVersionArr[i] < destVer[i]) {
+      return false;
+    }
+  }
+  return false;
+}
+
+/**
+ * Transitional option validator
+ * @param {function|boolean?} validator
+ * @param {string?} version
+ * @param {string} message
+ * @returns {function}
+ */
+validators.transitional = function transitional(validator, version, message) {
+  var isDeprecated = version && isOlderVersion(version);
+
+  function formatMessage(opt, desc) {
+    return '[Axios v' + pkg.version + '] Transitional option \'' + opt + '\'' + desc + (message ? '. ' + message : '');
+  }
+
+  // eslint-disable-next-line func-names
+  return function(value, opt, opts) {
+    if (validator === false) {
+      throw new Error(formatMessage(opt, ' has been removed in ' + version));
+    }
+
+    if (isDeprecated && !deprecatedWarnings[opt]) {
+      deprecatedWarnings[opt] = true;
+      // eslint-disable-next-line no-console
+      console.warn(
+        formatMessage(
+          opt,
+          ' has been deprecated since v' + version + ' and will be removed in the near future'
+        )
+      );
+    }
+
+    return validator ? validator(value, opt, opts) : true;
+  };
+};
+
+/**
+ * Assert object's properties type
+ * @param {object} options
+ * @param {object} schema
+ * @param {boolean?} allowUnknown
+ */
+
+function assertOptions(options, schema, allowUnknown) {
+  if (typeof options !== 'object') {
+    throw new TypeError('options must be an object');
+  }
+  var keys = Object.keys(options);
+  var i = keys.length;
+  while (i-- > 0) {
+    var opt = keys[i];
+    var validator = schema[opt];
+    if (validator) {
+      var value = options[opt];
+      var result = value === undefined || validator(value, opt, options);
+      if (result !== true) {
+        throw new TypeError('option ' + opt + ' must be ' + result);
+      }
+      continue;
+    }
+    if (allowUnknown !== true) {
+      throw Error('Unknown option ' + opt);
+    }
+  }
+}
+
+module.exports = {
+  isOlderVersion: isOlderVersion,
+  assertOptions: assertOptions,
+  validators: validators
+};
+
+},{"./../../package.json":29}],28:[function(_dereq_,module,exports){
+'use strict';
+
+var bind = _dereq_('./helpers/bind');
 
 // utils is a library of generic helper functions non-specific to axios
 
@@ -1427,7 +1638,7 @@ function isURLSearchParams(val) {
  * @returns {String} The String freed of excess whitespace
  */
 function trim(str) {
-  return str.replace(/^\s*/, '').replace(/\s*$/, '');
+  return str.trim ? str.trim() : str.replace(/^\s+|\s+$/g, '');
 }
 
 /**
@@ -1590,9 +1801,95 @@ module.exports = {
   stripBOM: stripBOM
 };
 
-},{"./helpers/bind":17}],28:[function(_dereq_,module,exports){
+},{"./helpers/bind":17}],29:[function(_dereq_,module,exports){
+module.exports={
+  "name": "axios",
+  "version": "0.21.4",
+  "description": "Promise based HTTP client for the browser and node.js",
+  "main": "index.js",
+  "scripts": {
+    "test": "grunt test",
+    "start": "node ./sandbox/server.js",
+    "build": "NODE_ENV=production grunt build",
+    "preversion": "npm test",
+    "version": "npm run build && grunt version && git add -A dist && git add CHANGELOG.md bower.json package.json",
+    "postversion": "git push && git push --tags",
+    "examples": "node ./examples/server.js",
+    "coveralls": "cat coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js",
+    "fix": "eslint --fix lib/**/*.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/axios/axios.git"
+  },
+  "keywords": [
+    "xhr",
+    "http",
+    "ajax",
+    "promise",
+    "node"
+  ],
+  "author": "Matt Zabriskie",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/axios/axios/issues"
+  },
+  "homepage": "https://axios-http.com",
+  "devDependencies": {
+    "coveralls": "^3.0.0",
+    "es6-promise": "^4.2.4",
+    "grunt": "^1.3.0",
+    "grunt-banner": "^0.6.0",
+    "grunt-cli": "^1.2.0",
+    "grunt-contrib-clean": "^1.1.0",
+    "grunt-contrib-watch": "^1.0.0",
+    "grunt-eslint": "^23.0.0",
+    "grunt-karma": "^4.0.0",
+    "grunt-mocha-test": "^0.13.3",
+    "grunt-ts": "^6.0.0-beta.19",
+    "grunt-webpack": "^4.0.2",
+    "istanbul-instrumenter-loader": "^1.0.0",
+    "jasmine-core": "^2.4.1",
+    "karma": "^6.3.2",
+    "karma-chrome-launcher": "^3.1.0",
+    "karma-firefox-launcher": "^2.1.0",
+    "karma-jasmine": "^1.1.1",
+    "karma-jasmine-ajax": "^0.1.13",
+    "karma-safari-launcher": "^1.0.0",
+    "karma-sauce-launcher": "^4.3.6",
+    "karma-sinon": "^1.0.5",
+    "karma-sourcemap-loader": "^0.3.8",
+    "karma-webpack": "^4.0.2",
+    "load-grunt-tasks": "^3.5.2",
+    "minimist": "^1.2.0",
+    "mocha": "^8.2.1",
+    "sinon": "^4.5.0",
+    "terser-webpack-plugin": "^4.2.3",
+    "typescript": "^4.0.5",
+    "url-search-params": "^0.10.0",
+    "webpack": "^4.44.2",
+    "webpack-dev-server": "^3.11.0"
+  },
+  "browser": {
+    "./lib/adapters/http.js": "./lib/adapters/xhr.js"
+  },
+  "jsdelivr": "dist/axios.min.js",
+  "unpkg": "dist/axios.min.js",
+  "typings": "./index.d.ts",
+  "dependencies": {
+    "follow-redirects": "^1.14.0"
+  },
+  "bundlesize": [
+    {
+      "path": "./dist/axios.min.js",
+      "threshold": "5kB"
+    }
+  ]
+}
 
-},{}],29:[function(_dereq_,module,exports){
+},{}],30:[function(_dereq_,module,exports){
+
+},{}],31:[function(_dereq_,module,exports){
 /* jshint esversion: 6 */
 /* jslint node: true */
 'use strict';
@@ -1620,7 +1917,7 @@ module.exports = function serialize (object) {
   }, '') + '}';
 };
 
-},{}],30:[function(_dereq_,module,exports){
+},{}],32:[function(_dereq_,module,exports){
 /*
  * Copyright (c) 2019 Digital Bazaar, Inc. All rights reserved.
  */
@@ -1883,7 +2180,7 @@ function _resolveContextUrls({context, base}) {
   }
 }
 
-},{"./JsonLdError":31,"./ResolvedContext":35,"./types":49,"./url":50,"./util":51}],31:[function(_dereq_,module,exports){
+},{"./JsonLdError":33,"./ResolvedContext":37,"./types":51,"./url":52,"./util":53}],33:[function(_dereq_,module,exports){
 /*
  * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
  */
@@ -1908,7 +2205,7 @@ module.exports = class JsonLdError extends Error {
   }
 };
 
-},{}],32:[function(_dereq_,module,exports){
+},{}],34:[function(_dereq_,module,exports){
 /*
  * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
  */
@@ -1962,7 +2259,7 @@ module.exports = jsonld => {
   return JsonLdProcessor;
 };
 
-},{}],33:[function(_dereq_,module,exports){
+},{}],35:[function(_dereq_,module,exports){
 /*
  * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
  */
@@ -1971,7 +2268,7 @@ module.exports = jsonld => {
 // TODO: move `NQuads` to its own package
 module.exports = _dereq_('rdf-canonize').NQuads;
 
-},{"rdf-canonize":54}],34:[function(_dereq_,module,exports){
+},{"rdf-canonize":56}],36:[function(_dereq_,module,exports){
 /*
  * Copyright (c) 2017-2019 Digital Bazaar, Inc. All rights reserved.
  */
@@ -2011,7 +2308,7 @@ module.exports = class RequestQueue {
   }
 };
 
-},{}],35:[function(_dereq_,module,exports){
+},{}],37:[function(_dereq_,module,exports){
 /*
  * Copyright (c) 2019 Digital Bazaar, Inc. All rights reserved.
  */
@@ -2043,7 +2340,7 @@ module.exports = class ResolvedContext {
   }
 };
 
-},{"lru-cache":52}],36:[function(_dereq_,module,exports){
+},{"lru-cache":54}],38:[function(_dereq_,module,exports){
 /*
  * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
  */
@@ -3223,7 +3520,7 @@ function _checkNestProperty(activeCtx, nestProperty, options) {
   }
 }
 
-},{"./JsonLdError":31,"./context":38,"./graphTypes":44,"./types":49,"./url":50,"./util":51}],37:[function(_dereq_,module,exports){
+},{"./JsonLdError":33,"./context":40,"./graphTypes":46,"./types":51,"./url":52,"./util":53}],39:[function(_dereq_,module,exports){
 /*
  * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
  */
@@ -3257,7 +3554,7 @@ module.exports = {
   XSD_STRING: XSD + 'string',
 };
 
-},{}],38:[function(_dereq_,module,exports){
+},{}],40:[function(_dereq_,module,exports){
 /*
  * Copyright (c) 2017-2019 Digital Bazaar, Inc. All rights reserved.
  */
@@ -4729,7 +5026,7 @@ function _deepCompare(x1, x2) {
   return true;
 }
 
-},{"./JsonLdError":31,"./types":49,"./url":50,"./util":51}],39:[function(_dereq_,module,exports){
+},{"./JsonLdError":33,"./types":51,"./url":52,"./util":53}],41:[function(_dereq_,module,exports){
 /*
  * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
  */
@@ -4848,7 +5145,7 @@ function _get(xhr, url, headers) {
   });
 }
 
-},{"../JsonLdError":31,"../RequestQueue":34,"../constants":37,"../url":50,"../util":51}],40:[function(_dereq_,module,exports){
+},{"../JsonLdError":33,"../RequestQueue":36,"../constants":39,"../url":52,"../util":53}],42:[function(_dereq_,module,exports){
 /*
  * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
  */
@@ -5965,7 +6262,7 @@ async function _expandIndexMap(
   return rval;
 }
 
-},{"./JsonLdError":31,"./context":38,"./graphTypes":44,"./types":49,"./url":50,"./util":51}],41:[function(_dereq_,module,exports){
+},{"./JsonLdError":33,"./context":40,"./graphTypes":46,"./types":51,"./url":52,"./util":53}],43:[function(_dereq_,module,exports){
 /*
  * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
  */
@@ -6005,7 +6302,7 @@ api.flatten = input => {
   return flattened;
 };
 
-},{"./graphTypes":44,"./nodeMap":46}],42:[function(_dereq_,module,exports){
+},{"./graphTypes":46,"./nodeMap":48}],44:[function(_dereq_,module,exports){
 /*
  * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
  */
@@ -6832,7 +7129,7 @@ function _valueMatch(pattern, value) {
   return true;
 }
 
-},{"./JsonLdError":31,"./context":38,"./graphTypes":44,"./nodeMap":46,"./types":49,"./url":50,"./util":51}],43:[function(_dereq_,module,exports){
+},{"./JsonLdError":33,"./context":40,"./graphTypes":46,"./nodeMap":48,"./types":51,"./url":52,"./util":53}],45:[function(_dereq_,module,exports){
 /*
  * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
  */
@@ -7181,7 +7478,7 @@ function _RDFToObject(o, useNativeTypes, rdfDirection) {
   return rval;
 }
 
-},{"./JsonLdError":31,"./constants":37,"./graphTypes":44,"./types":49,"./util":51}],44:[function(_dereq_,module,exports){
+},{"./JsonLdError":33,"./constants":39,"./graphTypes":46,"./types":51,"./util":53}],46:[function(_dereq_,module,exports){
 /*
  * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
  */
@@ -7302,7 +7599,7 @@ api.isBlankNode = v => {
   return false;
 };
 
-},{"./types":49}],45:[function(_dereq_,module,exports){
+},{"./types":51}],47:[function(_dereq_,module,exports){
 /**
  * A JavaScript implementation of the JSON-LD API.
  *
@@ -8331,7 +8628,7 @@ wrapper(factory);
 // export API
 module.exports = factory;
 
-},{"./ContextResolver":30,"./JsonLdError":31,"./JsonLdProcessor":32,"./NQuads":33,"./RequestQueue":34,"./compact":36,"./context":38,"./expand":40,"./flatten":41,"./frame":42,"./fromRdf":43,"./graphTypes":44,"./nodeMap":46,"./platform":47,"./toRdf":48,"./types":49,"./url":50,"./util":51,"lru-cache":52,"rdf-canonize":54}],46:[function(_dereq_,module,exports){
+},{"./ContextResolver":32,"./JsonLdError":33,"./JsonLdProcessor":34,"./NQuads":35,"./RequestQueue":36,"./compact":38,"./context":40,"./expand":42,"./flatten":43,"./frame":44,"./fromRdf":45,"./graphTypes":46,"./nodeMap":48,"./platform":49,"./toRdf":50,"./types":51,"./url":52,"./util":53,"lru-cache":54,"rdf-canonize":56}],48:[function(_dereq_,module,exports){
 /*
  * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
  */
@@ -8623,7 +8920,7 @@ api.mergeNodeMaps = graphs => {
   return defaultGraph;
 };
 
-},{"./JsonLdError":31,"./context":38,"./graphTypes":44,"./types":49,"./util":51}],47:[function(_dereq_,module,exports){
+},{"./JsonLdError":33,"./context":40,"./graphTypes":46,"./types":51,"./util":53}],49:[function(_dereq_,module,exports){
 /*
  * Copyright (c) 2021 Digital Bazaar, Inc. All rights reserved.
  */
@@ -8664,7 +8961,7 @@ api.setupGlobals = function(jsonld) {
   }
 };
 
-},{"./documentLoaders/xhr":39}],48:[function(_dereq_,module,exports){
+},{"./documentLoaders/xhr":41}],50:[function(_dereq_,module,exports){
 /*
  * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
  */
@@ -8946,7 +9243,7 @@ function _objectToRDF(item, issuer, dataset, graphTerm, rdfDirection) {
   return object;
 }
 
-},{"./constants":37,"./context":38,"./graphTypes":44,"./nodeMap":46,"./types":49,"./url":50,"./util":51,"canonicalize":29}],49:[function(_dereq_,module,exports){
+},{"./constants":39,"./context":40,"./graphTypes":46,"./nodeMap":48,"./types":51,"./url":52,"./util":53,"canonicalize":31}],51:[function(_dereq_,module,exports){
 /*
  * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
  */
@@ -9040,7 +9337,7 @@ api.isString = v => (typeof v === 'string' ||
  */
 api.isUndefined = v => typeof v === 'undefined';
 
-},{}],50:[function(_dereq_,module,exports){
+},{}],52:[function(_dereq_,module,exports){
 /*
  * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
  */
@@ -9343,7 +9640,7 @@ api.isAbsolute = v => types.isString(v) && isAbsoluteRegex.test(v);
  */
 api.isRelative = v => types.isString(v);
 
-},{"./types":49}],51:[function(_dereq_,module,exports){
+},{"./types":51}],53:[function(_dereq_,module,exports){
 /*
  * Copyright (c) 2017-2019 Digital Bazaar, Inc. All rights reserved.
  */
@@ -9796,7 +10093,7 @@ function _labelBlankNodes(issuer, element) {
   return element;
 }
 
-},{"./JsonLdError":31,"./graphTypes":44,"./types":49,"rdf-canonize":54}],52:[function(_dereq_,module,exports){
+},{"./JsonLdError":33,"./graphTypes":46,"./types":51,"rdf-canonize":56}],54:[function(_dereq_,module,exports){
 'use strict'
 
 // A linked list to keep track of recently-used-ness
@@ -10132,7 +10429,7 @@ const forEachStep = (self, fn, node, thisp) => {
 
 module.exports = LRUCache
 
-},{"yallist":67}],53:[function(_dereq_,module,exports){
+},{"yallist":69}],55:[function(_dereq_,module,exports){
 // shim for using process in browser
 var process = module.exports = {};
 
@@ -10318,7 +10615,7 @@ process.chdir = function (dir) {
 };
 process.umask = function() { return 0; };
 
-},{}],54:[function(_dereq_,module,exports){
+},{}],56:[function(_dereq_,module,exports){
 /**
  * An implementation of the RDF Dataset Normalization specification.
  *
@@ -10328,7 +10625,7 @@ process.umask = function() { return 0; };
  */
 module.exports = _dereq_('./lib');
 
-},{"./lib":63}],55:[function(_dereq_,module,exports){
+},{"./lib":65}],57:[function(_dereq_,module,exports){
 /*
  * Copyright (c) 2016-2021 Digital Bazaar, Inc. All rights reserved.
  */
@@ -10410,7 +10707,7 @@ module.exports = class IdentifierIssuer {
   }
 };
 
-},{}],56:[function(_dereq_,module,exports){
+},{}],58:[function(_dereq_,module,exports){
 /*
  * Copyright (c) 2016-2021 Digital Bazaar, Inc. All rights reserved.
  */
@@ -10461,7 +10758,7 @@ module.exports = class MessageDigest {
   }
 };
 
-},{"setimmediate":64}],57:[function(_dereq_,module,exports){
+},{"setimmediate":66}],59:[function(_dereq_,module,exports){
 /*
  * Copyright (c) 2016-2021 Digital Bazaar, Inc. All rights reserved.
  */
@@ -10856,7 +11153,7 @@ function _unescape(s) {
   });
 }
 
-},{}],58:[function(_dereq_,module,exports){
+},{}],60:[function(_dereq_,module,exports){
 /*
  * Copyright (c) 2016-2021 Digital Bazaar, Inc. All rights reserved.
  */
@@ -10943,7 +11240,7 @@ module.exports = class Permuter {
   }
 };
 
-},{}],59:[function(_dereq_,module,exports){
+},{}],61:[function(_dereq_,module,exports){
 (function (setImmediate){(function (){
 /*
  * Copyright (c) 2016-2021 Digital Bazaar, Inc. All rights reserved.
@@ -11457,7 +11754,7 @@ function _stringHashCompare(a, b) {
 }
 
 }).call(this)}).call(this,_dereq_("timers").setImmediate)
-},{"./IdentifierIssuer":55,"./MessageDigest":56,"./NQuads":57,"./Permuter":58,"timers":65}],60:[function(_dereq_,module,exports){
+},{"./IdentifierIssuer":57,"./MessageDigest":58,"./NQuads":59,"./Permuter":60,"timers":67}],62:[function(_dereq_,module,exports){
 /*
  * Copyright (c) 2016-2021 Digital Bazaar, Inc. All rights reserved.
  */
@@ -11947,7 +12244,7 @@ function _stringHashCompare(a, b) {
   return a.hash < b.hash ? -1 : a.hash > b.hash ? 1 : 0;
 }
 
-},{"./IdentifierIssuer":55,"./MessageDigest":56,"./NQuads":57,"./Permuter":58}],61:[function(_dereq_,module,exports){
+},{"./IdentifierIssuer":57,"./MessageDigest":58,"./NQuads":59,"./Permuter":60}],63:[function(_dereq_,module,exports){
 /*
  * Copyright (c) 2016-2021 Digital Bazaar, Inc. All rights reserved.
  */
@@ -12039,7 +12336,7 @@ module.exports = class URDNA2012 extends URDNA2015 {
   }
 };
 
-},{"./URDNA2015":59}],62:[function(_dereq_,module,exports){
+},{"./URDNA2015":61}],64:[function(_dereq_,module,exports){
 /*
  * Copyright (c) 2016-2021 Digital Bazaar, Inc. All rights reserved.
  */
@@ -12125,7 +12422,7 @@ module.exports = class URDNA2012Sync extends URDNA2015Sync {
   }
 };
 
-},{"./URDNA2015Sync":60}],63:[function(_dereq_,module,exports){
+},{"./URDNA2015Sync":62}],65:[function(_dereq_,module,exports){
 /**
  * An implementation of the RDF Dataset Normalization specification.
  * This library works in the browser and node.js.
@@ -12272,7 +12569,7 @@ api._canonizeSync = function(dataset, options) {
     'Invalid RDF Dataset Canonicalization algorithm: ' + options.algorithm);
 };
 
-},{"./IdentifierIssuer":55,"./NQuads":57,"./URDNA2015":59,"./URDNA2015Sync":60,"./URGNA2012":61,"./URGNA2012Sync":62,"rdf-canonize-native":28}],64:[function(_dereq_,module,exports){
+},{"./IdentifierIssuer":57,"./NQuads":59,"./URDNA2015":61,"./URDNA2015Sync":62,"./URGNA2012":63,"./URGNA2012Sync":64,"rdf-canonize-native":30}],66:[function(_dereq_,module,exports){
 (function (process,global){(function (){
 (function (global, undefined) {
     "use strict";
@@ -12462,7 +12759,7 @@ api._canonizeSync = function(dataset, options) {
 }(typeof self === "undefined" ? typeof global === "undefined" ? this : global : self));
 
 }).call(this)}).call(this,_dereq_('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"_process":53}],65:[function(_dereq_,module,exports){
+},{"_process":55}],67:[function(_dereq_,module,exports){
 (function (setImmediate,clearImmediate){(function (){
 var nextTick = _dereq_('process/browser.js').nextTick;
 var apply = Function.prototype.apply;
@@ -12541,7 +12838,7 @@ exports.clearImmediate = typeof clearImmediate === "function" ? clearImmediate :
   delete immediateIds[id];
 };
 }).call(this)}).call(this,_dereq_("timers").setImmediate,_dereq_("timers").clearImmediate)
-},{"process/browser.js":53,"timers":65}],66:[function(_dereq_,module,exports){
+},{"process/browser.js":55,"timers":67}],68:[function(_dereq_,module,exports){
 'use strict'
 module.exports = function (Yallist) {
   Yallist.prototype[Symbol.iterator] = function* () {
@@ -12551,7 +12848,7 @@ module.exports = function (Yallist) {
   }
 }
 
-},{}],67:[function(_dereq_,module,exports){
+},{}],69:[function(_dereq_,module,exports){
 'use strict'
 module.exports = Yallist
 
@@ -12979,7 +13276,7 @@ try {
   _dereq_('./iterator.js')(Yallist)
 } catch (er) {}
 
-},{"./iterator.js":66}],68:[function(_dereq_,module,exports){
+},{"./iterator.js":68}],70:[function(_dereq_,module,exports){
 "use strict";
 
 // the functions for a class Object
@@ -13137,7 +13434,7 @@ class Class extends Term {
 
 module.exports = Class;
 
-},{"./Term":76,"./utilities":77}],69:[function(_dereq_,module,exports){
+},{"./Term":78,"./utilities":79}],71:[function(_dereq_,module,exports){
 "use strict";
 
 // the functions for a data type Object
@@ -13267,7 +13564,7 @@ class DataType extends Term {
 
 module.exports = DataType;
 
-},{"./Term":76,"./utilities":77}],70:[function(_dereq_,module,exports){
+},{"./Term":78,"./utilities":79}],72:[function(_dereq_,module,exports){
 "use strict";
 
 // the functions for a enumeration Object
@@ -13356,7 +13653,7 @@ class Enumeration extends Class {
 
 module.exports = Enumeration;
 
-},{"./Class":68,"./utilities":77}],71:[function(_dereq_,module,exports){
+},{"./Class":70,"./utilities":79}],73:[function(_dereq_,module,exports){
 "use strict";
 
 // the functions for a enumeration member Object
@@ -13446,7 +13743,7 @@ class EnumerationMember extends Term {
 
 module.exports = EnumerationMember;
 
-},{"./Term":76,"./utilities":77}],72:[function(_dereq_,module,exports){
+},{"./Term":78,"./utilities":79}],74:[function(_dereq_,module,exports){
 "use strict";
 
 function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { Promise.resolve(value).then(_next, _throw); } }
@@ -13566,7 +13863,7 @@ class Graph {
    *
    * @param {object} vocab - The vocabulary to add the graph, in JSON-LD format
    * @param {string|null} vocabURL - The URL of the vocabulary
-   * @returns {boolean} returns true on success
+   * @returns {Promise<boolean>} returns true on success
    */
 
 
@@ -14502,7 +14799,7 @@ class Graph {
 
 module.exports = Graph;
 
-},{"./Class":68,"./DataType":69,"./Enumeration":70,"./EnumerationMember":71,"./Property":73,"./ReasoningEngine":74,"./utilities":77}],73:[function(_dereq_,module,exports){
+},{"./Class":70,"./DataType":71,"./Enumeration":72,"./EnumerationMember":73,"./Property":75,"./ReasoningEngine":76,"./utilities":79}],75:[function(_dereq_,module,exports){
 "use strict";
 
 // the functions for a property Object
@@ -14681,7 +14978,7 @@ class Property extends Term {
 
 module.exports = Property;
 
-},{"./Term":76,"./utilities":77}],74:[function(_dereq_,module,exports){
+},{"./Term":78,"./utilities":79}],76:[function(_dereq_,module,exports){
 "use strict";
 
 var util = _dereq_('./utilities');
@@ -14990,7 +15287,7 @@ class ReasoningEngine {
 
 module.exports = ReasoningEngine;
 
-},{"./utilities":77}],75:[function(_dereq_,module,exports){
+},{"./utilities":79}],77:[function(_dereq_,module,exports){
 "use strict";
 
 function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { Promise.resolve(value).then(_next, _throw); } }
@@ -15002,6 +15299,10 @@ var Graph = _dereq_('./Graph');
 var util = _dereq_('./utilities');
 
 var axios = _dereq_('axios');
+
+var {
+  isString
+} = _dereq_('./utilities');
 
 var URI_SEMANTIFY_GITHUB = 'https://raw.githubusercontent.com/semantifyit/schemaorg/main/';
 var URI_SEMANTIFY_RELEASES = URI_SEMANTIFY_GITHUB + 'data/releases/';
@@ -15075,6 +15376,11 @@ class SDOAdapter {
               // assume it is a URL
               try {
                 var fetchedVocab = yield _this.fetchVocabularyFromURL(vocab);
+
+                if (isString(fetchedVocab)) {
+                  fetchedVocab = JSON.parse(fetchedVocab); // try to parse the fetched content as JSON
+                }
+
                 yield _this.graph.addVocabulary(fetchedVocab, vocab);
               } catch (e) {
                 throw new Error('The given URL ' + vocab + ' did not contain a valid JSON-LD vocabulary.');
@@ -15103,7 +15409,7 @@ class SDOAdapter {
    * Fetches a vocabulary from the given URL.
    *
    * @param {string} url - the URL from which the vocabulary should be fetched
-   * @returns {Promise<object>} - the fetched vocabulary object
+   * @returns {Promise<object>| Promise<string>} - the fetched vocabulary object (or string, if the server returns a string instead of an object)
    */
 
 
@@ -15638,7 +15944,7 @@ class SDOAdapter {
 
 module.exports = SDOAdapter;
 
-},{"./Graph":72,"./utilities":77,"axios":1}],76:[function(_dereq_,module,exports){
+},{"./Graph":74,"./utilities":79,"axios":1}],78:[function(_dereq_,module,exports){
 "use strict";
 
 // the functions for a term Object
@@ -15832,7 +16138,7 @@ class Term {
 
 module.exports = Term;
 
-},{"./utilities":77}],77:[function(_dereq_,module,exports){
+},{"./utilities":79}],79:[function(_dereq_,module,exports){
 "use strict";
 
 function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { Promise.resolve(value).then(_next, _throw); } }
@@ -16618,5 +16924,5 @@ module.exports = {
   switchIRIProtocol
 };
 
-},{"jsonld":45}]},{},[75])(75)
+},{"jsonld":47}]},{},[77])(77)
 });

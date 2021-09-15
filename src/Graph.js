@@ -102,7 +102,7 @@ class Graph {
      *
      * @param {object} vocab - The vocabulary to add the graph, in JSON-LD format
      * @param {string|null} vocabURL - The URL of the vocabulary
-     * @returns {boolean} returns true on success
+     * @returns {Promise<boolean>} returns true on success
      */
     async addVocabulary(vocab, vocabURL = null) {
         // check which protocol version of schema.org is used in the first vocabulary given to the graph, set that version as the namespace for "schema" in the standard @context

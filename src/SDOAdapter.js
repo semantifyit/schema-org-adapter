@@ -1,6 +1,7 @@
 const Graph = require('./Graph');
 const util = require('./utilities');
 const axios = require('axios');
+const { isString } = require('./utilities');
 
 const URI_SEMANTIFY_GITHUB = 'https://raw.githubusercontent.com/semantifyit/schemaorg/main/';
 const URI_SEMANTIFY_RELEASES = URI_SEMANTIFY_GITHUB + 'data/releases/';
@@ -64,7 +65,10 @@ class SDOAdapter {
                     if (vocab.startsWith('www') || vocab.startsWith('http')) {
                         // assume it is a URL
                         try {
-                            const fetchedVocab = await this.fetchVocabularyFromURL(vocab);
+                            let fetchedVocab = await this.fetchVocabularyFromURL(vocab);
+                            if (isString(fetchedVocab)) {
+                                fetchedVocab = JSON.parse(fetchedVocab); // try to parse the fetched content as JSON
+                            }
                             await this.graph.addVocabulary(fetchedVocab, vocab);
                         } catch (e) {
                             throw new Error('The given URL ' + vocab + ' did not contain a valid JSON-LD vocabulary.');
@@ -93,7 +97,7 @@ class SDOAdapter {
      * Fetches a vocabulary from the given URL.
      *
      * @param {string} url - the URL from which the vocabulary should be fetched
-     * @returns {Promise<object>} - the fetched vocabulary object
+     * @returns {Promise<object>| Promise<string>} - the fetched vocabulary object (or string, if the server returns a string instead of an object)
      */
     async fetchVocabularyFromURL(url) {
         return new Promise(function(resolve, reject) {
