@@ -17,36 +17,55 @@
 <dd></dd>
 </dl>
 
+## Typedefs
+
+<dl>
+<dt><a href="#SDOAdapterParameterObject">SDOAdapterParameterObject</a> : <code>object</code></dt>
+<dd></dd>
+<dt><a href="#filterObject">filterObject</a> : <code>object</code></dt>
+<dd></dd>
+<dt><a href="#filterObject">filterObject</a> : <code>object</code></dt>
+<dd></dd>
+<dt><a href="#filterObject">filterObject</a> : <code>object</code></dt>
+<dd></dd>
+<dt><a href="#filterObject">filterObject</a> : <code>object</code></dt>
+<dd></dd>
+<dt><a href="#filterObject">filterObject</a> : <code>object</code></dt>
+<dd></dd>
+<dt><a href="#filterObject">filterObject</a> : <code>object</code></dt>
+<dd></dd>
+</dl>
+
 <a name="SDOAdapter"></a>
 
 ## SDOAdapter
 **Kind**: global class  
 
 * [SDOAdapter](#SDOAdapter)
-    * [new SDOAdapter(parameterObject)](#new_SDOAdapter_new)
-    * [.addVocabularies(vocabArray)](#SDOAdapter+addVocabularies) ⇒ <code>Promise.&lt;void&gt;</code>
-    * [.fetchVocabularyFromURL(url)](#SDOAdapter+fetchVocabularyFromURL) ⇒ <code>Promise.&lt;object&gt;</code>
-    * [.getTerm(id, filter)](#SDOAdapter+getTerm) ⇒ [<code>Term</code>](#Term)
-    * [.getAllTerms(filter)](#SDOAdapter+getAllTerms) ⇒ [<code>Array.&lt;Class&gt;</code>](#Class)
-    * [.getListOfTerms(filter)](#SDOAdapter+getListOfTerms) ⇒ <code>Array.&lt;string&gt;</code>
-    * [.getClass(id, filter)](#SDOAdapter+getClass) ⇒ [<code>Class</code>](#Class) \| [<code>Enumeration</code>](#Enumeration)
-    * [.getAllClasses(filter)](#SDOAdapter+getAllClasses) ⇒ [<code>Array.&lt;Class&gt;</code>](#Class)
-    * [.getListOfClasses(filter)](#SDOAdapter+getListOfClasses) ⇒ <code>Array.&lt;string&gt;</code>
-    * [.getProperty(id, filter)](#SDOAdapter+getProperty) ⇒ [<code>Property</code>](#Property)
-    * [.getAllProperties(filter)](#SDOAdapter+getAllProperties) ⇒ [<code>Array.&lt;Property&gt;</code>](#Property)
-    * [.getListOfProperties(filter)](#SDOAdapter+getListOfProperties) ⇒ <code>Array.&lt;string&gt;</code>
-    * [.getDataType(id, filter)](#SDOAdapter+getDataType) ⇒ [<code>DataType</code>](#DataType)
-    * [.getAllDataTypes(filter)](#SDOAdapter+getAllDataTypes) ⇒ [<code>Array.&lt;DataType&gt;</code>](#DataType)
-    * [.getListOfDataTypes(filter)](#SDOAdapter+getListOfDataTypes) ⇒ <code>Array.&lt;string&gt;</code>
-    * [.getEnumeration(id, filter)](#SDOAdapter+getEnumeration) ⇒ [<code>Enumeration</code>](#Enumeration)
-    * [.getAllEnumerations(filter)](#SDOAdapter+getAllEnumerations) ⇒ [<code>Array.&lt;Enumeration&gt;</code>](#Enumeration)
-    * [.getListOfEnumerations(filter)](#SDOAdapter+getListOfEnumerations) ⇒ <code>Array.&lt;string&gt;</code>
-    * [.getEnumerationMember(id, filter)](#SDOAdapter+getEnumerationMember) ⇒ [<code>EnumerationMember</code>](#EnumerationMember)
-    * [.getAllEnumerationMembers(filter)](#SDOAdapter+getAllEnumerationMembers) ⇒ [<code>Array.&lt;EnumerationMember&gt;</code>](#EnumerationMember)
-    * [.getListOfEnumerationMembers(filter)](#SDOAdapter+getListOfEnumerationMembers) ⇒ <code>Array.&lt;string&gt;</code>
+    * [new SDOAdapter([parameterObject])](#new_SDOAdapter_new)
+    * [.addVocabularies(vocabArray)](#SDOAdapter+addVocabularies) ⇒ <code>Promise.&lt;boolean&gt;</code>
+    * [.fetchVocabularyFromURL(url)](#SDOAdapter+fetchVocabularyFromURL) ⇒ <code>Promise.&lt;(object\|string)&gt;</code>
+    * [.getTerm(id, [filter])](#SDOAdapter+getTerm) ⇒ [<code>Term</code>](#Term)
+    * [.getAllTerms([filter])](#SDOAdapter+getAllTerms) ⇒ [<code>Array.&lt;Class&gt;</code>](#Class)
+    * [.getListOfTerms([filter])](#SDOAdapter+getListOfTerms) ⇒ <code>Array.&lt;string&gt;</code>
+    * [.getClass(id, [filter])](#SDOAdapter+getClass) ⇒ [<code>Class</code>](#Class) \| [<code>Enumeration</code>](#Enumeration)
+    * [.getAllClasses([filter])](#SDOAdapter+getAllClasses) ⇒ [<code>Array.&lt;Class&gt;</code>](#Class)
+    * [.getListOfClasses([filter])](#SDOAdapter+getListOfClasses) ⇒ <code>Array.&lt;string&gt;</code>
+    * [.getProperty(id, [filter])](#SDOAdapter+getProperty) ⇒ [<code>Property</code>](#Property)
+    * [.getAllProperties([filter])](#SDOAdapter+getAllProperties) ⇒ [<code>Array.&lt;Property&gt;</code>](#Property)
+    * [.getListOfProperties([filter])](#SDOAdapter+getListOfProperties) ⇒ <code>Array.&lt;string&gt;</code>
+    * [.getDataType(id, [filter])](#SDOAdapter+getDataType) ⇒ [<code>DataType</code>](#DataType)
+    * [.getAllDataTypes([filter])](#SDOAdapter+getAllDataTypes) ⇒ [<code>Array.&lt;DataType&gt;</code>](#DataType)
+    * [.getListOfDataTypes([filter])](#SDOAdapter+getListOfDataTypes) ⇒ <code>Array.&lt;string&gt;</code>
+    * [.getEnumeration(id, [filter])](#SDOAdapter+getEnumeration) ⇒ [<code>Enumeration</code>](#Enumeration)
+    * [.getAllEnumerations([filter])](#SDOAdapter+getAllEnumerations) ⇒ [<code>Array.&lt;Enumeration&gt;</code>](#Enumeration)
+    * [.getListOfEnumerations([filter])](#SDOAdapter+getListOfEnumerations) ⇒ <code>Array.&lt;string&gt;</code>
+    * [.getEnumerationMember(id, [filter])](#SDOAdapter+getEnumerationMember) ⇒ [<code>EnumerationMember</code>](#EnumerationMember)
+    * [.getAllEnumerationMembers([filter])](#SDOAdapter+getAllEnumerationMembers) ⇒ [<code>Array.&lt;EnumerationMember&gt;</code>](#EnumerationMember)
+    * [.getListOfEnumerationMembers([filter])](#SDOAdapter+getListOfEnumerationMembers) ⇒ <code>Array.&lt;string&gt;</code>
     * [.getVocabularies()](#SDOAdapter+getVocabularies) ⇒ <code>object</code>
-    * [.constructSDOVocabularyURL(version)](#SDOAdapter+constructSDOVocabularyURL) ⇒ <code>Promise.&lt;string&gt;</code>
-    * [.getSDOVersionFile()](#SDOAdapter+getSDOVersionFile) ⇒ <code>Promise.&lt;void&gt;</code>
+    * [.constructSDOVocabularyURL([version])](#SDOAdapter+constructSDOVocabularyURL) ⇒ <code>Promise.&lt;string&gt;</code>
+    * [.getSDOVersionFile()](#SDOAdapter+getSDOVersionFile) ⇒ <code>Promise.&lt;boolean&gt;</code>
     * [.checkURL(url)](#SDOAdapter+checkURL) ⇒ <code>Promise.&lt;boolean&gt;</code>
     * [.getLatestSDOVersion()](#SDOAdapter+getLatestSDOVersion) ⇒ <code>Promise.&lt;string&gt;</code>
     * [.getReleasesURI()](#SDOAdapter+getReleasesURI) ⇒ <code>string</code>
@@ -54,21 +73,21 @@
 
 <a name="new_SDOAdapter_new"></a>
 
-### new SDOAdapter(parameterObject)
+### new SDOAdapter([parameterObject])
 The SDOAdapter is a JS-Class that represents the interface between the user and this library. Its methods enable to add vocabularies to its memory as well as retrieving vocabulary items. It is possible to create multiple instances of this JS-Class which use different vocabularies.
 
 
-| Param | Type | Default | Description |
-| --- | --- | --- | --- |
-| parameterObject | <code>object</code> \| <code>null</code> | <code></code> | an object with optional parameters for the constructor. There is 'commitBase': The commit string from https://github.com/schemaorg/schemaorg which is the base for the adapter (if not given, we take the latest commit of our fork at https://github.com/semantifyit/schemaorg). There is 'onError': A callback function(string) that is called when an unexpected error happens. There is 'schemaHttps': a boolean flag - use the https version of the schema.org vocabulary, it defaults to true. Only available if for schema.org version 9.0 upwards There is 'equateVocabularyProtocols': a boolean flag - treats namespaces as equal even if their protocols (http/https) are different, it defaults to false. |
+| Param | Type | Description |
+| --- | --- | --- |
+| [parameterObject] | [<code>SDOAdapterParameterObject</code>](#SDOAdapterParameterObject) | an optional parameter object with optional options for the constructor. |
 
 <a name="SDOAdapter+addVocabularies"></a>
 
-### sdoAdapter.addVocabularies(vocabArray) ⇒ <code>Promise.&lt;void&gt;</code>
+### sdoAdapter.addVocabularies(vocabArray) ⇒ <code>Promise.&lt;boolean&gt;</code>
 Adds vocabularies (in JSON-LD format or as URL) to the memory of this SDOAdapter. The function "constructSDOVocabularyURL()" helps you to construct URLs for the schema.org vocabulary
 
 **Kind**: instance method of [<code>SDOAdapter</code>](#SDOAdapter)  
-**Returns**: <code>Promise.&lt;void&gt;</code> - This is an async function  
+**Returns**: <code>Promise.&lt;boolean&gt;</code> - This is an async function, returns true when done.  
 
 | Param | Type | Description |
 | --- | --- | --- |
@@ -76,11 +95,11 @@ Adds vocabularies (in JSON-LD format or as URL) to the memory of this SDOAdapter
 
 <a name="SDOAdapter+fetchVocabularyFromURL"></a>
 
-### sdoAdapter.fetchVocabularyFromURL(url) ⇒ <code>Promise.&lt;object&gt;</code>
+### sdoAdapter.fetchVocabularyFromURL(url) ⇒ <code>Promise.&lt;(object\|string)&gt;</code>
 Fetches a vocabulary from the given URL.
 
 **Kind**: instance method of [<code>SDOAdapter</code>](#SDOAdapter)  
-**Returns**: <code>Promise.&lt;object&gt;</code> - - the fetched vocabulary object  
+**Returns**: <code>Promise.&lt;(object\|string)&gt;</code> - The fetched vocabulary object (or string, if the server returns a string instead of an object)  
 
 | Param | Type | Description |
 | --- | --- | --- |
@@ -88,225 +107,225 @@ Fetches a vocabulary from the given URL.
 
 <a name="SDOAdapter+getTerm"></a>
 
-### sdoAdapter.getTerm(id, filter) ⇒ [<code>Term</code>](#Term)
+### sdoAdapter.getTerm(id, [filter]) ⇒ [<code>Term</code>](#Term)
 Creates a corresponding JS-Class for the given IRI, depending on its term-category
 
 **Kind**: instance method of [<code>SDOAdapter</code>](#SDOAdapter)  
-**Returns**: [<code>Term</code>](#Term) - the JS-Class for the given IRI  
+**Returns**: [<code>Term</code>](#Term) - The JS-Class for the given IRI  
 
-| Param | Type | Default | Description |
-| --- | --- | --- | --- |
-| id | <code>string</code> |  | The id of the wished term, can be an IRI (absolute or compact) or a label |
-| filter | <code>object</code> | <code></code> | (optional) The filter settings to be applied on the result |
+| Param | Type | Description |
+| --- | --- | --- |
+| id | <code>string</code> | The id of the wished term, can be an IRI (absolute or compact) or a label |
+| [filter] | [<code>filterObject</code>](#filterObject) | (optional) The filter settings to be applied on the result |
 
 <a name="SDOAdapter+getAllTerms"></a>
 
-### sdoAdapter.getAllTerms(filter) ⇒ [<code>Array.&lt;Class&gt;</code>](#Class)
+### sdoAdapter.getAllTerms([filter]) ⇒ [<code>Array.&lt;Class&gt;</code>](#Class)
 Creates an array of JS-Classes for all vocabulary Terms (corresponding JS-Classes depending on the Term types)
 
 **Kind**: instance method of [<code>SDOAdapter</code>](#SDOAdapter)  
 **Returns**: [<code>Array.&lt;Class&gt;</code>](#Class) - An array of JS-Classes representing all vocabulary Terms  
 
-| Param | Type | Default | Description |
-| --- | --- | --- | --- |
-| filter | <code>object</code> \| <code>null</code> | <code></code> | (default = null) an optional filter for the Term creation |
+| Param | Type | Description |
+| --- | --- | --- |
+| [filter] | [<code>filterObject</code>](#filterObject) | (optional) The filter settings to be applied on the result |
 
 <a name="SDOAdapter+getListOfTerms"></a>
 
-### sdoAdapter.getListOfTerms(filter) ⇒ <code>Array.&lt;string&gt;</code>
+### sdoAdapter.getListOfTerms([filter]) ⇒ <code>Array.&lt;string&gt;</code>
 Creates an array of IRIs for all vocabulary Terms
 
 **Kind**: instance method of [<code>SDOAdapter</code>](#SDOAdapter)  
 **Returns**: <code>Array.&lt;string&gt;</code> - An array of IRIs representing all vocabulary Terms  
 
-| Param | Type | Default | Description |
-| --- | --- | --- | --- |
-| filter | <code>object</code> \| <code>null</code> | <code></code> | (default = null) an optional filter for the List creation |
+| Param | Type | Description |
+| --- | --- | --- |
+| [filter] | [<code>filterObject</code>](#filterObject) | (optional) The filter settings to be applied on the result |
 
 <a name="SDOAdapter+getClass"></a>
 
-### sdoAdapter.getClass(id, filter) ⇒ [<code>Class</code>](#Class) \| [<code>Enumeration</code>](#Enumeration)
+### sdoAdapter.getClass(id, [filter]) ⇒ [<code>Class</code>](#Class) \| [<code>Enumeration</code>](#Enumeration)
 Creates a JS-Class for a vocabulary Class by the given identifier (@id) or name
 
 **Kind**: instance method of [<code>SDOAdapter</code>](#SDOAdapter)  
 **Returns**: [<code>Class</code>](#Class) \| [<code>Enumeration</code>](#Enumeration) - The JS-Class representing a Class of an Enumeration (depending on the given id)  
 
-| Param | Type | Default | Description |
-| --- | --- | --- | --- |
-| id | <code>string</code> |  | The identifier of the wished Class. It can be either a compact IRI -> "schema:Hotel", an absolute IRI -> "http://schema.org/Hotel", or the name (rdfs:label) -> "name" of the class (which may be ambiguous if multiple vocabularies/languages are used). |
-| filter | <code>object</code> \| <code>null</code> | <code></code> | (default = null) an optional filter for the Class creation |
+| Param | Type | Description |
+| --- | --- | --- |
+| id | <code>string</code> | The identifier of the wished Class. It can be either a compact IRI -> "schema:Hotel", an absolute IRI -> "http://schema.org/Hotel", or the name (rdfs:label) -> "name" of the class (which may be ambiguous if multiple vocabularies/languages are used). |
+| [filter] | [<code>filterObject</code>](#filterObject) | (optional) The filter settings to be applied on the result |
 
 <a name="SDOAdapter+getAllClasses"></a>
 
-### sdoAdapter.getAllClasses(filter) ⇒ [<code>Array.&lt;Class&gt;</code>](#Class)
+### sdoAdapter.getAllClasses([filter]) ⇒ [<code>Array.&lt;Class&gt;</code>](#Class)
 Creates an array of JS-Classes for all vocabulary Classes
 
 **Kind**: instance method of [<code>SDOAdapter</code>](#SDOAdapter)  
 **Returns**: [<code>Array.&lt;Class&gt;</code>](#Class) - An array of JS-Classes representing all vocabulary Classes, does not include Enumerations  
 
-| Param | Type | Default | Description |
-| --- | --- | --- | --- |
-| filter | <code>object</code> \| <code>null</code> | <code></code> | (default = null) an optional filter for the Class creation |
+| Param | Type | Description |
+| --- | --- | --- |
+| [filter] | [<code>filterObject</code>](#filterObject) | (optional) The filter settings to be applied on the result |
 
 <a name="SDOAdapter+getListOfClasses"></a>
 
-### sdoAdapter.getListOfClasses(filter) ⇒ <code>Array.&lt;string&gt;</code>
+### sdoAdapter.getListOfClasses([filter]) ⇒ <code>Array.&lt;string&gt;</code>
 Creates an array of IRIs for all vocabulary Classes
 
 **Kind**: instance method of [<code>SDOAdapter</code>](#SDOAdapter)  
 **Returns**: <code>Array.&lt;string&gt;</code> - An array of IRIs representing all vocabulary Classes, does not include Enumerations  
 
-| Param | Type | Default | Description |
-| --- | --- | --- | --- |
-| filter | <code>object</code> \| <code>null</code> | <code></code> | (default = null) an optional filter for the List creation |
+| Param | Type | Description |
+| --- | --- | --- |
+| [filter] | [<code>filterObject</code>](#filterObject) | (optional) The filter settings to be applied on the result |
 
 <a name="SDOAdapter+getProperty"></a>
 
-### sdoAdapter.getProperty(id, filter) ⇒ [<code>Property</code>](#Property)
+### sdoAdapter.getProperty(id, [filter]) ⇒ [<code>Property</code>](#Property)
 Creates a JS-Class for a vocabulary Property by the given identifier (@id) or name
 
 **Kind**: instance method of [<code>SDOAdapter</code>](#SDOAdapter)  
 **Returns**: [<code>Property</code>](#Property) - The JS-Class representing a Property  
 
-| Param | Type | Default | Description |
-| --- | --- | --- | --- |
-| id | <code>string</code> |  | The identifier of the wished Property. It can be either a compact IRI -> "schema:address", an absolute IRI -> "http://schema.org/address", or the name (rdfs:label) -> "address" of the Property (which may be ambiguous if multiple vocabularies/languages are used). |
-| filter | <code>object</code> \| <code>null</code> | <code></code> | (default = null) an optional filter for the Property creation |
+| Param | Type | Description |
+| --- | --- | --- |
+| id | <code>string</code> | The identifier of the wished Property. It can be either a compact IRI -> "schema:address", an absolute IRI -> "http://schema.org/address", or the name (rdfs:label) -> "address" of the Property (which may be ambiguous if multiple vocabularies/languages are used). |
+| [filter] | [<code>filterObject</code>](#filterObject) | (optional) The filter settings to be applied on the result |
 
 <a name="SDOAdapter+getAllProperties"></a>
 
-### sdoAdapter.getAllProperties(filter) ⇒ [<code>Array.&lt;Property&gt;</code>](#Property)
+### sdoAdapter.getAllProperties([filter]) ⇒ [<code>Array.&lt;Property&gt;</code>](#Property)
 Creates an array of JS-Classes for all vocabulary Properties
 
 **Kind**: instance method of [<code>SDOAdapter</code>](#SDOAdapter)  
 **Returns**: [<code>Array.&lt;Property&gt;</code>](#Property) - An array of JS-Classes representing all vocabulary Properties  
 
-| Param | Type | Default | Description |
-| --- | --- | --- | --- |
-| filter | <code>object</code> \| <code>null</code> | <code></code> | (default = null) an optional filter for the Property creation |
+| Param | Type | Description |
+| --- | --- | --- |
+| [filter] | [<code>filterObject</code>](#filterObject) | (optional) The filter settings to be applied on the result |
 
 <a name="SDOAdapter+getListOfProperties"></a>
 
-### sdoAdapter.getListOfProperties(filter) ⇒ <code>Array.&lt;string&gt;</code>
+### sdoAdapter.getListOfProperties([filter]) ⇒ <code>Array.&lt;string&gt;</code>
 Creates an array of IRIs for all vocabulary Properties
 
 **Kind**: instance method of [<code>SDOAdapter</code>](#SDOAdapter)  
 **Returns**: <code>Array.&lt;string&gt;</code> - An array of IRIs representing all vocabulary Properties  
 
-| Param | Type | Default | Description |
-| --- | --- | --- | --- |
-| filter | <code>object</code> \| <code>null</code> | <code></code> | (default = null) an optional filter for the List creation |
+| Param | Type | Description |
+| --- | --- | --- |
+| [filter] | [<code>filterObject</code>](#filterObject) | (optional) The filter settings to be applied on the result |
 
 <a name="SDOAdapter+getDataType"></a>
 
-### sdoAdapter.getDataType(id, filter) ⇒ [<code>DataType</code>](#DataType)
+### sdoAdapter.getDataType(id, [filter]) ⇒ [<code>DataType</code>](#DataType)
 Creates a JS-Class for a vocabulary DataType by the given identifier (@id) or name
 
 **Kind**: instance method of [<code>SDOAdapter</code>](#SDOAdapter)  
 **Returns**: [<code>DataType</code>](#DataType) - The JS-Class representing a DataType  
 
-| Param | Type | Default | Description |
-| --- | --- | --- | --- |
-| id | <code>string</code> |  | The identifier of the wished DataType. It can be either a compact IRI -> "schema:Number", an absolute IRI -> "http://schema.org/Number", or the name (rdfs:label) -> "Number" of the DataType (which may be ambiguous if multiple vocabularies/languages are used). |
-| filter | <code>object</code> \| <code>null</code> | <code></code> | (default = null) an optional filter for the DataType creation |
+| Param | Type | Description |
+| --- | --- | --- |
+| id | <code>string</code> | The identifier of the wished DataType. It can be either a compact IRI -> "schema:Number", an absolute IRI -> "http://schema.org/Number", or the name (rdfs:label) -> "Number" of the DataType (which may be ambiguous if multiple vocabularies/languages are used). |
+| [filter] | [<code>filterObject</code>](#filterObject) | (optional) The filter settings to be applied on the result |
 
 <a name="SDOAdapter+getAllDataTypes"></a>
 
-### sdoAdapter.getAllDataTypes(filter) ⇒ [<code>Array.&lt;DataType&gt;</code>](#DataType)
+### sdoAdapter.getAllDataTypes([filter]) ⇒ [<code>Array.&lt;DataType&gt;</code>](#DataType)
 Creates an array of JS-Classes for all vocabulary DataTypes
 
 **Kind**: instance method of [<code>SDOAdapter</code>](#SDOAdapter)  
 **Returns**: [<code>Array.&lt;DataType&gt;</code>](#DataType) - An array of JS-Classes representing all vocabulary DataTypes  
 
-| Param | Type | Default | Description |
-| --- | --- | --- | --- |
-| filter | <code>object</code> \| <code>null</code> | <code></code> | (default = null) an optional filter for the DataType creation |
+| Param | Type | Description |
+| --- | --- | --- |
+| [filter] | [<code>filterObject</code>](#filterObject) | (optional) The filter settings to be applied on the result |
 
 <a name="SDOAdapter+getListOfDataTypes"></a>
 
-### sdoAdapter.getListOfDataTypes(filter) ⇒ <code>Array.&lt;string&gt;</code>
+### sdoAdapter.getListOfDataTypes([filter]) ⇒ <code>Array.&lt;string&gt;</code>
 Creates an array of IRIs for all vocabulary DataTypes
 
 **Kind**: instance method of [<code>SDOAdapter</code>](#SDOAdapter)  
 **Returns**: <code>Array.&lt;string&gt;</code> - An array of IRIs representing all vocabulary DataTypes  
 
-| Param | Type | Default | Description |
-| --- | --- | --- | --- |
-| filter | <code>object</code> \| <code>null</code> | <code></code> | (default = null) an optional filter for the List creation |
+| Param | Type | Description |
+| --- | --- | --- |
+| [filter] | [<code>filterObject</code>](#filterObject) | (optional) The filter settings to be applied on the result |
 
 <a name="SDOAdapter+getEnumeration"></a>
 
-### sdoAdapter.getEnumeration(id, filter) ⇒ [<code>Enumeration</code>](#Enumeration)
+### sdoAdapter.getEnumeration(id, [filter]) ⇒ [<code>Enumeration</code>](#Enumeration)
 Creates a JS-Class for a vocabulary Enumeration by the given identifier (@id) or name
 
 **Kind**: instance method of [<code>SDOAdapter</code>](#SDOAdapter)  
 **Returns**: [<code>Enumeration</code>](#Enumeration) - The JS-Class representing an Enumeration  
 
-| Param | Type | Default | Description |
-| --- | --- | --- | --- |
-| id | <code>string</code> |  | The identifier of the wished Enumeration. It can be either a compact IRI -> "schema:DayOfWeek", an absolute IRI -> "http://schema.org/DayOfWeek", or the name (rdfs:label) -> "DayOfWeek" of the Enumeration (which may be ambiguous if multiple vocabularies/languages are used). |
-| filter | <code>object</code> \| <code>null</code> | <code></code> | (default = null) an optional filter for the Enumeration creation |
+| Param | Type | Description |
+| --- | --- | --- |
+| id | <code>string</code> | The identifier of the wished Enumeration. It can be either a compact IRI -> "schema:DayOfWeek", an absolute IRI -> "http://schema.org/DayOfWeek", or the name (rdfs:label) -> "DayOfWeek" of the Enumeration (which may be ambiguous if multiple vocabularies/languages are used). |
+| [filter] | [<code>filterObject</code>](#filterObject) | (optional) The filter settings to be applied on the result |
 
 <a name="SDOAdapter+getAllEnumerations"></a>
 
-### sdoAdapter.getAllEnumerations(filter) ⇒ [<code>Array.&lt;Enumeration&gt;</code>](#Enumeration)
+### sdoAdapter.getAllEnumerations([filter]) ⇒ [<code>Array.&lt;Enumeration&gt;</code>](#Enumeration)
 Creates an array of JS-Classes for all vocabulary Enumerations
 
 **Kind**: instance method of [<code>SDOAdapter</code>](#SDOAdapter)  
 **Returns**: [<code>Array.&lt;Enumeration&gt;</code>](#Enumeration) - An array of JS-Classes representing all vocabulary Enumerations  
 
-| Param | Type | Default | Description |
-| --- | --- | --- | --- |
-| filter | <code>object</code> \| <code>null</code> | <code></code> | (default = null) an optional filter for the Enumeration creation |
+| Param | Type | Description |
+| --- | --- | --- |
+| [filter] | [<code>filterObject</code>](#filterObject) | (optional) The filter settings to be applied on the result |
 
 <a name="SDOAdapter+getListOfEnumerations"></a>
 
-### sdoAdapter.getListOfEnumerations(filter) ⇒ <code>Array.&lt;string&gt;</code>
+### sdoAdapter.getListOfEnumerations([filter]) ⇒ <code>Array.&lt;string&gt;</code>
 Creates an array of IRIs for all vocabulary Enumerations
 
 **Kind**: instance method of [<code>SDOAdapter</code>](#SDOAdapter)  
 **Returns**: <code>Array.&lt;string&gt;</code> - An array of IRIs representing all vocabulary Enumerations  
 
-| Param | Type | Default | Description |
-| --- | --- | --- | --- |
-| filter | <code>object</code> \| <code>null</code> | <code></code> | (default = null) an optional filter for the List creation |
+| Param | Type | Description |
+| --- | --- | --- |
+| [filter] | [<code>filterObject</code>](#filterObject) | (optional) The filter settings to be applied on the result |
 
 <a name="SDOAdapter+getEnumerationMember"></a>
 
-### sdoAdapter.getEnumerationMember(id, filter) ⇒ [<code>EnumerationMember</code>](#EnumerationMember)
+### sdoAdapter.getEnumerationMember(id, [filter]) ⇒ [<code>EnumerationMember</code>](#EnumerationMember)
 Creates a JS-Class for a vocabulary EnumerationMember by the given identifier (@id) or name
 
 **Kind**: instance method of [<code>SDOAdapter</code>](#SDOAdapter)  
 **Returns**: [<code>EnumerationMember</code>](#EnumerationMember) - The JS-Class representing an EnumerationMember  
 
-| Param | Type | Default | Description |
-| --- | --- | --- | --- |
-| id | <code>string</code> |  | The identifier of the wished EnumerationMember. It can be either a compact IRI -> "schema:Friday", an absolute IRI -> "http://schema.org/Friday", or the name (rdfs:label) -> "Friday" of the EnumerationMember (which may be ambiguous if multiple vocabularies/languages are used). |
-| filter | <code>object</code> \| <code>null</code> | <code></code> | (default = null) an optional filter for the EnumerationMember creation |
+| Param | Type | Description |
+| --- | --- | --- |
+| id | <code>string</code> | The identifier of the wished EnumerationMember. It can be either a compact IRI -> "schema:Friday", an absolute IRI -> "http://schema.org/Friday", or the name (rdfs:label) -> "Friday" of the EnumerationMember (which may be ambiguous if multiple vocabularies/languages are used). |
+| [filter] | [<code>filterObject</code>](#filterObject) | (optional) The filter settings to be applied on the result |
 
 <a name="SDOAdapter+getAllEnumerationMembers"></a>
 
-### sdoAdapter.getAllEnumerationMembers(filter) ⇒ [<code>Array.&lt;EnumerationMember&gt;</code>](#EnumerationMember)
+### sdoAdapter.getAllEnumerationMembers([filter]) ⇒ [<code>Array.&lt;EnumerationMember&gt;</code>](#EnumerationMember)
 Creates an array of JS-Classes for all vocabulary EnumerationMember
 
 **Kind**: instance method of [<code>SDOAdapter</code>](#SDOAdapter)  
 **Returns**: [<code>Array.&lt;EnumerationMember&gt;</code>](#EnumerationMember) - An array of JS-Classes representing all vocabulary EnumerationMember  
 
-| Param | Type | Default | Description |
-| --- | --- | --- | --- |
-| filter | <code>object</code> \| <code>null</code> | <code></code> | (default = null) an optional filter for the EnumerationMember creation |
+| Param | Type | Description |
+| --- | --- | --- |
+| [filter] | [<code>filterObject</code>](#filterObject) | (optional) The filter settings to be applied on the result |
 
 <a name="SDOAdapter+getListOfEnumerationMembers"></a>
 
-### sdoAdapter.getListOfEnumerationMembers(filter) ⇒ <code>Array.&lt;string&gt;</code>
+### sdoAdapter.getListOfEnumerationMembers([filter]) ⇒ <code>Array.&lt;string&gt;</code>
 Creates an array of IRIs for all vocabulary EnumerationMember
 
 **Kind**: instance method of [<code>SDOAdapter</code>](#SDOAdapter)  
 **Returns**: <code>Array.&lt;string&gt;</code> - An array of IRIs representing all vocabulary EnumerationMember  
 
-| Param | Type | Default | Description |
-| --- | --- | --- | --- |
-| filter | <code>object</code> \| <code>null</code> | <code></code> | (default = null) an optional filter for the List creation |
+| Param | Type | Description |
+| --- | --- | --- |
+| [filter] | [<code>filterObject</code>](#filterObject) | (optional) The filter settings to be applied on the result |
 
 <a name="SDOAdapter+getVocabularies"></a>
 
@@ -317,7 +336,7 @@ Returns key-value pairs of the vocabularies used in this SDOAdapter
 **Returns**: <code>object</code> - An object containing the key-value pairs representing the used vocabularies  
 <a name="SDOAdapter+constructSDOVocabularyURL"></a>
 
-### sdoAdapter.constructSDOVocabularyURL(version) ⇒ <code>Promise.&lt;string&gt;</code>
+### sdoAdapter.constructSDOVocabularyURL([version]) ⇒ <code>Promise.&lt;string&gt;</code>
 Creates a URL pointing to the Schema.org vocabulary (the wished version can be specified). This URL can then be added to the SDOAdapter to retrieve the Schema.org vocabulary. Invalid version argument will result in errors, check https://schema.org/docs/developers.html for more information
 To achieve this, the Schema.org version listing on https://raw.githubusercontent.com/schemaorg/schemaorg/main/versions.json is used.
 
@@ -326,24 +345,24 @@ To achieve this, the Schema.org version listing on https://raw.githubusercontent
 
 | Param | Type | Default | Description |
 | --- | --- | --- | --- |
-| version | <code>string</code> | <code>&quot;latest&quot;</code> | the wished Schema.org vocabulary version for the resulting URL (e.g. "5.0", "3.7", or "latest"). default: "latest" |
+| [version] | <code>string</code> | <code>&quot;latest&quot;</code> | the wished Schema.org vocabulary version for the resulting URL (e.g. "5.0", "3.7", or "latest"). default: "latest" |
 
 <a name="SDOAdapter+getSDOVersionFile"></a>
 
-### sdoAdapter.getSDOVersionFile() ⇒ <code>Promise.&lt;void&gt;</code>
+### sdoAdapter.getSDOVersionFile() ⇒ <code>Promise.&lt;boolean&gt;</code>
 Retrieves the schema.org version listing at https://raw.githubusercontent.com/schemaorg/schemaorg/main/versions.json
 and saves it in the local memory. Also sends head-requests to determine if the 'latest' version is really 'fetch-able'.
 If not, this head-requests are done again for older versions until the latest valid version is determined and saved in the memory.
 
 **Kind**: instance method of [<code>SDOAdapter</code>](#SDOAdapter)  
-**Returns**: <code>Promise.&lt;void&gt;</code> - Returns void when the process ends (signalizing the process ending).  
+**Returns**: <code>Promise.&lt;boolean&gt;</code> - Returns true when the process ends  
 <a name="SDOAdapter+checkURL"></a>
 
 ### sdoAdapter.checkURL(url) ⇒ <code>Promise.&lt;boolean&gt;</code>
 Sends a head-request to the given URL, checking if content exists.
 
 **Kind**: instance method of [<code>SDOAdapter</code>](#SDOAdapter)  
-**Returns**: <code>Promise.&lt;boolean&gt;</code> - - returns true if there is content  
+**Returns**: <code>Promise.&lt;boolean&gt;</code> - Returns true if there is content  
 
 | Param | Type | Description |
 | --- | --- | --- |
@@ -363,14 +382,14 @@ To achieve this, the Schema.org version listing on https://raw.githubusercontent
 Returns the base part of respective release URI
 
 **Kind**: instance method of [<code>SDOAdapter</code>](#SDOAdapter)  
-**Returns**: <code>string</code> - the base part of respective release URI  
+**Returns**: <code>string</code> - The base part of respective release URI  
 <a name="SDOAdapter+getVersionFileURI"></a>
 
 ### sdoAdapter.getVersionFileURI() ⇒ <code>string</code>
 Returns the URI of the respective versions file
 
 **Kind**: instance method of [<code>SDOAdapter</code>](#SDOAdapter)  
-**Returns**: <code>string</code> - the URI of the respective versions file  
+**Returns**: <code>string</code> - The URI of the respective versions file  
 <a name="Term"></a>
 
 ## Term
@@ -378,15 +397,15 @@ Returns the URI of the respective versions file
 
 * [Term](#Term)
     * [new Term(IRI, graph)](#new_Term_new)
-    * [.getIRI(compactForm)](#Term+getIRI) ⇒ <code>string</code>
+    * [.getIRI([compactForm])](#Term+getIRI) ⇒ <code>string</code>
     * *[.getTermType()](#Term+getTermType) ⇒ <code>string</code>*
     * *[.getTermObj()](#Term+getTermObj) ⇒ <code>string</code>*
     * [.getVocabURLs()](#Term+getVocabURLs) ⇒ <code>Array</code> \| <code>null</code>
-    * [.getVocabulary()](#Term+getVocabulary) ⇒ <code>string</code> \| <code>null</code>
+    * [.getVocabulary()](#Term+getVocabulary) ⇒ <code>string</code>
     * [.getSource()](#Term+getSource) ⇒ <code>string</code> \| <code>Array</code> \| <code>null</code>
-    * [.isSupersededBy()](#Term+isSupersededBy) ⇒ <code>string</code> \| <code>null</code>
-    * [.getName(language)](#Term+getName) ⇒ <code>string</code> \| <code>null</code>
-    * [.getDescription(language)](#Term+getDescription) ⇒ <code>string</code> \| <code>null</code>
+    * [.isSupersededBy()](#Term+isSupersededBy) ⇒ <code>string</code>
+    * [.getName([language])](#Term+getName) ⇒ <code>string</code>
+    * [.getDescription([language])](#Term+getDescription) ⇒ <code>string</code>
     * [.toString()](#Term+toString) ⇒ <code>string</code>
     * [.toJSON()](#Term+toJSON) ⇒ <code>object</code>
 
@@ -403,7 +422,7 @@ A vocabulary term. It is identified by its IRI.
 
 <a name="Term+getIRI"></a>
 
-### term.getIRI(compactForm) ⇒ <code>string</code>
+### term.getIRI([compactForm]) ⇒ <code>string</code>
 Retrieves the IRI (@id) of this Term in compact/absolute form
 
 **Kind**: instance method of [<code>Term</code>](#Term)  
@@ -411,7 +430,7 @@ Retrieves the IRI (@id) of this Term in compact/absolute form
 
 | Param | Type | Default | Description |
 | --- | --- | --- | --- |
-| compactForm | <code>boolean</code> | <code>false</code> | (default = false), if true -> return compact IRI -> "schema:Friday", if false -> return absolute IRI -> "http://schema.org/Friday" |
+| [compactForm] | <code>boolean</code> | <code>false</code> | if true -> return compact IRI -> "schema:Friday", if false -> return absolute IRI -> "http://schema.org/Friday" (default: false) |
 
 <a name="Term+getTermType"></a>
 
@@ -436,11 +455,11 @@ Retrieves the original vocabulary urls of this Term
 **Returns**: <code>Array</code> \| <code>null</code> - The original vocabulary urls of this Term  
 <a name="Term+getVocabulary"></a>
 
-### term.getVocabulary() ⇒ <code>string</code> \| <code>null</code>
+### term.getVocabulary() ⇒ <code>string</code>
 Retrieves the original vocabulary (schema:isPartOf) of this Term
 
 **Kind**: instance method of [<code>Term</code>](#Term)  
-**Returns**: <code>string</code> \| <code>null</code> - The vocabulary IRI given by the "schema:isPartOf" of this Term  
+**Returns**: <code>string</code> - The vocabulary IRI given by the "schema:isPartOf" of this Term  
 <a name="Term+getSource"></a>
 
 ### term.getSource() ⇒ <code>string</code> \| <code>Array</code> \| <code>null</code>
@@ -450,34 +469,34 @@ Retrieves the source (dc:source) of this Term
 **Returns**: <code>string</code> \| <code>Array</code> \| <code>null</code> - The source IRI given by the "dc:source" of this Term (null if none)  
 <a name="Term+isSupersededBy"></a>
 
-### term.isSupersededBy() ⇒ <code>string</code> \| <code>null</code>
+### term.isSupersededBy() ⇒ <code>string</code>
 Retrieves the Term superseding (schema:supersededBy) this Term
 
 **Kind**: instance method of [<code>Term</code>](#Term)  
-**Returns**: <code>string</code> \| <code>null</code> - The Term superseding this Term (null if none)  
+**Returns**: <code>string</code> - The Term superseding this Term (null if none)  
 <a name="Term+getName"></a>
 
-### term.getName(language) ⇒ <code>string</code> \| <code>null</code>
+### term.getName([language]) ⇒ <code>string</code>
 Retrieves the name (rdfs:label) of this Term in a wished language (optional)
 
 **Kind**: instance method of [<code>Term</code>](#Term)  
-**Returns**: <code>string</code> \| <code>null</code> - The name of this Term (null if not given for specified language)  
+**Returns**: <code>string</code> - The name of this Term (null if not given for specified language)  
 
 | Param | Type | Default | Description |
 | --- | --- | --- | --- |
-| language | <code>string</code> | <code>&quot;en&quot;</code> | (default = "en") the wished language for the name |
+| [language] | <code>string</code> | <code>&quot;en&quot;</code> | the wished language for the name (default = "en") |
 
 <a name="Term+getDescription"></a>
 
-### term.getDescription(language) ⇒ <code>string</code> \| <code>null</code>
+### term.getDescription([language]) ⇒ <code>string</code>
 Retrieves the description (rdfs:comment) of this Term in a wished language (optional)
 
 **Kind**: instance method of [<code>Term</code>](#Term)  
-**Returns**: <code>string</code> \| <code>null</code> - The description of this Term (null if not given for specified language)  
+**Returns**: <code>string</code> - The description of this Term (null if not given for specified language)  
 
 | Param | Type | Default | Description |
 | --- | --- | --- | --- |
-| language | <code>string</code> | <code>&quot;en&quot;</code> | (default = "en") the wished language for the description |
+| [language] | <code>string</code> | <code>&quot;en&quot;</code> | the wished language for the description (default = "en") |
 
 <a name="Term+toString"></a>
 
@@ -502,11 +521,11 @@ Generates a JSON representation of this Term
     * [new Class(IRI, graph)](#new_Class_new)
     * [.getTermType()](#Class+getTermType) ⇒ <code>string</code>
     * [.getTermObj()](#Class+getTermObj) ⇒ <code>string</code>
-    * [.getProperties(implicit, filter)](#Class+getProperties) ⇒ <code>Array.&lt;string&gt;</code>
-    * [.getSuperClasses(implicit, filter)](#Class+getSuperClasses) ⇒ <code>Array.&lt;string&gt;</code>
-    * [.getSubClasses(implicit, filter)](#Class+getSubClasses) ⇒ <code>Array.&lt;string&gt;</code>
-    * [.isRangeOf(implicit, filter)](#Class+isRangeOf) ⇒ <code>Array</code>
-    * [.toJSON(implicit, filter)](#Class+toJSON) ⇒ <code>object</code>
+    * [.getProperties([implicit], [filter])](#Class+getProperties) ⇒ <code>Array.&lt;string&gt;</code>
+    * [.getSuperClasses([implicit], [filter])](#Class+getSuperClasses) ⇒ <code>Array.&lt;string&gt;</code>
+    * [.getSubClasses([implicit], [filter])](#Class+getSubClasses) ⇒ <code>Array.&lt;string&gt;</code>
+    * [.isRangeOf([implicit], [filter])](#Class+isRangeOf) ⇒ <code>Array.&lt;string&gt;</code>
+    * [.toJSON([implicit], [filter])](#Class+toJSON) ⇒ <code>object</code>
 
 <a name="new_Class_new"></a>
 
@@ -535,7 +554,7 @@ Retrieves the term object of this Class
 **Returns**: <code>string</code> - The term object of this Class  
 <a name="Class+getProperties"></a>
 
-### class.getProperties(implicit, filter) ⇒ <code>Array.&lt;string&gt;</code>
+### class.getProperties([implicit], [filter]) ⇒ <code>Array.&lt;string&gt;</code>
 Retrieves the explicit/implicit properties (soa:hasProperty) of this Class
 
 **Kind**: instance method of [<code>Class</code>](#Class)  
@@ -543,12 +562,12 @@ Retrieves the explicit/implicit properties (soa:hasProperty) of this Class
 
 | Param | Type | Default | Description |
 | --- | --- | --- | --- |
-| implicit | <code>boolean</code> | <code>true</code> | (default = true) retrieves also implicit properties (inheritance from super-classes) |
-| filter | <code>object</code> \| <code>null</code> | <code></code> | (default = null) an optional filter for the properties |
+| [implicit] | <code>boolean</code> | <code>true</code> | retrieves also implicit properties (inheritance from super-classes) - (default = true) |
+| [filter] | [<code>filterObject</code>](#filterObject) |  | (optional) The filter settings to be applied on the result |
 
 <a name="Class+getSuperClasses"></a>
 
-### class.getSuperClasses(implicit, filter) ⇒ <code>Array.&lt;string&gt;</code>
+### class.getSuperClasses([implicit], [filter]) ⇒ <code>Array.&lt;string&gt;</code>
 Retrieves the explicit/implicit super-classes (rdfs:subClassOf) of this Class
 
 **Kind**: instance method of [<code>Class</code>](#Class)  
@@ -556,12 +575,12 @@ Retrieves the explicit/implicit super-classes (rdfs:subClassOf) of this Class
 
 | Param | Type | Default | Description |
 | --- | --- | --- | --- |
-| implicit | <code>boolean</code> | <code>true</code> | (default = true) retrieves also implicit super-classes (recursive from super-classes) |
-| filter | <code>object</code> \| <code>null</code> | <code></code> | (default = null) an optional filter for the super-classes |
+| [implicit] | <code>boolean</code> | <code>true</code> | retrieves also implicit super-classes (recursive from super-classes) - (default = true) |
+| [filter] | [<code>filterObject</code>](#filterObject) |  | (optional) The filter settings to be applied on the result |
 
 <a name="Class+getSubClasses"></a>
 
-### class.getSubClasses(implicit, filter) ⇒ <code>Array.&lt;string&gt;</code>
+### class.getSubClasses([implicit], [filter]) ⇒ <code>Array.&lt;string&gt;</code>
 Retrieves the explicit/implicit sub-classes (soa:superClassOf) of this Class
 
 **Kind**: instance method of [<code>Class</code>](#Class)  
@@ -569,25 +588,25 @@ Retrieves the explicit/implicit sub-classes (soa:superClassOf) of this Class
 
 | Param | Type | Default | Description |
 | --- | --- | --- | --- |
-| implicit | <code>boolean</code> | <code>true</code> | (default = true) retrieves also implicit sub-classes (recursive from sub-classes) |
-| filter | <code>object</code> \| <code>null</code> | <code></code> | (default = null) an optional filter for the sub-classes |
+| [implicit] | <code>boolean</code> | <code>true</code> | retrieves also implicit sub-classes (recursive from sub-classes) - (default = true) |
+| [filter] | [<code>filterObject</code>](#filterObject) |  | (optional) The filter settings to be applied on the result |
 
 <a name="Class+isRangeOf"></a>
 
-### class.isRangeOf(implicit, filter) ⇒ <code>Array</code>
+### class.isRangeOf([implicit], [filter]) ⇒ <code>Array.&lt;string&gt;</code>
 Retrieves the properties that have this Class as a range
 
 **Kind**: instance method of [<code>Class</code>](#Class)  
-**Returns**: <code>Array</code> - The properties that have this Class as a range  
+**Returns**: <code>Array.&lt;string&gt;</code> - The properties that have this Class as a range  
 
 | Param | Type | Default | Description |
 | --- | --- | --- | --- |
-| implicit | <code>boolean</code> | <code>true</code> | (default = true) includes also implicit data |
-| filter | <code>object</code> \| <code>null</code> | <code></code> | (default = null) an optional filter for the generated data |
+| [implicit] | <code>boolean</code> | <code>true</code> | includes also implicit data - (default = true) |
+| [filter] | [<code>filterObject</code>](#filterObject) |  | (optional) The filter settings to be applied on the result |
 
 <a name="Class+toJSON"></a>
 
-### class.toJSON(implicit, filter) ⇒ <code>object</code>
+### class.toJSON([implicit], [filter]) ⇒ <code>object</code>
 Generates an explicit/implicit JSON representation of this Class.
 
 **Kind**: instance method of [<code>Class</code>](#Class)  
@@ -595,8 +614,8 @@ Generates an explicit/implicit JSON representation of this Class.
 
 | Param | Type | Default | Description |
 | --- | --- | --- | --- |
-| implicit | <code>boolean</code> | <code>true</code> | (default = true) includes also implicit data (e.g. sub-Classes, super-Classes, properties, etc.) |
-| filter | <code>object</code> \| <code>null</code> | <code></code> | (default = null) an optional filter for the generated data |
+| [implicit] | <code>boolean</code> | <code>true</code> | includes also implicit data (e.g. sub-Classes, super-Classes, properties, etc.) - (default = true) |
+| [filter] | [<code>filterObject</code>](#filterObject) |  | (optional) The filter settings to be applied on the result |
 
 <a name="Property"></a>
 
@@ -607,12 +626,12 @@ Generates an explicit/implicit JSON representation of this Class.
     * [new Property(IRI, graph)](#new_Property_new)
     * [.getTermType()](#Property+getTermType) ⇒ <code>string</code>
     * [.getTermObj()](#Property+getTermObj) ⇒ <code>string</code>
-    * [.getRanges(implicit, filter)](#Property+getRanges) ⇒ <code>Array.&lt;string&gt;</code>
-    * [.getDomains(implicit, filter)](#Property+getDomains) ⇒ <code>Array.&lt;string&gt;</code>
-    * [.getSuperProperties(implicit, filter)](#Property+getSuperProperties) ⇒ <code>Array.&lt;string&gt;</code>
-    * [.getSubProperties(implicit, filter)](#Property+getSubProperties) ⇒ <code>Array.&lt;string&gt;</code>
+    * [.getRanges([implicit], [filter])](#Property+getRanges) ⇒ <code>Array.&lt;string&gt;</code>
+    * [.getDomains([implicit], [filter])](#Property+getDomains) ⇒ <code>Array.&lt;string&gt;</code>
+    * [.getSuperProperties([implicit], [filter])](#Property+getSuperProperties) ⇒ <code>Array.&lt;string&gt;</code>
+    * [.getSubProperties([implicit], [filter])](#Property+getSubProperties) ⇒ <code>Array.&lt;string&gt;</code>
     * [.getInverseOf()](#Property+getInverseOf) ⇒ <code>string</code>
-    * [.toJSON(implicit, filter)](#Property+toJSON) ⇒ <code>object</code>
+    * [.toJSON([implicit], [filter])](#Property+toJSON) ⇒ <code>object</code>
 
 <a name="new_Property_new"></a>
 
@@ -641,7 +660,7 @@ Retrieves the term object of this Property
 **Returns**: <code>string</code> - The term object of this Property  
 <a name="Property+getRanges"></a>
 
-### property.getRanges(implicit, filter) ⇒ <code>Array.&lt;string&gt;</code>
+### property.getRanges([implicit], [filter]) ⇒ <code>Array.&lt;string&gt;</code>
 Retrieves the explicit/implicit ranges (schema:rangeIncludes) of this Property
 
 **Kind**: instance method of [<code>Property</code>](#Property)  
@@ -649,12 +668,12 @@ Retrieves the explicit/implicit ranges (schema:rangeIncludes) of this Property
 
 | Param | Type | Default | Description |
 | --- | --- | --- | --- |
-| implicit | <code>boolean</code> | <code>true</code> | (default = true) retrieves also implicit ranges (inheritance from sub-classes of the ranges) |
-| filter | <code>object</code> \| <code>null</code> | <code></code> | (default = null) an optional filter for the ranges |
+| [implicit] | <code>boolean</code> | <code>true</code> | retrieves also implicit ranges (inheritance from sub-classes of the ranges) - (default = true) |
+| [filter] | [<code>filterObject</code>](#filterObject) |  | (optional) The filter settings to be applied on the result |
 
 <a name="Property+getDomains"></a>
 
-### property.getDomains(implicit, filter) ⇒ <code>Array.&lt;string&gt;</code>
+### property.getDomains([implicit], [filter]) ⇒ <code>Array.&lt;string&gt;</code>
 Retrieves the explicit/implicit domains (schema:domainIncludes) of this Property
 
 **Kind**: instance method of [<code>Property</code>](#Property)  
@@ -662,12 +681,12 @@ Retrieves the explicit/implicit domains (schema:domainIncludes) of this Property
 
 | Param | Type | Default | Description |
 | --- | --- | --- | --- |
-| implicit | <code>boolean</code> | <code>true</code> | (default = true) retrieves also implicit domains (inheritance from sub-classes of the domains) |
-| filter | <code>object</code> \| <code>null</code> | <code></code> | (default = null) an optional filter for the domains |
+| [implicit] | <code>boolean</code> | <code>true</code> | retrieves also implicit domains (inheritance from sub-classes of the domains) - (default = true) |
+| [filter] | [<code>filterObject</code>](#filterObject) |  | (optional) The filter settings to be applied on the result |
 
 <a name="Property+getSuperProperties"></a>
 
-### property.getSuperProperties(implicit, filter) ⇒ <code>Array.&lt;string&gt;</code>
+### property.getSuperProperties([implicit], [filter]) ⇒ <code>Array.&lt;string&gt;</code>
 Retrieves the explicit/implicit super-properties (rdfs:subPropertyOf) of this Property
 
 **Kind**: instance method of [<code>Property</code>](#Property)  
@@ -675,12 +694,12 @@ Retrieves the explicit/implicit super-properties (rdfs:subPropertyOf) of this Pr
 
 | Param | Type | Default | Description |
 | --- | --- | --- | --- |
-| implicit | <code>boolean</code> | <code>true</code> | (default = true) retrieves also implicit super-properties (recursive from super-properties) |
-| filter | <code>object</code> \| <code>null</code> | <code></code> | (default = null) an optional filter for the super-properties |
+| [implicit] | <code>boolean</code> | <code>true</code> | retrieves also implicit super-properties (recursive from super-properties) - (default = true) |
+| [filter] | [<code>filterObject</code>](#filterObject) |  | (optional) The filter settings to be applied on the result |
 
 <a name="Property+getSubProperties"></a>
 
-### property.getSubProperties(implicit, filter) ⇒ <code>Array.&lt;string&gt;</code>
+### property.getSubProperties([implicit], [filter]) ⇒ <code>Array.&lt;string&gt;</code>
 Retrieves the explicit/implicit sub-properties (soa:superPropertyOf) of this Property
 
 **Kind**: instance method of [<code>Property</code>](#Property)  
@@ -688,8 +707,8 @@ Retrieves the explicit/implicit sub-properties (soa:superPropertyOf) of this Pro
 
 | Param | Type | Default | Description |
 | --- | --- | --- | --- |
-| implicit | <code>boolean</code> | <code>true</code> | (default = true) retrieves also implicit sub-properties (recursive from sub-properties) |
-| filter | <code>object</code> \| <code>null</code> | <code></code> | (default = null) an optional filter for the sub-properties |
+| [implicit] | <code>boolean</code> | <code>true</code> | retrieves also implicit sub-properties (recursive from sub-properties) - (default = true) |
+| [filter] | [<code>filterObject</code>](#filterObject) |  | (optional) The filter settings to be applied on the result |
 
 <a name="Property+getInverseOf"></a>
 
@@ -700,7 +719,7 @@ Retrieves the inverse Property (schema:inverseOf) of this Property
 **Returns**: <code>string</code> - The IRI of the inverse Property of this Property  
 <a name="Property+toJSON"></a>
 
-### property.toJSON(implicit, filter) ⇒ <code>object</code>
+### property.toJSON([implicit], [filter]) ⇒ <code>object</code>
 Generates an explicit/implicit JSON representation of this Property.
 
 **Kind**: instance method of [<code>Property</code>](#Property)  
@@ -708,8 +727,8 @@ Generates an explicit/implicit JSON representation of this Property.
 
 | Param | Type | Default | Description |
 | --- | --- | --- | --- |
-| implicit | <code>boolean</code> | <code>true</code> | (default = true) includes also implicit data (e.g. domains, ranges, etc.) |
-| filter | <code>object</code> \| <code>null</code> | <code></code> | (default = null) an optional filter for the generated data |
+| [implicit] | <code>boolean</code> | <code>true</code> | includes also implicit data (e.g. domains, ranges, etc.) - (default = true) |
+| [filter] | [<code>filterObject</code>](#filterObject) |  | (optional) The filter settings to be applied on the result |
 
 <a name="Enumeration"></a>
 
@@ -720,8 +739,8 @@ Generates an explicit/implicit JSON representation of this Property.
     * [new Enumeration(IRI, graph)](#new_Enumeration_new)
     * [.getTermType()](#Enumeration+getTermType) ⇒ <code>string</code>
     * [.getTermObj()](#Enumeration+getTermObj) ⇒ <code>string</code>
-    * [.getEnumerationMembers(implicit, filter)](#Enumeration+getEnumerationMembers) ⇒ <code>Array.&lt;string&gt;</code>
-    * [.toJSON(implicit, filter)](#Enumeration+toJSON) ⇒ <code>object</code>
+    * [.getEnumerationMembers([implicit], [filter])](#Enumeration+getEnumerationMembers) ⇒ <code>Array.&lt;string&gt;</code>
+    * [.toJSON([implicit], [filter])](#Enumeration+toJSON) ⇒ <code>object</code>
 
 <a name="new_Enumeration_new"></a>
 
@@ -750,7 +769,7 @@ Retrieves the term object of this Enumeration
 **Returns**: <code>string</code> - The term object of this Enumeration  
 <a name="Enumeration+getEnumerationMembers"></a>
 
-### enumeration.getEnumerationMembers(implicit, filter) ⇒ <code>Array.&lt;string&gt;</code>
+### enumeration.getEnumerationMembers([implicit], [filter]) ⇒ <code>Array.&lt;string&gt;</code>
 Retrieves the enumeration members (soa:hasEnumerationMember) of this Enumeration
 
 **Kind**: instance method of [<code>Enumeration</code>](#Enumeration)  
@@ -758,12 +777,12 @@ Retrieves the enumeration members (soa:hasEnumerationMember) of this Enumeration
 
 | Param | Type | Default | Description |
 | --- | --- | --- | --- |
-| implicit | <code>boolean</code> | <code>false</code> | (default = false) retrieves also implicit enumeration members (inheritance from sub-enumerations) |
-| filter | <code>object</code> \| <code>null</code> | <code></code> | (default = null) an optional filter for the enumeration members |
+| [implicit] | <code>boolean</code> | <code>true</code> | retrieves also implicit enumeration members (inheritance from sub-enumerations) - (default = false) |
+| [filter] | [<code>filterObject</code>](#filterObject) |  | (optional) The filter settings to be applied on the result |
 
 <a name="Enumeration+toJSON"></a>
 
-### enumeration.toJSON(implicit, filter) ⇒ <code>object</code>
+### enumeration.toJSON([implicit], [filter]) ⇒ <code>object</code>
 Generates an explicit/implicit JSON representation of this Enumeration
 
 **Kind**: instance method of [<code>Enumeration</code>](#Enumeration)  
@@ -771,8 +790,8 @@ Generates an explicit/implicit JSON representation of this Enumeration
 
 | Param | Type | Default | Description |
 | --- | --- | --- | --- |
-| implicit | <code>boolean</code> | <code>true</code> | (default = true) includes also implicit data |
-| filter | <code>object</code> \| <code>null</code> | <code></code> | (default = null) an optional filter for the generated data |
+| [implicit] | <code>boolean</code> | <code>true</code> | includes also implicit data - (default = true) |
+| [filter] | [<code>filterObject</code>](#filterObject) |  | (optional) The filter settings to be applied on the result |
 
 <a name="EnumerationMember"></a>
 
@@ -783,8 +802,8 @@ Generates an explicit/implicit JSON representation of this Enumeration
     * [new EnumerationMember(IRI, graph)](#new_EnumerationMember_new)
     * [.getTermType()](#EnumerationMember+getTermType) ⇒ <code>string</code>
     * [.getTermObj()](#EnumerationMember+getTermObj) ⇒ <code>string</code>
-    * [.getDomainEnumerations(implicit, filter)](#EnumerationMember+getDomainEnumerations) ⇒ <code>Array.&lt;string&gt;</code>
-    * [.toJSON(implicit, filter)](#EnumerationMember+toJSON) ⇒ <code>object</code>
+    * [.getDomainEnumerations([implicit], [filter])](#EnumerationMember+getDomainEnumerations) ⇒ <code>Array.&lt;string&gt;</code>
+    * [.toJSON([implicit], [filter])](#EnumerationMember+toJSON) ⇒ <code>object</code>
 
 <a name="new_EnumerationMember_new"></a>
 
@@ -813,7 +832,7 @@ Retrieves the term object of this Enumeration Member
 **Returns**: <code>string</code> - The term object of this Enumeration Member  
 <a name="EnumerationMember+getDomainEnumerations"></a>
 
-### enumerationMember.getDomainEnumerations(implicit, filter) ⇒ <code>Array.&lt;string&gt;</code>
+### enumerationMember.getDomainEnumerations([implicit], [filter]) ⇒ <code>Array.&lt;string&gt;</code>
 Retrieves the domain enumerations (soa:enumerationDomainIncludes) of this EnumerationMember
 
 **Kind**: instance method of [<code>EnumerationMember</code>](#EnumerationMember)  
@@ -821,12 +840,12 @@ Retrieves the domain enumerations (soa:enumerationDomainIncludes) of this Enumer
 
 | Param | Type | Default | Description |
 | --- | --- | --- | --- |
-| implicit | <code>boolean</code> | <code>false</code> | (default = false) retrieves also implicit domain enumerations (inheritance from super-enumerations) |
-| filter | <code>object</code> \| <code>null</code> | <code></code> | (default = null) an optional filter for the domain enumerations |
+| [implicit] | <code>boolean</code> | <code>true</code> | retrieves also implicit domain enumerations (inheritance from super-enumerations) - (default = false) |
+| [filter] | [<code>filterObject</code>](#filterObject) |  | (optional) The filter settings to be applied on the result |
 
 <a name="EnumerationMember+toJSON"></a>
 
-### enumerationMember.toJSON(implicit, filter) ⇒ <code>object</code>
+### enumerationMember.toJSON([implicit], [filter]) ⇒ <code>object</code>
 Generates a JSON representation of this EnumerationMember
 
 **Kind**: instance method of [<code>EnumerationMember</code>](#EnumerationMember)  
@@ -834,8 +853,8 @@ Generates a JSON representation of this EnumerationMember
 
 | Param | Type | Default | Description |
 | --- | --- | --- | --- |
-| implicit | <code>boolean</code> | <code>false</code> | (default = false) includes also implicit data |
-| filter | <code>object</code> \| <code>null</code> | <code></code> | (default = null) an optional filter for the generated data |
+| [implicit] | <code>boolean</code> | <code>true</code> | includes also implicit data - (default = false) |
+| [filter] | [<code>filterObject</code>](#filterObject) |  | (optional) The filter settings to be applied on the result |
 
 <a name="DataType"></a>
 
@@ -846,10 +865,10 @@ Generates a JSON representation of this EnumerationMember
     * [new DataType(IRI, graph)](#new_DataType_new)
     * [.getTermType()](#DataType+getTermType) ⇒ <code>string</code>
     * [.getTermObj()](#DataType+getTermObj) ⇒ <code>string</code>
-    * [.getSuperDataTypes(implicit, filter)](#DataType+getSuperDataTypes) ⇒ <code>Array.&lt;string&gt;</code>
-    * [.getSubDataTypes(implicit, filter)](#DataType+getSubDataTypes) ⇒ <code>Array.&lt;string&gt;</code>
-    * [.isRangeOf(implicit, filter)](#DataType+isRangeOf) ⇒ <code>Array</code>
-    * [.toJSON(implicit, filter)](#DataType+toJSON) ⇒ <code>object</code>
+    * [.getSuperDataTypes([implicit], [filter])](#DataType+getSuperDataTypes) ⇒ <code>Array.&lt;string&gt;</code>
+    * [.getSubDataTypes([implicit], [filter])](#DataType+getSubDataTypes) ⇒ <code>Array.&lt;string&gt;</code>
+    * [.isRangeOf([implicit], [filter])](#DataType+isRangeOf) ⇒ <code>Array.&lt;string&gt;</code>
+    * [.toJSON([implicit], [filter])](#DataType+toJSON) ⇒ <code>object</code>
 
 <a name="new_DataType_new"></a>
 
@@ -878,7 +897,7 @@ Retrieves the term object of this DataType
 **Returns**: <code>string</code> - The term object of this DataType  
 <a name="DataType+getSuperDataTypes"></a>
 
-### dataType.getSuperDataTypes(implicit, filter) ⇒ <code>Array.&lt;string&gt;</code>
+### dataType.getSuperDataTypes([implicit], [filter]) ⇒ <code>Array.&lt;string&gt;</code>
 Retrieves the explicit/implicit super-DataTypes (rdfs:subClassOf) of this DataType
 
 **Kind**: instance method of [<code>DataType</code>](#DataType)  
@@ -886,12 +905,12 @@ Retrieves the explicit/implicit super-DataTypes (rdfs:subClassOf) of this DataTy
 
 | Param | Type | Default | Description |
 | --- | --- | --- | --- |
-| implicit | <code>boolean</code> | <code>true</code> | (default = true) retrieves also implicit super-DataTypes (recursive from super-DataTypes) |
-| filter | <code>object</code> \| <code>null</code> | <code></code> | (default = null) an optional filter for the super-DataTypes |
+| [implicit] | <code>boolean</code> | <code>true</code> | retrieves also implicit super-DataTypes (recursive from super-DataTypes) - (default = true) |
+| [filter] | [<code>filterObject</code>](#filterObject) |  | (optional) The filter settings to be applied on the result |
 
 <a name="DataType+getSubDataTypes"></a>
 
-### dataType.getSubDataTypes(implicit, filter) ⇒ <code>Array.&lt;string&gt;</code>
+### dataType.getSubDataTypes([implicit], [filter]) ⇒ <code>Array.&lt;string&gt;</code>
 Retrieves the explicit/implicit sub-DataTypes (soa:superClassOf) of this DataType
 
 **Kind**: instance method of [<code>DataType</code>](#DataType)  
@@ -899,25 +918,25 @@ Retrieves the explicit/implicit sub-DataTypes (soa:superClassOf) of this DataTyp
 
 | Param | Type | Default | Description |
 | --- | --- | --- | --- |
-| implicit | <code>boolean</code> | <code>true</code> | (default = true) retrieves also implicit sub-DataTypes (recursive from sub-DataTypes) |
-| filter | <code>object</code> \| <code>null</code> | <code></code> | (default = null) an optional filter for the sub-DataTypes |
+| [implicit] | <code>boolean</code> | <code>true</code> | retrieves also implicit sub-DataTypes (recursive from sub-DataTypes) - (default = true) |
+| [filter] | [<code>filterObject</code>](#filterObject) |  | (optional) The filter settings to be applied on the result |
 
 <a name="DataType+isRangeOf"></a>
 
-### dataType.isRangeOf(implicit, filter) ⇒ <code>Array</code>
+### dataType.isRangeOf([implicit], [filter]) ⇒ <code>Array.&lt;string&gt;</code>
 Retrieves the properties that have this DataType as a range
 
 **Kind**: instance method of [<code>DataType</code>](#DataType)  
-**Returns**: <code>Array</code> - The properties that have this DataType as a range  
+**Returns**: <code>Array.&lt;string&gt;</code> - The properties that have this DataType as a range  
 
 | Param | Type | Default | Description |
 | --- | --- | --- | --- |
-| implicit | <code>boolean</code> | <code>true</code> | (default = true) includes also implicit data |
-| filter | <code>object</code> \| <code>null</code> | <code></code> | (default = null) an optional filter for the generated data |
+| [implicit] | <code>boolean</code> | <code>true</code> | includes also implicit data - (default = true) |
+| [filter] | [<code>filterObject</code>](#filterObject) |  | (optional) The filter settings to be applied on the result |
 
 <a name="DataType+toJSON"></a>
 
-### dataType.toJSON(implicit, filter) ⇒ <code>object</code>
+### dataType.toJSON([implicit], [filter]) ⇒ <code>object</code>
 Generates an explicit/implicit JSON representation of this DataType.
 
 **Kind**: instance method of [<code>DataType</code>](#DataType)  
@@ -925,6 +944,91 @@ Generates an explicit/implicit JSON representation of this DataType.
 
 | Param | Type | Default | Description |
 | --- | --- | --- | --- |
-| implicit | <code>boolean</code> | <code>true</code> | (default = true) includes also implicit data (e.g. sub-DataTypes, super-DataTypes) |
-| filter | <code>object</code> \| <code>null</code> | <code></code> | (default = null) an optional filter for the generated data |
+| [implicit] | <code>boolean</code> | <code>true</code> | includes also implicit data (e.g. sub-DataTypes, super-DataTypes) - (default = true) |
+| [filter] | [<code>filterObject</code>](#filterObject) |  | (optional) The filter settings to be applied on the result |
+
+<a name="SDOAdapterParameterObject"></a>
+
+## SDOAdapterParameterObject : <code>object</code>
+**Kind**: global typedef  
+**Properties**
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| [commitBase] | <code>string</code> |  | The commit string from https://github.com/schemaorg/schemaorg which is the base for the adapter (if not given, we take the latest commit of our fork at https://github.com/semantifyit/schemaorg) |
+| [schemaHttps] | <code>boolean</code> | <code>true</code> | Enables the use of the https version of the schema.org vocabulary, it defaults to true. Only available for schema.org version 9.0 upwards. |
+| [equateVocabularyProtocols] | <code>boolean</code> | <code>false</code> | If true, treat namespaces as equal even if their protocols (http/https) are different, it defaults to false. |
+| [onError] | <code>function</code> |  | A callback function(string) that is called when an unexpected error happens |
+
+<a name="filterObject"></a>
+
+## filterObject : <code>object</code>
+**Kind**: global typedef  
+**Properties**
+
+| Name | Type | Description |
+| --- | --- | --- |
+| [isSuperseded] | <code>boolean</code> | defines the superseded status for the filter (true: only terms that are superseded, false: only terms that are NOT superseded) |
+| [fromVocabulary] | <code>string</code> \| <code>Array.&lt;string&gt;</code> | defines a set of allowed vocabularies for the filter - vocabularies are given as indicators (e.g. "schema") |
+| [termType] | <code>string</code> \| <code>Array.&lt;string&gt;</code> | defines a set of allowed term types for the filter (e.g. "Class", "Property") |
+
+<a name="filterObject"></a>
+
+## filterObject : <code>object</code>
+**Kind**: global typedef  
+**Properties**
+
+| Name | Type | Description |
+| --- | --- | --- |
+| [isSuperseded] | <code>boolean</code> | defines the superseded status for the filter (true: only terms that are superseded, false: only terms that are NOT superseded) |
+| [fromVocabulary] | <code>string</code> \| <code>Array.&lt;string&gt;</code> | defines a set of allowed vocabularies for the filter - vocabularies are given as indicators (e.g. "schema") |
+| [termType] | <code>string</code> \| <code>Array.&lt;string&gt;</code> | defines a set of allowed term types for the filter (e.g. "Class", "Property") |
+
+<a name="filterObject"></a>
+
+## filterObject : <code>object</code>
+**Kind**: global typedef  
+**Properties**
+
+| Name | Type | Description |
+| --- | --- | --- |
+| [isSuperseded] | <code>boolean</code> | defines the superseded status for the filter (true: only terms that are superseded, false: only terms that are NOT superseded) |
+| [fromVocabulary] | <code>string</code> \| <code>Array.&lt;string&gt;</code> | defines a set of allowed vocabularies for the filter - vocabularies are given as indicators (e.g. "schema") |
+| [termType] | <code>string</code> \| <code>Array.&lt;string&gt;</code> | defines a set of allowed term types for the filter (e.g. "Class", "Property") |
+
+<a name="filterObject"></a>
+
+## filterObject : <code>object</code>
+**Kind**: global typedef  
+**Properties**
+
+| Name | Type | Description |
+| --- | --- | --- |
+| [isSuperseded] | <code>boolean</code> | defines the superseded status for the filter (true: only terms that are superseded, false: only terms that are NOT superseded) |
+| [fromVocabulary] | <code>string</code> \| <code>Array.&lt;string&gt;</code> | defines a set of allowed vocabularies for the filter - vocabularies are given as indicators (e.g. "schema") |
+| [termType] | <code>string</code> \| <code>Array.&lt;string&gt;</code> | defines a set of allowed term types for the filter (e.g. "Class", "Property") |
+
+<a name="filterObject"></a>
+
+## filterObject : <code>object</code>
+**Kind**: global typedef  
+**Properties**
+
+| Name | Type | Description |
+| --- | --- | --- |
+| [isSuperseded] | <code>boolean</code> | defines the superseded status for the filter (true: only terms that are superseded, false: only terms that are NOT superseded) |
+| [fromVocabulary] | <code>string</code> \| <code>Array.&lt;string&gt;</code> | defines a set of allowed vocabularies for the filter - vocabularies are given as indicators (e.g. "schema") |
+| [termType] | <code>string</code> \| <code>Array.&lt;string&gt;</code> | defines a set of allowed term types for the filter (e.g. "Class", "Property") |
+
+<a name="filterObject"></a>
+
+## filterObject : <code>object</code>
+**Kind**: global typedef  
+**Properties**
+
+| Name | Type | Description |
+| --- | --- | --- |
+| [isSuperseded] | <code>boolean</code> | defines the superseded status for the filter (true: only terms that are superseded, false: only terms that are NOT superseded) |
+| [fromVocabulary] | <code>string</code> \| <code>Array.&lt;string&gt;</code> | defines a set of allowed vocabularies for the filter - vocabularies are given as indicators (e.g. "schema") |
+| [termType] | <code>string</code> \| <code>Array.&lt;string&gt;</code> | defines a set of allowed term types for the filter (e.g. "Class", "Property") |
 

@@ -1,0 +1,6 @@
+coverage
+dist
+docu
+jsDoc
+node_modules
+tests/data

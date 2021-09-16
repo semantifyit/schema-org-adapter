@@ -6,9 +6,9 @@ const CONSOLE_OUTPUT = false; // Change to "true" if you want to see console.log
  * @param {string} out - the output string
  */
 function debugFunc(out) {
-    if (CONSOLE_OUTPUT === true) {
-        console.log(out);
-    }
+  if (CONSOLE_OUTPUT === true) {
+    console.log(out);
+  }
 }
 
 /**
@@ -17,12 +17,12 @@ function debugFunc(out) {
  * @param {string} out - the output string
  */
 function debugFuncErr(out) {
-    if (CONSOLE_OUTPUT === true) {
-        console.error(out);
-    }
+  if (CONSOLE_OUTPUT === true) {
+    console.error(out);
+  }
 }
 
 module.exports = {
-    debugFunc,
-    debugFuncErr
+  debugFunc,
+  debugFuncErr,
 };

@@ -1,5 +1,5 @@
-const SDOAdapter = require('../src/SDOAdapter'); // load the SDOAdapter library
-const VOC_EXAMPLE = require('./data/exampleExternalVocabulary'); // load our external vocabulary
+const SDOAdapter = require("../src/SDOAdapter"); // load the SDOAdapter library
+const VOC_EXAMPLE = require("../tests/data/vocabulary-animal.json"); // load our external vocabulary
 const mySA = new SDOAdapter(); // create an instance of the SDOAdapter
 
 main();
@@ -8,11 +8,11 @@ main();
  * example usage of the SDOAdapter in node.js
  */
 async function main() {
-    const mySDOUrl = await mySA.constructSDOVocabularyURL('latest'); // construct the latest vocabulary URL for Schema.org
-    await mySA.addVocabularies([mySDOUrl, VOC_EXAMPLE]); // add schema.org and our external vocabulary to the SDOAdapter
-    let AnimalClass = mySA.getClass('ex:Animal'); // get a JS-Class for the Class-Term https://example-vocab.ex/Animal , note that the compacted version of the IRI is also a valid parameter for the function
-    console.log(JSON.stringify(AnimalClass.toJSON(true, null), null, 2)); // AnimalClass.toJSON() prints a JSON version of the Class, note that here we pass 'true' as parameter for the reasoning (the result will contain attributes resolved though reasoning, e.g. properties of super-classes)
-    /*
+  const mySDOUrl = await mySA.constructSDOVocabularyURL("latest"); // construct the latest vocabulary URL for Schema.org
+  await mySA.addVocabularies([mySDOUrl, VOC_EXAMPLE]); // add schema.org and our external vocabulary to the SDOAdapter
+  let AnimalClass = mySA.getClass("ex:Animal"); // get a JS-Class for the Class-Term https://example-vocab.ex/Animal , note that the compacted version of the IRI is also a valid parameter for the function
+  console.log(JSON.stringify(AnimalClass.toJSON(true, null), null, 2)); // AnimalClass.toJSON() prints a JSON version of the Class, note that here we pass 'true' as parameter for the reasoning (the result will contain attributes resolved though reasoning, e.g. properties of super-classes)
+  /*
   {
     "id": "ex:Animal",
     "IRI": "https://example-vocab.ex/Animal",
@@ -46,9 +46,9 @@ async function main() {
     ]
   }
   */
-    let TigerClass = mySA.getClass('ex:Tiger');
-    console.log(JSON.stringify(TigerClass.toJSON(true, null), null, 2));
-    /*
+  let TigerClass = mySA.getClass("ex:Tiger");
+  console.log(JSON.stringify(TigerClass.toJSON(true, null), null, 2));
+  /*
    {
       "id": "ex:Tiger",
       "IRI": "https://example-vocab.ex/Tiger",
@@ -81,16 +81,24 @@ async function main() {
       ]
     }
   */
-    console.log(TigerClass.getName()); // print the name. When no language tag is given as parameter, then "en" for english is taken as default
-    /* Tiger */
-    console.log(TigerClass.getName('es')); // print the spanish name
-    /* Tigre */
-    console.log(TigerClass.getName('zh'));  // print the chinese (zh) name
-    /* 虎 */
+  console.log(TigerClass.getName()); // print the name. When no language tag is given as parameter, then "en" for english is taken as default
+  /* Tiger */
+  console.log(TigerClass.getName("es")); // print the spanish name
+  /* Tigre */
+  console.log(TigerClass.getName("zh")); // print the chinese (zh) name
+  /* 虎 */
 
-    let AnimalLivingEnvironmentEnumeration = mySA.getEnumeration('ex:AnimalLivingEnvironment'); // get JS-Class for the Enumeration-Term "https://example-vocab.ex/AnimalLivingEnvironment"
-    console.log(JSON.stringify(AnimalLivingEnvironmentEnumeration.getEnumerationMembers(), null, 2)); // print all EnumerationMembers of the Enumeration
-    /*
+  let AnimalLivingEnvironmentEnumeration = mySA.getEnumeration(
+    "ex:AnimalLivingEnvironment"
+  ); // get JS-Class for the Enumeration-Term "https://example-vocab.ex/AnimalLivingEnvironment"
+  console.log(
+    JSON.stringify(
+      AnimalLivingEnvironmentEnumeration.getEnumerationMembers(),
+      null,
+      2
+    )
+  ); // print all EnumerationMembers of the Enumeration
+  /*
   [
     "ex:AnimalLivingEnvironmentFreedom",
     "ex:AnimalLivingEnvironmentZoo",

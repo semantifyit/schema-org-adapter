@@ -3,13 +3,15 @@
     "jest",
     "markdown",
     "node",
-    "jsdoc"
+    "jsdoc",
+    "prettier"
   ],
   "extends": [
     "eslint:recommended",
     "plugin:jsdoc/recommended",
     "plugin:node/recommended",
-    "plugin:jest/recommended"
+    "plugin:jest/recommended",
+    "prettier"
   ],
   "env": {
     "browser": true,
@@ -23,42 +25,32 @@
     "sourceType": "module"
   },
   "rules": {
-    "semi": "error",
+    // respect the prettier style guide
+    "prettier/prettier": "error",
     "spaced-comment": [
       "warn",
-      "always"
-    ],
-    "no-trailing-spaces": [
-      "warn",
+      "always",
       {
-        "ignoreComments": true
+        "block": {
+          // whitespace for block comments must be the same at the beginning and at the end
+          "balanced": true,
+          /*--------------
+          should be allowed
+          ----------------*/
+          "exceptions": [
+            "-"
+          ]
+        },
+        "line": {
+          //-------------- should be allowed
+          "exceptions": [
+            "-"
+          ]
+        }
       }
     ],
-    "space-before-function-paren": ["warn", "never"],
-    "no-multiple-empty-lines": [
-      "warn",
-      {
-        "max": 1,
-        "maxEOF": 0,
-        "maxBOF": 0
-      }
-    ],
-    "indent": [
-      "warn",
-      4,
-      {
-        "SwitchCase": 1
-      }
-    ],
-    "linebreak-style": [
-      "off"
-    ],
-    "no-unused-vars": [
-      "warn",
-      {
-        "varsIgnorePattern": "^modal_.*"
-      }
-    ]
+    "node/no-unpublished-require": "off",
+    "no-unused-vars": "warn"
   },
   "globals": {
     "Graph": true,

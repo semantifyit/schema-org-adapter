@@ -276,7 +276,7 @@ _Example term definition for a EnumerationMember:_
 <a name="example"></a>
 ## Example
 
-The following vocabulary is hosted as <a href="https://github.com/semantifyit/schema-org-adapter/blob/master/tests/data/exampleExternalVocabulary.json" target="_blank">independent JSON-LD file</a>, together with <a href="https://github.com/semantifyit/schema-org-adapter/blob/master/tests/dist-test-node-example-vocabulary.js" target="_blank">example code</a> to show how to use it with **SDOAdapter**.
+The following vocabulary is hosted as <a href="https://github.com/semantifyit/schema-org-adapter/blob/master/tests/data/exampleExternalVocabulary.json" target="_blank">independent JSON-LD file</a>, together with <a href="https://github.com/semantifyit/schema-org-adapter/blob/master/tests/example-node-external-vocabulary.js" target="_blank">example code</a> to show how to use it with **SDOAdapter**.
 
 ```json
 {

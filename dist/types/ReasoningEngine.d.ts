@@ -8,6 +8,7 @@ declare class ReasoningEngine {
      */
     constructor(graph: any);
     graph: any;
+    util: typeof import("./utilities");
     /**
      * Infers all properties that can be used by the given classes and all their implicit and explicit superClasses
      *

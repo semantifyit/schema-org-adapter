@@ -1,44 +1,65 @@
+export type filterObject = {
+    /**
+     * - defines the superseded status for the filter (true: only terms that are superseded, false: only terms that are NOT superseded)
+     */
+    isSuperseded?: boolean;
+    /**
+     * - defines a set of allowed vocabularies for the filter - vocabularies are given as indicators (e.g. "schema")
+     */
+    fromVocabulary?: string | string[];
+    /**
+     * - defines a set of allowed term types for the filter (e.g. "Class", "Property")
+     */
+    termType?: string | string[];
+};
+/**
+ * @typedef filterObject
+ * @type {object}
+ * @property {boolean} [isSuperseded] - defines the superseded status for the filter (true: only terms that are superseded, false: only terms that are NOT superseded)
+ * @property {string|string[]} [fromVocabulary] - defines a set of allowed vocabularies for the filter - vocabularies are given as indicators (e.g. "schema")
+ * @property {string|string[]} [termType] - defines a set of allowed term types for the filter (e.g. "Class", "Property")
+ */
 /**
  * Applies a filter to the IRIs in the given Array
  *
  * @param {string[]} dataArray - Array of IRIs that should be filtered
- * @param {object} filter - The filter options, which can be: "isSuperseded": T/F, "termType": string/Array, "fromVocabulary": string/Array
+ * @param {filterObject} filter - The filter settings used to filter the dataArray (can be undefined to return all data back)
  * @param {Graph} graph - the graph calling this function
  * @returns {string[]} Array of IRIs that are in compliance with the given filter options
  */
-export function applyFilter(dataArray: string[], filter: object, graph: any): string[];
+export function applyFilter(dataArray: string[], filter: filterObject, graph: Graph): string[];
 /**
  * Creates a copy-by-value of a JSON element
  *
- * @param {*} element - the JSON element that should be copied
- * @returns {*} copy of the given JSON element
+ * @param {any} element - the JSON element that should be copied
+ * @returns {any} copy of the given JSON element
  */
 export function copByVal(element: any): any;
 /**
  * Checks if the given input is a JS array
  *
- * @param {*} value - the input element to check
+ * @param {any} value - the input element to check
  * @returns {boolean} true if the given input is a JS array
  */
 export function isArray(value: any): boolean;
 /**
  * Checks if the given input is a string
  *
- * @param {*} value - the input element to check
+ * @param {any} value - the input element to check
  * @returns {boolean} true if the given input is a string
  */
 export function isString(value: any): boolean;
 /**
  * Checks if the given input is a JS object
  *
- * @param {*} value - the input element to check
+ * @param {any} value - the input element to check
  * @returns {boolean} true if the given input is a JS object
  */
 export function isObject(value: any): boolean;
 /**
  * Checks if the given input is undefined or null
  *
- * @param {*} value - the input element to check
+ * @param {any} value - the input element to check
  * @returns {boolean} true if the given input is undefined or null
  */
 export function isNil(value: any): boolean;
@@ -78,7 +99,7 @@ export function curateVocabNode(vocabNode: object, vocabularies: any[]): object;
  *
  * @param {string} absoluteIRI - the absolute IRI to transform
  * @param {object} context - the context object holding key-value pairs that represent indicator-namespace pairs
- * @param {boolean} equateVocabularyProtocols - treats namespaces as equal even if their protocols (http/https) are different, it defaults to false.
+ * @param {boolean} [equateVocabularyProtocols = false] - treats namespaces as equal even if their protocols (http/https) are different, it defaults to false.
  * @returns {?string} the compact IRI (null, if given context does not contain the used namespace)
  */
 export function toCompactIRI(absoluteIRI: string, context: object, equateVocabularyProtocols?: boolean): string | null;
@@ -101,7 +122,7 @@ export function sortReleaseEntriesByDate(releaseLog: object): any[];
  * Returns the jsonld filename that holds the schema.org vocabulary for a given version.
  *
  * @param {string} version - the schema.org version
- * @param {boolean} schemaHttps - use https as protocol for the schema.org vocabulary - works only from version 9.0 upwards
+ * @param {boolean} [schemaHttps = true] - use https as protocol for the schema.org vocabulary - works only from version 9.0 upwards
  * @returns {string} - the corresponding jsonld filename
  */
 export function getFileNameForSchemaOrgVersion(version: string, schemaHttps?: boolean): string;
@@ -127,3 +148,4 @@ export function discoverEquateNamespaces(currentContext: object, vocabulary: obj
  * @returns {string} - the resulting transformed IRI
  */
 export function switchIRIProtocol(IRI: string): string;
+import Graph = require("./Graph");
