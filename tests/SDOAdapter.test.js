@@ -5,7 +5,7 @@ const VOC_OBJ_SDO3_7 = require("./data/schema-3.7.json");
 const VOC_OBJ_SDO10_0 = require("./data/schema-10.0.json");
 const VOC_OBJ_GWON = require("./data/graph-with-one-node.json");
 const VOC_URL_ZOO =
-  "https://raw.githubusercontent.com/semantifyit/schema-org-adapter/master/tests/data/exampleExternalVocabulary.json";
+  "https://raw.githubusercontent.com/semantifyit/schema-org-adapter/master/tests/data/vocabulary-animal.json";
 const VOC_URL_SDO10_0 =
   "https://raw.githubusercontent.com/semantifyit/schemaorg/main/data/releases/10.0/schemaorg-all-https.jsonld";
 const { debugFunc, debugFuncErr } = require("./testUtility");

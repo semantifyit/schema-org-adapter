@@ -19,7 +19,7 @@
     (async function() {
         let mySA = new SDOAdapter({ schemaHttps: true });
         console.log(await mySA.constructSDOVocabularyURL('latest'));
-        let externalVocabURL = 'https://raw.githubusercontent.com/semantifyit/schema-org-adapter/master/tests/data/exampleExternalVocabulary.json';
+        let externalVocabURL = 'https://raw.githubusercontent.com/semantifyit/schema-org-adapter/master/tests/data/vocabulary-animal.json';
 
         mySA.constructSDOVocabularyURL('10.0').then(function(sdoURL) {
             mySA.addVocabularies([sdoURL, externalVocabURL]).then(function() {
