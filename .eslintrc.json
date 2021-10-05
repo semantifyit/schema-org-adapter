@@ -14,14 +14,12 @@
     "prettier"
   ],
   "env": {
-    "browser": true,
-    "es6": true,
     "node": true,
+    "browser": true,
     "jest": true
   },
-  "parser": "babel-eslint",
   "parserOptions": {
-    "ecmaVersion": 6,
+    "ecmaVersion": 2020,
     "sourceType": "module"
   },
   "rules": {

@@ -1,3 +1,8 @@
+4.3.0 / 2021-10-05
+==================
+
+* Removed use of Babel for bundling. Older browser (versions) like IE won't be supported anymore. There should be no changes for modern browsers.
+
 4.2.0 / 2021-09-15
 ==================
 
