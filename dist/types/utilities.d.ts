@@ -29,12 +29,12 @@ export type filterObject = {
  */
 export function applyFilter(dataArray: string[], filter: filterObject, graph: Graph): string[];
 /**
- * Creates a copy-by-value of a JSON element
+ * Creates a clone of the given JSON input (without reference to the original input)
  *
- * @param {any} element - the JSON element that should be copied
+ * @param {any} input - the JSON element that should be copied
  * @returns {any} copy of the given JSON element
  */
-export function copByVal(element: any): any;
+export function cloneJson(input: any): any;
 /**
  * Checks if the given input is a JS array
  *

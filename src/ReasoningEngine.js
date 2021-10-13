@@ -47,7 +47,7 @@ class ReasoningEngine {
       this.graph.classes[classIRI] || this.graph.enumerations[classIRI];
     if (classObj) {
       result.push(...classObj["rdfs:subClassOf"]);
-      let addition = this.util.copByVal(result); // make a copy
+      let addition = this.util.cloneJson(result); // make a copy
       do {
         let newAddition = [];
         for (const curAdd of addition) {
@@ -58,7 +58,7 @@ class ReasoningEngine {
           }
         }
         newAddition = this.util.uniquifyArray(newAddition);
-        addition = this.util.copByVal(newAddition);
+        addition = this.util.cloneJson(newAddition);
         result.push(...newAddition);
       } while (addition.length !== 0);
       result = this.util.uniquifyArray(result);
@@ -78,7 +78,7 @@ class ReasoningEngine {
       this.graph.classes[classIRI] || this.graph.enumerations[classIRI];
     if (classObj) {
       result.push(...classObj["soa:superClassOf"]);
-      let addition = this.util.copByVal(result); // make a copy
+      let addition = this.util.cloneJson(result); // make a copy
       do {
         let newAddition = [];
         for (const curAdd of addition) {
@@ -89,7 +89,7 @@ class ReasoningEngine {
           }
         }
         newAddition = this.util.uniquifyArray(newAddition);
-        addition = this.util.copByVal(newAddition);
+        addition = this.util.cloneJson(newAddition);
         result.push(...newAddition);
       } while (addition.length !== 0);
       result = this.util.uniquifyArray(result);
@@ -108,7 +108,7 @@ class ReasoningEngine {
     const dataTypeObj = this.graph.dataTypes[dataTypeIRI];
     if (dataTypeObj) {
       result.push(...dataTypeObj["rdfs:subClassOf"]);
-      let addition = this.util.copByVal(result); // make a copy
+      let addition = this.util.cloneJson(result); // make a copy
       do {
         let newAddition = [];
         for (const curAdd of addition) {
@@ -118,7 +118,7 @@ class ReasoningEngine {
           }
         }
         newAddition = this.util.uniquifyArray(newAddition);
-        addition = this.util.copByVal(newAddition);
+        addition = this.util.cloneJson(newAddition);
         result.push(...newAddition);
       } while (addition.length !== 0);
       result = this.util.uniquifyArray(result);
@@ -137,7 +137,7 @@ class ReasoningEngine {
     const dataTypeObj = this.graph.dataTypes[dataTypeIRI];
     if (dataTypeObj) {
       result.push(...dataTypeObj["soa:superClassOf"]);
-      let addition = this.util.copByVal(result); // make a copy
+      let addition = this.util.cloneJson(result); // make a copy
       do {
         let newAddition = [];
         for (const curAdd of addition) {
@@ -147,7 +147,7 @@ class ReasoningEngine {
           }
         }
         newAddition = this.util.uniquifyArray(newAddition);
-        addition = this.util.copByVal(newAddition);
+        addition = this.util.cloneJson(newAddition);
         result.push(...newAddition);
       } while (addition.length !== 0);
       result = this.util.uniquifyArray(result);
@@ -166,7 +166,7 @@ class ReasoningEngine {
     const propertyObj = this.graph.properties[propertyIRI];
     if (propertyObj) {
       result.push(...propertyObj["rdfs:subPropertyOf"]);
-      let addition = this.util.copByVal(result); // make a copy
+      let addition = this.util.cloneJson(result); // make a copy
       do {
         let newAddition = [];
         for (let curAdd of addition) {
@@ -176,7 +176,7 @@ class ReasoningEngine {
           }
         }
         newAddition = this.util.uniquifyArray(newAddition);
-        addition = this.util.copByVal(newAddition);
+        addition = this.util.cloneJson(newAddition);
         result.push(...newAddition);
       } while (addition.length !== 0);
       result = this.util.uniquifyArray(result);
@@ -195,7 +195,7 @@ class ReasoningEngine {
     const propertyObj = this.graph.properties[propertyIRI];
     if (propertyObj) {
       result.push(...propertyObj["soa:superPropertyOf"]);
-      let addition = this.util.copByVal(result); // make a copy
+      let addition = this.util.cloneJson(result); // make a copy
       do {
         let newAddition = [];
         for (const curAdd of addition) {
@@ -205,7 +205,7 @@ class ReasoningEngine {
           }
         }
         newAddition = this.util.uniquifyArray(newAddition);
-        addition = this.util.copByVal(newAddition);
+        addition = this.util.cloneJson(newAddition);
         result.push(...newAddition);
       } while (addition.length !== 0);
       result = this.util.uniquifyArray(result);

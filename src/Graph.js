@@ -131,7 +131,7 @@ class Graph {
         // 2. If the List is not empty, then the vocab needs to be adapted
         if (equateNamespaces.length > 0) {
           //  - Create adapted context for vocab, which includes IRIs from vocab context + IRIs from the List, use vocab indicators from this.context
-          let adaptedContext = this.util.copByVal(vocab["@context"]);
+          let adaptedContext = this.util.cloneJson(vocab["@context"]);
           equateNamespaces.forEach(function (ens) {
             let usedKeyToDelete = Object.keys(adaptedContext).find(
               (el) => adaptedContext[el] === ens
@@ -173,7 +173,7 @@ class Graph {
        enumerationMembers ("@type" = @id(s) of enumeration(s))
        */
       for (let i = 0; i < vocab["@graph"].length; i++) {
-        const curNode = this.util.copByVal(vocab["@graph"][i]);
+        const curNode = this.util.cloneJson(vocab["@graph"][i]);
         if (this.util.isString(curNode["@type"])) {
           switch (curNode["@type"]) {
             case "rdfs:Class":
@@ -240,7 +240,7 @@ class Graph {
                   !this.enumerations[actClassKey]
                 ) {
                   newEnum = true;
-                  this.enumerations[actClassKey] = this.util.copByVal(
+                  this.enumerations[actClassKey] = this.util.cloneJson(
                     this.classes[actClassKey]
                   );
                   delete this.classes[actClassKey];
@@ -266,7 +266,7 @@ class Graph {
               ) {
                 if (this.classes[actClassKey] && !this.dataTypes[actClassKey]) {
                   newDatatype = true;
-                  this.dataTypes[actClassKey] = this.util.copByVal(
+                  this.dataTypes[actClassKey] = this.util.cloneJson(
                     this.classes[actClassKey]
                   );
                   delete this.classes[actClassKey];

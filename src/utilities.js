@@ -129,16 +129,16 @@ function applyFilter(dataArray, filter, graph) {
 }
 
 /**
- * Creates a copy-by-value of a JSON element
+ * Creates a clone of the given JSON input (without reference to the original input)
  *
- * @param {any} element - the JSON element that should be copied
+ * @param {any} input - the JSON element that should be copied
  * @returns {any} copy of the given JSON element
  */
-function copByVal(element) {
-  if (element === undefined) {
-    return undefined; // causes error for JSON functions
+function cloneJson(input) {
+  if (input === undefined) {
+    return undefined;
   }
-  return JSON.parse(JSON.stringify(element));
+  return JSON.parse(JSON.stringify(input));
 }
 
 /**
@@ -220,7 +220,7 @@ function generateContext(currentContext, newContext) {
   const keysCurrentContext = Object.keys(currentContext);
   const keysNewContext = Object.keys(newContext);
   // add all of the old context
-  let resultContext = copByVal(currentContext);
+  let resultContext = cloneJson(currentContext);
   // add vocabs of new context that are not already used (value is URI)
   for (const keyNC of keysNewContext) {
     if (isString(newContext[keyNC])) {
@@ -298,13 +298,13 @@ async function preProcessVocab(vocab, newContext) {
     foundInnerGraph = false;
     for (let i = 0; i < vocab["@graph"].length; i++) {
       if (vocab["@graph"][i]["@graph"] !== undefined) {
-        newGraph.push(...copByVal(vocab["@graph"][i]["@graph"])); // copy all elements of the inner @graph into the outer @graph
+        newGraph.push(...cloneJson(vocab["@graph"][i]["@graph"])); // copy all elements of the inner @graph into the outer @graph
         foundInnerGraph = true;
       } else {
-        newGraph.push(copByVal(vocab["@graph"][i])); // copy this element to the outer @graph
+        newGraph.push(cloneJson(vocab["@graph"][i])); // copy this element to the outer @graph
       }
     }
-    vocab["@graph"] = copByVal(newGraph);
+    vocab["@graph"] = cloneJson(newGraph);
   } while (foundInnerGraph === true);
 
   // compact to apply the new context (which is supposed to have been merged before with the old context through the function generateContext())
@@ -343,7 +343,7 @@ function curateVocabNode(vocabNode, vocabularies) {
       const newVal = {};
       newVal[vocabNode["rdfs:comment"]["@language"]] =
         vocabNode["rdfs:comment"]["@value"];
-      vocabNode["rdfs:comment"] = copByVal(newVal);
+      vocabNode["rdfs:comment"] = cloneJson(newVal);
     } else if (isArray(vocabNode["rdfs:comment"])) {
       const newVal = {};
       for (let i = 0; i < vocabNode["rdfs:comment"].length; i++) {
@@ -352,7 +352,7 @@ function curateVocabNode(vocabNode, vocabularies) {
             vocabNode["rdfs:comment"][i]["@value"];
         }
       }
-      vocabNode["rdfs:comment"] = copByVal(newVal);
+      vocabNode["rdfs:comment"] = cloneJson(newVal);
     }
   } else {
     vocabNode["rdfs:comment"] = {};
@@ -373,7 +373,7 @@ function curateVocabNode(vocabNode, vocabularies) {
       const newVal = {};
       newVal[vocabNode["rdfs:label"]["@language"]] =
         vocabNode["rdfs:label"]["@value"];
-      vocabNode["rdfs:label"] = copByVal(newVal);
+      vocabNode["rdfs:label"] = cloneJson(newVal);
     } else if (isArray(vocabNode["rdfs:label"])) {
       // "rdfs:label": [{
       //   "@language": "en",
@@ -390,7 +390,7 @@ function curateVocabNode(vocabNode, vocabularies) {
             vocabNode["rdfs:label"][i]["@value"];
         }
       }
-      vocabNode["rdfs:label"] = copByVal(newVal);
+      vocabNode["rdfs:label"] = cloneJson(newVal);
     }
   } else {
     vocabNode["rdfs:label"] = {};
@@ -767,7 +767,7 @@ function switchIRIProtocol(IRI) {
 
 module.exports = {
   applyFilter,
-  copByVal,
+  cloneJson,
   isArray,
   isString,
   isObject,

@@ -13695,7 +13695,7 @@ class EnumerationMember extends Term {
     let result = [];
     result.push(...enumObj["soa:enumerationDomainIncludes"]);
     if (implicit) {
-      let domainEnumerationsToCheck = this.util.copByVal(result);
+      let domainEnumerationsToCheck = this.util.cloneJson(result);
       for (const actDE of domainEnumerationsToCheck) {
         result.push(...this.graph.reasoner.inferSuperClasses(actDE));
       }
@@ -13862,7 +13862,7 @@ class Graph {
         // 2. If the List is not empty, then the vocab needs to be adapted
         if (equateNamespaces.length > 0) {
           //  - Create adapted context for vocab, which includes IRIs from vocab context + IRIs from the List, use vocab indicators from this.context
-          let adaptedContext = this.util.copByVal(vocab["@context"]);
+          let adaptedContext = this.util.cloneJson(vocab["@context"]);
           equateNamespaces.forEach(function (ens) {
             let usedKeyToDelete = Object.keys(adaptedContext).find(
               (el) => adaptedContext[el] === ens
@@ -13904,7 +13904,7 @@ class Graph {
        enumerationMembers ("@type" = @id(s) of enumeration(s))
        */
       for (let i = 0; i < vocab["@graph"].length; i++) {
-        const curNode = this.util.copByVal(vocab["@graph"][i]);
+        const curNode = this.util.cloneJson(vocab["@graph"][i]);
         if (this.util.isString(curNode["@type"])) {
           switch (curNode["@type"]) {
             case "rdfs:Class":
@@ -13971,7 +13971,7 @@ class Graph {
                   !this.enumerations[actClassKey]
                 ) {
                   newEnum = true;
-                  this.enumerations[actClassKey] = this.util.copByVal(
+                  this.enumerations[actClassKey] = this.util.cloneJson(
                     this.classes[actClassKey]
                   );
                   delete this.classes[actClassKey];
@@ -13997,7 +13997,7 @@ class Graph {
               ) {
                 if (this.classes[actClassKey] && !this.dataTypes[actClassKey]) {
                   newDatatype = true;
-                  this.dataTypes[actClassKey] = this.util.copByVal(
+                  this.dataTypes[actClassKey] = this.util.cloneJson(
                     this.classes[actClassKey]
                   );
                   delete this.classes[actClassKey];
@@ -14914,7 +14914,7 @@ class ReasoningEngine {
       this.graph.classes[classIRI] || this.graph.enumerations[classIRI];
     if (classObj) {
       result.push(...classObj["rdfs:subClassOf"]);
-      let addition = this.util.copByVal(result); // make a copy
+      let addition = this.util.cloneJson(result); // make a copy
       do {
         let newAddition = [];
         for (const curAdd of addition) {
@@ -14925,7 +14925,7 @@ class ReasoningEngine {
           }
         }
         newAddition = this.util.uniquifyArray(newAddition);
-        addition = this.util.copByVal(newAddition);
+        addition = this.util.cloneJson(newAddition);
         result.push(...newAddition);
       } while (addition.length !== 0);
       result = this.util.uniquifyArray(result);
@@ -14945,7 +14945,7 @@ class ReasoningEngine {
       this.graph.classes[classIRI] || this.graph.enumerations[classIRI];
     if (classObj) {
       result.push(...classObj["soa:superClassOf"]);
-      let addition = this.util.copByVal(result); // make a copy
+      let addition = this.util.cloneJson(result); // make a copy
       do {
         let newAddition = [];
         for (const curAdd of addition) {
@@ -14956,7 +14956,7 @@ class ReasoningEngine {
           }
         }
         newAddition = this.util.uniquifyArray(newAddition);
-        addition = this.util.copByVal(newAddition);
+        addition = this.util.cloneJson(newAddition);
         result.push(...newAddition);
       } while (addition.length !== 0);
       result = this.util.uniquifyArray(result);
@@ -14975,7 +14975,7 @@ class ReasoningEngine {
     const dataTypeObj = this.graph.dataTypes[dataTypeIRI];
     if (dataTypeObj) {
       result.push(...dataTypeObj["rdfs:subClassOf"]);
-      let addition = this.util.copByVal(result); // make a copy
+      let addition = this.util.cloneJson(result); // make a copy
       do {
         let newAddition = [];
         for (const curAdd of addition) {
@@ -14985,7 +14985,7 @@ class ReasoningEngine {
           }
         }
         newAddition = this.util.uniquifyArray(newAddition);
-        addition = this.util.copByVal(newAddition);
+        addition = this.util.cloneJson(newAddition);
         result.push(...newAddition);
       } while (addition.length !== 0);
       result = this.util.uniquifyArray(result);
@@ -15004,7 +15004,7 @@ class ReasoningEngine {
     const dataTypeObj = this.graph.dataTypes[dataTypeIRI];
     if (dataTypeObj) {
       result.push(...dataTypeObj["soa:superClassOf"]);
-      let addition = this.util.copByVal(result); // make a copy
+      let addition = this.util.cloneJson(result); // make a copy
       do {
         let newAddition = [];
         for (const curAdd of addition) {
@@ -15014,7 +15014,7 @@ class ReasoningEngine {
           }
         }
         newAddition = this.util.uniquifyArray(newAddition);
-        addition = this.util.copByVal(newAddition);
+        addition = this.util.cloneJson(newAddition);
         result.push(...newAddition);
       } while (addition.length !== 0);
       result = this.util.uniquifyArray(result);
@@ -15033,7 +15033,7 @@ class ReasoningEngine {
     const propertyObj = this.graph.properties[propertyIRI];
     if (propertyObj) {
       result.push(...propertyObj["rdfs:subPropertyOf"]);
-      let addition = this.util.copByVal(result); // make a copy
+      let addition = this.util.cloneJson(result); // make a copy
       do {
         let newAddition = [];
         for (let curAdd of addition) {
@@ -15043,7 +15043,7 @@ class ReasoningEngine {
           }
         }
         newAddition = this.util.uniquifyArray(newAddition);
-        addition = this.util.copByVal(newAddition);
+        addition = this.util.cloneJson(newAddition);
         result.push(...newAddition);
       } while (addition.length !== 0);
       result = this.util.uniquifyArray(result);
@@ -15062,7 +15062,7 @@ class ReasoningEngine {
     const propertyObj = this.graph.properties[propertyIRI];
     if (propertyObj) {
       result.push(...propertyObj["soa:superPropertyOf"]);
-      let addition = this.util.copByVal(result); // make a copy
+      let addition = this.util.cloneJson(result); // make a copy
       do {
         let newAddition = [];
         for (const curAdd of addition) {
@@ -15072,7 +15072,7 @@ class ReasoningEngine {
           }
         }
         newAddition = this.util.uniquifyArray(newAddition);
-        addition = this.util.copByVal(newAddition);
+        addition = this.util.cloneJson(newAddition);
         result.push(...newAddition);
       } while (addition.length !== 0);
       result = this.util.uniquifyArray(result);
@@ -16048,16 +16048,16 @@ function applyFilter(dataArray, filter, graph) {
 }
 
 /**
- * Creates a copy-by-value of a JSON element
+ * Creates a clone of the given JSON input (without reference to the original input)
  *
- * @param {any} element - the JSON element that should be copied
+ * @param {any} input - the JSON element that should be copied
  * @returns {any} copy of the given JSON element
  */
-function copByVal(element) {
-  if (element === undefined) {
-    return undefined; // causes error for JSON functions
+function cloneJson(input) {
+  if (input === undefined) {
+    return undefined;
   }
-  return JSON.parse(JSON.stringify(element));
+  return JSON.parse(JSON.stringify(input));
 }
 
 /**
@@ -16139,7 +16139,7 @@ function generateContext(currentContext, newContext) {
   const keysCurrentContext = Object.keys(currentContext);
   const keysNewContext = Object.keys(newContext);
   // add all of the old context
-  let resultContext = copByVal(currentContext);
+  let resultContext = cloneJson(currentContext);
   // add vocabs of new context that are not already used (value is URI)
   for (const keyNC of keysNewContext) {
     if (isString(newContext[keyNC])) {
@@ -16217,13 +16217,13 @@ async function preProcessVocab(vocab, newContext) {
     foundInnerGraph = false;
     for (let i = 0; i < vocab["@graph"].length; i++) {
       if (vocab["@graph"][i]["@graph"] !== undefined) {
-        newGraph.push(...copByVal(vocab["@graph"][i]["@graph"])); // copy all elements of the inner @graph into the outer @graph
+        newGraph.push(...cloneJson(vocab["@graph"][i]["@graph"])); // copy all elements of the inner @graph into the outer @graph
         foundInnerGraph = true;
       } else {
-        newGraph.push(copByVal(vocab["@graph"][i])); // copy this element to the outer @graph
+        newGraph.push(cloneJson(vocab["@graph"][i])); // copy this element to the outer @graph
       }
     }
-    vocab["@graph"] = copByVal(newGraph);
+    vocab["@graph"] = cloneJson(newGraph);
   } while (foundInnerGraph === true);
 
   // compact to apply the new context (which is supposed to have been merged before with the old context through the function generateContext())
@@ -16262,7 +16262,7 @@ function curateVocabNode(vocabNode, vocabularies) {
       const newVal = {};
       newVal[vocabNode["rdfs:comment"]["@language"]] =
         vocabNode["rdfs:comment"]["@value"];
-      vocabNode["rdfs:comment"] = copByVal(newVal);
+      vocabNode["rdfs:comment"] = cloneJson(newVal);
     } else if (isArray(vocabNode["rdfs:comment"])) {
       const newVal = {};
       for (let i = 0; i < vocabNode["rdfs:comment"].length; i++) {
@@ -16271,7 +16271,7 @@ function curateVocabNode(vocabNode, vocabularies) {
             vocabNode["rdfs:comment"][i]["@value"];
         }
       }
-      vocabNode["rdfs:comment"] = copByVal(newVal);
+      vocabNode["rdfs:comment"] = cloneJson(newVal);
     }
   } else {
     vocabNode["rdfs:comment"] = {};
@@ -16292,7 +16292,7 @@ function curateVocabNode(vocabNode, vocabularies) {
       const newVal = {};
       newVal[vocabNode["rdfs:label"]["@language"]] =
         vocabNode["rdfs:label"]["@value"];
-      vocabNode["rdfs:label"] = copByVal(newVal);
+      vocabNode["rdfs:label"] = cloneJson(newVal);
     } else if (isArray(vocabNode["rdfs:label"])) {
       // "rdfs:label": [{
       //   "@language": "en",
@@ -16309,7 +16309,7 @@ function curateVocabNode(vocabNode, vocabularies) {
             vocabNode["rdfs:label"][i]["@value"];
         }
       }
-      vocabNode["rdfs:label"] = copByVal(newVal);
+      vocabNode["rdfs:label"] = cloneJson(newVal);
     }
   } else {
     vocabNode["rdfs:label"] = {};
@@ -16686,7 +16686,7 @@ function switchIRIProtocol(IRI) {
 
 module.exports = {
   applyFilter,
-  copByVal,
+  cloneJson,
   isArray,
   isString,
   isObject,
