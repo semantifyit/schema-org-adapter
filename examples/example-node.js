@@ -43,4 +43,9 @@ async function main() {
   console.log(
     JSON.stringify(testEnumerationMember.toJSON(true, null), null, 2)
   );
+
+  // static methods
+  console.log(
+    "Latest sdo version static: " + (await SDOAdapter.getLatestSDOVersion())
+  );
 }

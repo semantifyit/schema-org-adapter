@@ -954,4 +954,11 @@ describe("SDO Adapter methods", () => {
       "https://raw.githubusercontent.com/semantifyit/schemaorg/main/versions.json"
     );
   });
+
+  test("static getLatestVersion()", async () => {
+    // static methods always take the version on commit version of semantify.it
+    const latestVersion = await SDOAdapter.getLatestSDOVersion();
+    debugFunc(latestVersion);
+    expect(Number(latestVersion) > 5).toBe(true);
+  });
 });

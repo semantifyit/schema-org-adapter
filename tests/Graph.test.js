@@ -14,7 +14,7 @@ async function initGraph() {
     onError: debugFuncErr,
   });
   VOC_URL_LATEST = await mySA.constructSDOVocabularyURL("latest");
-  VOC_OBJ_LATEST = await mySA.fetchVocabularyFromURL(VOC_URL_LATEST);
+  VOC_OBJ_LATEST = await SDOAdapter.fetchVocabularyFromURL(VOC_URL_LATEST);
   return new Graph(mySA);
 }
 

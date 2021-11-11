@@ -73,6 +73,77 @@ class SDOAdapter {
     this.graph = new Graph(this);
   }
 
+  /*
+   * STATIC METHODS
+   */
+
+  /**
+   * Sends a head-request to the given URL, checking if content exists.
+   *
+   * @param {string} url - the URL to check
+   * @returns {Promise<boolean>} Returns true if there is content
+   */
+  static async checkURL(url) {
+    try {
+      await axios.head(url);
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  /**
+   * Returns the latest version number of the schema.org vocabulary
+   * To achieve this, the latest approved version hosted by SDO-Adapter is retrieved.
+   *
+   * @returns {Promise<string>} The latest version of the schema.org vocabulary
+   */
+  static async getLatestSDOVersion() {
+    let versionFile;
+    // 1. retrieve versions file
+    try {
+      versionFile = await axios.get(URI_SEMANTIFY_VERSIONS);
+    } catch (e) {
+      console.log(
+        "Unable to retrieve the schema.org versions file at " +
+          URI_SEMANTIFY_VERSIONS
+      );
+      throw e;
+    }
+    // 2. determine the latest valid version
+    if (versionFile && versionFile.data && versionFile.data.schemaversion) {
+      return versionFile.data.schemaversion;
+    }
+    throw new Error("Could not get the latest version.");
+  }
+
+  /**
+   * Fetches a vocabulary from the given URL.
+   *
+   * @param {string} url - the URL from which the vocabulary should be fetched
+   * @returns {Promise<object|string>} The fetched vocabulary object (or string, if the server returns a string instead of an object)
+   */
+  static async fetchVocabularyFromURL(url) {
+    return new Promise(function (resolve, reject) {
+      axios
+        .get(url, {
+          headers: {
+            Accept: "application/ld+json, application/json",
+          },
+        })
+        .then(function (res) {
+          resolve(res.data);
+        })
+        .catch(function () {
+          reject("Could not find any resource at the given URL.");
+        });
+    });
+  }
+
+  /*
+   * NON-STATIC METHODS
+   */
+
   /**
    * Adds vocabularies (in JSON-LD format or as URL) to the memory of this SDOAdapter. The function "constructSDOVocabularyURL()" helps you to construct URLs for the schema.org vocabulary
    *
@@ -93,7 +164,7 @@ class SDOAdapter {
           if (vocab.startsWith("www") || vocab.startsWith("http")) {
             // assume it is a URL
             try {
-              let fetchedVocab = await this.fetchVocabularyFromURL(vocab);
+              let fetchedVocab = await SDOAdapter.fetchVocabularyFromURL(vocab);
               if (this.util.isString(fetchedVocab)) {
                 fetchedVocab = JSON.parse(fetchedVocab); // try to parse the fetched content as JSON
               }
@@ -131,29 +202,6 @@ class SDOAdapter {
       );
     }
     return true;
-  }
-
-  /**
-   * Fetches a vocabulary from the given URL.
-   *
-   * @param {string} url - the URL from which the vocabulary should be fetched
-   * @returns {Promise<object|string>} The fetched vocabulary object (or string, if the server returns a string instead of an object)
-   */
-  async fetchVocabularyFromURL(url) {
-    return new Promise(function (resolve, reject) {
-      axios
-        .get(url, {
-          headers: {
-            Accept: "application/ld+json, application/json",
-          },
-        })
-        .then(function (res) {
-          resolve(res.data);
-        })
-        .catch(function () {
-          reject("Could not find any resource at the given URL.");
-        });
-    });
   }
 
   /**
@@ -530,7 +578,7 @@ class SDOAdapter {
       this.retrievalMemory.versionsFile = versionFile.data;
       if (this.retrievalMemory.versionsFile.schemaversion) {
         if (
-          await this.checkURL(
+          await SDOAdapter.checkURL(
             await this.constructSDOVocabularyURL(
               this.retrievalMemory.versionsFile.schemaversion
             )
@@ -547,7 +595,7 @@ class SDOAdapter {
             // Sort release entries by the date. latest is first in array
             for (const currVersion of sortedArray) {
               if (
-                await this.checkURL(
+                await SDOAdapter.checkURL(
                   await this.constructSDOVocabularyURL(currVersion[0])
                 )
               ) {
@@ -570,21 +618,6 @@ class SDOAdapter {
       throw new Error(errMsg);
     }
     return true;
-  }
-
-  /**
-   * Sends a head-request to the given URL, checking if content exists.
-   *
-   * @param {string} url - the URL to check
-   * @returns {Promise<boolean>} Returns true if there is content
-   */
-  async checkURL(url) {
-    try {
-      await axios.head(url);
-      return true;
-    } catch (e) {
-      return false;
-    }
   }
 
   /**

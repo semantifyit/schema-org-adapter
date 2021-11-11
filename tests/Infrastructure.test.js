@@ -87,7 +87,7 @@ describe("Infrastructure testing", () => {
       // let this function construct the URL. No error should happen.
       currentFileURL = await mySA.constructSDOVocabularyURL(currentVersion);
       debugFunc(currentFileURL);
-      expect(await mySA.checkURL(currentFileURL)).toBe(true);
+      expect(await SDOAdapter.checkURL(currentFileURL)).toBe(true);
     }
   });
 });
