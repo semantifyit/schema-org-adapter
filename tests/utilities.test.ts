@@ -70,14 +70,15 @@ describe("utilities testing", () => {
     expect(toCompactIRI("https://schema.org/Book", testContext, true)).toBe(
       "schema:Book"
     );
-    expect(toCompactIRI("https://schema.org/Book", testContext, false)).toBe(
-      null
-    );
+    expect(() =>
+      toCompactIRI("https://schema.org/Book", testContext, false)
+    ).toThrow();
   });
   test("toAbsoluteIRI()", async () => {
     const input = "schema:Hotel";
     const expectedOutcome = "http://schema.org/Hotel";
     expect(toAbsoluteIRI(input, testContext)).toBe(expectedOutcome);
+    expect(() => toAbsoluteIRI("schemaaaa:Hotel", testContext)).toThrow();
   });
   test("applyFilter()", async () => {
     const mySA = await initAdapter();

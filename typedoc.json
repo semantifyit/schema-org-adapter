@@ -10,5 +10,6 @@
     "privateremarks"
   ],
   "hideGenerator": true,
-  "customCss": "./docu/typedoc.css"
+  "customCss": "./docu/typedoc.css",
+  "readme": "none"
 }

@@ -7,9 +7,6 @@
     "sourceMap": true,
     "esModuleInterop": true,
     "baseUrl": "./",
-//    "paths": {
-//      "jsonld": ["../node_modules/jsonld/dist/jsonld"] // This mapping is relative to "baseUrl"
-//    },
     "rootDir": "./",
     "sourceRoot": "./",
     "resolveJsonModule": true,

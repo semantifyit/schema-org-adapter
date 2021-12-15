@@ -24,7 +24,6 @@ import {
   preProcessVocab,
 } from "./graphUtilities";
 import { applyFilter } from "./reasoning";
-import { Term } from "./Term";
 
 /** @ignore */
 export class Graph {
@@ -622,7 +621,10 @@ export class Graph {
    * @param filter - The filter to be applied on the result
    * @returns the JS-Class for the given IRI
    */
-  getTerm(id: string, filter?: FilterObject): Term {
+  getTerm(
+    id: string,
+    filter?: FilterObject
+  ): Class | Enumeration | EnumerationMember | Property | DataType {
     const compactIRI = this.discoverCompactIRI(id);
     if (!compactIRI) {
       throw new Error("There is no term with the IRI " + id);
@@ -842,11 +844,16 @@ export class Graph {
               input.startsWith(switchIRIProtocol(absoluteIRI as string)))
           ) {
             // is absoluteIRI
-            return toCompactIRI(
-              input,
-              this.context,
-              this.sdoAdapter.equateVocabularyProtocols
-            );
+            try {
+              return toCompactIRI(
+                input,
+                this.context,
+                this.sdoAdapter.equateVocabularyProtocols
+              );
+            } catch (e) {
+              // the namespace used in the URL is not present in the context
+              return null;
+            }
           }
         }
       }

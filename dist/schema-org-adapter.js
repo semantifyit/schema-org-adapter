@@ -834,7 +834,12 @@ class Graph {
                     else if (input.startsWith(absoluteIRI) ||
                         (this.sdoAdapter.equateVocabularyProtocols &&
                             input.startsWith((0, utilities_1.switchIRIProtocol)(absoluteIRI)))) {
-                        return (0, utilities_1.toCompactIRI)(input, this.context, this.sdoAdapter.equateVocabularyProtocols);
+                        try {
+                            return (0, utilities_1.toCompactIRI)(input, this.context, this.sdoAdapter.equateVocabularyProtocols);
+                        }
+                        catch (e) {
+                            return null;
+                        }
                     }
                 }
             }
@@ -1029,23 +1034,23 @@ const utilities_1 = _dereq_("./utilities");
 const reasoning_1 = _dereq_("./reasoning");
 class SDOAdapter {
     constructor(paramObj) {
-        if (paramObj && paramObj.commit) {
+        if (paramObj === null || paramObj === void 0 ? void 0 : paramObj.commit) {
             this.commit = paramObj.commit;
         }
-        if (paramObj && typeof paramObj.onError === "function") {
+        if (typeof (paramObj === null || paramObj === void 0 ? void 0 : paramObj.onError) === "function") {
             this.onError = paramObj.onError;
         }
         else {
             this.onError = function () {
             };
         }
-        if (paramObj && paramObj.schemaHttps !== undefined) {
+        if ((paramObj === null || paramObj === void 0 ? void 0 : paramObj.schemaHttps) !== undefined) {
             this.schemaHttps = paramObj.schemaHttps;
         }
         else {
             this.schemaHttps = true;
         }
-        if (paramObj && paramObj.equateVocabularyProtocols !== undefined) {
+        if ((paramObj === null || paramObj === void 0 ? void 0 : paramObj.equateVocabularyProtocols) !== undefined) {
             this.equateVocabularyProtocols = paramObj.equateVocabularyProtocols;
         }
         else {
@@ -1055,67 +1060,56 @@ class SDOAdapter {
     }
     addVocabularies(vocabArray) {
         return __awaiter(this, void 0, void 0, function* () {
-            if (!(0, utilities_1.isArray)(vocabArray)) {
-                vocabArray = (0, utilities_1.toArray)(vocabArray);
-            }
-            if ((0, utilities_1.isArray)(vocabArray)) {
-                for (const vocab of vocabArray) {
-                    if ((0, utilities_1.isString)(vocab)) {
-                        if (vocab.startsWith("www") ||
-                            vocab.startsWith("http")) {
-                            try {
-                                let fetchedVocab = yield this.fetchVocabularyFromURL(vocab);
-                                if ((0, utilities_1.isString)(fetchedVocab)) {
-                                    fetchedVocab = JSON.parse(fetchedVocab);
-                                }
-                                yield this.graph.addVocabulary(fetchedVocab, vocab);
+            vocabArray = (0, utilities_1.toArray)(vocabArray);
+            for (const vocab of vocabArray) {
+                if ((0, utilities_1.isString)(vocab)) {
+                    if (vocab.startsWith("www") ||
+                        vocab.startsWith("http")) {
+                        try {
+                            let fetchedVocab = yield this.fetchVocabularyFromURL(vocab);
+                            if ((0, utilities_1.isString)(fetchedVocab)) {
+                                fetchedVocab = JSON.parse(fetchedVocab);
                             }
-                            catch (e) {
-                                console.log(e);
-                                throw new Error("The given URL " +
-                                    vocab +
-                                    " did not contain a valid JSON-LD vocabulary.");
-                            }
+                            yield this.graph.addVocabulary(fetchedVocab, vocab);
                         }
-                        else {
-                            try {
-                                yield this.graph.addVocabulary(JSON.parse(vocab));
-                            }
-                            catch (e) {
-                                throw new Error("Parsing of vocabulary string produced an invalid JSON-LD.");
-                            }
+                        catch (e) {
+                            throw new Error("The given URL " +
+                                vocab +
+                                " did not contain a valid JSON-LD vocabulary.");
                         }
-                    }
-                    else if ((0, utilities_1.isObject)(vocab)) {
-                        yield this.graph.addVocabulary(vocab);
                     }
                     else {
-                        throw new Error("The first argument of the function must be an Array of vocabularies or a single vocabulary (JSON-LD as Object/String)");
+                        try {
+                            yield this.graph.addVocabulary(JSON.parse(vocab));
+                        }
+                        catch (e) {
+                            throw new Error("Parsing of vocabulary string produced an invalid JSON-LD.");
+                        }
                     }
                 }
-            }
-            else {
-                throw new Error("The first argument of the function must be an Array of vocabularies or a single vocabulary (JSON-LD as Object/String)");
+                else if ((0, utilities_1.isObject)(vocab)) {
+                    yield this.graph.addVocabulary(vocab);
+                }
+                else {
+                    throw new Error("The first argument of the function must be an Array of vocabularies or a single vocabulary (JSON-LD as Object/String)");
+                }
             }
             return true;
         });
     }
     fetchVocabularyFromURL(url) {
         return __awaiter(this, void 0, void 0, function* () {
-            return new Promise(function (resolve, reject) {
-                axios_1.default
-                    .get(url, {
+            try {
+                const res = yield axios_1.default.get(url, {
                     headers: {
                         Accept: "application/ld+json, application/json",
                     },
-                })
-                    .then(function (res) {
-                    resolve(res.data);
-                })
-                    .catch(function () {
-                    reject("Could not find any resource at the given URL.");
                 });
-            });
+                return res.data;
+            }
+            catch (e) {
+                throw new Error("Could not find any resource at the given URL.");
+            }
         });
     }
     getTerm(id, filter) {
@@ -1129,44 +1123,19 @@ class SDOAdapter {
         const dataTypesIRIList = this.getListOfDataTypes(filter);
         const enumerationMembersIRIList = this.getListOfEnumerationMembers(filter);
         for (const c of classesIRIList) {
-            try {
-                result.push(this.getClass(c));
-            }
-            catch (e) {
-                throw new Error("There is no class with the IRI " + c);
-            }
+            result.push(this.getClass(c));
         }
         for (const en of enumerationsIRIList) {
-            try {
-                result.push(this.getEnumeration(en));
-            }
-            catch (e) {
-                throw new Error("There is no enumeration with the IRI " + en);
-            }
+            result.push(this.getEnumeration(en));
         }
         for (const p of propertiesIRIList) {
-            try {
-                result.push(this.getProperty(p));
-            }
-            catch (e) {
-                throw new Error("There is no property with the IRI " + p);
-            }
+            result.push(this.getProperty(p));
         }
         for (const dt of dataTypesIRIList) {
-            try {
-                result.push(this.getDataType(dt));
-            }
-            catch (e) {
-                throw new Error("There is no data type with the IRI " + dt);
-            }
+            result.push(this.getDataType(dt));
         }
         for (const enm of enumerationMembersIRIList) {
-            try {
-                result.push(this.getEnumerationMember(enm));
-            }
-            catch (e) {
-                throw new Error("There is no enumeration member with the IRI " + enm);
-            }
+            result.push(this.getEnumerationMember(enm));
         }
         return result;
     }
@@ -1186,12 +1155,7 @@ class SDOAdapter {
         const result = [];
         const classesIRIList = this.getListOfClasses(filter);
         for (const c of classesIRIList) {
-            try {
-                result.push(this.getClass(c));
-            }
-            catch (e) {
-                throw new Error("There is no class with the IRI " + c);
-            }
+            result.push(this.getClass(c));
         }
         return result;
     }
@@ -1209,12 +1173,7 @@ class SDOAdapter {
         const result = [];
         const propertiesIRIList = this.getListOfProperties(filter);
         for (const p of propertiesIRIList) {
-            try {
-                result.push(this.getProperty(p));
-            }
-            catch (e) {
-                throw new Error("There is no property with the IRI " + p);
-            }
+            result.push(this.getProperty(p));
         }
         return result;
     }
@@ -1232,12 +1191,7 @@ class SDOAdapter {
         const result = [];
         const dataTypesIRIList = this.getListOfDataTypes(filter);
         for (const dt of dataTypesIRIList) {
-            try {
-                result.push(this.getDataType(dt));
-            }
-            catch (e) {
-                throw new Error("There is no data type with the IRI " + dt);
-            }
+            result.push(this.getDataType(dt));
         }
         return result;
     }
@@ -1255,12 +1209,7 @@ class SDOAdapter {
         const result = [];
         const enumerationsIRIList = this.getListOfEnumerations(filter);
         for (const en of enumerationsIRIList) {
-            try {
-                result.push(this.getEnumeration(en));
-            }
-            catch (e) {
-                throw new Error("There is no enumeration with the IRI " + en);
-            }
+            result.push(this.getEnumeration(en));
         }
         return result;
     }
@@ -1278,12 +1227,7 @@ class SDOAdapter {
         const result = [];
         const enumerationMembersIRIList = this.getListOfEnumerationMembers(filter);
         for (const enm of enumerationMembersIRIList) {
-            try {
-                result.push(this.getEnumerationMember(enm));
-            }
-            catch (e) {
-                throw new Error("There is no enumeration member with the IRI " + enm);
-            }
+            result.push(this.getEnumerationMember(enm));
         }
         return result;
     }
@@ -1298,7 +1242,7 @@ class SDOAdapter {
         const vocabKeys = Object.keys(this.graph.context);
         const result = {};
         const blacklist = ["soa", "xsd", "rdf", "rdfa", "rdfs", "dc"];
-        vocabKeys.map((el) => {
+        vocabKeys.forEach((el) => {
             if ((0, utilities_1.isString)(this.graph.context[el]) && !blacklist.includes(el)) {
                 result[el] = this.graph.context[el];
             }
@@ -2153,7 +2097,7 @@ function toCompactIRI(absoluteIRI, context, equateVocabularyProtocols = false) {
             }
         }
     }
-    return null;
+    throw new Error("Trying to get a compact IRI for a term with no entry in the Context");
 }
 exports.toCompactIRI = toCompactIRI;
 function toAbsoluteIRI(compactIRI, context) {

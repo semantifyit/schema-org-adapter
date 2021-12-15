@@ -132,7 +132,9 @@ export function toCompactIRI(
       }
     }
   }
-  return null;
+  throw new Error(
+    "Trying to get a compact IRI for a term with no entry in the Context"
+  );
 }
 
 /** @ignore

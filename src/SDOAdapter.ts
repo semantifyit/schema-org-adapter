@@ -3,7 +3,6 @@ import axios from "axios";
 import {
   getLatestSchemaVersion,
   constructURLSchemaVocabulary,
-  isArray,
   isObject,
   isString,
   toArray,
@@ -49,25 +48,25 @@ export class SDOAdapter {
    */
   constructor(paramObj?: ParamObjSdoAdapter) {
     // option commit - defaults to undefined
-    if (paramObj && paramObj.commit) {
+    if (paramObj?.commit) {
       this.commit = paramObj.commit;
     }
     // option onError - defaults to a function that does nothing
-    if (paramObj && typeof paramObj.onError === "function") {
+    if (typeof paramObj?.onError === "function") {
       this.onError = paramObj.onError;
     } else {
       this.onError = function () {
-        // do nothing; The users should pass their own function to handle errors, they have else no way to hide automatic error messages once the SDO Adapter is compiled
+        // do nothing; The users should pass their own function to handle unexpected errors, they have else no way to hide automatic error messages once the SDO Adapter is compiled
       };
     }
     // option schemaHttps - defaults to true
-    if (paramObj && paramObj.schemaHttps !== undefined) {
+    if (paramObj?.schemaHttps !== undefined) {
       this.schemaHttps = paramObj.schemaHttps;
     } else {
       this.schemaHttps = true;
     }
     // option equateVocabularyProtocols - defaults to false
-    if (paramObj && paramObj.equateVocabularyProtocols !== undefined) {
+    if (paramObj?.equateVocabularyProtocols !== undefined) {
       this.equateVocabularyProtocols = paramObj.equateVocabularyProtocols;
     } else {
       this.equateVocabularyProtocols = false;
@@ -92,57 +91,49 @@ export class SDOAdapter {
    */
   async addVocabularies(
     vocabArray: string | Vocabulary | (string | Vocabulary)[]
-  ) {
-    if (!isArray(vocabArray)) {
-      vocabArray = toArray(vocabArray);
-    }
-    if (isArray(vocabArray)) {
-      // check every vocab if it is a valid JSON-LD. If string -> try to JSON.parse()
-      for (const vocab of vocabArray as []) {
-        if (isString(vocab)) {
-          if (
-            (vocab as string).startsWith("www") ||
-            (vocab as string).startsWith("http")
-          ) {
-            // assume it is a URL
-            try {
-              let fetchedVocab = await this.fetchVocabularyFromURL(vocab);
-              if (isString(fetchedVocab)) {
-                fetchedVocab = JSON.parse(fetchedVocab as string); // try to parse the fetched content as JSON
-              }
-              await this.graph.addVocabulary(fetchedVocab as Vocabulary, vocab);
-            } catch (e) {
-              console.log(e);
-              throw new Error(
-                "The given URL " +
-                  vocab +
-                  " did not contain a valid JSON-LD vocabulary."
-              );
+  ): Promise<boolean> {
+    vocabArray = toArray(vocabArray);
+    // check every vocab if it is a valid JSON-LD. If string -> try to JSON.parse()
+    for (const vocab of vocabArray) {
+      if (isString(vocab)) {
+        if (
+          (vocab as string).startsWith("www") ||
+          (vocab as string).startsWith("http")
+        ) {
+          // assume it is a URL
+          try {
+            let fetchedVocab = await this.fetchVocabularyFromURL(vocab);
+            if (isString(fetchedVocab)) {
+              fetchedVocab = JSON.parse(fetchedVocab as string); // try to parse the fetched content as JSON
             }
-          } else {
-            // assume it is a string-version of a JSON-LD
-            try {
-              await this.graph.addVocabulary(JSON.parse(vocab));
-            } catch (e) {
-              throw new Error(
-                "Parsing of vocabulary string produced an invalid JSON-LD."
-              );
-            }
+            await this.graph.addVocabulary(fetchedVocab as Vocabulary, vocab);
+          } catch (e) {
+            throw new Error(
+              "The given URL " +
+                vocab +
+                " did not contain a valid JSON-LD vocabulary."
+            );
           }
-        } else if (isObject(vocab)) {
-          await this.graph.addVocabulary(vocab);
         } else {
-          // invalid argument type!
-          throw new Error(
-            "The first argument of the function must be an Array of vocabularies or a single vocabulary (JSON-LD as Object/String)"
-          );
+          // assume it is a string-version of a JSON-LD
+          try {
+            await this.graph.addVocabulary(JSON.parse(vocab));
+          } catch (e) {
+            throw new Error(
+              "Parsing of vocabulary string produced an invalid JSON-LD."
+            );
+          }
         }
+      } else if (isObject(vocab)) {
+        await this.graph.addVocabulary(vocab);
+      } else {
+        // invalid argument type!
+        throw new Error(
+          "The first argument of the function must be an Array of vocabularies or a single vocabulary (JSON-LD as Object/String)"
+        );
       }
-    } else {
-      throw new Error(
-        "The first argument of the function must be an Array of vocabularies or a single vocabulary (JSON-LD as Object/String)"
-      );
     }
+
     return true;
   }
 
@@ -153,20 +144,16 @@ export class SDOAdapter {
    * @returns The fetched vocabulary object (or string, if the server returns a string instead of an object)
    */
   async fetchVocabularyFromURL(url: string): Promise<Vocabulary | string> {
-    return new Promise(function (resolve, reject) {
-      axios
-        .get(url, {
-          headers: {
-            Accept: "application/ld+json, application/json",
-          },
-        })
-        .then(function (res: any) {
-          resolve(res.data);
-        })
-        .catch(function () {
-          reject("Could not find any resource at the given URL.");
-        });
-    });
+    try {
+      const res = await axios.get(url, {
+        headers: {
+          Accept: "application/ld+json, application/json",
+        },
+      });
+      return res.data;
+    } catch (e) {
+      throw new Error("Could not find any resource at the given URL.");
+    }
   }
 
   /**
@@ -188,7 +175,10 @@ export class SDOAdapter {
    * @param filter - The filter to be applied on the result
    * @returns The term instance for the given IRI
    */
-  getTerm(id: string, filter?: FilterObject) {
+  getTerm(
+    id: string,
+    filter?: FilterObject
+  ): Class | Enumeration | EnumerationMember | Property | DataType {
     return this.graph.getTerm(id, filter);
   }
 
@@ -214,39 +204,19 @@ export class SDOAdapter {
     const dataTypesIRIList = this.getListOfDataTypes(filter);
     const enumerationMembersIRIList = this.getListOfEnumerationMembers(filter);
     for (const c of classesIRIList) {
-      try {
-        result.push(this.getClass(c));
-      } catch (e) {
-        throw new Error("There is no class with the IRI " + c);
-      }
+      result.push(this.getClass(c));
     }
     for (const en of enumerationsIRIList) {
-      try {
-        result.push(this.getEnumeration(en));
-      } catch (e) {
-        throw new Error("There is no enumeration with the IRI " + en);
-      }
+      result.push(this.getEnumeration(en));
     }
     for (const p of propertiesIRIList) {
-      try {
-        result.push(this.getProperty(p));
-      } catch (e) {
-        throw new Error("There is no property with the IRI " + p);
-      }
+      result.push(this.getProperty(p));
     }
     for (const dt of dataTypesIRIList) {
-      try {
-        result.push(this.getDataType(dt));
-      } catch (e) {
-        throw new Error("There is no data type with the IRI " + dt);
-      }
+      result.push(this.getDataType(dt));
     }
     for (const enm of enumerationMembersIRIList) {
-      try {
-        result.push(this.getEnumerationMember(enm));
-      } catch (e) {
-        throw new Error("There is no enumeration member with the IRI " + enm);
-      }
+      result.push(this.getEnumerationMember(enm));
     }
     return result;
   }
@@ -269,7 +239,7 @@ export class SDOAdapter {
    * @param filter - The filter to be applied on the result
    * @returns An array of IRIs representing all vocabulary terms
    */
-  getListOfTerms(filter?: FilterObject) {
+  getListOfTerms(filter?: FilterObject): string[] {
     const result = [];
     result.push(...Object.keys(this.graph.classes));
     result.push(...Object.keys(this.graph.enumerations));
@@ -292,7 +262,7 @@ export class SDOAdapter {
    * @param filter - The filter to be applied on the result
    * @returns The Class instance for the given IRI
    */
-  getClass(id: string, filter?: FilterObject) {
+  getClass(id: string, filter?: FilterObject): Class {
     // returns also enumerations
     return this.graph.getClass(id, filter);
   }
@@ -309,15 +279,11 @@ export class SDOAdapter {
    * @param filter - The filter to be applied on the result
    * @returns An array of Class instances representing all class terms
    */
-  getAllClasses(filter?: FilterObject) {
+  getAllClasses(filter?: FilterObject): Class[] {
     const result = [];
     const classesIRIList = this.getListOfClasses(filter);
     for (const c of classesIRIList) {
-      try {
-        result.push(this.getClass(c));
-      } catch (e) {
-        throw new Error("There is no class with the IRI " + c);
-      }
+      result.push(this.getClass(c));
     }
     return result;
   }
@@ -340,7 +306,7 @@ export class SDOAdapter {
    * @param filter - The filter to be applied on the result
    * @returns An array of IRIs representing all class terms
    */
-  getListOfClasses(filter?: FilterObject) {
+  getListOfClasses(filter?: FilterObject): string[] {
     // do not include enumerations
     return applyFilter({
       data: Object.keys(this.graph.classes),
@@ -362,7 +328,7 @@ export class SDOAdapter {
    * @param filter - The filter to be applied on the result
    * @returns The Property instance for the given IRI
    */
-  getProperty(id: string, filter?: FilterObject) {
+  getProperty(id: string, filter?: FilterObject): Property {
     return this.graph.getProperty(id, filter);
   }
 
@@ -378,15 +344,11 @@ export class SDOAdapter {
    * @param filter - The filter to be applied on the result
    * @returns An array of Property instances representing all property terms
    */
-  getAllProperties(filter?: FilterObject) {
+  getAllProperties(filter?: FilterObject): Property[] {
     const result = [];
     const propertiesIRIList = this.getListOfProperties(filter);
     for (const p of propertiesIRIList) {
-      try {
-        result.push(this.getProperty(p));
-      } catch (e) {
-        throw new Error("There is no property with the IRI " + p);
-      }
+      result.push(this.getProperty(p));
     }
     return result;
   }
@@ -409,7 +371,7 @@ export class SDOAdapter {
    * @param filter - The filter to be applied on the result
    * @returns An array of IRIs representing all property terms
    */
-  getListOfProperties(filter?: FilterObject) {
+  getListOfProperties(filter?: FilterObject): string[] {
     return applyFilter({
       data: Object.keys(this.graph.properties),
       filter,
@@ -430,7 +392,7 @@ export class SDOAdapter {
    * @param filter - The filter to be applied on the result
    * @returns The DataType instance for the given IRI
    */
-  getDataType(id: string, filter?: FilterObject) {
+  getDataType(id: string, filter?: FilterObject): DataType {
     return this.graph.getDataType(id, filter);
   }
 
@@ -446,15 +408,11 @@ export class SDOAdapter {
    * @param filter - The filter to be applied on the result
    * @returns An array of DataType instances representing all data-type terms
    */
-  getAllDataTypes(filter?: FilterObject) {
+  getAllDataTypes(filter?: FilterObject): DataType[] {
     const result = [];
     const dataTypesIRIList = this.getListOfDataTypes(filter);
     for (const dt of dataTypesIRIList) {
-      try {
-        result.push(this.getDataType(dt));
-      } catch (e) {
-        throw new Error("There is no data type with the IRI " + dt);
-      }
+      result.push(this.getDataType(dt));
     }
     return result;
   }
@@ -477,7 +435,7 @@ export class SDOAdapter {
    * @param filter - The filter to be applied on the result
    * @returns An array of IRIs representing all data-type terms
    */
-  getListOfDataTypes(filter?: FilterObject) {
+  getListOfDataTypes(filter?: FilterObject): string[] {
     return applyFilter({
       data: Object.keys(this.graph.dataTypes),
       filter,
@@ -498,7 +456,7 @@ export class SDOAdapter {
    * @param filter - The filter to be applied on the result
    * @returns The Enumeration instance for the given IRI
    */
-  getEnumeration(id: string, filter?: FilterObject) {
+  getEnumeration(id: string, filter?: FilterObject): Enumeration {
     return this.graph.getEnumeration(id, filter);
   }
 
@@ -514,15 +472,11 @@ export class SDOAdapter {
    * @param filter - The filter to be applied on the result
    * @returns An array of Enumeration instances representing all enumeration terms
    */
-  getAllEnumerations(filter?: FilterObject) {
+  getAllEnumerations(filter?: FilterObject): Enumeration[] {
     const result = [];
     const enumerationsIRIList = this.getListOfEnumerations(filter);
     for (const en of enumerationsIRIList) {
-      try {
-        result.push(this.getEnumeration(en));
-      } catch (e) {
-        throw new Error("There is no enumeration with the IRI " + en);
-      }
+      result.push(this.getEnumeration(en));
     }
     return result;
   }
@@ -545,7 +499,7 @@ export class SDOAdapter {
    * @param filter - The filter to be applied on the result
    * @returns An array of IRIs representing all enumeration terms
    */
-  getListOfEnumerations(filter?: FilterObject) {
+  getListOfEnumerations(filter?: FilterObject): string[] {
     return applyFilter({
       data: Object.keys(this.graph.enumerations),
       filter,
@@ -566,7 +520,7 @@ export class SDOAdapter {
    * @param filter - The filter to be applied on the result
    * @returns The EnumerationMember instance for the given IRI
    */
-  getEnumerationMember(id: string, filter?: FilterObject) {
+  getEnumerationMember(id: string, filter?: FilterObject): EnumerationMember {
     return this.graph.getEnumerationMember(id, filter);
   }
 
@@ -582,15 +536,11 @@ export class SDOAdapter {
    * @param filter - The filter to be applied on the result
    * @returns An array of EnumerationMember instances representing all enumeration member terms
    */
-  getAllEnumerationMembers(filter?: FilterObject) {
+  getAllEnumerationMembers(filter?: FilterObject): EnumerationMember[] {
     const result = [];
     const enumerationMembersIRIList = this.getListOfEnumerationMembers(filter);
     for (const enm of enumerationMembersIRIList) {
-      try {
-        result.push(this.getEnumerationMember(enm));
-      } catch (e) {
-        throw new Error("There is no enumeration member with the IRI " + enm);
-      }
+      result.push(this.getEnumerationMember(enm));
     }
     return result;
   }
@@ -613,7 +563,7 @@ export class SDOAdapter {
    * @param filter - The filter to be applied on the result
    * @returns An array of IRIs representing all enumeration member terms
    */
-  getListOfEnumerationMembers(filter?: FilterObject) {
+  getListOfEnumerationMembers(filter?: FilterObject): string[] {
     return applyFilter({
       data: Object.keys(this.graph.enumerationMembers),
       filter,
@@ -637,11 +587,11 @@ export class SDOAdapter {
    *
    * @returns An object containing key-value pairs representing the used vocabulary namespaces
    */
-  getVocabularies() {
+  getVocabularies(): Record<string, string> {
     const vocabKeys = Object.keys(this.graph.context);
     const result = {} as Record<string, string>;
     const blacklist = ["soa", "xsd", "rdf", "rdfa", "rdfs", "dc"]; // standard vocabs that should not be exposed
-    vocabKeys.map((el) => {
+    vocabKeys.forEach((el) => {
       if (isString(this.graph.context[el]) && !blacklist.includes(el)) {
         result[el] = this.graph.context[el] as string;
       }
@@ -662,7 +612,7 @@ export class SDOAdapter {
    *
    * @returns The latest version of the schema.org vocabulary
    */
-  async getLatestSchemaVersion() {
+  async getLatestSchemaVersion(): Promise<string> {
     return await getLatestSchemaVersion(this.commit);
   }
 
@@ -682,7 +632,7 @@ export class SDOAdapter {
    * @param version - The wished Schema.org vocabulary version for the resulting URL (e.g. "5.0", "3.7", or "latest"). default: "latest"
    * @returns The URL to the Schema.org vocabulary
    */
-  async constructURLSchemaVocabulary(version = "latest") {
+  async constructURLSchemaVocabulary(version = "latest"): Promise<string> {
     return await constructURLSchemaVocabulary(
       version,
       this.schemaHttps,
