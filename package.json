@@ -21,8 +21,8 @@
     "eslint-repair": "eslint --fix src/*.ts tests/*.ts",
     "prettier-check": "prettier --check src/*.ts tests/*.ts",
     "prettier-repair": "prettier --write src/*.ts tests/*.ts",
-    "genTypeDoc": "typedoc --out docs src/*.ts --tsconfig src/tsconfig.json --disableSources --excludeTags privateremarks --hideGenerator --customCss ./docu/typedoc.css true",
-    "watchTypeDoc": "typedoc --out docs src/*.ts  --tsconfig src/tsconfig.json --disableSources --excludeTags privateremarks --hideGenerator true --customCss ./docu/typedoc.css --watch"
+    "genTypeDoc": "typedoc",
+    "watchTypeDoc": "typedoc --watch"
   },
   "author": {
     "name": "Omar J. A. Holzknecht for STI Innsbruck",
