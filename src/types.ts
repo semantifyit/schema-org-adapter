@@ -37,6 +37,7 @@ export type FilterObject = {
   termType?: TermTypeLabelValue | TermTypeLabelValue[];
 };
 
+/** @ignore */
 export interface ErrorFunction {
   // eslint-disable-next-line no-unused-vars
   (msg: string): void;
