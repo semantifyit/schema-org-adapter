@@ -1,24 +1,28 @@
 {
   "name": "schema-org-adapter",
-  "version": "4.3.0",
+  "version": "5.0.0",
+  "engines": {
+    "node": ">=16.0.0"
+  },
   "description": "Fast, simple & flexible API for the Schema.org Vocabulary (and vocabulary extensions!) for Node and Browsers",
-  "main": "src/SDOAdapter.js",
-  "types": "dist/types/SDOAdapter.d.ts",
+  "main": "lib/index",
+  "types": "lib/index",
   "scripts": {
-    "buildAll": "npm run-script build && npm run-script buildMinified && npm run-script buildtypes",
-    "build": "browserify src/SDOAdapter.js -s SDOAdapter | derequire -cm --toplevel > dist/schema-org-adapter.js",
-    "buildMinified": "browserify src/SDOAdapter.js -s SDOAdapter -g [uglifyify] | derequire -cm --toplevel > dist/schema-org-adapter.min.js",
-    "buildtypes": "npx -p typescript tsc src/*.js --declaration --allowJs --emitDeclarationOnly --outDir dist/types",
-    "test": "jest",
-    "testLatestOriginalRepository": "jest --globals=\"{\\\"commitBase\\\":\\\"main\\\"}\"",
+    "buildAll": "npm run-script buildTs && npm run-script buildDist && npm run-script buildDistMinified",
+    "watchTs": "tsc -b src --watch",
+    "buildTs": "tsc -b src",
+    "buildDist": "browserify lib/index.js -s SDOAdapter | derequire -cm --toplevel > dist/schema-org-adapter.js",
+    "buildDistMinified": "browserify lib/index.js -s SDOAdapter -g [uglifyify] | derequire -cm --toplevel > dist/schema-org-adapter.min.js",
+    "test:badges": "npm run-script testSoaRepo && npm run-script badges",
+    "testSoaRepo": "jest",
+    "testSchemaRepo": "COMMIT=9a3ba4684a21c88506d0fed5ea37e5c6bbb115a1 jest",
     "badges": "jest-coverage-badges",
-    "test:badges": "npm run-script test && npm run-script badges",
-    "genJsDoc": "jsdoc src/SDOAdapter.js src/Term.js src/Class.js src/Property.js src/Enumeration.js src/EnumerationMember.js src/DataType.js -t docu/jsDocTemplate --destination ./jsDoc",
-    "getJsDocMD": "jsdoc2md src/SDOAdapter.js src/Term.js src/Class.js src/Property.js src/Enumeration.js src/EnumerationMember.js src/DataType.js > docu/api.md",
-    "eslint-check": "eslint src/*.js tests/*.js",
-    "eslint-repair": "eslint --fix src/*.js tests/*.js",
-    "prettier-check": "prettier --check src/*.js tests/*.js",
-    "prettier-repair": "prettier --write src/*.js tests/*.js"
+    "eslint-check": "eslint src/*.ts tests/*.ts",
+    "eslint-repair": "eslint --fix src/*.ts tests/*.ts",
+    "prettier-check": "prettier --check src/*.ts tests/*.ts",
+    "prettier-repair": "prettier --write src/*.ts tests/*.ts",
+    "genTypeDoc": "typedoc --out docs src/*.ts --tsconfig src/tsconfig.json --disableSources --excludeTags privateremarks --hideGenerator --customCss ./docu/typedoc.css true",
+    "watchTypeDoc": "typedoc --out docs src/*.ts  --tsconfig src/tsconfig.json --disableSources --excludeTags privateremarks --hideGenerator true --customCss ./docu/typedoc.css --watch"
   },
   "author": {
     "name": "Omar J. A. Holzknecht for STI Innsbruck",
@@ -44,38 +48,48 @@
     "jsonld": "^5.2.0"
   },
   "devDependencies": {
+    "@types/jest": "^27.0.3",
+    "@types/jsonld": "^1.5.6",
+    "@typescript-eslint/eslint-plugin": "^5.4.0",
+    "@typescript-eslint/parser": "^5.4.0",
     "browserify": "^17.0.0",
     "derequire": "^2.1.1",
     "eslint": "^7.32.0",
     "eslint-config-prettier": "^8.3.0",
     "eslint-plugin-jest": "^24.4.0",
-    "eslint-plugin-jsdoc": "^36.1.0",
-    "eslint-plugin-markdown": "^2.2.1",
-    "eslint-plugin-node": "^11.1.0",
     "eslint-plugin-prettier": "^4.0.0",
     "jest": "^27.2.0",
     "jest-coverage-badges": "^1.1.2",
-    "jsdoc": "^3.6.7",
-    "jsdoc-to-markdown": "^7.0.1",
     "prettier": "^2.4.0",
+    "ts-jest": "^27.0.7",
+    "typedoc": "^0.22.10",
+    "typedoc-plugin-merge-modules": "^3.1.0",
+    "typescript": "^4.5.2",
     "uglifyify": "^5.0.2"
   },
   "jest": {
+    "preset": "ts-jest/presets/js-with-ts",
     "testEnvironment": "node",
     "testTimeout": 30000,
     "collectCoverage": true,
     "collectCoverageFrom": [
-      "src/*.js"
+      "src/*.ts"
     ],
     "coverageReporters": [
       "json-summary",
       "text",
       "lcov"
-    ]
+    ],
+    "globals": {
+      "ts-jest": {
+        "isolatedModules": true,
+        "tsconfig": "tests/tsconfig.json"
+      }
+    }
   },
   "files": [
-    "src/*",
-    "dist/**/*",
+    "lib/*",
+    "dist/*",
     "README.md",
     "History.md",
     "LICENSE",

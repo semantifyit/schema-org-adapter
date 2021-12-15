@@ -3,13 +3,17 @@
 <div align="center">
 <b>Fast, simple & flexible API for the Schema.org Vocabulary (and vocabulary extensions!) for Node and Browsers</b>
 <br><br>
-<a href="https://www.npmjs.com/package/schema-org-adapter" rel="nofollow"><img src="https://img.shields.io/npm/v/schema-org-adapter.svg" alt="NPM Version"></a>
-<a href="https://eslint.org/"><img src="https://img.shields.io/badge/code%20style-ESLint-brightgreen" alt="Code style in ESLint" /></a>
-<a href="https://david-dm.org/semantifyit/schema-org-adapter"><img src="https://david-dm.org/semantifyit/schema-org-adapter.svg" alt="Dependencies" /></a>
-<br>
+<a href="https://libraries.io/npm/schema-org-adapter"><img src="https://img.shields.io/librariesio/release/npm/schema-org-adapter" alt="Dependencies" /></a>
 <a href="https://github.com/semantifyit/schema-org-adapter/issues"><img src="https://img.shields.io/github/issues/semantifyit/schema-org-adapter.svg" alt="Issues open" /></a>
+<a href="https://github.com/semantifyit/schema-org-adapter/issues"><img src="https://img.shields.io/snyk/vulnerabilities/github/semantifyit/schema-org-adapter" alt="Snyk Vulnerability Test" /></a>
+<br>
+<a href="https://www.typescriptlang.org/"><img src="https://img.shields.io/npm/types/scrub-js.svg" alt="Built with TypeScript" /></a>
+<a href="https://eslint.org/"><img src="https://img.shields.io/badge/code%20style-ESLint-brightgreen" alt="Code style in ESLint" /></a>
+<a href="https://npms.io/search?q=schema-org-adapter"><img src="https://img.shields.io/npms-io/quality-score/schema-org-adapter" alt="npms.io Code Quality" /></a>
 <img src="https://raw.githubusercontent.com/semantifyit/schema-org-adapter/master/coverage/badge-functions.svg?sanitize=true" alt="Jest Test Coverage Functions" />
 <br>
+<a href="https://www.npmjs.com/package/schema-org-adapter" rel="nofollow"><img src="https://img.shields.io/npm/v/schema-org-adapter.svg" alt="NPM Version"></a>
+<a href="https://github.com/semantifyit/schema-org-adapter/"><img src="https://img.shields.io/tokei/lines/github/semantifyit/schema-org-adapter" alt="Total lines of code" /></a>
 <a href="https://www.apache.org/licenses/LICENSE-2.0"><img src="https://img.shields.io/badge/License-Apache%202.0-blue.svg" alt="License: CC BY-SA 4.0" /></a>
 </div>
 <br>
@@ -20,7 +24,7 @@ const SDOAdapter = require('schema-org-adapter');
 // 2. Create a new instance of the SDO-Adapter with no knowledge (it must yet be initialized with vocabularies)
 const mySDOAdapter = new SDOAdapter();
 // 3. Initialize the SDO-Adapter with a vocabulary/vocabularyURL (SDO-Adapter can help with that!)
-await mySDOAdapter.addVocabularies(await mySDOAdapter.constructSDOVocabularyURL('latest'));
+await mySDOAdapter.addVocabularies(await mySDOAdapter.constructURLSchemaVocabulary('latest'));
 
 // 4. Use the SDO-Adapter!
 let Hotel = mySDOAdapter.getClass('schema:Hotel');
@@ -73,12 +77,9 @@ Script-include the bundled package in **/dist** or load via a cdn:
 
 ## API
 
-### JSDoc
-Api documentation generated as Markdown (based on JSDoc) available at <a href="https://github.com/semantifyit/schema-org-adapter/blob/master/docu/api.md" target="_blank">GitHub</a>.
+### Documentation
 
-You can also download this repository and generate an HTML version of JSDoc with:
-
-`npm run-script genJsDoc`
+Documentation is available at https://semantifyit.github.io/schema-org-adapter/
 
 ### Examples
 
@@ -95,7 +96,7 @@ const SDOAdapter = require('schema-org-adapter');
 const mySdoAdapter = new SDOAdapter({schemaHttps: true});
 
 // sdoUrl resolves to file name "schemaorg-all-https.jsonld"
-const sdoUrl = await mySDOAdapter.constructSDOVocabularyURL('latest');
+const sdoUrl = await mySDOAdapter.constructURLSchemaVocabulary('latest');
 ```
 
 ```javascript
@@ -105,7 +106,7 @@ const SDOAdapter = require('schema-org-adapter');
 const mySdoAdapter = new SDOAdapter({schemaHttps: false}); 
 
 // sdoUrl resolves to file name "schemaorg-all-http.jsonld"
-const sdoUrl = await mySDOAdapter.constructSDOVocabularyURL('latest');
+const sdoUrl = await mySDOAdapter.constructURLSchemaVocabulary('latest');
 ```
 
 ### Use of filters
@@ -118,7 +119,7 @@ It is possible to filter the results of some functions by passing a filter objec
 ```javascript
 const SDOAdapter = require('schema-org-adapter');
 const mySdoAdapter = new SDOAdapter();
-await mySdoAdapter.addVocabularies(await mySDOAdapter.constructSDOVocabularyURL('latest'));
+await mySdoAdapter.addVocabularies(await mySDOAdapter.constructURLSchemaVocabulary('latest'));
 
 //get list of classes that are NOT superseded
 let listOfClasses = mySdoAdapter.getAllClasses({

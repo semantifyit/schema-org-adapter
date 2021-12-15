@@ -1,13 +1,13 @@
-const SDOAdapter = require("../src/SDOAdapter");
+const SDOAdapter = require("../lib/index");
 const VOC_OBJ_ZOO = require("../tests/data/vocabulary-animal.json");
-const mySA = new SDOAdapter();
 main();
 
 /**
  * example usage of the library within node.js
  */
 async function main() {
-  const mySDOUrl = await mySA.constructSDOVocabularyURL("latest");
+  const mySA = await SDOAdapter.create();
+  const mySDOUrl = await mySA.constructURLSchemaVocabulary("latest");
   console.log("The latest version is " + mySDOUrl);
   await mySA.addVocabularies([mySDOUrl, VOC_OBJ_ZOO]);
   let testClass = mySA.getClass("https://schema.org/Person");

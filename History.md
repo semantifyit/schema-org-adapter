@@ -1,3 +1,14 @@
+5.0.0 / 2022 TBA
+==================
+* Refactored entire code to TypeScript.
+* Replaced the function `getTermType()` with 2 new functions, namely `getTermTypeIRI()` and `getTermTypeLabel()`. `getTermTypeIRI()` returns the compacted term type IRI (e.g. `"rdf:Property"` ) that was previously provided by `getTermType()`. `getTermTypeLabel()` on the other hand returns a human-readable label for the term type (e.g. `"Property"`). The corresponding `toJson()` and `toString()` functions reflect these changes.
+* The way how to create an SDO-Adapter instance has been improved.
+* Every `implicit` parameter is `true` by default.
+* Changes to several functions, parameters and how certain methods work.
+* Introduction of a library-wide cache and exposure of different static methods for handy utilities.
+* To reflect all these changes the documentation has been updated, please have a look on it and adapt your code if you want to upgrade to this version of SDO-Adapter: https://semantifyit.github.io/schema-org-adapter/
+
+
 4.3.0 / 2021-10-05
 ==================
 
@@ -21,7 +32,7 @@
 ==================
 
 * Major Update of dependencies.
-* Breaking API change for the SDOAdapter() constructor: now a parameter object can be passed, with the old option `commitBase`, and the new option `onError` that provides a callback in the case an error happens that hasn't been handled properly yet. Additionally, there is the new option `schemaHttps` with a boolean value (default: `true`) that specifies if the https version of the schema.org vocabulary should be used, if available for the given vocabulary version (version 9.0 upwards).
+* Breaking API change for the SDOAdapter() constructor: now a parameter object can be passed, with the old option `commit`, and the new option `onError` that provides a callback in the case an error happens that hasn't been handled properly yet. Additionally, there is the new option `schemaHttps` with a boolean value (default: `true`) that specifies if the https version of the schema.org vocabulary should be used, if available for the given vocabulary version (version 9.0 upwards).
 
 3.5.0 / 2021-03-17
 ==================
@@ -72,13 +83,13 @@
 ==================
 
   * Dependencies update.
-  * Minor bug-fix regarding the reusability of **constructSDOVocabularyURL()**.
+  * Minor bug-fix regarding the reusability of **constructURLSchemaVocabulary()**.
 
 3.0.0 / 2020-08-20
 ==================
 
-  * **constructSDOVocabularyURL()** -> Adapted our code to work with the new vocabulary file deployment style/naming. It is not possible to specify the used "parts" of schema.org anymore (e.g. auto, pending, etc.). The files "all-layers.jsonld" and "schemaorg-all-http.jsonld" are now taken as the standard. 
-  * **constructSDOVocabularyURL()** -> In order to ensure the quality of this library we made a fork of schema.org, from which we fetch the data. We have an update script that checks for schema.org releases, executes tests, and if they succeed, the fork will automatically be updated (which consequently enables this library to use the latest release of schema.org). If you want to use the **original repository**, you can pass the commit/branch name to the schema-org-adapter on creation -> `let mySdoAdapter = new SDOAdapter("main")`
+  * **constructURLSchemaVocabulary()** -> Adapted our code to work with the new vocabulary file deployment style/naming. It is not possible to specify the used "parts" of schema.org anymore (e.g. auto, pending, etc.). The files "all-layers.jsonld" and "schemaorg-all-http.jsonld" are now taken as the standard. 
+  * **constructURLSchemaVocabulary()** -> In order to ensure the quality of this library we made a fork of schema.org, from which we fetch the data. We have an update script that checks for schema.org releases, executes tests, and if they succeed, the fork will automatically be updated (which consequently enables this library to use the latest release of schema.org). If you want to use the **original repository**, you can pass the commit/branch name to the schema-org-adapter on creation -> `let mySdoAdapter = new SDOAdapter("main")`
   * Added **getTerm()** for the SDOAdapter JS-Class. This function will automatically detect the term-type for the given URI.  
   * Dependencies update.
   * Changed code-style from Standard to ESLint.

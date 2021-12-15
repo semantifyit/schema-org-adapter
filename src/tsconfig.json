@@ -1,0 +1,26 @@
+{
+  "compilerOptions": {
+    "target": "ES6",
+    "module": "CommonJS",
+    "outDir": "../lib/",
+    "noImplicitAny": true,
+    "sourceMap": true,
+    "esModuleInterop": true,
+    "baseUrl": "./",
+//    "paths": {
+//      "jsonld": ["../node_modules/jsonld/dist/jsonld"] // This mapping is relative to "baseUrl"
+//    },
+    "rootDir": "./",
+    "sourceRoot": "./",
+    "resolveJsonModule": true,
+    "removeComments": true,
+    "noEmitOnError": true,
+    "strict": true,
+    "experimentalDecorators": true,
+    "declaration": true,
+    "declarationMap": true
+  },
+  "include": [
+    "./**/*.ts"
+  ]
+}

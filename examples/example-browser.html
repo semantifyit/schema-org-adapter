@@ -12,16 +12,17 @@
 </div>
 
 </body>
-<script src="../dist/schema-org-adapter.min.js"></script>
+<!--<script src="../dist/schema-org-adapter.min.js"></script>-->
+<script src="../dist/schema-org-adapter.js"></script>
 <!--You can also use a CDN!-->
 <!--<script src="https://cdn.jsdelivr.net/gh/semantifyit/schema-org-adapter/dist/schema-org-adapter.min.js"></script>-->
 <script>
     (async function() {
-        let mySA = new SDOAdapter({ schemaHttps: true });
-        console.log(await mySA.constructSDOVocabularyURL('latest'));
+        let mySA = await SDOAdapter.create({ schemaHttps: true });
+        console.log(await mySA.constructURLSchemaVocabulary('latest'));
         let externalVocabURL = 'https://raw.githubusercontent.com/semantifyit/schema-org-adapter/master/tests/data/vocabulary-animal.json';
 
-        mySA.constructSDOVocabularyURL('10.0').then(function(sdoURL) {
+        mySA.constructURLSchemaVocabulary('10.0').then(function(sdoURL) {
             mySA.addVocabularies([sdoURL, externalVocabURL]).then(function() {
                 let testClass = mySA.getClass('Hotel');
                 console.log(mySA.getVocabularies());

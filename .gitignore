@@ -114,3 +114,5 @@ crashlytics.properties
 crashlytics-build.properties
 fabric.properties
 
+# Generated js files should be on github
+lib/

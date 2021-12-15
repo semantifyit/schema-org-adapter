@@ -1,0 +1,7 @@
+.tsd-hierarchy, .tsd-sources {
+    display: none;
+}
+
+ul.tsd-descriptions > li > :first-child {
+    margin-top: 18px !important;
+}

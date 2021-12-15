@@ -1,6 +1,2344 @@
 (function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.SDOAdapter = f()}})(function(){var define,module,exports;return (function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(_dereq_,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.Class = void 0;
+const Term_1 = _dereq_("./Term");
+const reasoning_1 = _dereq_("./reasoning");
+const namespaces_1 = _dereq_("./namespaces");
+class Class extends Term_1.Term {
+    constructor(IRI, graph) {
+        super(IRI, graph);
+        this.termTypeLabel = namespaces_1.TermTypeLabel.class;
+        this.termTypeIRI = namespaces_1.TermTypeIRI.class;
+    }
+    getTermObj() {
+        return this.graph.classes[this.IRI];
+    }
+    getProperties(implicit = true, filter) {
+        const classObj = this.getTermObj();
+        const result = [];
+        result.push(...classObj[namespaces_1.SOA.hasProperty]);
+        if (implicit) {
+            result.push(...(0, reasoning_1.inferPropertiesFromSuperClasses)(classObj[namespaces_1.RDFS.subClassOf], this.graph));
+        }
+        return (0, reasoning_1.applyFilter)({ data: result, filter, graph: this.graph });
+    }
+    getSuperClasses(implicit = true, filter) {
+        const classObj = this.getTermObj();
+        const result = [];
+        if (implicit) {
+            result.push(...(0, reasoning_1.inferSuperClasses)(this.IRI, this.graph));
+        }
+        else {
+            result.push(...classObj[namespaces_1.RDFS.subClassOf]);
+        }
+        return (0, reasoning_1.applyFilter)({ data: result, filter, graph: this.graph });
+    }
+    getSubClasses(implicit = true, filter) {
+        const classObj = this.getTermObj();
+        const result = [];
+        if (implicit) {
+            result.push(...(0, reasoning_1.inferSubClasses)(this.IRI, this.graph));
+        }
+        else {
+            result.push(...classObj[namespaces_1.SOA.superClassOf]);
+        }
+        return (0, reasoning_1.applyFilter)({ data: result, filter, graph: this.graph });
+    }
+    isRangeOf(implicit = true, filter) {
+        const result = [];
+        if (implicit) {
+            result.push(...(0, reasoning_1.inferRangeOf)(this.IRI, this.graph));
+        }
+        else {
+            result.push(...this.getTermObj()[namespaces_1.SOA.isRangeOf]);
+        }
+        return (0, reasoning_1.applyFilter)({ data: result, filter, graph: this.graph });
+    }
+    toString(implicit = true, filter) {
+        return JSON.stringify(this.toJSON(implicit, filter), null, 2);
+    }
+    toJSON(implicit = true, filter) {
+        const result = super.toJSON();
+        result.superClasses = this.getSuperClasses(implicit, filter);
+        result.subClasses = this.getSubClasses(implicit, filter);
+        result.properties = this.getProperties(implicit, filter);
+        result.rangeOf = this.isRangeOf(implicit, filter);
+        return result;
+    }
+}
+exports.Class = Class;
+
+},{"./Term":9,"./namespaces":12,"./reasoning":13}],2:[function(_dereq_,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.DataType = void 0;
+const Term_1 = _dereq_("./Term");
+const reasoning_1 = _dereq_("./reasoning");
+const namespaces_1 = _dereq_("./namespaces");
+class DataType extends Term_1.Term {
+    constructor(IRI, graph) {
+        super(IRI, graph);
+        this.termTypeLabel = namespaces_1.TermTypeLabel.dataType;
+        this.termTypeIRI = namespaces_1.TermTypeIRI.dataType;
+    }
+    getTermObj() {
+        return this.graph.dataTypes[this.IRI];
+    }
+    getSuperDataTypes(implicit = true, filter) {
+        const dataTypeObj = this.getTermObj();
+        const result = [];
+        if (implicit) {
+            result.push(...(0, reasoning_1.inferSuperDataTypes)(this.IRI, this.graph));
+        }
+        else {
+            result.push(...dataTypeObj[namespaces_1.RDFS.subClassOf]);
+        }
+        return (0, reasoning_1.applyFilter)({ data: result, filter, graph: this.graph });
+    }
+    getSubDataTypes(implicit = true, filter) {
+        const dataTypeObj = this.getTermObj();
+        const result = [];
+        if (implicit) {
+            result.push(...(0, reasoning_1.inferSubDataTypes)(this.IRI, this.graph));
+        }
+        else {
+            result.push(...dataTypeObj[namespaces_1.SOA.superClassOf]);
+        }
+        return (0, reasoning_1.applyFilter)({ data: result, filter, graph: this.graph });
+    }
+    isRangeOf(implicit = true, filter) {
+        const result = [];
+        if (implicit) {
+            result.push(...(0, reasoning_1.inferRangeOf)(this.IRI, this.graph));
+        }
+        else {
+            result.push(...this.getTermObj()[namespaces_1.SOA.isRangeOf]);
+        }
+        return (0, reasoning_1.applyFilter)({ data: result, filter, graph: this.graph });
+    }
+    toJSON(implicit = true, filter) {
+        const result = super.toJSON();
+        result.superDataTypes = this.getSuperDataTypes(implicit, filter);
+        result.subDataTypes = this.getSubDataTypes(implicit, filter);
+        result.rangeOf = this.isRangeOf(implicit, filter);
+        return result;
+    }
+    toString(implicit = true, filter) {
+        return JSON.stringify(this.toJSON(implicit, filter), null, 2);
+    }
+}
+exports.DataType = DataType;
+
+},{"./Term":9,"./namespaces":12,"./reasoning":13}],3:[function(_dereq_,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.Enumeration = void 0;
+const Class_1 = _dereq_("./Class");
+const utilities_1 = _dereq_("./utilities");
+const namespaces_1 = _dereq_("./namespaces");
+const reasoning_1 = _dereq_("./reasoning");
+class Enumeration extends Class_1.Class {
+    constructor(IRI, graph) {
+        super(IRI, graph);
+        this.termTypeLabel = namespaces_1.TermTypeLabel.enumeration;
+        this.termTypeIRI = namespaces_1.TermTypeIRI.enumeration;
+    }
+    getTermObj() {
+        return this.graph.enumerations[this.IRI];
+    }
+    getEnumerationMembers(implicit = true, filter) {
+        const result = [];
+        result.push(...this.getTermObj()[namespaces_1.SOA.hasEnumerationMember]);
+        if (implicit) {
+            const subClasses = this.getSubClasses(true);
+            for (const actSubClass of subClasses) {
+                const actualEnumeration = this.graph.enumerations[actSubClass];
+                if (!(0, utilities_1.isNil)(actualEnumeration)) {
+                    result.push(...actualEnumeration[namespaces_1.SOA.hasEnumerationMember]);
+                }
+            }
+        }
+        return (0, reasoning_1.applyFilter)({ data: result, filter, graph: this.graph });
+    }
+    toString(implicit = true, filter) {
+        return JSON.stringify(this.toJSON(implicit, filter), null, 2);
+    }
+    toJSON(implicit = true, filter) {
+        const result = super.toJSON(implicit, filter);
+        result.enumerationMembers = this.getEnumerationMembers(implicit, filter);
+        return result;
+    }
+}
+exports.Enumeration = Enumeration;
+
+},{"./Class":1,"./namespaces":12,"./reasoning":13,"./utilities":14}],4:[function(_dereq_,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.EnumerationMember = void 0;
+const Term_1 = _dereq_("./Term");
+const utilities_1 = _dereq_("./utilities");
+const reasoning_1 = _dereq_("./reasoning");
+const namespaces_1 = _dereq_("./namespaces");
+class EnumerationMember extends Term_1.Term {
+    constructor(IRI, graph) {
+        super(IRI, graph);
+        this.termTypeLabel = namespaces_1.TermTypeLabel.enumerationMember;
+        this.termTypeIRI = namespaces_1.TermTypeIRI.enumerationMember;
+    }
+    getTermObj() {
+        return this.graph.enumerationMembers[this.IRI];
+    }
+    getDomainEnumerations(implicit = true, filter) {
+        const enumObj = this.getTermObj();
+        let result = [];
+        result.push(...enumObj[namespaces_1.SOA.enumerationDomainIncludes]);
+        if (implicit) {
+            const domainEnumerationsToCheck = (0, utilities_1.cloneJson)(result);
+            for (const actDE of domainEnumerationsToCheck) {
+                result.push(...(0, reasoning_1.inferSuperClasses)(actDE, this.graph));
+            }
+            result = (0, reasoning_1.applyFilter)({
+                data: result,
+                filter: { termType: namespaces_1.TermTypeLabel.enumeration },
+                graph: this.graph,
+            });
+        }
+        return (0, reasoning_1.applyFilter)({ data: result, filter, graph: this.graph });
+    }
+    toString(implicit = true, filter) {
+        return JSON.stringify(this.toJSON(implicit, filter), null, 2);
+    }
+    toJSON(implicit = true, filter) {
+        const result = super.toJSON();
+        result["domainEnumerations"] = this.getDomainEnumerations(implicit, filter);
+        return result;
+    }
+}
+exports.EnumerationMember = EnumerationMember;
+
+},{"./Term":9,"./namespaces":12,"./reasoning":13,"./utilities":14}],5:[function(_dereq_,module,exports){
+"use strict";
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.Graph = void 0;
+const Class_1 = _dereq_("./Class");
+const Property_1 = _dereq_("./Property");
+const Enumeration_1 = _dereq_("./Enumeration");
+const EnumerationMember_1 = _dereq_("./EnumerationMember");
+const DataType_1 = _dereq_("./DataType");
+const utilities_1 = _dereq_("./utilities");
+const namespaces_1 = _dereq_("./namespaces");
+const graphUtilities_1 = _dereq_("./graphUtilities");
+const reasoning_1 = _dereq_("./reasoning");
+class Graph {
+    constructor(sdoAdapter) {
+        this.sdoAdapter = sdoAdapter;
+        this.context = (0, graphUtilities_1.getStandardContext)();
+        this.classes = {};
+        this.properties = {};
+        this.dataTypes = {};
+        this.enumerations = {};
+        this.enumerationMembers = {};
+    }
+    addVocabulary(vocab, vocabURL) {
+        return __awaiter(this, void 0, void 0, function* () {
+            if (this.context.schema === undefined) {
+                this.context.schema =
+                    (0, graphUtilities_1.discoverUsedSchemaOrgProtocol)(vocab) + "://schema.org/";
+            }
+            try {
+                if (this.sdoAdapter.equateVocabularyProtocols) {
+                    const equateNamespaces = (0, graphUtilities_1.discoverEquateNamespaces)(this.context, vocab);
+                    if (equateNamespaces.length > 0) {
+                        const adaptedContext = (0, utilities_1.cloneJson)(vocab["@context"]);
+                        equateNamespaces.forEach((ens) => {
+                            const usedKeyToDelete = Object.keys(adaptedContext).find((el) => adaptedContext[el] === ens);
+                            if (usedKeyToDelete) {
+                                delete adaptedContext[usedKeyToDelete];
+                            }
+                            const keyToUse = Object.keys(this.context).find((el) => this.context[el] === (0, utilities_1.switchIRIProtocol)(ens));
+                            adaptedContext[keyToUse] = ens;
+                        });
+                        vocab = (yield (0, graphUtilities_1.preProcessVocab)(vocab, adaptedContext));
+                        equateNamespaces.forEach((ens) => {
+                            const keyToUse = Object.keys(this.context).find((el) => this.context[el] === (0, utilities_1.switchIRIProtocol)(ens));
+                            vocab["@context"][keyToUse] =
+                                this.context[keyToUse];
+                        });
+                    }
+                }
+                this.context = (0, graphUtilities_1.generateContext)(this.context, vocab["@context"]);
+                vocab = (yield (0, graphUtilities_1.preProcessVocab)(vocab, this.context));
+                const vocabularies = this.sdoAdapter.getVocabularies();
+                for (let vocabNode of vocab["@graph"]) {
+                    vocabNode = (0, graphUtilities_1.curateVocabNode)(vocabNode, vocabularies);
+                }
+                for (let i = 0; i < vocab["@graph"].length; i++) {
+                    const curNode = (0, utilities_1.cloneJson)(vocab["@graph"][i]);
+                    if ((0, utilities_1.isString)(curNode["@type"])) {
+                        switch (curNode["@type"]) {
+                            case namespaces_1.TermTypeIRI.class:
+                                this.addGraphNode(this.classes, curNode, vocabURL);
+                                break;
+                            case namespaces_1.TermTypeIRI.property:
+                                this.addGraphNode(this.properties, curNode, vocabURL);
+                                break;
+                            default:
+                                this.addGraphNode(this.enumerationMembers, curNode, vocabURL);
+                                break;
+                        }
+                    }
+                    else if ((0, utilities_1.isArray)(curNode["@type"])) {
+                        if (curNode["@type"].includes(namespaces_1.TermTypeIRI.class) &&
+                            curNode["@type"].includes(namespaces_1.TermTypeIRI.dataType)) {
+                            this.addGraphNode(this.dataTypes, curNode, vocabURL);
+                        }
+                        else {
+                            this.addGraphNode(this.enumerationMembers, curNode, vocabURL);
+                        }
+                    }
+                    else {
+                        this.sdoAdapter.onError("unexpected @type format for the following node: " +
+                            JSON.stringify(curNode, null, 2));
+                    }
+                }
+                let newEnum;
+                do {
+                    newEnum = false;
+                    const classesKeys = Object.keys(this.classes);
+                    const enumKeys = Object.keys(this.enumerations);
+                    for (const actClassKey of classesKeys) {
+                        if (this.classes[actClassKey][namespaces_1.RDFS.subClassOf] !== undefined) {
+                            const subClassArray = this.classes[actClassKey][namespaces_1.RDFS.subClassOf];
+                            for (const actSubClass of subClassArray) {
+                                if (actSubClass === namespaces_1.TermTypeIRI.enumeration ||
+                                    enumKeys.includes(actSubClass)) {
+                                    if (this.classes[actClassKey] &&
+                                        !this.enumerations[actClassKey]) {
+                                        newEnum = true;
+                                        this.enumerations[actClassKey] = (0, utilities_1.cloneJson)(this.classes[actClassKey]);
+                                        delete this.classes[actClassKey];
+                                    }
+                                }
+                            }
+                        }
+                    }
+                } while (newEnum);
+                let newDatatype;
+                do {
+                    newDatatype = false;
+                    const classesKeys = Object.keys(this.classes);
+                    const dtKeys = Object.keys(this.dataTypes);
+                    for (const actClassKey of classesKeys) {
+                        if (this.classes[actClassKey][namespaces_1.RDFS.subClassOf] !== undefined) {
+                            const subClassArray = this.classes[actClassKey][namespaces_1.RDFS.subClassOf];
+                            for (const actSubClass of subClassArray) {
+                                if (actSubClass === namespaces_1.TermTypeIRI.dataType ||
+                                    dtKeys.includes(actSubClass)) {
+                                    if (this.classes[actClassKey] && !this.dataTypes[actClassKey]) {
+                                        newDatatype = true;
+                                        this.dataTypes[actClassKey] = (0, utilities_1.cloneJson)(this.classes[actClassKey]);
+                                        delete this.classes[actClassKey];
+                                    }
+                                }
+                            }
+                        }
+                    }
+                } while (newDatatype);
+                const dtKeys = Object.keys(this.dataTypes);
+                for (const actDtKey of dtKeys) {
+                    this.dataTypes[actDtKey]["@type"] = namespaces_1.TermTypeIRI.dataType;
+                }
+                let classesKeys = Object.keys(this.classes);
+                for (const actClassKey of classesKeys) {
+                    const superClasses = this.classes[actClassKey][namespaces_1.RDFS.subClassOf];
+                    if (!this.classes[actClassKey][namespaces_1.SOA.superClassOf]) {
+                        this.classes[actClassKey][namespaces_1.SOA.superClassOf] = [];
+                    }
+                    for (const actSuperClass of superClasses) {
+                        let superClass = this.classes[actSuperClass];
+                        if (!superClass) {
+                            superClass = this.enumerations[actSuperClass];
+                        }
+                        if (superClass) {
+                            if (superClass[namespaces_1.SOA.superClassOf]) {
+                                if (!superClass[namespaces_1.SOA.superClassOf].includes(actClassKey)) {
+                                    superClass[namespaces_1.SOA.superClassOf].push(actClassKey);
+                                }
+                            }
+                            else {
+                                superClass[namespaces_1.SOA.superClassOf] = [actClassKey];
+                            }
+                        }
+                    }
+                }
+                let enumKeys = Object.keys(this.enumerations);
+                for (const actEnumKey of enumKeys) {
+                    const superClasses = this.enumerations[actEnumKey][namespaces_1.RDFS.subClassOf];
+                    if (!this.enumerations[actEnumKey][namespaces_1.SOA.superClassOf]) {
+                        this.enumerations[actEnumKey][namespaces_1.SOA.superClassOf] = [];
+                    }
+                    for (const actSuperClass of superClasses) {
+                        let superClass = this.classes[actSuperClass];
+                        if (!superClass) {
+                            superClass = this.enumerations[actSuperClass];
+                        }
+                        if (superClass) {
+                            if (superClass[namespaces_1.SOA.superClassOf]) {
+                                if (!superClass[namespaces_1.SOA.superClassOf].includes(actEnumKey)) {
+                                    superClass[namespaces_1.SOA.superClassOf].push(actEnumKey);
+                                }
+                            }
+                            else {
+                                superClass[namespaces_1.SOA.superClassOf] = [actEnumKey];
+                            }
+                        }
+                    }
+                }
+                let dataTypeKeys = Object.keys(this.dataTypes);
+                for (const actDtKey of dataTypeKeys) {
+                    const superClasses = this.dataTypes[actDtKey][namespaces_1.RDFS.subClassOf];
+                    if (!this.dataTypes[actDtKey][namespaces_1.SOA.superClassOf]) {
+                        this.dataTypes[actDtKey][namespaces_1.SOA.superClassOf] = [];
+                    }
+                    if (!superClasses) {
+                        this.dataTypes[actDtKey][namespaces_1.RDFS.subClassOf] = [];
+                    }
+                    else {
+                        for (const actSuperClass of superClasses) {
+                            const superClass = this.dataTypes[actSuperClass];
+                            if (superClass) {
+                                if (superClass[namespaces_1.SOA.superClassOf]) {
+                                    if (!superClass[namespaces_1.SOA.superClassOf].includes(actDtKey)) {
+                                        superClass[namespaces_1.SOA.superClassOf].push(actDtKey);
+                                    }
+                                }
+                                else {
+                                    superClass[namespaces_1.SOA.superClassOf] = [actDtKey];
+                                }
+                            }
+                        }
+                    }
+                }
+                let propertyKeys = Object.keys(this.properties);
+                for (const actPropKey of propertyKeys) {
+                    const superProperties = this.properties[actPropKey][namespaces_1.RDFS.subPropertyOf];
+                    if (!this.properties[actPropKey][namespaces_1.SOA.superPropertyOf]) {
+                        this.properties[actPropKey][namespaces_1.SOA.superPropertyOf] = [];
+                    }
+                    if (!superProperties) {
+                        this.properties[actPropKey][namespaces_1.RDFS.subPropertyOf] = [];
+                    }
+                    else {
+                        for (const actSuperProp of superProperties) {
+                            const superClass = this.properties[actSuperProp];
+                            if (superClass) {
+                                if (superClass[namespaces_1.SOA.superPropertyOf]) {
+                                    if (!superClass[namespaces_1.SOA.superPropertyOf].includes(actPropKey)) {
+                                        superClass[namespaces_1.SOA.superPropertyOf].push(actPropKey);
+                                    }
+                                }
+                                else {
+                                    superClass[namespaces_1.SOA.superPropertyOf] = [actPropKey];
+                                }
+                            }
+                        }
+                    }
+                }
+                classesKeys = Object.keys(this.classes);
+                for (const actClassKey of classesKeys) {
+                    if (!this.classes[actClassKey][namespaces_1.SOA.hasProperty]) {
+                        this.classes[actClassKey][namespaces_1.SOA.hasProperty] = [];
+                    }
+                    if (!this.classes[actClassKey][namespaces_1.SOA.isRangeOf]) {
+                        this.classes[actClassKey][namespaces_1.SOA.isRangeOf] = [];
+                    }
+                }
+                enumKeys = Object.keys(this.enumerations);
+                for (const actEnumKey of enumKeys) {
+                    if (!this.enumerations[actEnumKey][namespaces_1.SOA.hasEnumerationMember]) {
+                        this.enumerations[actEnumKey][namespaces_1.SOA.hasEnumerationMember] = [];
+                    }
+                    if (!this.enumerations[actEnumKey][namespaces_1.SOA.isRangeOf]) {
+                        this.enumerations[actEnumKey][namespaces_1.SOA.isRangeOf] = [];
+                    }
+                    if (!this.enumerations[actEnumKey][namespaces_1.SOA.hasProperty]) {
+                        this.enumerations[actEnumKey][namespaces_1.SOA.hasProperty] = [];
+                    }
+                }
+                dataTypeKeys = Object.keys(this.dataTypes);
+                for (const actDataTypeKey of dataTypeKeys) {
+                    if (!this.dataTypes[actDataTypeKey][namespaces_1.SOA.isRangeOf]) {
+                        this.dataTypes[actDataTypeKey][namespaces_1.SOA.isRangeOf] = [];
+                    }
+                }
+                let enumMemKeys = Object.keys(this.enumerationMembers);
+                for (const actEnumMemKey of enumMemKeys) {
+                    if (!this.enumerationMembers[actEnumMemKey][namespaces_1.SOA.enumerationDomainIncludes]) {
+                        this.enumerationMembers[actEnumMemKey][namespaces_1.SOA.enumerationDomainIncludes] = [];
+                    }
+                }
+                propertyKeys = Object.keys(this.properties);
+                for (const actPropKey of propertyKeys) {
+                    const domainIncludesArray = this.properties[actPropKey][namespaces_1.SCHEMA.domainIncludes];
+                    if ((0, utilities_1.isArray)(domainIncludesArray)) {
+                        for (const actDomain of domainIncludesArray) {
+                            let target = this.classes[actDomain];
+                            if (!target) {
+                                target = this.enumerations[actDomain];
+                            }
+                            if (target &&
+                                (0, utilities_1.isArray)(target[namespaces_1.SOA.hasProperty]) &&
+                                !target[namespaces_1.SOA.hasProperty].includes(actPropKey)) {
+                                target[namespaces_1.SOA.hasProperty].push(actPropKey);
+                            }
+                        }
+                    }
+                    const rangeIncludesArray = this.properties[actPropKey][namespaces_1.SCHEMA.rangeIncludes];
+                    if ((0, utilities_1.isArray)(rangeIncludesArray)) {
+                        for (const actRange of rangeIncludesArray) {
+                            const target = this.classes[actRange] ||
+                                this.enumerations[actRange] ||
+                                this.dataTypes[actRange];
+                            if (target &&
+                                (0, utilities_1.isArray)(target[namespaces_1.SOA.isRangeOf]) &&
+                                !target[namespaces_1.SOA.isRangeOf].includes(actPropKey)) {
+                                target[namespaces_1.SOA.isRangeOf].push(actPropKey);
+                            }
+                        }
+                    }
+                }
+                enumMemKeys = Object.keys(this.enumerationMembers);
+                for (const actEnumMemKey of enumMemKeys) {
+                    const enumMem = this.enumerationMembers[actEnumMemKey];
+                    let enumMemTypeArray = enumMem["@type"];
+                    if (!(0, utilities_1.isArray)(enumMemTypeArray)) {
+                        enumMemTypeArray = [enumMemTypeArray];
+                    }
+                    for (const actEnumMemType of enumMemTypeArray) {
+                        const target = this.enumerations[actEnumMemType];
+                        if (target &&
+                            (0, utilities_1.isArray)(target[namespaces_1.SOA.hasEnumerationMember]) &&
+                            !target[namespaces_1.SOA.hasEnumerationMember].includes(actEnumMemKey)) {
+                            target[namespaces_1.SOA.hasEnumerationMember].push(actEnumMemKey);
+                            if ((0, utilities_1.isArray)(enumMem[namespaces_1.SOA.enumerationDomainIncludes])) {
+                                enumMem[namespaces_1.SOA.enumerationDomainIncludes].push(actEnumMemType);
+                            }
+                            else {
+                                enumMem[namespaces_1.SOA.enumerationDomainIncludes] = [actEnumMemType];
+                            }
+                        }
+                    }
+                }
+                return true;
+            }
+            catch (e) {
+                this.sdoAdapter.onError(e);
+                return false;
+            }
+        });
+    }
+    addGraphNode(memory, newNode, vocabURL) {
+        try {
+            if (!memory[newNode["@id"]]) {
+                memory[newNode["@id"]] = newNode;
+                if (vocabURL) {
+                    memory[newNode["@id"]]["vocabURLs"] = [vocabURL];
+                }
+            }
+            else {
+                const oldNode = memory[newNode["@id"]];
+                if (!(0, utilities_1.isNil)(newNode[namespaces_1.SCHEMA.isPartOf])) {
+                    oldNode[namespaces_1.SCHEMA.isPartOf] = newNode[namespaces_1.SCHEMA.isPartOf];
+                }
+                if (!(0, utilities_1.isNil)(newNode[namespaces_1.DC.source])) {
+                    oldNode[namespaces_1.DC.source] = newNode[namespaces_1.DC.source];
+                }
+                if (!(0, utilities_1.isNil)(newNode[namespaces_1.SCHEMA.source])) {
+                    oldNode[namespaces_1.SCHEMA.source] = newNode[namespaces_1.SCHEMA.source];
+                }
+                if (!(0, utilities_1.isNil)(newNode[namespaces_1.SCHEMA.category])) {
+                    oldNode[namespaces_1.SCHEMA.category] = newNode[namespaces_1.SCHEMA.category];
+                }
+                if (!(0, utilities_1.isNil)(newNode[namespaces_1.SCHEMA.supersededBy])) {
+                    oldNode[namespaces_1.SCHEMA.supersededBy] = newNode[namespaces_1.SCHEMA.supersededBy];
+                }
+                if (!(0, utilities_1.isNil)(newNode[namespaces_1.RDFS.label])) {
+                    const labelKeysNew = Object.keys(newNode[namespaces_1.RDFS.label]);
+                    for (const actLabelKey of labelKeysNew) {
+                        oldNode[namespaces_1.RDFS.label][actLabelKey] = newNode[namespaces_1.RDFS.label][actLabelKey];
+                    }
+                }
+                if (!(0, utilities_1.isNil)(newNode[namespaces_1.RDFS.comment])) {
+                    const commentKeysNew = Object.keys(newNode[namespaces_1.RDFS.comment]);
+                    for (const actCommentKey of commentKeysNew) {
+                        oldNode[namespaces_1.RDFS.comment][actCommentKey] =
+                            newNode[namespaces_1.RDFS.comment][actCommentKey];
+                    }
+                }
+                if (!(0, utilities_1.isNil)(newNode[namespaces_1.RDFS.subClassOf])) {
+                    for (const actSuperClass of newNode[namespaces_1.RDFS.subClassOf]) {
+                        if (!oldNode[namespaces_1.RDFS.subClassOf].includes(actSuperClass)) {
+                            oldNode[namespaces_1.RDFS.subClassOf].push(actSuperClass);
+                        }
+                    }
+                }
+                if (!(0, utilities_1.isNil)(newNode[namespaces_1.SOA.superClassOf])) {
+                    for (const actSubClass of newNode[namespaces_1.SOA.superClassOf]) {
+                        if (!oldNode[namespaces_1.SOA.superClassOf].includes(actSubClass)) {
+                            oldNode[namespaces_1.SOA.superClassOf].push(actSubClass);
+                        }
+                    }
+                }
+                if (!(0, utilities_1.isNil)(newNode[namespaces_1.SOA.hasProperty])) {
+                    for (const actProp of newNode[namespaces_1.SOA.hasProperty]) {
+                        if (!oldNode[namespaces_1.SOA.hasProperty].includes(actProp)) {
+                            oldNode[namespaces_1.SOA.hasProperty].push(actProp);
+                        }
+                    }
+                }
+                if (!(0, utilities_1.isNil)(newNode[namespaces_1.SOA.isRangeOf])) {
+                    for (const actProp of newNode[namespaces_1.SOA.isRangeOf]) {
+                        if (!oldNode[namespaces_1.SOA.isRangeOf].includes(actProp)) {
+                            oldNode[namespaces_1.SOA.isRangeOf].push(actProp);
+                        }
+                    }
+                }
+                if (!(0, utilities_1.isNil)(newNode[namespaces_1.SOA.enumerationDomainIncludes])) {
+                    for (const actEnum of newNode[namespaces_1.SOA.enumerationDomainIncludes]) {
+                        if (!oldNode[namespaces_1.SOA.enumerationDomainIncludes].includes(actEnum)) {
+                            oldNode[namespaces_1.SOA.enumerationDomainIncludes].push(actEnum);
+                        }
+                    }
+                }
+                if (!(0, utilities_1.isNil)(newNode[namespaces_1.SOA.hasEnumerationMember])) {
+                    for (const actEnumMem of newNode[namespaces_1.SOA.hasEnumerationMember]) {
+                        if (!oldNode[namespaces_1.SOA.hasEnumerationMember].includes(actEnumMem)) {
+                            oldNode[namespaces_1.SOA.hasEnumerationMember].push(actEnumMem);
+                        }
+                    }
+                }
+                if (!(0, utilities_1.isNil)(newNode[namespaces_1.RDFS.subPropertyOf])) {
+                    for (const actProp of newNode[namespaces_1.RDFS.subPropertyOf]) {
+                        if (!oldNode[namespaces_1.RDFS.subPropertyOf].includes(actProp)) {
+                            oldNode[namespaces_1.RDFS.subPropertyOf].push(actProp);
+                        }
+                    }
+                }
+                if (!(0, utilities_1.isNil)(newNode[namespaces_1.SCHEMA.domainIncludes])) {
+                    for (const actDomain of newNode[namespaces_1.SCHEMA.domainIncludes]) {
+                        if (!oldNode[namespaces_1.SCHEMA.domainIncludes].includes(actDomain)) {
+                            oldNode[namespaces_1.SCHEMA.domainIncludes].push(actDomain);
+                        }
+                    }
+                }
+                if (!(0, utilities_1.isNil)(newNode[namespaces_1.SCHEMA.rangeIncludes])) {
+                    for (const actRange of newNode[namespaces_1.SCHEMA.rangeIncludes]) {
+                        if (!oldNode[namespaces_1.SCHEMA.rangeIncludes].includes(actRange)) {
+                            oldNode[namespaces_1.SCHEMA.rangeIncludes].push(actRange);
+                        }
+                    }
+                }
+                if (!(0, utilities_1.isNil)(newNode[namespaces_1.SOA.superPropertyOf])) {
+                    for (const actProp of newNode[namespaces_1.SOA.superPropertyOf]) {
+                        if (!oldNode[namespaces_1.SOA.superPropertyOf].includes(actProp)) {
+                            oldNode[namespaces_1.SOA.superPropertyOf].push(actProp);
+                        }
+                    }
+                }
+                if (vocabURL) {
+                    if (oldNode["vocabURLs"]) {
+                        if (!oldNode["vocabURLs"].includes(vocabURL)) {
+                            oldNode["vocabURLs"].push(vocabURL);
+                        }
+                    }
+                    else {
+                        oldNode["vocabURLs"] = [vocabURL];
+                    }
+                }
+            }
+            return true;
+        }
+        catch (e) {
+            this.sdoAdapter.onError(e);
+            return false;
+        }
+    }
+    getTerm(id, filter) {
+        const compactIRI = this.discoverCompactIRI(id);
+        if (!compactIRI) {
+            throw new Error("There is no term with the IRI " + id);
+        }
+        let targetObj;
+        let targetType;
+        let tryCounter = 0;
+        do {
+            switch (tryCounter) {
+                case 0:
+                    targetObj = this.classes[compactIRI];
+                    targetType = "Class";
+                    break;
+                case 1:
+                    targetObj = this.properties[compactIRI];
+                    targetType = "Property";
+                    break;
+                case 2:
+                    targetObj = this.dataTypes[compactIRI];
+                    targetType = "DataType";
+                    break;
+                case 3:
+                    targetObj = this.enumerations[compactIRI];
+                    targetType = "Enumeration";
+                    break;
+                case 4:
+                    targetObj = this.enumerationMembers[compactIRI];
+                    targetType = "EnumerationMember";
+                    break;
+            }
+            tryCounter++;
+        } while (!targetObj && tryCounter < 6);
+        if (!targetObj || !targetType) {
+            throw new Error("There is no term with the IRI " + id);
+        }
+        targetObj = (0, reasoning_1.applyFilter)({
+            data: [targetObj["@id"]],
+            filter,
+            graph: this,
+        });
+        if (targetObj.length === 0) {
+            throw new Error("There is no term with that IRI and filter settings.");
+        }
+        switch (targetType) {
+            case "Class":
+                return new Class_1.Class(compactIRI, this);
+            case "Property":
+                return new Property_1.Property(compactIRI, this);
+            case "Enumeration":
+                return new Enumeration_1.Enumeration(compactIRI, this);
+            case "EnumerationMember":
+                return new EnumerationMember_1.EnumerationMember(compactIRI, this);
+            case "DataType":
+                return new DataType_1.DataType(compactIRI, this);
+        }
+        throw new Error("targetType with unknown value: " + targetType);
+    }
+    getClass(id, filter) {
+        const compactIRI = this.discoverCompactIRI(id);
+        if (compactIRI) {
+            let classObj = this.classes[compactIRI];
+            if (classObj) {
+                classObj = (0, reasoning_1.applyFilter)({ data: [compactIRI], filter, graph: this });
+                if (classObj.length === 0) {
+                    throw new Error("There is no class with that IRI and filter settings.");
+                }
+                else {
+                    return new Class_1.Class(compactIRI, this);
+                }
+            }
+            else {
+                classObj = this.enumerations[compactIRI];
+                if (classObj) {
+                    try {
+                        return this.getEnumeration(compactIRI, filter);
+                    }
+                    catch (e) {
+                        throw new Error("There is no class with that IRI and filter settings.");
+                    }
+                }
+            }
+        }
+        throw new Error("There is no class with the IRI " + id);
+    }
+    getProperty(id, filter) {
+        const compactIRI = this.discoverCompactIRI(id);
+        if (compactIRI) {
+            let propertyObj = this.properties[compactIRI];
+            if (propertyObj) {
+                propertyObj = (0, reasoning_1.applyFilter)({ data: [compactIRI], filter, graph: this });
+                if (propertyObj.length === 0) {
+                    throw new Error("There is no property with that URI and filter settings.");
+                }
+                else {
+                    return new Property_1.Property(compactIRI, this);
+                }
+            }
+        }
+        throw new Error("There is no property with that URI.");
+    }
+    getDataType(id, filter) {
+        const compactIRI = this.discoverCompactIRI(id);
+        if (compactIRI) {
+            let dataTypeObj = this.dataTypes[compactIRI];
+            if (dataTypeObj) {
+                dataTypeObj = (0, reasoning_1.applyFilter)({ data: [compactIRI], filter, graph: this });
+                if (dataTypeObj.length === 0) {
+                    throw new Error("There is no data-type with that IRI and filter settings.");
+                }
+                else {
+                    return new DataType_1.DataType(compactIRI, this);
+                }
+            }
+        }
+        throw new Error("There is no data-type with the IRI " + id);
+    }
+    getEnumeration(id, filter) {
+        const compactIRI = this.discoverCompactIRI(id);
+        if (compactIRI) {
+            let enumObj = this.enumerations[compactIRI];
+            if (enumObj) {
+                enumObj = (0, reasoning_1.applyFilter)({ data: [compactIRI], filter, graph: this });
+                if (enumObj.length === 0) {
+                    throw new Error("There is no enumeration with that IRI and filter settings.");
+                }
+                else {
+                    return new Enumeration_1.Enumeration(compactIRI, this);
+                }
+            }
+        }
+        throw new Error("There is no enumeration with the IRI " + id);
+    }
+    getEnumerationMember(id, filter) {
+        const compactIRI = this.discoverCompactIRI(id);
+        if (compactIRI) {
+            let enumObj = this.enumerationMembers[compactIRI];
+            if (enumObj) {
+                enumObj = (0, reasoning_1.applyFilter)({ data: [compactIRI], filter, graph: this });
+                if (enumObj.length === 0) {
+                    throw new Error("There is no EnumerationMember with that IRI and filter settings.");
+                }
+                else {
+                    return new EnumerationMember_1.EnumerationMember(compactIRI, this);
+                }
+            }
+        }
+        throw new Error("There is no EnumerationMember with the IRI " + id);
+    }
+    discoverCompactIRI(input) {
+        if (input.includes(":")) {
+            const terms = Object.keys(this.context);
+            for (const actTerm of terms) {
+                const absoluteIRI = this.context[actTerm];
+                if ((0, utilities_1.isString)(absoluteIRI)) {
+                    if (input.startsWith(actTerm)) {
+                        return input;
+                    }
+                    else if (input.startsWith(absoluteIRI) ||
+                        (this.sdoAdapter.equateVocabularyProtocols &&
+                            input.startsWith((0, utilities_1.switchIRIProtocol)(absoluteIRI)))) {
+                        return (0, utilities_1.toCompactIRI)(input, this.context, this.sdoAdapter.equateVocabularyProtocols);
+                    }
+                }
+            }
+        }
+        else {
+            const classesKeys = Object.keys(this.classes);
+            for (const actClassKey of classesKeys) {
+                if (this.containsLabel(this.classes[actClassKey], input)) {
+                    return actClassKey;
+                }
+            }
+            const propertiesKeys = Object.keys(this.properties);
+            for (const actPropKey of propertiesKeys) {
+                if (this.containsLabel(this.properties[actPropKey], input)) {
+                    return actPropKey;
+                }
+            }
+            const dataTypeKeys = Object.keys(this.dataTypes);
+            for (const actDtKey of dataTypeKeys) {
+                if (this.containsLabel(this.dataTypes[actDtKey], input)) {
+                    return actDtKey;
+                }
+            }
+            const enumerationKeys = Object.keys(this.enumerations);
+            for (const actEnumKey of enumerationKeys) {
+                if (this.containsLabel(this.enumerations[actEnumKey], input)) {
+                    return actEnumKey;
+                }
+            }
+            const enumerationMemberKeys = Object.keys(this.enumerationMembers);
+            for (const actEnumMemKey of enumerationMemberKeys) {
+                if (this.containsLabel(this.enumerationMembers[actEnumMemKey], input)) {
+                    return actEnumMemKey;
+                }
+            }
+        }
+        return null;
+    }
+    containsLabel(termObj, label) {
+        if (termObj && (0, utilities_1.isObject)(termObj[namespaces_1.RDFS.label])) {
+            const langKeys = Object.keys(termObj[namespaces_1.RDFS.label]);
+            for (const actLangKey of langKeys) {
+                if (termObj[namespaces_1.RDFS.label][actLangKey] === label) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+}
+exports.Graph = Graph;
+
+},{"./Class":1,"./DataType":2,"./Enumeration":3,"./EnumerationMember":4,"./Property":6,"./graphUtilities":10,"./namespaces":12,"./reasoning":13,"./utilities":14}],6:[function(_dereq_,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.Property = void 0;
+const Term_1 = _dereq_("./Term");
+const reasoning_1 = _dereq_("./reasoning");
+const namespaces_1 = _dereq_("./namespaces");
+class Property extends Term_1.Term {
+    constructor(IRI, graph) {
+        super(IRI, graph);
+        this.termTypeLabel = namespaces_1.TermTypeLabel.property;
+        this.termTypeIRI = namespaces_1.TermTypeIRI.property;
+    }
+    getTermObj() {
+        return this.graph.properties[this.IRI];
+    }
+    getRanges(implicit = true, filter) {
+        const propertyObj = this.getTermObj();
+        const result = [];
+        result.push(...propertyObj[namespaces_1.SCHEMA.rangeIncludes]);
+        if (implicit) {
+            for (const actRes of result) {
+                result.push(...(0, reasoning_1.inferSubDataTypes)(actRes, this.graph));
+            }
+            for (const actRes of result) {
+                result.push(...(0, reasoning_1.inferSubClasses)(actRes, this.graph));
+            }
+        }
+        return (0, reasoning_1.applyFilter)({ data: result, filter, graph: this.graph });
+    }
+    getDomains(implicit = true, filter) {
+        const propertyObj = this.getTermObj();
+        const result = [];
+        result.push(...propertyObj[namespaces_1.SCHEMA.domainIncludes]);
+        if (implicit) {
+            const inferredSubClasses = [];
+            for (const actRes of result) {
+                inferredSubClasses.push(...(0, reasoning_1.inferSubClasses)(actRes, this.graph));
+            }
+            result.push(...inferredSubClasses);
+        }
+        return (0, reasoning_1.applyFilter)({ data: result, filter, graph: this.graph });
+    }
+    getSuperProperties(implicit = true, filter) {
+        const propertyObj = this.getTermObj();
+        const result = [];
+        if (implicit) {
+            result.push(...(0, reasoning_1.inferSuperProperties)(this.IRI, this.graph));
+        }
+        else {
+            result.push(...propertyObj[namespaces_1.RDFS.subPropertyOf]);
+        }
+        return (0, reasoning_1.applyFilter)({ data: result, filter, graph: this.graph });
+    }
+    getSubProperties(implicit = true, filter) {
+        const propertyObj = this.getTermObj();
+        const result = [];
+        if (implicit) {
+            result.push(...(0, reasoning_1.inferSubProperties)(this.IRI, this.graph));
+        }
+        else {
+            result.push(...propertyObj[namespaces_1.SOA.superPropertyOf]);
+        }
+        return (0, reasoning_1.applyFilter)({ data: result, filter, graph: this.graph });
+    }
+    getInverseOf() {
+        const propertyObj = this.getTermObj();
+        return propertyObj[namespaces_1.SCHEMA.inverseOf];
+    }
+    toString(implicit = true, filter) {
+        return JSON.stringify(this.toJSON(implicit, filter), null, 2);
+    }
+    toJSON(implicit = true, filter) {
+        const result = super.toJSON();
+        result["ranges"] = this.getRanges(implicit, filter);
+        result["domains"] = this.getDomains(implicit, filter);
+        result["superProperties"] = this.getSuperProperties(implicit, filter);
+        result["subProperties"] = this.getSubProperties(implicit, filter);
+        result["inverseOf"] = this.getInverseOf();
+        return result;
+    }
+}
+exports.Property = Property;
+
+},{"./Term":9,"./namespaces":12,"./reasoning":13}],7:[function(_dereq_,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.RetrievalMemory = void 0;
+const utilities_1 = _dereq_("./utilities");
+class RetrievalMemory {
+    constructor() {
+        this.cache = new Map();
+    }
+    static getInstance() {
+        if (!RetrievalMemory.instance) {
+            RetrievalMemory.instance = new RetrievalMemory();
+        }
+        return RetrievalMemory.instance;
+    }
+    setData(dataId, data, commit = "standard") {
+        let entry = this.cache.get(commit);
+        if (!entry) {
+            entry = {};
+            this.cache.set(commit, entry);
+        }
+        entry[dataId] = (0, utilities_1.cloneJson)(data);
+    }
+    getData(dataId, commit = "standard") {
+        const entry = this.cache.get(commit);
+        if (entry) {
+            return (0, utilities_1.cloneJson)(entry[dataId]);
+        }
+        return undefined;
+    }
+    deleteCache() {
+        this.cache = new Map();
+    }
+}
+exports.RetrievalMemory = RetrievalMemory;
+
+},{"./utilities":14}],8:[function(_dereq_,module,exports){
+"use strict";
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.SDOAdapter = void 0;
+const Graph_1 = _dereq_("./Graph");
+const axios_1 = __importDefault(_dereq_("axios"));
+const utilities_1 = _dereq_("./utilities");
+const reasoning_1 = _dereq_("./reasoning");
+class SDOAdapter {
+    constructor(paramObj) {
+        if (paramObj && paramObj.commit) {
+            this.commit = paramObj.commit;
+        }
+        if (paramObj && typeof paramObj.onError === "function") {
+            this.onError = paramObj.onError;
+        }
+        else {
+            this.onError = function () {
+            };
+        }
+        if (paramObj && paramObj.schemaHttps !== undefined) {
+            this.schemaHttps = paramObj.schemaHttps;
+        }
+        else {
+            this.schemaHttps = true;
+        }
+        if (paramObj && paramObj.equateVocabularyProtocols !== undefined) {
+            this.equateVocabularyProtocols = paramObj.equateVocabularyProtocols;
+        }
+        else {
+            this.equateVocabularyProtocols = false;
+        }
+        this.graph = new Graph_1.Graph(this);
+    }
+    addVocabularies(vocabArray) {
+        return __awaiter(this, void 0, void 0, function* () {
+            if (!(0, utilities_1.isArray)(vocabArray)) {
+                vocabArray = (0, utilities_1.toArray)(vocabArray);
+            }
+            if ((0, utilities_1.isArray)(vocabArray)) {
+                for (const vocab of vocabArray) {
+                    if ((0, utilities_1.isString)(vocab)) {
+                        if (vocab.startsWith("www") ||
+                            vocab.startsWith("http")) {
+                            try {
+                                let fetchedVocab = yield this.fetchVocabularyFromURL(vocab);
+                                if ((0, utilities_1.isString)(fetchedVocab)) {
+                                    fetchedVocab = JSON.parse(fetchedVocab);
+                                }
+                                yield this.graph.addVocabulary(fetchedVocab, vocab);
+                            }
+                            catch (e) {
+                                console.log(e);
+                                throw new Error("The given URL " +
+                                    vocab +
+                                    " did not contain a valid JSON-LD vocabulary.");
+                            }
+                        }
+                        else {
+                            try {
+                                yield this.graph.addVocabulary(JSON.parse(vocab));
+                            }
+                            catch (e) {
+                                throw new Error("Parsing of vocabulary string produced an invalid JSON-LD.");
+                            }
+                        }
+                    }
+                    else if ((0, utilities_1.isObject)(vocab)) {
+                        yield this.graph.addVocabulary(vocab);
+                    }
+                    else {
+                        throw new Error("The first argument of the function must be an Array of vocabularies or a single vocabulary (JSON-LD as Object/String)");
+                    }
+                }
+            }
+            else {
+                throw new Error("The first argument of the function must be an Array of vocabularies or a single vocabulary (JSON-LD as Object/String)");
+            }
+            return true;
+        });
+    }
+    fetchVocabularyFromURL(url) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return new Promise(function (resolve, reject) {
+                axios_1.default
+                    .get(url, {
+                    headers: {
+                        Accept: "application/ld+json, application/json",
+                    },
+                })
+                    .then(function (res) {
+                    resolve(res.data);
+                })
+                    .catch(function () {
+                    reject("Could not find any resource at the given URL.");
+                });
+            });
+        });
+    }
+    getTerm(id, filter) {
+        return this.graph.getTerm(id, filter);
+    }
+    getAllTerms(filter) {
+        const result = [];
+        const classesIRIList = this.getListOfClasses(filter);
+        const enumerationsIRIList = this.getListOfEnumerations(filter);
+        const propertiesIRIList = this.getListOfProperties(filter);
+        const dataTypesIRIList = this.getListOfDataTypes(filter);
+        const enumerationMembersIRIList = this.getListOfEnumerationMembers(filter);
+        for (const c of classesIRIList) {
+            try {
+                result.push(this.getClass(c));
+            }
+            catch (e) {
+                throw new Error("There is no class with the IRI " + c);
+            }
+        }
+        for (const en of enumerationsIRIList) {
+            try {
+                result.push(this.getEnumeration(en));
+            }
+            catch (e) {
+                throw new Error("There is no enumeration with the IRI " + en);
+            }
+        }
+        for (const p of propertiesIRIList) {
+            try {
+                result.push(this.getProperty(p));
+            }
+            catch (e) {
+                throw new Error("There is no property with the IRI " + p);
+            }
+        }
+        for (const dt of dataTypesIRIList) {
+            try {
+                result.push(this.getDataType(dt));
+            }
+            catch (e) {
+                throw new Error("There is no data type with the IRI " + dt);
+            }
+        }
+        for (const enm of enumerationMembersIRIList) {
+            try {
+                result.push(this.getEnumerationMember(enm));
+            }
+            catch (e) {
+                throw new Error("There is no enumeration member with the IRI " + enm);
+            }
+        }
+        return result;
+    }
+    getListOfTerms(filter) {
+        const result = [];
+        result.push(...Object.keys(this.graph.classes));
+        result.push(...Object.keys(this.graph.enumerations));
+        result.push(...Object.keys(this.graph.properties));
+        result.push(...Object.keys(this.graph.dataTypes));
+        result.push(...Object.keys(this.graph.enumerationMembers));
+        return (0, reasoning_1.applyFilter)({ data: result, filter, graph: this.graph });
+    }
+    getClass(id, filter) {
+        return this.graph.getClass(id, filter);
+    }
+    getAllClasses(filter) {
+        const result = [];
+        const classesIRIList = this.getListOfClasses(filter);
+        for (const c of classesIRIList) {
+            try {
+                result.push(this.getClass(c));
+            }
+            catch (e) {
+                throw new Error("There is no class with the IRI " + c);
+            }
+        }
+        return result;
+    }
+    getListOfClasses(filter) {
+        return (0, reasoning_1.applyFilter)({
+            data: Object.keys(this.graph.classes),
+            filter,
+            graph: this.graph,
+        });
+    }
+    getProperty(id, filter) {
+        return this.graph.getProperty(id, filter);
+    }
+    getAllProperties(filter) {
+        const result = [];
+        const propertiesIRIList = this.getListOfProperties(filter);
+        for (const p of propertiesIRIList) {
+            try {
+                result.push(this.getProperty(p));
+            }
+            catch (e) {
+                throw new Error("There is no property with the IRI " + p);
+            }
+        }
+        return result;
+    }
+    getListOfProperties(filter) {
+        return (0, reasoning_1.applyFilter)({
+            data: Object.keys(this.graph.properties),
+            filter,
+            graph: this.graph,
+        });
+    }
+    getDataType(id, filter) {
+        return this.graph.getDataType(id, filter);
+    }
+    getAllDataTypes(filter) {
+        const result = [];
+        const dataTypesIRIList = this.getListOfDataTypes(filter);
+        for (const dt of dataTypesIRIList) {
+            try {
+                result.push(this.getDataType(dt));
+            }
+            catch (e) {
+                throw new Error("There is no data type with the IRI " + dt);
+            }
+        }
+        return result;
+    }
+    getListOfDataTypes(filter) {
+        return (0, reasoning_1.applyFilter)({
+            data: Object.keys(this.graph.dataTypes),
+            filter,
+            graph: this.graph,
+        });
+    }
+    getEnumeration(id, filter) {
+        return this.graph.getEnumeration(id, filter);
+    }
+    getAllEnumerations(filter) {
+        const result = [];
+        const enumerationsIRIList = this.getListOfEnumerations(filter);
+        for (const en of enumerationsIRIList) {
+            try {
+                result.push(this.getEnumeration(en));
+            }
+            catch (e) {
+                throw new Error("There is no enumeration with the IRI " + en);
+            }
+        }
+        return result;
+    }
+    getListOfEnumerations(filter) {
+        return (0, reasoning_1.applyFilter)({
+            data: Object.keys(this.graph.enumerations),
+            filter,
+            graph: this.graph,
+        });
+    }
+    getEnumerationMember(id, filter) {
+        return this.graph.getEnumerationMember(id, filter);
+    }
+    getAllEnumerationMembers(filter) {
+        const result = [];
+        const enumerationMembersIRIList = this.getListOfEnumerationMembers(filter);
+        for (const enm of enumerationMembersIRIList) {
+            try {
+                result.push(this.getEnumerationMember(enm));
+            }
+            catch (e) {
+                throw new Error("There is no enumeration member with the IRI " + enm);
+            }
+        }
+        return result;
+    }
+    getListOfEnumerationMembers(filter) {
+        return (0, reasoning_1.applyFilter)({
+            data: Object.keys(this.graph.enumerationMembers),
+            filter,
+            graph: this.graph,
+        });
+    }
+    getVocabularies() {
+        const vocabKeys = Object.keys(this.graph.context);
+        const result = {};
+        const blacklist = ["soa", "xsd", "rdf", "rdfa", "rdfs", "dc"];
+        vocabKeys.map((el) => {
+            if ((0, utilities_1.isString)(this.graph.context[el]) && !blacklist.includes(el)) {
+                result[el] = this.graph.context[el];
+            }
+        });
+        return result;
+    }
+    getLatestSchemaVersion() {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield (0, utilities_1.getLatestSchemaVersion)(this.commit);
+        });
+    }
+    constructURLSchemaVocabulary(version = "latest") {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield (0, utilities_1.constructURLSchemaVocabulary)(version, this.schemaHttps, this.commit);
+        });
+    }
+}
+exports.SDOAdapter = SDOAdapter;
+
+},{"./Graph":5,"./reasoning":13,"./utilities":14,"axios":15}],9:[function(_dereq_,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.Term = void 0;
+const utilities_1 = _dereq_("./utilities");
+const namespaces_1 = _dereq_("./namespaces");
+class Term {
+    constructor(IRI, graph) {
+        this.IRI = IRI;
+        this.graph = graph;
+    }
+    getIRI(compactForm = false) {
+        if (compactForm) {
+            return this.IRI;
+        }
+        return (0, utilities_1.toAbsoluteIRI)(this.IRI, this.graph.context);
+    }
+    getTermTypeLabel() {
+        return this.termTypeLabel;
+    }
+    getTermTypeIRI() {
+        return this.termTypeIRI;
+    }
+    getVocabURLs() {
+        const termObj = this.getTermObj();
+        if (!(0, utilities_1.isNil)(termObj["vocabURLs"])) {
+            return termObj["vocabURLs"];
+        }
+        return null;
+    }
+    getVocabulary() {
+        const termObj = this.getTermObj();
+        if (!(0, utilities_1.isNil)(termObj[namespaces_1.SCHEMA.isPartOf])) {
+            return termObj[namespaces_1.SCHEMA.isPartOf];
+        }
+        return null;
+    }
+    getSource() {
+        const termObj = this.getTermObj();
+        if (!(0, utilities_1.isNil)(termObj[namespaces_1.DC.source])) {
+            return termObj[namespaces_1.DC.source];
+        }
+        else if (!(0, utilities_1.isNil)(termObj[namespaces_1.SCHEMA.source])) {
+            return termObj[namespaces_1.SCHEMA.source];
+        }
+        return null;
+    }
+    isSupersededBy() {
+        const termObj = this.getTermObj();
+        if ((0, utilities_1.isString)(termObj[namespaces_1.SCHEMA.supersededBy])) {
+            return termObj[namespaces_1.SCHEMA.supersededBy];
+        }
+        return null;
+    }
+    getName(language = "en") {
+        const termObj = this.getTermObj()[namespaces_1.RDFS.label];
+        if ((0, utilities_1.isNil)(termObj) || (0, utilities_1.isNil)(termObj[language])) {
+            return null;
+        }
+        return termObj[language];
+    }
+    getDescription(language = "en") {
+        const termObj = this.getTermObj()[namespaces_1.RDFS.comment];
+        if ((0, utilities_1.isNil)(termObj) || (0, utilities_1.isNil)(termObj[language])) {
+            return null;
+        }
+        return termObj[language];
+    }
+    toString() {
+        return JSON.stringify(this.toJSON(), null, 2);
+    }
+    toJSON() {
+        return {
+            id: this.getIRI(true),
+            IRI: this.getIRI(),
+            typeLabel: this.getTermTypeLabel(),
+            typeIRI: this.getTermTypeIRI(),
+            vocabURLs: this.getVocabURLs(),
+            vocabulary: this.getVocabulary(),
+            source: this.getSource(),
+            supersededBy: this.isSupersededBy(),
+            name: this.getName(),
+            description: this.getDescription(),
+        };
+    }
+}
+exports.Term = Term;
+
+},{"./namespaces":12,"./utilities":14}],10:[function(_dereq_,module,exports){
+"use strict";
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.getStandardContext = exports.checkIfNamespaceFromListIsUsed = exports.discoverEquateNamespaces = exports.discoverUsedSchemaOrgProtocol = exports.preProcessVocab = exports.generateContext = exports.curateVocabNode = void 0;
+const namespaces_1 = _dereq_("./namespaces");
+const utilities_1 = _dereq_("./utilities");
+const jsonld_1 = __importDefault(_dereq_("jsonld"));
+function curateLanguageTerm(vocabNode, term) {
+    if (vocabNode[term] !== undefined) {
+        if ((0, utilities_1.isString)(vocabNode[term])) {
+            vocabNode[term] = {
+                en: vocabNode[term],
+            };
+        }
+        else if ((0, utilities_1.isLanguageObjectVocab)(vocabNode[term])) {
+            vocabNode[term] = {
+                [vocabNode[term]["@language"]]: vocabNode[term]["@value"],
+            };
+        }
+        else if ((0, utilities_1.isArray)(vocabNode[term])) {
+            const newVal = {};
+            vocabNode[term].map((el) => {
+                if ((0, utilities_1.isLanguageObjectVocab)(el)) {
+                    newVal[el["@language"]] = el["@value"];
+                }
+            });
+            vocabNode[term] = newVal;
+        }
+    }
+    else {
+        vocabNode[term] = {};
+    }
+}
+function curateRelationshipTermArray(vocabNode, term, initDefaultIf) {
+    if ((0, utilities_1.isString)(vocabNode[term])) {
+        vocabNode[term] = [vocabNode[term]];
+    }
+    else if (vocabNode[term] === undefined &&
+        vocabNode["@type"] === initDefaultIf) {
+        vocabNode[term] = [];
+    }
+}
+function curateVocabNode(vocabNode, vocabularies) {
+    curateLanguageTerm(vocabNode, namespaces_1.RDFS.comment);
+    curateLanguageTerm(vocabNode, namespaces_1.RDFS.label);
+    curateRelationshipTermArray(vocabNode, namespaces_1.RDFS.subClassOf, namespaces_1.TermTypeIRI.class);
+    curateRelationshipTermArray(vocabNode, namespaces_1.RDFS.subPropertyOf, namespaces_1.TermTypeIRI.property);
+    curateRelationshipTermArray(vocabNode, namespaces_1.SCHEMA.domainIncludes, namespaces_1.TermTypeIRI.property);
+    curateRelationshipTermArray(vocabNode, namespaces_1.SCHEMA.rangeIncludes, namespaces_1.TermTypeIRI.property);
+    if (vocabNode[namespaces_1.SCHEMA.inverseOf] === undefined &&
+        vocabNode["@type"] === namespaces_1.TermTypeIRI.property) {
+        vocabNode[namespaces_1.SCHEMA.inverseOf] = null;
+    }
+    if (!(0, utilities_1.isString)(vocabNode[namespaces_1.SCHEMA.isPartOf])) {
+        const vocabKeys = Object.keys(vocabularies);
+        let vocab = vocabKeys.find((el) => vocabNode["@id"].substring(0, vocabNode["@id"].indexOf(":")) === el);
+        if ((0, utilities_1.isString)(vocab)) {
+            vocab = vocabularies[vocab];
+            let newChange;
+            do {
+                newChange = false;
+                if (vocab.endsWith("/") || vocab.endsWith("#")) {
+                    vocab = vocab.substring(0, vocab.length - 1);
+                    newChange = true;
+                }
+            } while (newChange);
+            vocabNode[namespaces_1.SCHEMA.isPartOf] = vocab;
+        }
+    }
+    return vocabNode;
+}
+exports.curateVocabNode = curateVocabNode;
+function generateContext(currentContext, newContext) {
+    const keysCurrentContext = Object.keys(currentContext);
+    const keysNewContext = Object.keys(newContext);
+    let resultContext = (0, utilities_1.cloneJson)(currentContext);
+    for (const keyNC of keysNewContext) {
+        if ((0, utilities_1.isString)(newContext[keyNC])) {
+            let foundMatch = false;
+            for (const keyCC of keysCurrentContext) {
+                if ((0, utilities_1.isString)(resultContext[keyCC])) {
+                    if (resultContext[keyCC] === newContext[keyNC]) {
+                        foundMatch = true;
+                        break;
+                    }
+                }
+            }
+            if (foundMatch) {
+                continue;
+            }
+            if (!resultContext[keyNC]) {
+                resultContext[keyNC] = newContext[keyNC];
+            }
+            else {
+                if (resultContext[keyNC] !== newContext[keyNC]) {
+                    let foundFreeName = false;
+                    let counter = 1;
+                    while (!foundFreeName) {
+                        const newVocabIndicator = keyNC + counter++;
+                        if (!resultContext[newVocabIndicator]) {
+                            foundFreeName = true;
+                            resultContext[newVocabIndicator] = newContext[keyNC];
+                        }
+                    }
+                }
+            }
+        }
+    }
+    const ordered = {};
+    Object.keys(resultContext)
+        .sort()
+        .forEach(function (key) {
+        ordered[key] = resultContext[key];
+    });
+    resultContext = ordered;
+    const keysResultContext = Object.keys(resultContext);
+    const orderedResultContext = {};
+    for (const keyRC of keysResultContext) {
+        if ((0, utilities_1.isString)(resultContext[keyRC])) {
+            orderedResultContext[keyRC] = resultContext[keyRC];
+        }
+    }
+    for (const keyRC of keysResultContext) {
+        if ((0, utilities_1.isObject)(resultContext[keyRC])) {
+            orderedResultContext[keyRC] = resultContext[keyRC];
+        }
+    }
+    return orderedResultContext;
+}
+exports.generateContext = generateContext;
+function preProcessVocab(vocab, newContext) {
+    return __awaiter(this, void 0, void 0, function* () {
+        let foundInnerGraph = false;
+        do {
+            const newGraph = [];
+            foundInnerGraph = false;
+            for (let i = 0; i < vocab["@graph"].length; i++) {
+                if (vocab["@graph"][i]["@graph"] !== undefined) {
+                    newGraph.push(...(0, utilities_1.cloneJson)(vocab["@graph"][i]["@graph"]));
+                    foundInnerGraph = true;
+                }
+                else {
+                    newGraph.push((0, utilities_1.cloneJson)(vocab["@graph"][i]));
+                }
+            }
+            vocab["@graph"] = (0, utilities_1.cloneJson)(newGraph);
+        } while (foundInnerGraph);
+        const compactedVocab = yield jsonld_1.default.compact(vocab, newContext);
+        if (compactedVocab["@graph"] === undefined) {
+            delete compactedVocab["@context"];
+            return {
+                "@context": newContext,
+                "@graph": [compactedVocab],
+            };
+        }
+        else {
+            return compactedVocab;
+        }
+    });
+}
+exports.preProcessVocab = preProcessVocab;
+function discoverUsedSchemaOrgProtocol(vocabulary) {
+    const httpsIRI = "https://schema.org/";
+    const httpIRI = "http://schema.org/";
+    if (vocabulary["@context"]) {
+        for (const contextEntry of Object.values(vocabulary["@context"])) {
+            if ((0, utilities_1.isObject)(contextEntry) && contextEntry["@vocab"]) {
+                if (contextEntry["@vocab"] === httpsIRI) {
+                    return "https";
+                }
+                else if (contextEntry["@vocab"] === httpIRI) {
+                    return "http";
+                }
+            }
+            else if ((0, utilities_1.isString)(contextEntry)) {
+                if (contextEntry === httpsIRI) {
+                    return "https";
+                }
+                else if (contextEntry === httpIRI) {
+                    return "http";
+                }
+            }
+        }
+    }
+    const stringifiedVocab = JSON.stringify(vocabulary);
+    const amountHttps = stringifiedVocab.split(httpsIRI).length - 1;
+    const amountHttp = stringifiedVocab.split(httpIRI).length - 1;
+    if (amountHttps > amountHttp) {
+        return "https";
+    }
+    else if (amountHttp > amountHttps) {
+        return "http";
+    }
+    else {
+        return httpsIRI;
+    }
+}
+exports.discoverUsedSchemaOrgProtocol = discoverUsedSchemaOrgProtocol;
+function discoverEquateNamespaces(currentContext, vocabulary) {
+    const result = new Set();
+    const protocolSwitchedNamespaces = [];
+    Object.values(currentContext).forEach(function (el) {
+        if ((0, utilities_1.isString)(el)) {
+            protocolSwitchedNamespaces.push((0, utilities_1.switchIRIProtocol)(el));
+        }
+    });
+    if (vocabulary["@context"]) {
+        Object.values(vocabulary["@context"]).forEach(function (el) {
+            if ((0, utilities_1.isString)(el) && protocolSwitchedNamespaces.includes(el)) {
+                result.add(el);
+            }
+        });
+    }
+    if (Array.isArray(vocabulary["@graph"])) {
+        vocabulary["@graph"].forEach(function (vocabNode) {
+            checkIfNamespaceFromListIsUsed(vocabNode["@id"], protocolSwitchedNamespaces, result);
+            checkIfNamespaceFromListIsUsed(vocabNode["@type"], protocolSwitchedNamespaces, result);
+            checkIfNamespaceFromListIsUsed(vocabNode[namespaces_1.RDFS.subClassOf], protocolSwitchedNamespaces, result);
+            checkIfNamespaceFromListIsUsed(vocabNode["http://www.w3.org/2000/01/rdf-schema#subClassOf"], protocolSwitchedNamespaces, result);
+            checkIfNamespaceFromListIsUsed(vocabNode[namespaces_1.SCHEMA.domainIncludes], protocolSwitchedNamespaces, result);
+            checkIfNamespaceFromListIsUsed(vocabNode["http://schema.org/domainIncludes"], protocolSwitchedNamespaces, result);
+            checkIfNamespaceFromListIsUsed(vocabNode["https://schema.org/domainIncludes"], protocolSwitchedNamespaces, result);
+            checkIfNamespaceFromListIsUsed(vocabNode[namespaces_1.SCHEMA.rangeIncludes], protocolSwitchedNamespaces, result);
+            checkIfNamespaceFromListIsUsed(vocabNode["http://schema.org/rangeIncludes"], protocolSwitchedNamespaces, result);
+            checkIfNamespaceFromListIsUsed(vocabNode["https://schema.org/rangeIncludes"], protocolSwitchedNamespaces, result);
+            checkIfNamespaceFromListIsUsed(vocabNode[namespaces_1.RDFS.subPropertyOf], protocolSwitchedNamespaces, result);
+            checkIfNamespaceFromListIsUsed(vocabNode["http://www.w3.org/2000/01/rdf-schema#subPropertyOf"], protocolSwitchedNamespaces, result);
+            checkIfNamespaceFromListIsUsed(vocabNode[namespaces_1.SCHEMA.inverseOf], protocolSwitchedNamespaces, result);
+            checkIfNamespaceFromListIsUsed(vocabNode["http://schema.org/inverseOf"], protocolSwitchedNamespaces, result);
+            checkIfNamespaceFromListIsUsed(vocabNode["https://schema.org/inverseOf"], protocolSwitchedNamespaces, result);
+        });
+    }
+    return Array.from(result);
+}
+exports.discoverEquateNamespaces = discoverEquateNamespaces;
+function checkIfNamespaceFromListIsUsed(value, namespaceArray, result) {
+    if (Array.isArray(value)) {
+        value.forEach(function (val) {
+            checkIfNamespaceFromListIsUsed(val, namespaceArray, result);
+        });
+    }
+    else {
+        let toCheck;
+        if ((0, utilities_1.isObject)(value) && (0, utilities_1.isString)(value["@id"])) {
+            toCheck = value["@id"];
+        }
+        else {
+            toCheck = value;
+        }
+        if ((0, utilities_1.isString)(toCheck) && toCheck.startsWith("http")) {
+            const match = namespaceArray.find((el) => toCheck.startsWith(el));
+            if (match && !result.has(match)) {
+                result.add(match);
+            }
+        }
+    }
+}
+exports.checkIfNamespaceFromListIsUsed = checkIfNamespaceFromListIsUsed;
+function getStandardContext() {
+    const standardContext = {
+        rdf: namespaces_1.NsUrl.rdf,
+        rdfs: namespaces_1.NsUrl.rdfs,
+        xsd: namespaces_1.NsUrl.xsd,
+        dc: namespaces_1.NsUrl.dc,
+        soa: namespaces_1.NsUrl.soa,
+    };
+    const idEntries = [
+        namespaces_1.SOA.superClassOf,
+        namespaces_1.SOA.superPropertyOf,
+        namespaces_1.SOA.hasProperty,
+        namespaces_1.SOA.isRangeOf,
+        namespaces_1.SOA.hasEnumerationMember,
+        namespaces_1.SOA.enumerationDomainIncludes,
+        namespaces_1.RDFS.subClassOf,
+        namespaces_1.RDFS.subPropertyOf,
+        namespaces_1.SCHEMA.isPartOf,
+        namespaces_1.SCHEMA.domainIncludes,
+        namespaces_1.SCHEMA.rangeIncludes,
+        namespaces_1.SCHEMA.supersededBy,
+        namespaces_1.SCHEMA.inverseOf,
+        namespaces_1.SCHEMA.source,
+        namespaces_1.DC.source,
+    ];
+    idEntries.map((el) => {
+        standardContext[el] = {
+            "@id": el,
+            "@type": "@id",
+        };
+    });
+    return standardContext;
+}
+exports.getStandardContext = getStandardContext;
+
+},{"./namespaces":12,"./utilities":14,"jsonld":61}],11:[function(_dereq_,module,exports){
+"use strict";
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.constructURLSchemaVocabulary = exports.getLatestSchemaVersion = exports.fetchSchemaVersions = exports.create = void 0;
+const SDOAdapter_1 = _dereq_("./SDOAdapter");
+const utilities_1 = _dereq_("./utilities");
+function create(paramObj) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const newInstance = new SDOAdapter_1.SDOAdapter(paramObj);
+        if (paramObj && paramObj.schemaVersion) {
+            const schemaUrl = yield (0, utilities_1.constructURLSchemaVocabulary)(paramObj.schemaVersion, paramObj.schemaHttps, paramObj.commit);
+            yield newInstance.addVocabularies(schemaUrl);
+        }
+        if (paramObj && paramObj.vocabularies) {
+            yield newInstance.addVocabularies(paramObj.vocabularies);
+        }
+        return newInstance;
+    });
+}
+exports.create = create;
+var utilities_2 = _dereq_("./utilities");
+Object.defineProperty(exports, "fetchSchemaVersions", { enumerable: true, get: function () { return utilities_2.fetchSchemaVersions; } });
+Object.defineProperty(exports, "getLatestSchemaVersion", { enumerable: true, get: function () { return utilities_2.getLatestSchemaVersion; } });
+Object.defineProperty(exports, "constructURLSchemaVocabulary", { enumerable: true, get: function () { return utilities_2.constructURLSchemaVocabulary; } });
+
+},{"./SDOAdapter":8,"./utilities":14}],12:[function(_dereq_,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.TermTypeIRI = exports.TermTypeLabel = exports.XSD = exports.DC = exports.SCHEMA = exports.SOA = exports.RDFS = exports.RDF = exports.NsPre = exports.NsUrl = void 0;
+exports.NsUrl = {
+    xsd: "http://www.w3.org/2001/XMLSchema#",
+    rdf: "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    rdfs: "http://www.w3.org/2000/01/rdf-schema#",
+    schema: "https://schema.org/",
+    dc: "http://purl.org/dc/terms/",
+    soa: "http://schema-org-adapter.at/vocabTerms/",
+};
+exports.NsPre = {
+    xsd: "xsd",
+    rdf: "rdf",
+    rdfs: "rdfs",
+    schema: "schema",
+    dc: "dc",
+    soa: "soa",
+};
+function toCompactUri(prefix, properties) {
+    return Object.freeze(Object.fromEntries(properties.map((p) => [p, prefix + ":" + p])));
+}
+exports.RDF = toCompactUri(exports.NsPre.rdf, ["Property"]);
+exports.RDFS = toCompactUri("rdfs", [
+    "Class",
+    "subClassOf",
+    "subPropertyOf",
+    "label",
+    "comment",
+]);
+exports.SOA = toCompactUri("soa", [
+    "EnumerationMember",
+    "superClassOf",
+    "superPropertyOf",
+    "hasProperty",
+    "isRangeOf",
+    "hasEnumerationMember",
+    "enumerationDomainIncludes",
+]);
+exports.SCHEMA = toCompactUri("schema", [
+    "DataType",
+    "Enumeration",
+    "isPartOf",
+    "domainIncludes",
+    "rangeIncludes",
+    "supersededBy",
+    "inverseOf",
+    "source",
+    "category",
+]);
+exports.DC = toCompactUri("dc", ["source"]);
+exports.XSD = toCompactUri("xsd", [
+    "string",
+    "decimal",
+    "integer",
+    "float",
+    "double",
+    "boolean",
+    "date",
+    "time",
+    "dateTime",
+    "anyURI",
+]);
+exports.TermTypeLabel = {
+    class: "Class",
+    property: "Property",
+    enumeration: "Enumeration",
+    enumerationMember: "EnumerationMember",
+    dataType: "DataType",
+};
+exports.TermTypeIRI = {
+    class: "rdfs:Class",
+    property: "rdf:Property",
+    enumeration: "schema:Enumeration",
+    enumerationMember: "soa:EnumerationMember",
+    dataType: "schema:DataType",
+};
+
+},{}],13:[function(_dereq_,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.inferRangeOf = exports.inferSubProperties = exports.inferSuperProperties = exports.inferSubDataTypes = exports.inferSuperDataTypes = exports.inferSubClasses = exports.inferSuperClasses = exports.inferPropertiesFromSuperClasses = exports.applyFilter = void 0;
+const utilities_1 = _dereq_("./utilities");
+const namespaces_1 = _dereq_("./namespaces");
+function applyFilter(paramObj) {
+    const { data, filter, graph } = paramObj;
+    if (!Array.isArray(data) ||
+        data.length === 0 ||
+        !filter ||
+        Object.keys(filter).length === 0) {
+        return data;
+    }
+    const unifiedDataArray = (0, utilities_1.uniquifyArray)(data);
+    const result = [];
+    const context = graph.context;
+    let namespaces;
+    if (filter.fromVocabulary) {
+        namespaces = (0, utilities_1.toArray)(filter.fromVocabulary);
+        for (let v = 0; v < namespaces.length; v++) {
+            for (let vi = 0; vi < Object.keys(context).length; vi++) {
+                if (context[Object.keys(context)[vi]] === namespaces[v]) {
+                    namespaces[v] = Object.keys(context)[vi];
+                    break;
+                }
+            }
+        }
+    }
+    for (let i = 0; i < unifiedDataArray.length; i++) {
+        const actualTerm = graph.getTerm(unifiedDataArray[i]);
+        if (!actualTerm) {
+            continue;
+        }
+        if (filter.isSuperseded !== undefined) {
+            if (!filter.isSuperseded && actualTerm.isSupersededBy() != null) {
+                continue;
+            }
+            else if (filter.isSuperseded && actualTerm.isSupersededBy() == null) {
+                continue;
+            }
+        }
+        if (namespaces) {
+            let matchFound = false;
+            for (let v = 0; v < namespaces.length; v++) {
+                if (actualTerm.getIRI(true).startsWith(namespaces[v])) {
+                    matchFound = true;
+                    break;
+                }
+            }
+            if (!matchFound) {
+                continue;
+            }
+        }
+        if (filter.termType) {
+            const toCheck = (0, utilities_1.toArray)(filter.termType);
+            const invalidTermType = toCheck.find((el) => !Object.values(namespaces_1.TermTypeLabel).includes(el));
+            if (invalidTermType) {
+                throw new Error("Invalid filter.termType " + invalidTermType);
+            }
+            const foundMatch = toCheck.find((el) => el === actualTerm.getTermTypeLabel());
+            if (!foundMatch) {
+                continue;
+            }
+        }
+        result.push(unifiedDataArray[i]);
+    }
+    return result;
+}
+exports.applyFilter = applyFilter;
+function inferPropertiesFromSuperClasses(superClasses, graph) {
+    const result = [];
+    for (const superClass of superClasses) {
+        const superClassObj = graph.classes[superClass] || graph.enumerations[superClass];
+        if (superClassObj) {
+            result.push(...superClassObj[namespaces_1.SOA.hasProperty]);
+            if (superClassObj[namespaces_1.RDFS.subClassOf].length !== 0) {
+                result.push(...inferPropertiesFromSuperClasses(superClassObj[namespaces_1.RDFS.subClassOf], graph));
+            }
+        }
+    }
+    return (0, utilities_1.uniquifyArray)(result);
+}
+exports.inferPropertiesFromSuperClasses = inferPropertiesFromSuperClasses;
+function inferSuperClasses(classIRI, graph) {
+    let result = [];
+    const classObj = graph.classes[classIRI] || graph.enumerations[classIRI];
+    if (classObj) {
+        result.push(...classObj[namespaces_1.RDFS.subClassOf]);
+        let addition = (0, utilities_1.cloneJson)(result);
+        do {
+            let newAddition = [];
+            for (const curAdd of addition) {
+                const parentClassObj = graph.classes[curAdd] || graph.enumerations[curAdd];
+                if (parentClassObj) {
+                    newAddition.push(...parentClassObj[namespaces_1.RDFS.subClassOf]);
+                }
+            }
+            newAddition = (0, utilities_1.uniquifyArray)(newAddition);
+            addition = (0, utilities_1.cloneJson)(newAddition);
+            result.push(...newAddition);
+        } while (addition.length !== 0);
+        result = (0, utilities_1.uniquifyArray)(result);
+    }
+    return result;
+}
+exports.inferSuperClasses = inferSuperClasses;
+function inferSubClasses(classIRI, graph) {
+    let result = [];
+    const classObj = graph.classes[classIRI] || graph.enumerations[classIRI];
+    if (classObj) {
+        result.push(...classObj[namespaces_1.SOA.superClassOf]);
+        let addition = (0, utilities_1.cloneJson)(result);
+        do {
+            let newAddition = [];
+            for (const curAdd of addition) {
+                const parentClassObj = graph.classes[curAdd] || graph.enumerations[curAdd];
+                if (parentClassObj) {
+                    newAddition.push(...parentClassObj[namespaces_1.SOA.superClassOf]);
+                }
+            }
+            newAddition = (0, utilities_1.uniquifyArray)(newAddition);
+            addition = (0, utilities_1.cloneJson)(newAddition);
+            result.push(...newAddition);
+        } while (addition.length !== 0);
+        result = (0, utilities_1.uniquifyArray)(result);
+    }
+    return result;
+}
+exports.inferSubClasses = inferSubClasses;
+function inferSuperDataTypes(dataTypeIRI, graph) {
+    let result = [];
+    const dataTypeObj = graph.dataTypes[dataTypeIRI];
+    if (dataTypeObj) {
+        result.push(...dataTypeObj[namespaces_1.RDFS.subClassOf]);
+        let addition = (0, utilities_1.cloneJson)(result);
+        do {
+            let newAddition = [];
+            for (const curAdd of addition) {
+                const parentDataTypeObj = graph.dataTypes[curAdd];
+                if (parentDataTypeObj) {
+                    newAddition.push(...parentDataTypeObj[namespaces_1.RDFS.subClassOf]);
+                }
+            }
+            newAddition = (0, utilities_1.uniquifyArray)(newAddition);
+            addition = (0, utilities_1.cloneJson)(newAddition);
+            result.push(...newAddition);
+        } while (addition.length !== 0);
+        result = (0, utilities_1.uniquifyArray)(result);
+    }
+    return result;
+}
+exports.inferSuperDataTypes = inferSuperDataTypes;
+function inferSubDataTypes(dataTypeIRI, graph) {
+    let result = [];
+    const dataTypeObj = graph.dataTypes[dataTypeIRI];
+    if (dataTypeObj) {
+        result.push(...dataTypeObj[namespaces_1.SOA.superClassOf]);
+        let addition = (0, utilities_1.cloneJson)(result);
+        do {
+            let newAddition = [];
+            for (const curAdd of addition) {
+                const childDataTypeObj = graph.dataTypes[curAdd];
+                if (childDataTypeObj) {
+                    newAddition.push(...childDataTypeObj[namespaces_1.SOA.superClassOf]);
+                }
+            }
+            newAddition = (0, utilities_1.uniquifyArray)(newAddition);
+            addition = (0, utilities_1.cloneJson)(newAddition);
+            result.push(...newAddition);
+        } while (addition.length !== 0);
+        result = (0, utilities_1.uniquifyArray)(result);
+    }
+    return result;
+}
+exports.inferSubDataTypes = inferSubDataTypes;
+function inferSuperProperties(propertyIRI, graph) {
+    let result = [];
+    const propertyObj = graph.properties[propertyIRI];
+    if (propertyObj) {
+        result.push(...propertyObj[namespaces_1.RDFS.subPropertyOf]);
+        let addition = (0, utilities_1.cloneJson)(result);
+        do {
+            let newAddition = [];
+            for (const curAdd of addition) {
+                const parentPropertyObj = graph.properties[curAdd];
+                if (parentPropertyObj) {
+                    newAddition.push(...parentPropertyObj[namespaces_1.RDFS.subPropertyOf]);
+                }
+            }
+            newAddition = (0, utilities_1.uniquifyArray)(newAddition);
+            addition = (0, utilities_1.cloneJson)(newAddition);
+            result.push(...newAddition);
+        } while (addition.length !== 0);
+        result = (0, utilities_1.uniquifyArray)(result);
+    }
+    return result;
+}
+exports.inferSuperProperties = inferSuperProperties;
+function inferSubProperties(propertyIRI, graph) {
+    let result = [];
+    const propertyObj = graph.properties[propertyIRI];
+    if (propertyObj) {
+        result.push(...propertyObj[namespaces_1.SOA.superPropertyOf]);
+        let addition = (0, utilities_1.cloneJson)(result);
+        do {
+            let newAddition = [];
+            for (const curAdd of addition) {
+                const parentPropertyObj = graph.properties[curAdd];
+                if (parentPropertyObj) {
+                    newAddition.push(...parentPropertyObj[namespaces_1.SOA.superPropertyOf]);
+                }
+            }
+            newAddition = (0, utilities_1.uniquifyArray)(newAddition);
+            addition = (0, utilities_1.cloneJson)(newAddition);
+            result.push(...newAddition);
+        } while (addition.length !== 0);
+        result = (0, utilities_1.uniquifyArray)(result);
+    }
+    return result;
+}
+exports.inferSubProperties = inferSubProperties;
+function inferRangeOf(rangeIRI, graph) {
+    const classObj = graph.classes[rangeIRI] || graph.enumerations[rangeIRI];
+    const result = [];
+    if (classObj) {
+        result.push(...classObj[namespaces_1.SOA.isRangeOf]);
+        const superClasses = inferSuperClasses(rangeIRI, graph);
+        for (const superClass of superClasses) {
+            const superClassObj = graph.classes[superClass] || graph.enumerations[superClass];
+            if (superClassObj) {
+                result.push(...superClassObj[namespaces_1.SOA.isRangeOf]);
+            }
+        }
+    }
+    else {
+        const dataTypeObj = graph.dataTypes[rangeIRI];
+        if (dataTypeObj) {
+            result.push(...dataTypeObj[namespaces_1.SOA.isRangeOf]);
+            const superDataTypes = inferSuperDataTypes(rangeIRI, graph);
+            for (const superDataType of superDataTypes) {
+                const superDataTypeObj = graph.dataTypes[superDataType];
+                if (superDataTypeObj) {
+                    result.push(...superDataTypeObj[namespaces_1.SOA.isRangeOf]);
+                }
+            }
+        }
+    }
+    return (0, utilities_1.uniquifyArray)(result);
+}
+exports.inferRangeOf = inferRangeOf;
+
+},{"./namespaces":12,"./utilities":14}],14:[function(_dereq_,module,exports){
+"use strict";
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.getLatestSchemaVersion = exports.checkURL = exports.fetchSchemaVersions = exports.constructURLSchemaVocabulary = exports.getURLSchemaVersions = exports.getURLBaseSchema = exports.toArray = exports.switchIRIProtocol = exports.getFileNameForSchemaOrgVersion = exports.sortReleaseEntriesByDate = exports.toAbsoluteIRI = exports.toCompactIRI = exports.uniquifyArray = exports.isArray = exports.isString = exports.isNil = exports.isLanguageObjectVocab = exports.isObject = exports.cloneJson = void 0;
+const axios_1 = __importDefault(_dereq_("axios"));
+const RetrievalMemory_1 = _dereq_("./RetrievalMemory");
+const myRetrievalMemory = RetrievalMemory_1.RetrievalMemory.getInstance();
+function cloneJson(input) {
+    if (input === undefined) {
+        return input;
+    }
+    return JSON.parse(JSON.stringify(input));
+}
+exports.cloneJson = cloneJson;
+function isObject(value) {
+    if (Array.isArray(value)) {
+        return false;
+    }
+    if (isNil(value)) {
+        return false;
+    }
+    return typeof value === "object";
+}
+exports.isObject = isObject;
+function isLanguageObjectVocab(value) {
+    if (isObject(value)) {
+        if (isString(value["@language"]) && isString(value["@value"])) {
+            return true;
+        }
+    }
+    return false;
+}
+exports.isLanguageObjectVocab = isLanguageObjectVocab;
+function isNil(value) {
+    return value === undefined || value === null;
+}
+exports.isNil = isNil;
+function isString(value) {
+    if (isNil(value)) {
+        return false;
+    }
+    return typeof value === "string" || value instanceof String;
+}
+exports.isString = isString;
+function isArray(value) {
+    return Array.isArray(value);
+}
+exports.isArray = isArray;
+function uniquifyArray(array) {
+    return [...new Set(array)];
+}
+exports.uniquifyArray = uniquifyArray;
+function toCompactIRI(absoluteIRI, context, equateVocabularyProtocols = false) {
+    for (const contextTerm of Object.keys(context)) {
+        const vocabIRI = context[contextTerm];
+        if (isString(vocabIRI) && absoluteIRI.startsWith(vocabIRI)) {
+            return (contextTerm + ":" + absoluteIRI.substring(vocabIRI.length));
+        }
+        if (equateVocabularyProtocols && isString(vocabIRI)) {
+            const protocolSwitchedIRI = switchIRIProtocol(vocabIRI);
+            if (absoluteIRI.startsWith(protocolSwitchedIRI)) {
+                return (contextTerm + ":" + absoluteIRI.substring(protocolSwitchedIRI.length));
+            }
+        }
+    }
+    return null;
+}
+exports.toCompactIRI = toCompactIRI;
+function toAbsoluteIRI(compactIRI, context) {
+    const terms = Object.keys(context);
+    for (let i = 0; i < terms.length; i++) {
+        const vocabIRI = context[terms[i]];
+        if (compactIRI.substring(0, compactIRI.indexOf(":")) === terms[i]) {
+            return vocabIRI.concat(compactIRI.substring(compactIRI.indexOf(":") + 1));
+        }
+    }
+    throw new Error("Trying to get an absolute IRI for a term with no entry in the Context");
+}
+exports.toAbsoluteIRI = toAbsoluteIRI;
+function sortReleaseEntriesByDate(releaseLog) {
+    const versionEntries = Object.entries(releaseLog);
+    return versionEntries.sort((a, b) => +new Date(b[1]) - +new Date(a[1]));
+}
+exports.sortReleaseEntriesByDate = sortReleaseEntriesByDate;
+function getFileNameForSchemaOrgVersion(version, schemaHttps = true) {
+    switch (version) {
+        case "2.0":
+        case "2.1":
+        case "2.2":
+        case "3.0":
+            throw new Error("There is no jsonld file for that schema.org version.");
+        case "3.1":
+        case "3.2":
+        case "3.3":
+        case "3.4":
+        case "3.5":
+        case "3.6":
+        case "3.7":
+        case "3.8":
+        case "3.9":
+        case "4.0":
+        case "5.0":
+        case "6.0":
+        case "7.0":
+        case "7.01":
+        case "7.02":
+        case "7.03":
+        case "7.04":
+        case "8.0":
+            return "all-layers.jsonld";
+        case "9.0":
+            if (schemaHttps) {
+                return "schemaorg-all-https.jsonld";
+            }
+            else {
+                return "schemaorg-all-http.jsonld";
+            }
+        default:
+            if (schemaHttps) {
+                return "schemaorg-all-https.jsonld";
+            }
+            else {
+                return "schemaorg-all-http.jsonld";
+            }
+    }
+}
+exports.getFileNameForSchemaOrgVersion = getFileNameForSchemaOrgVersion;
+function switchIRIProtocol(IRI) {
+    if (IRI.startsWith("https://")) {
+        return "http" + IRI.substring(5);
+    }
+    else if (IRI.startsWith("http://")) {
+        return "https" + IRI.substring(4);
+    }
+    return IRI;
+}
+exports.switchIRIProtocol = switchIRIProtocol;
+const toArray = (o) => (Array.isArray(o) ? o : [o]);
+exports.toArray = toArray;
+const URI_SEMANTIFY_GITHUB = "https://raw.githubusercontent.com/semantifyit/schemaorg/main";
+const URI_SCHEMA_ORG_GITHUB = "https://raw.githubusercontent.com/schemaorg/schemaorg/";
+function getURLBaseSchema(commitBase) {
+    const path = "/data/releases/";
+    if (commitBase) {
+        return URI_SCHEMA_ORG_GITHUB + commitBase + path;
+    }
+    else {
+        return URI_SEMANTIFY_GITHUB + path;
+    }
+}
+exports.getURLBaseSchema = getURLBaseSchema;
+function getURLSchemaVersions(commitBase) {
+    const path = "/versions.json";
+    if (commitBase) {
+        return URI_SCHEMA_ORG_GITHUB + commitBase + path;
+    }
+    else {
+        return URI_SEMANTIFY_GITHUB + path;
+    }
+}
+exports.getURLSchemaVersions = getURLSchemaVersions;
+function constructURLSchemaVocabulary(version = "latest", schemaHttps = true, commit) {
+    return __awaiter(this, void 0, void 0, function* () {
+        if (version === "latest") {
+            version = yield getLatestSchemaVersion(commit);
+        }
+        const fileName = getFileNameForSchemaOrgVersion(version, schemaHttps);
+        return getURLBaseSchema(commit) + version + "/" + fileName;
+    });
+}
+exports.constructURLSchemaVocabulary = constructURLSchemaVocabulary;
+function fetchSchemaVersions(cacheClear = false, commit) {
+    return __awaiter(this, void 0, void 0, function* () {
+        let versionFile;
+        if (cacheClear) {
+            myRetrievalMemory.deleteCache();
+        }
+        else {
+            const cachedData = myRetrievalMemory.getData("versionsFile", commit);
+            if (cachedData) {
+                return cachedData;
+            }
+        }
+        const urlSchemaVersions = getURLSchemaVersions(commit);
+        try {
+            versionFile = yield axios_1.default.get(urlSchemaVersions);
+        }
+        catch (e) {
+            throw new Error("Unable to retrieve the schema.org versions file at " + urlSchemaVersions);
+        }
+        if (!versionFile || !versionFile.data || !versionFile.data.releaseLog) {
+            throw new Error("The schema.org versions file at " +
+                urlSchemaVersions +
+                " returned an unexpected result.");
+        }
+        const schemaVersions = versionFile.data;
+        myRetrievalMemory.setData("versionsFile", schemaVersions, commit);
+        let latestVersion;
+        if (schemaVersions.schemaversion &&
+            (yield checkURL(yield constructURLSchemaVocabulary(schemaVersions.schemaversion)))) {
+            latestVersion = schemaVersions.schemaversion;
+        }
+        else {
+            const sortedArray = sortReleaseEntriesByDate(schemaVersions.releaseLog);
+            for (const currVersion of sortedArray) {
+                if (yield checkURL(yield constructURLSchemaVocabulary(currVersion[0]))) {
+                    latestVersion = currVersion[0];
+                    break;
+                }
+            }
+        }
+        if (!latestVersion) {
+            throw new Error('Could not find any valid vocabulary file in the schema.org versions to be declared as "latest".');
+        }
+        myRetrievalMemory.setData("latest", latestVersion, commit);
+        return schemaVersions;
+    });
+}
+exports.fetchSchemaVersions = fetchSchemaVersions;
+function checkURL(url) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            yield axios_1.default.head(url);
+            return true;
+        }
+        catch (e) {
+            return false;
+        }
+    });
+}
+exports.checkURL = checkURL;
+function getLatestSchemaVersion(commit) {
+    return __awaiter(this, void 0, void 0, function* () {
+        let latestVersion = myRetrievalMemory.getData("latest", commit);
+        if (!latestVersion) {
+            yield fetchSchemaVersions(false, commit);
+        }
+        latestVersion = myRetrievalMemory.getData("latest", commit);
+        if (latestVersion) {
+            return latestVersion;
+        }
+        else {
+            throw new Error("Could not identify the latest version of the schema.org vocabulary");
+        }
+    });
+}
+exports.getLatestSchemaVersion = getLatestSchemaVersion;
+
+},{"./RetrievalMemory":7,"axios":15}],15:[function(_dereq_,module,exports){
 module.exports = _dereq_('./lib/axios');
-},{"./lib/axios":3}],2:[function(_dereq_,module,exports){
+},{"./lib/axios":17}],16:[function(_dereq_,module,exports){
 'use strict';
 
 var utils = _dereq_('./../utils');
@@ -191,7 +2529,7 @@ module.exports = function xhrAdapter(config) {
   });
 };
 
-},{"../core/buildFullPath":9,"../core/createError":10,"./../core/settle":14,"./../helpers/buildURL":18,"./../helpers/cookies":20,"./../helpers/isURLSameOrigin":23,"./../helpers/parseHeaders":25,"./../utils":28}],3:[function(_dereq_,module,exports){
+},{"../core/buildFullPath":23,"../core/createError":24,"./../core/settle":28,"./../helpers/buildURL":32,"./../helpers/cookies":34,"./../helpers/isURLSameOrigin":37,"./../helpers/parseHeaders":39,"./../utils":42}],17:[function(_dereq_,module,exports){
 'use strict';
 
 var utils = _dereq_('./utils');
@@ -249,7 +2587,7 @@ module.exports = axios;
 // Allow use of default import syntax in TypeScript
 module.exports.default = axios;
 
-},{"./cancel/Cancel":4,"./cancel/CancelToken":5,"./cancel/isCancel":6,"./core/Axios":7,"./core/mergeConfig":13,"./defaults":16,"./helpers/bind":17,"./helpers/isAxiosError":22,"./helpers/spread":26,"./utils":28}],4:[function(_dereq_,module,exports){
+},{"./cancel/Cancel":18,"./cancel/CancelToken":19,"./cancel/isCancel":20,"./core/Axios":21,"./core/mergeConfig":27,"./defaults":30,"./helpers/bind":31,"./helpers/isAxiosError":36,"./helpers/spread":40,"./utils":42}],18:[function(_dereq_,module,exports){
 'use strict';
 
 /**
@@ -270,7 +2608,7 @@ Cancel.prototype.__CANCEL__ = true;
 
 module.exports = Cancel;
 
-},{}],5:[function(_dereq_,module,exports){
+},{}],19:[function(_dereq_,module,exports){
 'use strict';
 
 var Cancel = _dereq_('./Cancel');
@@ -329,14 +2667,14 @@ CancelToken.source = function source() {
 
 module.exports = CancelToken;
 
-},{"./Cancel":4}],6:[function(_dereq_,module,exports){
+},{"./Cancel":18}],20:[function(_dereq_,module,exports){
 'use strict';
 
 module.exports = function isCancel(value) {
   return !!(value && value.__CANCEL__);
 };
 
-},{}],7:[function(_dereq_,module,exports){
+},{}],21:[function(_dereq_,module,exports){
 'use strict';
 
 var utils = _dereq_('./../utils');
@@ -486,7 +2824,7 @@ utils.forEach(['post', 'put', 'patch'], function forEachMethodWithData(method) {
 
 module.exports = Axios;
 
-},{"../helpers/buildURL":18,"../helpers/validator":27,"./../utils":28,"./InterceptorManager":8,"./dispatchRequest":11,"./mergeConfig":13}],8:[function(_dereq_,module,exports){
+},{"../helpers/buildURL":32,"../helpers/validator":41,"./../utils":42,"./InterceptorManager":22,"./dispatchRequest":25,"./mergeConfig":27}],22:[function(_dereq_,module,exports){
 'use strict';
 
 var utils = _dereq_('./../utils');
@@ -542,7 +2880,7 @@ InterceptorManager.prototype.forEach = function forEach(fn) {
 
 module.exports = InterceptorManager;
 
-},{"./../utils":28}],9:[function(_dereq_,module,exports){
+},{"./../utils":42}],23:[function(_dereq_,module,exports){
 'use strict';
 
 var isAbsoluteURL = _dereq_('../helpers/isAbsoluteURL');
@@ -564,7 +2902,7 @@ module.exports = function buildFullPath(baseURL, requestedURL) {
   return requestedURL;
 };
 
-},{"../helpers/combineURLs":19,"../helpers/isAbsoluteURL":21}],10:[function(_dereq_,module,exports){
+},{"../helpers/combineURLs":33,"../helpers/isAbsoluteURL":35}],24:[function(_dereq_,module,exports){
 'use strict';
 
 var enhanceError = _dereq_('./enhanceError');
@@ -584,7 +2922,7 @@ module.exports = function createError(message, config, code, request, response) 
   return enhanceError(error, config, code, request, response);
 };
 
-},{"./enhanceError":12}],11:[function(_dereq_,module,exports){
+},{"./enhanceError":26}],25:[function(_dereq_,module,exports){
 'use strict';
 
 var utils = _dereq_('./../utils');
@@ -668,7 +3006,7 @@ module.exports = function dispatchRequest(config) {
   });
 };
 
-},{"../cancel/isCancel":6,"../defaults":16,"./../utils":28,"./transformData":15}],12:[function(_dereq_,module,exports){
+},{"../cancel/isCancel":20,"../defaults":30,"./../utils":42,"./transformData":29}],26:[function(_dereq_,module,exports){
 'use strict';
 
 /**
@@ -712,7 +3050,7 @@ module.exports = function enhanceError(error, config, code, request, response) {
   return error;
 };
 
-},{}],13:[function(_dereq_,module,exports){
+},{}],27:[function(_dereq_,module,exports){
 'use strict';
 
 var utils = _dereq_('../utils');
@@ -801,7 +3139,7 @@ module.exports = function mergeConfig(config1, config2) {
   return config;
 };
 
-},{"../utils":28}],14:[function(_dereq_,module,exports){
+},{"../utils":42}],28:[function(_dereq_,module,exports){
 'use strict';
 
 var createError = _dereq_('./createError');
@@ -828,7 +3166,7 @@ module.exports = function settle(resolve, reject, response) {
   }
 };
 
-},{"./createError":10}],15:[function(_dereq_,module,exports){
+},{"./createError":24}],29:[function(_dereq_,module,exports){
 'use strict';
 
 var utils = _dereq_('./../utils');
@@ -852,7 +3190,7 @@ module.exports = function transformData(data, headers, fns) {
   return data;
 };
 
-},{"./../defaults":16,"./../utils":28}],16:[function(_dereq_,module,exports){
+},{"./../defaults":30,"./../utils":42}],30:[function(_dereq_,module,exports){
 (function (process){(function (){
 'use strict';
 
@@ -990,7 +3328,7 @@ utils.forEach(['post', 'put', 'patch'], function forEachMethodWithData(method) {
 module.exports = defaults;
 
 }).call(this)}).call(this,_dereq_('_process'))
-},{"./adapters/http":2,"./adapters/xhr":2,"./core/enhanceError":12,"./helpers/normalizeHeaderName":24,"./utils":28,"_process":55}],17:[function(_dereq_,module,exports){
+},{"./adapters/http":16,"./adapters/xhr":16,"./core/enhanceError":26,"./helpers/normalizeHeaderName":38,"./utils":42,"_process":69}],31:[function(_dereq_,module,exports){
 'use strict';
 
 module.exports = function bind(fn, thisArg) {
@@ -1003,7 +3341,7 @@ module.exports = function bind(fn, thisArg) {
   };
 };
 
-},{}],18:[function(_dereq_,module,exports){
+},{}],32:[function(_dereq_,module,exports){
 'use strict';
 
 var utils = _dereq_('./../utils');
@@ -1075,7 +3413,7 @@ module.exports = function buildURL(url, params, paramsSerializer) {
   return url;
 };
 
-},{"./../utils":28}],19:[function(_dereq_,module,exports){
+},{"./../utils":42}],33:[function(_dereq_,module,exports){
 'use strict';
 
 /**
@@ -1091,7 +3429,7 @@ module.exports = function combineURLs(baseURL, relativeURL) {
     : baseURL;
 };
 
-},{}],20:[function(_dereq_,module,exports){
+},{}],34:[function(_dereq_,module,exports){
 'use strict';
 
 var utils = _dereq_('./../utils');
@@ -1146,7 +3484,7 @@ module.exports = (
     })()
 );
 
-},{"./../utils":28}],21:[function(_dereq_,module,exports){
+},{"./../utils":42}],35:[function(_dereq_,module,exports){
 'use strict';
 
 /**
@@ -1162,7 +3500,7 @@ module.exports = function isAbsoluteURL(url) {
   return /^([a-z][a-z\d\+\-\.]*:)?\/\//i.test(url);
 };
 
-},{}],22:[function(_dereq_,module,exports){
+},{}],36:[function(_dereq_,module,exports){
 'use strict';
 
 /**
@@ -1175,7 +3513,7 @@ module.exports = function isAxiosError(payload) {
   return (typeof payload === 'object') && (payload.isAxiosError === true);
 };
 
-},{}],23:[function(_dereq_,module,exports){
+},{}],37:[function(_dereq_,module,exports){
 'use strict';
 
 var utils = _dereq_('./../utils');
@@ -1245,7 +3583,7 @@ module.exports = (
     })()
 );
 
-},{"./../utils":28}],24:[function(_dereq_,module,exports){
+},{"./../utils":42}],38:[function(_dereq_,module,exports){
 'use strict';
 
 var utils = _dereq_('../utils');
@@ -1259,7 +3597,7 @@ module.exports = function normalizeHeaderName(headers, normalizedName) {
   });
 };
 
-},{"../utils":28}],25:[function(_dereq_,module,exports){
+},{"../utils":42}],39:[function(_dereq_,module,exports){
 'use strict';
 
 var utils = _dereq_('./../utils');
@@ -1314,7 +3652,7 @@ module.exports = function parseHeaders(headers) {
   return parsed;
 };
 
-},{"./../utils":28}],26:[function(_dereq_,module,exports){
+},{"./../utils":42}],40:[function(_dereq_,module,exports){
 'use strict';
 
 /**
@@ -1343,7 +3681,7 @@ module.exports = function spread(callback) {
   };
 };
 
-},{}],27:[function(_dereq_,module,exports){
+},{}],41:[function(_dereq_,module,exports){
 'use strict';
 
 var pkg = _dereq_('./../../package.json');
@@ -1450,7 +3788,7 @@ module.exports = {
   validators: validators
 };
 
-},{"./../../package.json":29}],28:[function(_dereq_,module,exports){
+},{"./../../package.json":43}],42:[function(_dereq_,module,exports){
 'use strict';
 
 var bind = _dereq_('./helpers/bind');
@@ -1801,7 +4139,7 @@ module.exports = {
   stripBOM: stripBOM
 };
 
-},{"./helpers/bind":17}],29:[function(_dereq_,module,exports){
+},{"./helpers/bind":31}],43:[function(_dereq_,module,exports){
 module.exports={
   "name": "axios",
   "version": "0.21.4",
@@ -1887,9 +4225,9 @@ module.exports={
   ]
 }
 
-},{}],30:[function(_dereq_,module,exports){
+},{}],44:[function(_dereq_,module,exports){
 
-},{}],31:[function(_dereq_,module,exports){
+},{}],45:[function(_dereq_,module,exports){
 /* jshint esversion: 6 */
 /* jslint node: true */
 'use strict';
@@ -1917,7 +4255,7 @@ module.exports = function serialize (object) {
   }, '') + '}';
 };
 
-},{}],32:[function(_dereq_,module,exports){
+},{}],46:[function(_dereq_,module,exports){
 /*
  * Copyright (c) 2019 Digital Bazaar, Inc. All rights reserved.
  */
@@ -2180,7 +4518,7 @@ function _resolveContextUrls({context, base}) {
   }
 }
 
-},{"./JsonLdError":33,"./ResolvedContext":37,"./types":51,"./url":52,"./util":53}],33:[function(_dereq_,module,exports){
+},{"./JsonLdError":47,"./ResolvedContext":51,"./types":65,"./url":66,"./util":67}],47:[function(_dereq_,module,exports){
 /*
  * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
  */
@@ -2205,7 +4543,7 @@ module.exports = class JsonLdError extends Error {
   }
 };
 
-},{}],34:[function(_dereq_,module,exports){
+},{}],48:[function(_dereq_,module,exports){
 /*
  * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
  */
@@ -2259,7 +4597,7 @@ module.exports = jsonld => {
   return JsonLdProcessor;
 };
 
-},{}],35:[function(_dereq_,module,exports){
+},{}],49:[function(_dereq_,module,exports){
 /*
  * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
  */
@@ -2268,7 +4606,7 @@ module.exports = jsonld => {
 // TODO: move `NQuads` to its own package
 module.exports = _dereq_('rdf-canonize').NQuads;
 
-},{"rdf-canonize":56}],36:[function(_dereq_,module,exports){
+},{"rdf-canonize":70}],50:[function(_dereq_,module,exports){
 /*
  * Copyright (c) 2017-2019 Digital Bazaar, Inc. All rights reserved.
  */
@@ -2308,7 +4646,7 @@ module.exports = class RequestQueue {
   }
 };
 
-},{}],37:[function(_dereq_,module,exports){
+},{}],51:[function(_dereq_,module,exports){
 /*
  * Copyright (c) 2019 Digital Bazaar, Inc. All rights reserved.
  */
@@ -2340,7 +4678,7 @@ module.exports = class ResolvedContext {
   }
 };
 
-},{"lru-cache":54}],38:[function(_dereq_,module,exports){
+},{"lru-cache":68}],52:[function(_dereq_,module,exports){
 /*
  * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
  */
@@ -3520,7 +5858,7 @@ function _checkNestProperty(activeCtx, nestProperty, options) {
   }
 }
 
-},{"./JsonLdError":33,"./context":40,"./graphTypes":46,"./types":51,"./url":52,"./util":53}],39:[function(_dereq_,module,exports){
+},{"./JsonLdError":47,"./context":54,"./graphTypes":60,"./types":65,"./url":66,"./util":67}],53:[function(_dereq_,module,exports){
 /*
  * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
  */
@@ -3554,7 +5892,7 @@ module.exports = {
   XSD_STRING: XSD + 'string',
 };
 
-},{}],40:[function(_dereq_,module,exports){
+},{}],54:[function(_dereq_,module,exports){
 /*
  * Copyright (c) 2017-2019 Digital Bazaar, Inc. All rights reserved.
  */
@@ -5026,7 +7364,7 @@ function _deepCompare(x1, x2) {
   return true;
 }
 
-},{"./JsonLdError":33,"./types":51,"./url":52,"./util":53}],41:[function(_dereq_,module,exports){
+},{"./JsonLdError":47,"./types":65,"./url":66,"./util":67}],55:[function(_dereq_,module,exports){
 /*
  * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
  */
@@ -5145,7 +7483,7 @@ function _get(xhr, url, headers) {
   });
 }
 
-},{"../JsonLdError":33,"../RequestQueue":36,"../constants":39,"../url":52,"../util":53}],42:[function(_dereq_,module,exports){
+},{"../JsonLdError":47,"../RequestQueue":50,"../constants":53,"../url":66,"../util":67}],56:[function(_dereq_,module,exports){
 /*
  * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
  */
@@ -6262,7 +8600,7 @@ async function _expandIndexMap(
   return rval;
 }
 
-},{"./JsonLdError":33,"./context":40,"./graphTypes":46,"./types":51,"./url":52,"./util":53}],43:[function(_dereq_,module,exports){
+},{"./JsonLdError":47,"./context":54,"./graphTypes":60,"./types":65,"./url":66,"./util":67}],57:[function(_dereq_,module,exports){
 /*
  * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
  */
@@ -6302,7 +8640,7 @@ api.flatten = input => {
   return flattened;
 };
 
-},{"./graphTypes":46,"./nodeMap":48}],44:[function(_dereq_,module,exports){
+},{"./graphTypes":60,"./nodeMap":62}],58:[function(_dereq_,module,exports){
 /*
  * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
  */
@@ -7129,7 +9467,7 @@ function _valueMatch(pattern, value) {
   return true;
 }
 
-},{"./JsonLdError":33,"./context":40,"./graphTypes":46,"./nodeMap":48,"./types":51,"./url":52,"./util":53}],45:[function(_dereq_,module,exports){
+},{"./JsonLdError":47,"./context":54,"./graphTypes":60,"./nodeMap":62,"./types":65,"./url":66,"./util":67}],59:[function(_dereq_,module,exports){
 /*
  * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
  */
@@ -7478,7 +9816,7 @@ function _RDFToObject(o, useNativeTypes, rdfDirection) {
   return rval;
 }
 
-},{"./JsonLdError":33,"./constants":39,"./graphTypes":46,"./types":51,"./util":53}],46:[function(_dereq_,module,exports){
+},{"./JsonLdError":47,"./constants":53,"./graphTypes":60,"./types":65,"./util":67}],60:[function(_dereq_,module,exports){
 /*
  * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
  */
@@ -7599,7 +9937,7 @@ api.isBlankNode = v => {
   return false;
 };
 
-},{"./types":51}],47:[function(_dereq_,module,exports){
+},{"./types":65}],61:[function(_dereq_,module,exports){
 /**
  * A JavaScript implementation of the JSON-LD API.
  *
@@ -8628,7 +10966,7 @@ wrapper(factory);
 // export API
 module.exports = factory;
 
-},{"./ContextResolver":32,"./JsonLdError":33,"./JsonLdProcessor":34,"./NQuads":35,"./RequestQueue":36,"./compact":38,"./context":40,"./expand":42,"./flatten":43,"./frame":44,"./fromRdf":45,"./graphTypes":46,"./nodeMap":48,"./platform":49,"./toRdf":50,"./types":51,"./url":52,"./util":53,"lru-cache":54,"rdf-canonize":56}],48:[function(_dereq_,module,exports){
+},{"./ContextResolver":46,"./JsonLdError":47,"./JsonLdProcessor":48,"./NQuads":49,"./RequestQueue":50,"./compact":52,"./context":54,"./expand":56,"./flatten":57,"./frame":58,"./fromRdf":59,"./graphTypes":60,"./nodeMap":62,"./platform":63,"./toRdf":64,"./types":65,"./url":66,"./util":67,"lru-cache":68,"rdf-canonize":70}],62:[function(_dereq_,module,exports){
 /*
  * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
  */
@@ -8920,7 +11258,7 @@ api.mergeNodeMaps = graphs => {
   return defaultGraph;
 };
 
-},{"./JsonLdError":33,"./context":40,"./graphTypes":46,"./types":51,"./util":53}],49:[function(_dereq_,module,exports){
+},{"./JsonLdError":47,"./context":54,"./graphTypes":60,"./types":65,"./util":67}],63:[function(_dereq_,module,exports){
 /*
  * Copyright (c) 2021 Digital Bazaar, Inc. All rights reserved.
  */
@@ -8961,7 +11299,7 @@ api.setupGlobals = function(jsonld) {
   }
 };
 
-},{"./documentLoaders/xhr":41}],50:[function(_dereq_,module,exports){
+},{"./documentLoaders/xhr":55}],64:[function(_dereq_,module,exports){
 /*
  * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
  */
@@ -9243,7 +11581,7 @@ function _objectToRDF(item, issuer, dataset, graphTerm, rdfDirection) {
   return object;
 }
 
-},{"./constants":39,"./context":40,"./graphTypes":46,"./nodeMap":48,"./types":51,"./url":52,"./util":53,"canonicalize":31}],51:[function(_dereq_,module,exports){
+},{"./constants":53,"./context":54,"./graphTypes":60,"./nodeMap":62,"./types":65,"./url":66,"./util":67,"canonicalize":45}],65:[function(_dereq_,module,exports){
 /*
  * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
  */
@@ -9337,7 +11675,7 @@ api.isString = v => (typeof v === 'string' ||
  */
 api.isUndefined = v => typeof v === 'undefined';
 
-},{}],52:[function(_dereq_,module,exports){
+},{}],66:[function(_dereq_,module,exports){
 /*
  * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
  */
@@ -9640,7 +11978,7 @@ api.isAbsolute = v => types.isString(v) && isAbsoluteRegex.test(v);
  */
 api.isRelative = v => types.isString(v);
 
-},{"./types":51}],53:[function(_dereq_,module,exports){
+},{"./types":65}],67:[function(_dereq_,module,exports){
 /*
  * Copyright (c) 2017-2019 Digital Bazaar, Inc. All rights reserved.
  */
@@ -10093,7 +12431,7 @@ function _labelBlankNodes(issuer, element) {
   return element;
 }
 
-},{"./JsonLdError":33,"./graphTypes":46,"./types":51,"rdf-canonize":56}],54:[function(_dereq_,module,exports){
+},{"./JsonLdError":47,"./graphTypes":60,"./types":65,"rdf-canonize":70}],68:[function(_dereq_,module,exports){
 'use strict'
 
 // A linked list to keep track of recently-used-ness
@@ -10429,7 +12767,7 @@ const forEachStep = (self, fn, node, thisp) => {
 
 module.exports = LRUCache
 
-},{"yallist":69}],55:[function(_dereq_,module,exports){
+},{"yallist":83}],69:[function(_dereq_,module,exports){
 // shim for using process in browser
 var process = module.exports = {};
 
@@ -10615,7 +12953,7 @@ process.chdir = function (dir) {
 };
 process.umask = function() { return 0; };
 
-},{}],56:[function(_dereq_,module,exports){
+},{}],70:[function(_dereq_,module,exports){
 /**
  * An implementation of the RDF Dataset Normalization specification.
  *
@@ -10625,7 +12963,7 @@ process.umask = function() { return 0; };
  */
 module.exports = _dereq_('./lib');
 
-},{"./lib":65}],57:[function(_dereq_,module,exports){
+},{"./lib":79}],71:[function(_dereq_,module,exports){
 /*
  * Copyright (c) 2016-2021 Digital Bazaar, Inc. All rights reserved.
  */
@@ -10707,7 +13045,7 @@ module.exports = class IdentifierIssuer {
   }
 };
 
-},{}],58:[function(_dereq_,module,exports){
+},{}],72:[function(_dereq_,module,exports){
 /*
  * Copyright (c) 2016-2021 Digital Bazaar, Inc. All rights reserved.
  */
@@ -10758,7 +13096,7 @@ module.exports = class MessageDigest {
   }
 };
 
-},{"setimmediate":66}],59:[function(_dereq_,module,exports){
+},{"setimmediate":80}],73:[function(_dereq_,module,exports){
 /*
  * Copyright (c) 2016-2021 Digital Bazaar, Inc. All rights reserved.
  */
@@ -11153,7 +13491,7 @@ function _unescape(s) {
   });
 }
 
-},{}],60:[function(_dereq_,module,exports){
+},{}],74:[function(_dereq_,module,exports){
 /*
  * Copyright (c) 2016-2021 Digital Bazaar, Inc. All rights reserved.
  */
@@ -11240,7 +13578,7 @@ module.exports = class Permuter {
   }
 };
 
-},{}],61:[function(_dereq_,module,exports){
+},{}],75:[function(_dereq_,module,exports){
 (function (setImmediate){(function (){
 /*
  * Copyright (c) 2016-2021 Digital Bazaar, Inc. All rights reserved.
@@ -11754,7 +14092,7 @@ function _stringHashCompare(a, b) {
 }
 
 }).call(this)}).call(this,_dereq_("timers").setImmediate)
-},{"./IdentifierIssuer":57,"./MessageDigest":58,"./NQuads":59,"./Permuter":60,"timers":67}],62:[function(_dereq_,module,exports){
+},{"./IdentifierIssuer":71,"./MessageDigest":72,"./NQuads":73,"./Permuter":74,"timers":81}],76:[function(_dereq_,module,exports){
 /*
  * Copyright (c) 2016-2021 Digital Bazaar, Inc. All rights reserved.
  */
@@ -12244,7 +14582,7 @@ function _stringHashCompare(a, b) {
   return a.hash < b.hash ? -1 : a.hash > b.hash ? 1 : 0;
 }
 
-},{"./IdentifierIssuer":57,"./MessageDigest":58,"./NQuads":59,"./Permuter":60}],63:[function(_dereq_,module,exports){
+},{"./IdentifierIssuer":71,"./MessageDigest":72,"./NQuads":73,"./Permuter":74}],77:[function(_dereq_,module,exports){
 /*
  * Copyright (c) 2016-2021 Digital Bazaar, Inc. All rights reserved.
  */
@@ -12336,7 +14674,7 @@ module.exports = class URDNA2012 extends URDNA2015 {
   }
 };
 
-},{"./URDNA2015":61}],64:[function(_dereq_,module,exports){
+},{"./URDNA2015":75}],78:[function(_dereq_,module,exports){
 /*
  * Copyright (c) 2016-2021 Digital Bazaar, Inc. All rights reserved.
  */
@@ -12422,7 +14760,7 @@ module.exports = class URDNA2012Sync extends URDNA2015Sync {
   }
 };
 
-},{"./URDNA2015Sync":62}],65:[function(_dereq_,module,exports){
+},{"./URDNA2015Sync":76}],79:[function(_dereq_,module,exports){
 /**
  * An implementation of the RDF Dataset Normalization specification.
  * This library works in the browser and node.js.
@@ -12569,7 +14907,7 @@ api._canonizeSync = function(dataset, options) {
     'Invalid RDF Dataset Canonicalization algorithm: ' + options.algorithm);
 };
 
-},{"./IdentifierIssuer":57,"./NQuads":59,"./URDNA2015":61,"./URDNA2015Sync":62,"./URGNA2012":63,"./URGNA2012Sync":64,"rdf-canonize-native":30}],66:[function(_dereq_,module,exports){
+},{"./IdentifierIssuer":71,"./NQuads":73,"./URDNA2015":75,"./URDNA2015Sync":76,"./URGNA2012":77,"./URGNA2012Sync":78,"rdf-canonize-native":44}],80:[function(_dereq_,module,exports){
 (function (process,global){(function (){
 (function (global, undefined) {
     "use strict";
@@ -12759,7 +15097,7 @@ api._canonizeSync = function(dataset, options) {
 }(typeof self === "undefined" ? typeof global === "undefined" ? this : global : self));
 
 }).call(this)}).call(this,_dereq_('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"_process":55}],67:[function(_dereq_,module,exports){
+},{"_process":69}],81:[function(_dereq_,module,exports){
 (function (setImmediate,clearImmediate){(function (){
 var nextTick = _dereq_('process/browser.js').nextTick;
 var apply = Function.prototype.apply;
@@ -12838,7 +15176,7 @@ exports.clearImmediate = typeof clearImmediate === "function" ? clearImmediate :
   delete immediateIds[id];
 };
 }).call(this)}).call(this,_dereq_("timers").setImmediate,_dereq_("timers").clearImmediate)
-},{"process/browser.js":55,"timers":67}],68:[function(_dereq_,module,exports){
+},{"process/browser.js":69,"timers":81}],82:[function(_dereq_,module,exports){
 'use strict'
 module.exports = function (Yallist) {
   Yallist.prototype[Symbol.iterator] = function* () {
@@ -12848,7 +15186,7 @@ module.exports = function (Yallist) {
   }
 }
 
-},{}],69:[function(_dereq_,module,exports){
+},{}],83:[function(_dereq_,module,exports){
 'use strict'
 module.exports = Yallist
 
@@ -13276,3433 +15614,5 @@ try {
   _dereq_('./iterator.js')(Yallist)
 } catch (er) {}
 
-},{"./iterator.js":68}],70:[function(_dereq_,module,exports){
-// the functions for a class Object
-const Term = _dereq_("./Term");
-
-/**
- * @typedef filterObject
- * @type {object}
- * @property {boolean} [isSuperseded] - defines the superseded status for the filter (true: only terms that are superseded, false: only terms that are NOT superseded)
- * @property {string|string[]} [fromVocabulary] - defines a set of allowed vocabularies for the filter - vocabularies are given as indicators (e.g. "schema")
- * @property {string|string[]} [termType] - defines a set of allowed term types for the filter (e.g. "Class", "Property")
- */
-
-class Class extends Term {
-  /**
-   * A Class represents an rdfs:Class. It is identified by its IRI
-   *
-   * @class
-   * @param {string} IRI - The compacted IRI of this Class, e.g. "schema:Book"
-   * @param {Graph} graph - The underlying data graph to enable the methods of this Class
-   */
-  constructor(IRI, graph) {
-    super(IRI, graph);
-  }
-
-  /**
-   * Retrieves the term type (@type) of this Class (is always "rdfs:Class")
-   *
-   * @returns {string} The term type of this Class -> "rdfs:Class"
-   */
-  getTermType() {
-    return "rdfs:Class";
-  }
-
-  /**
-   * Retrieves the term object of this Class
-   *
-   * @returns {string} The term object of this Class
-   */
-  getTermObj() {
-    return this.graph.classes[this.IRI];
-  }
-
-  /**
-   * Retrieves the explicit/implicit properties (soa:hasProperty) of this Class
-   *
-   * @param {boolean} [implicit = true] - retrieves also implicit properties (inheritance from super-classes) - (default = true)
-   * @param {filterObject} [filter] - (optional) The filter settings to be applied on the result
-   * @returns {string[]} The properties of this Class
-   */
-  getProperties(implicit = true, filter = undefined) {
-    const classObj = this.getTermObj();
-    const result = [];
-    result.push(...classObj["soa:hasProperty"]);
-    if (implicit) {
-      // add properties from super-classes
-      result.push(
-        ...this.graph.reasoner.inferPropertiesFromSuperClasses(
-          classObj["rdfs:subClassOf"]
-        )
-      );
-    }
-    return this.util.applyFilter(
-      this.util.uniquifyArray(result),
-      filter,
-      this.graph
-    );
-  }
-
-  /**
-   * Retrieves the explicit/implicit super-classes (rdfs:subClassOf) of this Class
-   *
-   * @param {boolean} [implicit = true] - retrieves also implicit super-classes (recursive from super-classes) - (default = true)
-   * @param {filterObject} [filter] - (optional) The filter settings to be applied on the result
-   * @returns {string[]} The super-classes of this Class
-   */
-  getSuperClasses(implicit = true, filter = undefined) {
-    const classObj = this.getTermObj();
-    const result = [];
-    if (implicit) {
-      result.push(...this.graph.reasoner.inferSuperClasses(this.IRI));
-    } else {
-      result.push(...classObj["rdfs:subClassOf"]);
-    }
-    return this.util.applyFilter(
-      this.util.uniquifyArray(result),
-      filter,
-      this.graph
-    );
-  }
-
-  /**
-   * Retrieves the explicit/implicit sub-classes (soa:superClassOf) of this Class
-   *
-   * @param {boolean} [implicit = true] - retrieves also implicit sub-classes (recursive from sub-classes) - (default = true)
-   * @param {filterObject} [filter] - (optional) The filter settings to be applied on the result
-   * @returns {string[]} The sub-classes of this Class
-   */
-  getSubClasses(implicit = true, filter = undefined) {
-    const classObj = this.getTermObj();
-    const result = [];
-    if (implicit) {
-      result.push(...this.graph.reasoner.inferSubClasses(this.IRI));
-    } else {
-      result.push(...classObj["soa:superClassOf"]);
-    }
-    return this.util.applyFilter(
-      this.util.uniquifyArray(result),
-      filter,
-      this.graph
-    );
-  }
-
-  /**
-   * Retrieves the properties that have this Class as a range
-   *
-   * @param {boolean} [implicit = true] - includes also implicit data - (default = true)
-   * @param {filterObject} [filter] - (optional) The filter settings to be applied on the result
-   * @returns {string[]} The properties that have this Class as a range
-   */
-  isRangeOf(implicit = true, filter = undefined) {
-    const result = [];
-    if (implicit) {
-      result.push(...this.graph.reasoner.inferRangeOf(this.IRI));
-    } else {
-      result.push(...this.getTermObj()["soa:isRangeOf"]);
-    }
-    return this.util.applyFilter(
-      this.util.uniquifyArray(result),
-      filter,
-      this.graph
-    );
-  }
-
-  /**
-   * Generates an explicit/implicit JSON representation of this Class.
-   *
-   * @param {boolean} [implicit = true] - includes also implicit data (e.g. sub-Classes, super-Classes, properties, etc.) - (default = true)
-   * @param {filterObject} [filter] - (optional) The filter settings to be applied on the result
-   * @returns {object} The JSON representation of this Class
-   */
-  toJSON(implicit = true, filter = undefined) {
-    // (implicit === true) ->
-    // properties of all parent classes
-    // sub-classes and their subclasses
-    // super-classes and their superclasses
-    const result = super.toJSON();
-    result.superClasses = this.getSuperClasses(implicit, filter);
-    result.subClasses = this.getSubClasses(implicit, filter);
-    result.properties = this.getProperties(implicit, filter);
-    result.rangeOf = this.isRangeOf(implicit, filter);
-    return result;
-  }
-}
-
-module.exports = Class;
-
-},{"./Term":78}],71:[function(_dereq_,module,exports){
-// the functions for a data type Object
-const Term = _dereq_("./Term");
-
-/**
- * @typedef filterObject
- * @type {object}
- * @property {boolean} [isSuperseded] - defines the superseded status for the filter (true: only terms that are superseded, false: only terms that are NOT superseded)
- * @property {string|string[]} [fromVocabulary] - defines a set of allowed vocabularies for the filter - vocabularies are given as indicators (e.g. "schema")
- * @property {string|string[]} [termType] - defines a set of allowed term types for the filter (e.g. "Class", "Property")
- */
-
-class DataType extends Term {
-  /**
-   * A DataType represents an schema:DataType. It is identified by its IRI
-   *
-   * @class
-   * @param {string} IRI - The compacted IRI of this DataType, e.g. "schema:Number"
-   * @param {Graph} graph - The underlying data graph to enable the methods of this DataType
-   */
-  constructor(IRI, graph) {
-    super(IRI, graph);
-  }
-
-  /**
-   * Retrieves the term type (@type) of this DataType (is always "schema:DataType")
-   *
-   * @returns {string} The term type of this DataType -> "schema:DataType"
-   */
-  getTermType() {
-    return "schema:DataType";
-  }
-
-  /**
-   * Retrieves the term object of this DataType
-   *
-   * @returns {string} The term object of this DataType
-   */
-  getTermObj() {
-    return this.graph.dataTypes[this.IRI];
-  }
-
-  /**
-   * Retrieves the explicit/implicit super-DataTypes (rdfs:subClassOf) of this DataType
-   *
-   * @param {boolean} [implicit = true] - retrieves also implicit super-DataTypes (recursive from super-DataTypes) - (default = true)
-   * @param {filterObject} [filter] - (optional) The filter settings to be applied on the result
-   * @returns {string[]} The super-DataTypes of this DataType
-   */
-  getSuperDataTypes(implicit = true, filter = undefined) {
-    const dataTypeObj = this.getTermObj();
-    const result = [];
-    if (implicit) {
-      result.push(...this.graph.reasoner.inferSuperDataTypes(this.IRI));
-    } else {
-      result.push(...dataTypeObj["rdfs:subClassOf"]);
-    }
-    return this.util.applyFilter(
-      this.util.uniquifyArray(result),
-      filter,
-      this.graph
-    );
-  }
-
-  /**
-   * Retrieves the explicit/implicit sub-DataTypes (soa:superClassOf) of this DataType
-   *
-   * @param {boolean} [implicit = true] - retrieves also implicit sub-DataTypes (recursive from sub-DataTypes) - (default = true)
-   * @param {filterObject} [filter] - (optional) The filter settings to be applied on the result
-   * @returns {string[]} The sub-DataTypes of this DataType
-   */
-  getSubDataTypes(implicit = true, filter = undefined) {
-    const dataTypeObj = this.getTermObj();
-    const result = [];
-    if (implicit) {
-      result.push(...this.graph.reasoner.inferSubDataTypes(this.IRI));
-    } else {
-      result.push(...dataTypeObj["soa:superClassOf"]);
-    }
-    return this.util.applyFilter(
-      this.util.uniquifyArray(result),
-      filter,
-      this.graph
-    );
-  }
-
-  /**
-   * Retrieves the properties that have this DataType as a range
-   *
-   * @param {boolean} [implicit = true] - includes also implicit data - (default = true)
-   * @param {filterObject} [filter] - (optional) The filter settings to be applied on the result
-   * @returns {string[]} The properties that have this DataType as a range
-   */
-  isRangeOf(implicit = true, filter = undefined) {
-    const result = [];
-    if (implicit) {
-      result.push(...this.graph.reasoner.inferRangeOf(this.IRI));
-    } else {
-      result.push(...this.getTermObj()["soa:isRangeOf"]);
-    }
-    return this.util.applyFilter(
-      this.util.uniquifyArray(result),
-      filter,
-      this.graph
-    );
-  }
-
-  /**
-   * Generates an explicit/implicit JSON representation of this DataType.
-   *
-   * @param {boolean} [implicit = true]  - includes also implicit data (e.g. sub-DataTypes, super-DataTypes) - (default = true)
-   * @param {filterObject} [filter] - (optional) The filter settings to be applied on the result
-   * @returns {object} The JSON representation of this DataType
-   */
-  toJSON(implicit = true, filter = undefined) {
-    const result = super.toJSON();
-    result.superDataTypes = this.getSuperDataTypes(implicit, filter);
-    result.subDataTypes = this.getSubDataTypes(implicit, filter);
-    result.rangeOf = this.isRangeOf(implicit, filter);
-    return result;
-  }
-}
-
-module.exports = DataType;
-
-},{"./Term":78}],72:[function(_dereq_,module,exports){
-// the functions for a enumeration Object
-const Class = _dereq_("./Class");
-
-/**
- * @typedef filterObject
- * @type {object}
- * @property {boolean} [isSuperseded] - defines the superseded status for the filter (true: only terms that are superseded, false: only terms that are NOT superseded)
- * @property {string|string[]} [fromVocabulary] - defines a set of allowed vocabularies for the filter - vocabularies are given as indicators (e.g. "schema")
- * @property {string|string[]} [termType] - defines a set of allowed term types for the filter (e.g. "Class", "Property")
- */
-
-class Enumeration extends Class {
-  /**
-   * An Enumeration represents a schema:Enumeration, which is also a sub-type of an rdfs:Class. It is identified by its IRI
-   *
-   * @class
-   * @param {string} IRI - The compacted IRI of this Enumeration, e.g. "schema:DayOfWeek"
-   * @param {Graph} graph - The underlying data graph to enable the methods of this Enumeration
-   */
-  constructor(IRI, graph) {
-    super(IRI, graph);
-  }
-
-  /**
-   * Retrieves the term type (@type) of this Enumeration (is always "schema:Enumeration")
-   *
-   * @returns {string} The term type of this Enumeration -> "schema:Enumeration"
-   */
-  getTermType() {
-    return "schema:Enumeration";
-  }
-
-  /**
-   * Retrieves the term object of this Enumeration
-   *
-   * @returns {string} The term object of this Enumeration
-   */
-  getTermObj() {
-    return this.graph.enumerations[this.IRI];
-  }
-
-  /**
-   * Retrieves the enumeration members (soa:hasEnumerationMember) of this Enumeration
-   *
-   * @param {boolean} [implicit = true] - retrieves also implicit enumeration members (inheritance from sub-enumerations) - (default = false)
-   * @param {filterObject} [filter] - (optional) The filter settings to be applied on the result
-   * @returns {string[]} The enumeration members of this Enumeration
-   */
-  getEnumerationMembers(implicit = false, filter = undefined) {
-    const result = [];
-    result.push(...this.getTermObj()["soa:hasEnumerationMember"]);
-    if (implicit) {
-      const subClasses = this.getSubClasses(true);
-      for (const actSubClass of subClasses) {
-        const actualEnumeration = this.graph.enumerations[actSubClass];
-        if (!this.util.isNil(actualEnumeration)) {
-          result.push(...actualEnumeration["soa:hasEnumerationMember"]);
-        }
-      }
-    }
-    return this.util.applyFilter(
-      this.util.uniquifyArray(result),
-      filter,
-      this.graph
-    );
-  }
-
-  /**
-   * Generates an explicit/implicit JSON representation of this Enumeration
-   *
-   * @param {boolean} [implicit = true] - includes also implicit data - (default = true)
-   * @param {filterObject} [filter] - (optional) The filter settings to be applied on the result
-   * @returns {object} The JSON representation of this Enumeration
-   */
-  toJSON(implicit = true, filter = undefined) {
-    const result = super.toJSON(implicit, filter);
-    result.enumerationMembers = this.getEnumerationMembers(implicit, filter);
-    return result;
-  }
-}
-
-module.exports = Enumeration;
-
-},{"./Class":70}],73:[function(_dereq_,module,exports){
-// the functions for a enumeration member Object
-const Term = _dereq_("./Term");
-
-/**
- * @typedef filterObject
- * @type {object}
- * @property {boolean} [isSuperseded] - defines the superseded status for the filter (true: only terms that are superseded, false: only terms that are NOT superseded)
- * @property {string|string[]} [fromVocabulary] - defines a set of allowed vocabularies for the filter - vocabularies are given as indicators (e.g. "schema")
- * @property {string|string[]} [termType] - defines a set of allowed term types for the filter (e.g. "Class", "Property")
- */
-
-class EnumerationMember extends Term {
-  /**
-   * An EnumerationMember represents a possible value for a schema:Enumeration. It is identified by its IRI
-   *
-   * @class
-   * @param {string} IRI - The compacted IRI of this EnumerationMember, e.g. "schema:Friday"
-   * @param {Graph} graph - The underlying data graph to enable the methods of this EnumerationMember
-   */
-  constructor(IRI, graph) {
-    super(IRI, graph);
-  }
-
-  /**
-   * Retrieves the term type (@type) of this EnumerationMember (is always "schema:Enumeration")
-   *
-   * @returns {string} The term type of this EnumerationMember -> "soa:EnumerationMember" //there is no explicit type for enumeration members in the Schema.org Meta, so we use our own definition
-   */
-  getTermType() {
-    return "soa:EnumerationMember";
-  }
-
-  /**
-   * Retrieves the term object of this Enumeration Member
-   *
-   * @returns {string} The term object of this Enumeration Member
-   */
-  getTermObj() {
-    return this.graph.enumerationMembers[this.IRI];
-  }
-
-  /**
-   * Retrieves the domain enumerations (soa:enumerationDomainIncludes) of this EnumerationMember
-   *
-   * @param {boolean} [implicit = true] - retrieves also implicit domain enumerations (inheritance from super-enumerations) - (default = false)
-   * @param {filterObject} [filter] - (optional) The filter settings to be applied on the result
-   * @returns {string[]} The domain enumerations of this EnumerationMember
-   */
-  getDomainEnumerations(implicit = false, filter = undefined) {
-    let enumObj = this.getTermObj();
-    let result = [];
-    result.push(...enumObj["soa:enumerationDomainIncludes"]);
-    if (implicit) {
-      let domainEnumerationsToCheck = this.util.cloneJson(result);
-      for (const actDE of domainEnumerationsToCheck) {
-        result.push(...this.graph.reasoner.inferSuperClasses(actDE));
-      }
-      result = this.util.applyFilter(
-        this.util.uniquifyArray(result),
-        { termType: "Enumeration" },
-        this.graph
-      );
-    }
-    return this.util.applyFilter(
-      this.util.uniquifyArray(result),
-      filter,
-      this.graph
-    );
-  }
-
-  /**
-   * Generates a JSON representation of this EnumerationMember
-   *
-   * @param {boolean} [implicit = true] - includes also implicit data - (default = false)
-   * @param {filterObject} [filter] - (optional) The filter settings to be applied on the result
-   * @returns {object} The JSON representation of this EnumerationMember
-   */
-  toJSON(implicit = false, filter = undefined) {
-    const result = super.toJSON();
-    result["domainEnumerations"] = this.getDomainEnumerations(implicit, filter);
-    return result;
-  }
-}
-
-module.exports = EnumerationMember;
-
-},{"./Term":78}],74:[function(_dereq_,module,exports){
-const Class = _dereq_("./Class");
-const Property = _dereq_("./Property");
-const Enumeration = _dereq_("./Enumeration");
-const EnumerationMember = _dereq_("./EnumerationMember");
-const DataType = _dereq_("./DataType");
-const ReasoningEngine = _dereq_("./ReasoningEngine");
-
-/**
- * @typedef filterObject
- * @type {object}
- * @property {boolean} [isSuperseded] - defines the superseded status for the filter (true: only terms that are superseded, false: only terms that are NOT superseded)
- * @property {string|string[]} [fromVocabulary] - defines a set of allowed vocabularies for the filter - vocabularies are given as indicators (e.g. "schema")
- * @property {string|string[]} [termType] - defines a set of allowed term types for the filter (e.g. "Class", "Property")
- */
-
-class Graph {
-  /**
-   * @class
-   * @param {any} sdoAdapter - The parent sdoAdapter-class to which this Graph belongs
-   */
-  constructor(sdoAdapter) {
-    this.sdoAdapter = sdoAdapter;
-    this.util = _dereq_("./utilities");
-    this.reasoner = new ReasoningEngine(this);
-    // Simply speaking, a context is used to map terms to IRIs. Terms are case sensitive and any valid string that is not a reserved JSON-LD keyword can be used as a term.
-    // soa:superClassOf is an inverse of rdfs:subClassOf that should help us
-    // soa:superPropertyOf is an inverse of rdfs:subPropertyOf that should help us
-    // soa:hasProperty is an inverse of schema:domainIncludes
-    // soa:isRangeOf is an inverse of schema:rangeIncludes
-    // soa:hasEnumerationMember is used for enumerations to list all its enumeration members (their @type includes the @id of the enumeration)
-    // soa:enumerationDomainIncludes is an inverse of soa:hasEnumerationMember
-    // soa:EnumerationMember is introduced as meta type for the members of an schema:Enumeration
-    this.context = {
-      rdf: "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
-      rdfs: "http://www.w3.org/2000/01/rdf-schema#",
-      xsd: "http://www.w3.org/2001/XMLSchema#",
-      dc: "http://purl.org/dc/terms/",
-      // schema: 'http://schema.org/', this entry will be generated the first time a vocabulary is added to the graph
-      soa: "http://schema-org-adapter.at/vocabTerms/",
-      "soa:superClassOf": {
-        "@id": "soa:superClassOf",
-        "@type": "@id",
-      },
-      "soa:superPropertyOf": {
-        "@id": "soa:superPropertyOf",
-        "@type": "@id",
-      },
-      "soa:hasProperty": {
-        "@id": "soa:hasProperty",
-        "@type": "@id",
-      },
-      "soa:isRangeOf": {
-        "@id": "soa:isRangeOf",
-        "@type": "@id",
-      },
-      "soa:hasEnumerationMember": {
-        "@id": "soa:hasEnumerationMember",
-        "@type": "@id",
-      },
-      "soa:enumerationDomainIncludes": {
-        "@id": "soa:enumerationDomainIncludes",
-        "@type": "@id",
-      },
-      "rdfs:subClassOf": {
-        "@id": "rdfs:subClassOf",
-        "@type": "@id",
-      },
-      "rdfs:subPropertyOf": {
-        "@id": "rdfs:subPropertyOf",
-        "@type": "@id",
-      },
-      "schema:isPartOf": {
-        "@id": "schema:isPartOf",
-        "@type": "@id",
-      },
-      "schema:domainIncludes": {
-        "@id": "schema:domainIncludes",
-        "@type": "@id",
-      },
-      "schema:rangeIncludes": {
-        "@id": "schema:rangeIncludes",
-        "@type": "@id",
-      },
-      "schema:supersededBy": {
-        "@id": "schema:supersededBy",
-        "@type": "@id",
-      },
-      "schema:inverseOf": {
-        "@id": "schema:inverseOf",
-        "@type": "@id",
-      },
-      "dc:source": {
-        "@id": "dc:source",
-        "@type": "@id",
-      },
-      "schema:source": {
-        "@id": "schema:source",
-        "@type": "@id",
-      },
-    };
-    this.classes = {}; // keys are the compacted IRI
-    this.properties = {}; // keys are the compacted IRI
-    this.dataTypes = {}; // keys are the compacted IRI
-    this.enumerations = {}; // keys are the compacted IRI
-    this.enumerationMembers = {}; // keys are the compacted IRI
-  }
-
-  /**
-   * Adds a new vocabulary (in JSON-LD format) to the graph data
-   *
-   * @param {object} vocab - The vocabulary to add the graph, in JSON-LD format
-   * @param {?string} vocabURL - The URL of the vocabulary
-   * @returns {Promise<boolean>} returns true on success
-   */
-  async addVocabulary(vocab, vocabURL = null) {
-    // check which protocol version of schema.org is used in the first vocabulary given to the graph, set that version as the namespace for "schema" in the standard @context
-    if (this.context.schema === undefined) {
-      this.context.schema =
-        this.util.discoverUsedSchemaOrgProtocol(vocab) + "://schema.org/";
-    }
-    // this algorithm is well-documented in /docu/algorithm.md
-    try {
-      // A) Pre-process Vocabulary
-      // New: In the following any added vocabularies are slightly changed, if the "equateVocabularyProtocols" option is used and the vocabulary includes namespaces that meet the requirements
-      if (this.sdoAdapter.equateVocabularyProtocols) {
-        // 1. Check if any namespaces from this.context are used in vocab (context and content) with another protocol (http/https). Create a List of those
-        const equateNamespaces = this.util.discoverEquateNamespaces(
-          this.context,
-          vocab
-        );
-        // 2. If the List is not empty, then the vocab needs to be adapted
-        if (equateNamespaces.length > 0) {
-          //  - Create adapted context for vocab, which includes IRIs from vocab context + IRIs from the List, use vocab indicators from this.context
-          let adaptedContext = this.util.cloneJson(vocab["@context"]);
-          equateNamespaces.forEach(function (ens) {
-            let usedKeyToDelete = Object.keys(adaptedContext).find(
-              (el) => adaptedContext[el] === ens
-            );
-            if (usedKeyToDelete) {
-              delete adaptedContext[usedKeyToDelete];
-            }
-            let keyToUse = Object.keys(this.context).find(
-              (el) => this.context[el] === this.util.switchIRIProtocol(ens)
-            );
-            adaptedContext[keyToUse] = ens;
-          }, this);
-          //  - jsonld compact vocab with adapted context
-          vocab = await this.util.preProcessVocab(vocab, adaptedContext);
-          //  - manually change entries of compacted vocab context, so that they use the same protocol as in this.context (the vocab indicators should already be the same)
-          equateNamespaces.forEach(function (ens) {
-            let keyToUse = Object.keys(this.context).find(
-              (el) => this.context[el] === this.util.switchIRIProtocol(ens)
-            );
-            vocab["@context"][keyToUse] = this.context[keyToUse];
-          }, this);
-        }
-      }
-      // create new context
-      this.context = this.util.generateContext(this.context, vocab["@context"]);
-      // pre-process new vocab
-      vocab = await this.util.preProcessVocab(vocab, this.context); // adapt @graph to new context
-      const vocabularies = this.sdoAdapter.getVocabularies();
-      for (let vocabNode of vocab["@graph"]) {
-        vocabNode = this.util.curateVocabNode(vocabNode, vocabularies); // curate nodes
-      }
-      // B) Classify Input
-      /**
-       Classify every @graph node based on its @type. The node is transformed to another data-model based on the @type and stored in a new memory storage for an easier further usage. This is the first of two steps for an exact classification of the node, since the @type is not enough for a correct classification. The mapping of our data model and the @type(s) of the corresponding @graph nodes are as follows:
-       classes ("@type" = "rdfs:Class")
-       properties ("@type" = "rdf:Property")
-       dataTypes ("@type" = "rdfs:Class" + "schema:DataType")
-       enumerations ("@type" = "rdfs:Class", has "schema:Enumeration" as implicit super-class)
-       enumerationMembers ("@type" = @id(s) of enumeration(s))
-       */
-      for (let i = 0; i < vocab["@graph"].length; i++) {
-        const curNode = this.util.cloneJson(vocab["@graph"][i]);
-        if (this.util.isString(curNode["@type"])) {
-          switch (curNode["@type"]) {
-            case "rdfs:Class":
-              this.addGraphNode(this.classes, curNode, vocabURL);
-              break;
-            case "rdf:Property":
-              this.addGraphNode(this.properties, curNode, vocabURL);
-              break;
-            default:
-              // @type is not something expected -> assume enumerationMember
-              this.addGraphNode(this.enumerationMembers, curNode, vocabURL);
-              break;
-          }
-        } else if (this.util.isArray(curNode["@type"])) {
-          // @type is not a string -> datatype or enumeration
-          // [
-          //     "rdfs:Class",
-          //     "schema:DataType"
-          // ]
-          // [
-          //   "schema:MedicalImagingTechnique",
-          //   "schema:MedicalSpecialty"
-          // ]
-          if (
-            curNode["@type"].includes("rdfs:Class") &&
-            curNode["@type"].includes("schema:DataType")
-          ) {
-            // datatype
-            this.addGraphNode(this.dataTypes, curNode, vocabURL);
-          } else {
-            // enumeration member
-            this.addGraphNode(this.enumerationMembers, curNode, vocabURL);
-          }
-        } else {
-          this.sdoAdapter.onError(
-            "unexpected @type format for the following node: " +
-              JSON.stringify(curNode, null, 2)
-          );
-        }
-      }
-      // C) Classification cleaning
-      /* To have a correct classification for our data model it is needed to clean the data generated in the previous step. Inaccurate records include:
-                         Enumerations which are handled as Classes.
-                         DataTypes which are handled as Classes.
-                         */
-
-      // C.1)  Extract enumerations from classes memory
-      // For each entry in the classes memory check if its superClasses contain Enumeration or another Enumeration. If this is the case, it is known that this class is an enumeration.
-      let newEnum;
-      do {
-        newEnum = false;
-        const classesKeys = Object.keys(this.classes);
-        const enumKeys = Object.keys(this.enumerations);
-        for (const actClassKey of classesKeys) {
-          if (this.classes[actClassKey]["rdfs:subClassOf"] !== undefined) {
-            const subClassArray = this.classes[actClassKey]["rdfs:subClassOf"];
-            for (const actSubClass of subClassArray) {
-              if (
-                actSubClass === "schema:Enumeration" ||
-                enumKeys.includes(actSubClass)
-              ) {
-                if (
-                  this.classes[actClassKey] &&
-                  !this.enumerations[actClassKey]
-                ) {
-                  newEnum = true;
-                  this.enumerations[actClassKey] = this.util.cloneJson(
-                    this.classes[actClassKey]
-                  );
-                  delete this.classes[actClassKey];
-                }
-              }
-            }
-          }
-        }
-      } while (newEnum);
-      // C.2) check if there are subclasses of dataTypes which are in the classes data, put them in dataType data
-      let newDatatype;
-      do {
-        newDatatype = false;
-        const classesKeys = Object.keys(this.classes);
-        const dtKeys = Object.keys(this.dataTypes);
-        for (const actClassKey of classesKeys) {
-          if (this.classes[actClassKey]["rdfs:subClassOf"] !== undefined) {
-            const subClassArray = this.classes[actClassKey]["rdfs:subClassOf"];
-            for (const actSubClass of subClassArray) {
-              if (
-                actSubClass === "schema:DataType" ||
-                dtKeys.includes(actSubClass)
-              ) {
-                if (this.classes[actClassKey] && !this.dataTypes[actClassKey]) {
-                  newDatatype = true;
-                  this.dataTypes[actClassKey] = this.util.cloneJson(
-                    this.classes[actClassKey]
-                  );
-                  delete this.classes[actClassKey];
-                }
-              }
-            }
-          }
-        }
-      } while (newDatatype);
-      // C.3) change the @type of data-types to a single value, which is "schema:DataType"
-      const dtKeys = Object.keys(this.dataTypes);
-      for (const actDtKey of dtKeys) {
-        this.dataTypes[actDtKey]["@type"] = "schema:DataType";
-      }
-
-      // D) Inheritance
-      /*    Schema.org's Inheritance design states if an entity is the superClass/superProperty of another entity. In our data model design we also hold the information if an entity is the subClass/subProperty of another entity. In this step this inheritance information is generated. */
-      // D.1) Add subClasses for Classes and Enumerations
-      // check superclasses for all classes and enumerations. Add these classes/enumerations as subclasses (soa:superClassOf) for the parent class/enumeration
-      let classesKeys = Object.keys(this.classes);
-      for (const actClassKey of classesKeys) {
-        const superClasses = this.classes[actClassKey]["rdfs:subClassOf"];
-        // add empty superClassOf if not defined
-        if (!this.classes[actClassKey]["soa:superClassOf"]) {
-          this.classes[actClassKey]["soa:superClassOf"] = [];
-        }
-        for (const actSuperClass of superClasses) {
-          let superClass = this.classes[actSuperClass];
-          if (!superClass) {
-            superClass = this.enumerations[actSuperClass];
-          }
-          if (superClass) {
-            if (superClass["soa:superClassOf"]) {
-              if (!superClass["soa:superClassOf"].includes(actClassKey)) {
-                superClass["soa:superClassOf"].push(actClassKey);
-              }
-            } else {
-              superClass["soa:superClassOf"] = [actClassKey];
-            }
-          }
-        }
-      }
-      let enumKeys = Object.keys(this.enumerations);
-      for (const actEnumKey of enumKeys) {
-        const superClasses = this.enumerations[actEnumKey]["rdfs:subClassOf"];
-        // add empty superClassOf if not defined
-        if (!this.enumerations[actEnumKey]["soa:superClassOf"]) {
-          this.enumerations[actEnumKey]["soa:superClassOf"] = [];
-        }
-        for (const actSuperClass of superClasses) {
-          let superClass = this.classes[actSuperClass];
-          if (!superClass) {
-            superClass = this.enumerations[actSuperClass];
-          }
-          if (superClass) {
-            if (superClass["soa:superClassOf"]) {
-              if (!superClass["soa:superClassOf"].includes(actEnumKey)) {
-                superClass["soa:superClassOf"].push(actEnumKey);
-              }
-            } else {
-              superClass["soa:superClassOf"] = [actEnumKey];
-            }
-          }
-        }
-      }
-      // D.2) Add subClasses for DataTypes
-      // For each entry in the dataTypes memory the superClasses are checked (if they are in dataTypes memory) and those super types add the actual entry in their subClasses.
-      let dataTypeKeys = Object.keys(this.dataTypes);
-      for (const actDtKey of dataTypeKeys) {
-        const superClasses = this.dataTypes[actDtKey]["rdfs:subClassOf"];
-        // add empty superClassOf if not defined
-        if (!this.dataTypes[actDtKey]["soa:superClassOf"]) {
-          this.dataTypes[actDtKey]["soa:superClassOf"] = [];
-        }
-        // add empty subClassOf if not defined
-        if (!superClasses) {
-          this.dataTypes[actDtKey]["rdfs:subClassOf"] = [];
-        } else {
-          for (const actSuperClass of superClasses) {
-            const superClass = this.dataTypes[actSuperClass];
-            if (superClass) {
-              if (superClass["soa:superClassOf"]) {
-                if (!superClass["soa:superClassOf"].includes(actDtKey)) {
-                  superClass["soa:superClassOf"].push(actDtKey);
-                }
-              } else {
-                superClass["soa:superClassOf"] = [actDtKey];
-              }
-            }
-          }
-        }
-      }
-      // D.3) Add subProperties for Properties
-      // For each entry in the properties memory the superProperties are checked (if they are in properties memory) and those super properties add the actual entry in their subProperties. (soa:superPropertyOf)
-      let propertyKeys = Object.keys(this.properties);
-      for (const actPropKey of propertyKeys) {
-        const superProperties =
-          this.properties[actPropKey]["rdfs:subPropertyOf"];
-        // add empty superPropertyOf if not defined
-        if (!this.properties[actPropKey]["soa:superPropertyOf"]) {
-          this.properties[actPropKey]["soa:superPropertyOf"] = [];
-        }
-        // add empty subPropertyOf if not defined
-        if (!superProperties) {
-          this.properties[actPropKey]["rdfs:subPropertyOf"] = [];
-        } else {
-          for (const actSuperProp of superProperties) {
-            const superClass = this.properties[actSuperProp];
-            if (superClass) {
-              if (superClass["soa:superPropertyOf"]) {
-                if (!superClass["soa:superPropertyOf"].includes(actPropKey)) {
-                  superClass["soa:superPropertyOf"].push(actPropKey);
-                }
-              } else {
-                superClass["soa:superPropertyOf"] = [actPropKey];
-              }
-            }
-          }
-        }
-      }
-      // E) Relationships
-      /*  In this step additional fields are added to certain data entries to add links to other data entries, which should make it easier to use the generated data set.#
-                        soa:hasProperty is an inverse of schema:domainIncludes
-                        soa:isRangeOf is an inverse of schema:rangeIncludes
-                        soa:hasEnumerationMember is used for enumerations to list all its enumeration members (their @type includes the @id of the enumeration)
-                        soa:enumerationDomainIncludes is an inverse of soa:hasEnumerationMember */
-      // E.0) add empty arrays for the relationships
-      classesKeys = Object.keys(this.classes);
-      for (const actClassKey of classesKeys) {
-        if (!this.classes[actClassKey]["soa:hasProperty"]) {
-          this.classes[actClassKey]["soa:hasProperty"] = [];
-        }
-        if (!this.classes[actClassKey]["soa:isRangeOf"]) {
-          this.classes[actClassKey]["soa:isRangeOf"] = [];
-        }
-      }
-      enumKeys = Object.keys(this.enumerations);
-      for (const actEnumKey of enumKeys) {
-        if (!this.enumerations[actEnumKey]["soa:hasEnumerationMember"]) {
-          this.enumerations[actEnumKey]["soa:hasEnumerationMember"] = [];
-        }
-        if (!this.enumerations[actEnumKey]["soa:isRangeOf"]) {
-          this.enumerations[actEnumKey]["soa:isRangeOf"] = [];
-        }
-        if (!this.enumerations[actEnumKey]["soa:hasProperty"]) {
-          this.enumerations[actEnumKey]["soa:hasProperty"] = [];
-        }
-      }
-      dataTypeKeys = Object.keys(this.dataTypes);
-      for (const actDataTypeKey of dataTypeKeys) {
-        if (!this.dataTypes[actDataTypeKey]["soa:isRangeOf"]) {
-          this.dataTypes[actDataTypeKey]["soa:isRangeOf"] = [];
-        }
-      }
-      let enumMemKeys = Object.keys(this.enumerationMembers);
-      for (const actEnumMemKey of enumMemKeys) {
-        if (
-          !this.enumerationMembers[actEnumMemKey][
-            "soa:enumerationDomainIncludes"
-          ]
-        ) {
-          this.enumerationMembers[actEnumMemKey][
-            "soa:enumerationDomainIncludes"
-          ] = [];
-        }
-      }
-      /* E.1) Add explicit hasProperty and isRangeOf to classes, enumerations, and data types
-                        For each entry in the classes/enumeration/dataType memory, the soa:hasProperty field is added.
-                        This data field holds all properties which belong to this class/enumeration (class/enumeration is domain for property).
-                        Also the soa:isRangeOf field is added -> holds all properties which use to this class/enumeration/dataType as range (class/enumeration/dataType is range for property). */
-      propertyKeys = Object.keys(this.properties);
-      for (const actPropKey of propertyKeys) {
-        const domainIncludesArray =
-          this.properties[actPropKey]["schema:domainIncludes"];
-        if (this.util.isArray(domainIncludesArray)) {
-          for (const actDomain of domainIncludesArray) {
-            let target = this.classes[actDomain];
-            if (!target) {
-              target = this.enumerations[actDomain];
-            }
-            if (
-              target &&
-              this.util.isArray(target["soa:hasProperty"]) &&
-              !target["soa:hasProperty"].includes(actPropKey)
-            ) {
-              target["soa:hasProperty"].push(actPropKey);
-            }
-          }
-        }
-        const rangeIncludesArray =
-          this.properties[actPropKey]["schema:rangeIncludes"];
-        if (this.util.isArray(rangeIncludesArray)) {
-          for (const actRange of rangeIncludesArray) {
-            let target =
-              this.classes[actRange] ||
-              this.enumerations[actRange] ||
-              this.dataTypes[actRange];
-            if (
-              target &&
-              this.util.isArray(target["soa:isRangeOf"]) &&
-              !target["soa:isRangeOf"].includes(actPropKey)
-            ) {
-              target["soa:isRangeOf"].push(actPropKey);
-            }
-          }
-        }
-      }
-      /* E.2) Add soa:hasEnumerationMember to enumerations and soa:enumerationDomainIncludes to enumerationMembers
-                        For each entry in the enumeration memory the soa:hasEnumerationMember field is added, this data field holds all enumeration members which belong to this enumeration.
-                        For each entry in the enumerationMembers memory the soa:enumerationDomainIncludes field is added, this data field holds all enumerations that are a domain for this enumerationMember
-                        */
-      enumMemKeys = Object.keys(this.enumerationMembers);
-      for (const actEnumMemKey of enumMemKeys) {
-        const enumMem = this.enumerationMembers[actEnumMemKey];
-        let enumMemTypeArray = enumMem["@type"];
-        if (!this.util.isArray(enumMemTypeArray)) {
-          enumMemTypeArray = [enumMemTypeArray];
-        }
-        for (const actEnumMemType of enumMemTypeArray) {
-          const target = this.enumerations[actEnumMemType];
-          if (
-            target &&
-            this.util.isArray(target["soa:hasEnumerationMember"]) &&
-            !target["soa:hasEnumerationMember"].includes(actEnumMemKey)
-          ) {
-            target["soa:hasEnumerationMember"].push(actEnumMemKey);
-            if (this.util.isArray(enumMem["soa:enumerationDomainIncludes"])) {
-              enumMem["soa:enumerationDomainIncludes"].push(actEnumMemType);
-            } else {
-              enumMem["soa:enumerationDomainIncludes"] = [actEnumMemType];
-            }
-          }
-        }
-      }
-      return true;
-    } catch (e) {
-      this.sdoAdapter.onError(e);
-      return false;
-    }
-  }
-
-  /**
-   * Creates/Updates a node in the graph
-   *
-   * @param {object} memory - The memory object where the new node should be added (Classes, Properties, Enumerations, EnumerationMembers, DataTypes)
-   * @param {object} newNode - The node in JSON-LD format to be added
-   * @param {string} [vocabURL] - The vocabulary URL of the node
-   * @returns {boolean} returns true on success
-   */
-  addGraphNode(memory, newNode, vocabURL = undefined) {
-    try {
-      if (!memory[newNode["@id"]]) {
-        memory[newNode["@id"]] = newNode;
-        if (vocabURL) {
-          memory[newNode["@id"]]["vocabURLs"] = [vocabURL];
-        }
-      } else {
-        // merging algorithm
-        const oldNode = memory[newNode["@id"]];
-        // @id stays the same
-        // @type should stay the same (we already defined the memory to save it)
-        // schema:isPartOf -> overwrite
-        if (!this.util.isNil(newNode["schema:isPartOf"])) {
-          oldNode["schema:isPartOf"] = newNode["schema:isPartOf"];
-        }
-        // dc:source/schema:source -> overwrite
-        if (!this.util.isNil(newNode["dc:source"])) {
-          oldNode["dc:source"] = newNode["dc:source"];
-        }
-        if (!this.util.isNil(newNode["schema:source"])) {
-          oldNode["schema:source"] = newNode["schema:source"];
-        }
-        // schema:category -> overwrite
-        if (!this.util.isNil(newNode["schema:category"])) {
-          oldNode["schema:category"] = newNode["schema:category"];
-        }
-        // schema:supersededBy -> overwrite
-        if (!this.util.isNil(newNode["schema:supersededBy"])) {
-          oldNode["schema:supersededBy"] = newNode["schema:supersededBy"];
-        }
-        // rdfs:label -> add new languages, overwrite old ones if needed
-        if (!this.util.isNil(newNode["rdfs:label"])) {
-          const labelKeysNew = Object.keys(newNode["rdfs:label"]);
-          for (const actLabelKey of labelKeysNew) {
-            oldNode["rdfs:label"][actLabelKey] =
-              newNode["rdfs:label"][actLabelKey];
-          }
-        }
-        // rdfs:comment -> add new languages, overwrite old ones if needed
-        if (!this.util.isNil(newNode["rdfs:comment"])) {
-          const commentKeysNew = Object.keys(newNode["rdfs:comment"]);
-          for (const actCommentKey of commentKeysNew) {
-            oldNode["rdfs:comment"][actCommentKey] =
-              newNode["rdfs:comment"][actCommentKey];
-          }
-        }
-        // rdfs:subClassOf -> add new ids
-        if (!this.util.isNil(newNode["rdfs:subClassOf"])) {
-          for (const actSuperClass of newNode["rdfs:subClassOf"]) {
-            if (!oldNode["rdfs:subClassOf"].includes(actSuperClass)) {
-              // add new entry
-              oldNode["rdfs:subClassOf"].push(actSuperClass);
-            }
-          }
-        }
-        // soa:superClassOf -> add new ids
-        if (!this.util.isNil(newNode["soa:superClassOf"])) {
-          for (const actSubClass of newNode["soa:superClassOf"]) {
-            if (!oldNode["soa:superClassOf"].includes(actSubClass)) {
-              // add new entry
-              oldNode["soa:superClassOf"].push(actSubClass);
-            }
-          }
-        }
-        // soa:hasProperty -> add new ids
-        if (!this.util.isNil(newNode["soa:hasProperty"])) {
-          for (const actProp of newNode["soa:hasProperty"]) {
-            if (!oldNode["soa:hasProperty"].includes(actProp)) {
-              // add new entry
-              oldNode["soa:hasProperty"].push(actProp);
-            }
-          }
-        }
-        // soa:isRangeOf -> add new ids
-        if (!this.util.isNil(newNode["soa:isRangeOf"])) {
-          for (const actProp of newNode["soa:isRangeOf"]) {
-            if (!oldNode["soa:isRangeOf"].includes(actProp)) {
-              // add new entry
-              oldNode["soa:isRangeOf"].push(actProp);
-            }
-          }
-        }
-        // soa:enumerationDomainIncludes -> add new ids
-        if (!this.util.isNil(newNode["soa:enumerationDomainIncludes"])) {
-          for (const actEnum of newNode["soa:enumerationDomainIncludes"]) {
-            if (!oldNode["soa:enumerationDomainIncludes"].includes(actEnum)) {
-              // add new entry
-              oldNode["soa:enumerationDomainIncludes"].push(actEnum);
-            }
-          }
-        }
-        // soa:hasEnumerationMember -> add new ids
-        if (!this.util.isNil(newNode["soa:hasEnumerationMember"])) {
-          for (const actEnumMem of newNode["soa:hasEnumerationMember"]) {
-            if (!oldNode["soa:hasEnumerationMember"].includes(actEnumMem)) {
-              // add new entry
-              oldNode["soa:hasEnumerationMember"].push(actEnumMem);
-            }
-          }
-        }
-        // rdfs:subPropertyOf -> add new ids
-        if (!this.util.isNil(newNode["rdfs:subPropertyOf"])) {
-          for (const actProp of newNode["rdfs:subPropertyOf"]) {
-            if (!oldNode["rdfs:subPropertyOf"].includes(actProp)) {
-              // add new entry
-              oldNode["rdfs:subPropertyOf"].push(actProp);
-            }
-          }
-        }
-        // schema:domainIncludes -> add new ids
-        if (!this.util.isNil(newNode["schema:domainIncludes"])) {
-          for (const actDomain of newNode["schema:domainIncludes"]) {
-            if (!oldNode["schema:domainIncludes"].includes(actDomain)) {
-              // add new entry
-              oldNode["schema:domainIncludes"].push(actDomain);
-            }
-          }
-        }
-        // schema:rangeIncludes -> add new ids
-        if (!this.util.isNil(newNode["schema:rangeIncludes"])) {
-          for (const actRange of newNode["schema:rangeIncludes"]) {
-            if (!oldNode["schema:rangeIncludes"].includes(actRange)) {
-              // add new entry
-              oldNode["schema:rangeIncludes"].push(actRange);
-            }
-          }
-        }
-        // soa:superPropertyOf-> add new ids
-        if (!this.util.isNil(newNode["schema:superPropertyOf"])) {
-          for (const actProp of newNode["schema:superPropertyOf"]) {
-            if (!oldNode["schema:superPropertyOf"].includes(actProp)) {
-              // add new entry
-              oldNode["schema:superPropertyOf"].push(actProp);
-            }
-          }
-        }
-
-        if (vocabURL) {
-          if (oldNode["vocabURLs"]) {
-            if (!oldNode["vocabURLs"].includes(vocabURL)) {
-              oldNode["vocabURLs"].push(vocabURL);
-            }
-          } else {
-            oldNode["vocabURLs"] = [vocabURL];
-          }
-        }
-      }
-
-      return true;
-    } catch (e) {
-      this.sdoAdapter.onError(e);
-      return false;
-    }
-  }
-
-  /**
-   * Creates a corresponding JS-Class for the given IRI, depending on its category in the Graph
-   *
-   * @param {string} id - The id of the wished term, can be an IRI (absolute or compact) or a label
-   * @param {filterObject} [filter] - (optional) The filter settings to be applied on the result
-   * @returns {Term} the JS-Class for the given IRI
-   */
-  getTerm(id, filter = undefined) {
-    const compactIRI = this.discoverCompactIRI(id);
-    let targetObj;
-    let targetType;
-    let tryCounter = 0;
-    do {
-      switch (tryCounter) {
-        case 0:
-          targetObj = this.classes[compactIRI];
-          targetType = "Class";
-          break;
-        case 1:
-          targetObj = this.properties[compactIRI];
-          targetType = "Property";
-          break;
-        case 2:
-          targetObj = this.dataTypes[compactIRI];
-          targetType = "DataType";
-          break;
-        case 3:
-          targetObj = this.enumerations[compactIRI];
-          targetType = "Enumeration";
-          break;
-        case 4:
-          targetObj = this.enumerationMembers[compactIRI];
-          targetType = "EnumerationMember";
-          break;
-      }
-      tryCounter++;
-    } while (!targetObj && tryCounter < 6);
-
-    if (targetObj) {
-      targetObj = this.util.applyFilter([targetObj["@id"]], filter, this);
-      if (targetObj.length === 0) {
-        throw new Error("There is no term with that IRI and filter settings.");
-      } else {
-        switch (targetType) {
-          case "Class":
-            return new Class(compactIRI, this);
-          case "Property":
-            return new Property(compactIRI, this);
-          case "Enumeration":
-            return new Enumeration(compactIRI, this);
-          case "EnumerationMember":
-            return new EnumerationMember(compactIRI, this);
-          case "DataType":
-            return new DataType(compactIRI, this);
-        }
-      }
-    } else {
-      throw new Error("There is no term with the IRI " + id);
-    }
-  }
-
-  /**
-   * Creates a JS-Class for a Class of the Graph
-   *
-   * @param {string} id - The id of the wished Class-node, can be an IRI (absolute or compact) or a label
-   * @param {filterObject} [filter] - (optional) The filter settings to be applied on the result
-   * @returns {Class|Enumeration} the JS-Class for the given IRI
-   */
-  getClass(id, filter = undefined) {
-    const compactIRI = this.discoverCompactIRI(id);
-    if (compactIRI) {
-      let classObj = this.classes[compactIRI];
-      if (classObj) {
-        classObj = this.util.applyFilter([compactIRI], filter, this);
-        if (classObj.length === 0) {
-          throw new Error(
-            "There is no class with that IRI and filter settings."
-          );
-        } else {
-          return new Class(compactIRI, this);
-        }
-      } else {
-        // enumerations can also be counted as classes
-        classObj = this.enumerations[compactIRI];
-        if (classObj) {
-          try {
-            return this.getEnumeration(compactIRI, filter);
-          } catch (e) {
-            throw new Error(
-              "There is no class with that IRI and filter settings."
-            );
-          }
-        }
-      }
-    }
-    throw new Error("There is no class with the IRI " + id);
-  }
-
-  /**
-   * Creates a JS-Class for a Property of the Graph
-   *
-   * @param {string} id - The id of the wished Property-node, can be an IRI (absolute or compact) or a label
-   * @param {filterObject} [filter] - (optional) The filter settings to be applied on the result
-   * @returns {Property} the JS-Class for the given IRI
-   */
-  getProperty(id, filter = undefined) {
-    const compactIRI = this.discoverCompactIRI(id);
-    if (compactIRI) {
-      let propertyObj = this.properties[compactIRI];
-      if (propertyObj) {
-        propertyObj = this.util.applyFilter([compactIRI], filter, this);
-        if (propertyObj.length === 0) {
-          throw new Error(
-            "There is no property with that URI and filter settings."
-          );
-        } else {
-          return new Property(compactIRI, this);
-        }
-      }
-    }
-    throw new Error("There is no property with that URI.");
-  }
-
-  /**
-   * Creates a JS-Class for a DataType of the Graph
-   *
-   * @param {string} id - The id of the wished DataType-node, can be an IRI (absolute or compact) or a label
-   * @param {filterObject} [filter] - (optional) The filter settings to be applied on the result
-   * @returns {DataType} the JS-Class for the given IRI
-   */
-  getDataType(id, filter = undefined) {
-    const compactIRI = this.discoverCompactIRI(id);
-    if (compactIRI) {
-      let dataTypeObj = this.dataTypes[compactIRI];
-      if (dataTypeObj) {
-        dataTypeObj = this.util.applyFilter([compactIRI], filter, this);
-        if (dataTypeObj.length === 0) {
-          throw new Error(
-            "There is no data-type with that IRI and filter settings."
-          );
-        } else {
-          return new DataType(compactIRI, this);
-        }
-      }
-    }
-    throw new Error("There is no data-type with the IRI " + id);
-  }
-
-  /**
-   * Creates a JS-Class for an Enumeration of the Graph
-   *
-   * @param {string} id - The id of the wished Enumeration-node, can be an IRI (absolute or compact) or a label
-   * @param {filterObject} [filter] - (optional) The filter settings to be applied on the result
-   * @returns {Enumeration} the JS-Class for the given IRI
-   */
-  getEnumeration(id, filter = undefined) {
-    const compactIRI = this.discoverCompactIRI(id);
-    if (compactIRI) {
-      let enumObj = this.enumerations[compactIRI];
-      if (enumObj) {
-        enumObj = this.util.applyFilter([compactIRI], filter, this);
-        if (enumObj.length === 0) {
-          throw new Error(
-            "There is no enumeration with that IRI and filter settings."
-          );
-        } else {
-          return new Enumeration(compactIRI, this);
-        }
-      }
-    }
-    throw new Error("There is no enumeration with the IRI " + id);
-  }
-
-  /**
-   * Creates a JS-Class for an EnumerationMember of the Graph
-   *
-   * @param {string} id - The id of the wished EnumerationMember-node, can be an IRI (absolute or compact) or a label
-   * @param {filterObject} [filter] - (optional) The filter settings to be applied on the result
-   * @returns {EnumerationMember} the JS-Class for the given IRI
-   */
-  getEnumerationMember(id, filter = undefined) {
-    const compactIRI = this.discoverCompactIRI(id);
-    if (compactIRI) {
-      let enumObj = this.enumerationMembers[compactIRI];
-      if (enumObj) {
-        enumObj = this.util.applyFilter([compactIRI], filter, this);
-        if (enumObj.length === 0) {
-          throw new Error(
-            "There is no EnumerationMember with that IRI and filter settings."
-          );
-        } else {
-          return new EnumerationMember(compactIRI, this);
-        }
-      }
-    }
-    throw new Error("There is no EnumerationMember with the IRI " + id);
-  }
-
-  /**
-   * Transforms/Discovers the right compact IRI for a given input, which may be a already a compact IRI, or an absolute IRI, or a term label for a vocabulary member
-   *
-   * @param {string} input - The input string to discover (if label) or transform (if absolute IRI)
-   * @returns {?string} the corresponding compact IRI (null if input is not valid)
-   */
-  discoverCompactIRI(input) {
-    if (input.includes(":")) {
-      // is iri
-      const terms = Object.keys(this.context);
-      for (const actTerm of terms) {
-        const absoluteIRI = this.context[actTerm];
-        if (this.util.isString(absoluteIRI)) {
-          if (input.startsWith(actTerm)) {
-            // is compactIRI
-            return input;
-          } else if (
-            input.startsWith(absoluteIRI) ||
-            (this.sdoAdapter.equateVocabularyProtocols &&
-              input.startsWith(this.util.switchIRIProtocol(absoluteIRI)))
-          ) {
-            // is absoluteIRI
-            return this.util.toCompactIRI(
-              input,
-              this.context,
-              this.sdoAdapter.equateVocabularyProtocols
-            );
-          }
-        }
-      }
-    } else {
-      // is label
-      const classesKeys = Object.keys(this.classes);
-      for (const actClassKey of classesKeys) {
-        if (this.containsLabel(this.classes[actClassKey], input) === true) {
-          return actClassKey;
-        }
-      }
-      const propertiesKeys = Object.keys(this.properties);
-      for (const actPropKey of propertiesKeys) {
-        if (this.containsLabel(this.properties[actPropKey], input) === true) {
-          return actPropKey;
-        }
-      }
-      const dataTypeKeys = Object.keys(this.dataTypes);
-      for (const actDtKey of dataTypeKeys) {
-        if (this.containsLabel(this.dataTypes[actDtKey], input) === true) {
-          return actDtKey;
-        }
-      }
-      const enumerationKeys = Object.keys(this.enumerations);
-      for (const actEnumKey of enumerationKeys) {
-        if (this.containsLabel(this.enumerations[actEnumKey], input) === true) {
-          return actEnumKey;
-        }
-      }
-      const enumerationMemberKeys = Object.keys(this.enumerationMembers);
-      for (const actEnumMemKey of enumerationMemberKeys) {
-        if (
-          this.containsLabel(this.enumerationMembers[actEnumMemKey], input) ===
-          true
-        ) {
-          return actEnumMemKey;
-        }
-      }
-    }
-    // if nothing was found yet, the input is invalid
-    return null;
-  }
-
-  /**
-   * Checks if a given term object contains a given label string. Helper function for discoverCompactIRI()
-   *
-   * @param {object} termObj - the term node
-   * @param {string} label - the language to check
-   * @returns {boolean} returns true, if the termObj uses the given label (in any language)
-   */
-  containsLabel(termObj, label) {
-    if (termObj && this.util.isObject(termObj["rdfs:label"])) {
-      const langKeys = Object.keys(termObj["rdfs:label"]);
-      for (const actLangKey of langKeys) {
-        if (termObj["rdfs:label"][actLangKey] === label) {
-          return true;
-        }
-      }
-    }
-    return false;
-  }
-}
-
-module.exports = Graph;
-
-},{"./Class":70,"./DataType":71,"./Enumeration":72,"./EnumerationMember":73,"./Property":75,"./ReasoningEngine":76,"./utilities":79}],75:[function(_dereq_,module,exports){
-// the functions for a property Object
-const Term = _dereq_("./Term");
-
-/**
- * @typedef filterObject
- * @type {object}
- * @property {boolean} [isSuperseded] - defines the superseded status for the filter (true: only terms that are superseded, false: only terms that are NOT superseded)
- * @property {string|string[]} [fromVocabulary] - defines a set of allowed vocabularies for the filter - vocabularies are given as indicators (e.g. "schema")
- * @property {string|string[]} [termType] - defines a set of allowed term types for the filter (e.g. "Class", "Property")
- */
-
-class Property extends Term {
-  /**
-   * A Property represents an rdf:Property. It is identified by its IRI
-   *
-   * @class
-   * @param {string} IRI - The compacted IRI of this Property, e.g. "schema:address"
-   * @param {Graph} graph - The underlying data graph to enable the methods of this Property
-   */
-  constructor(IRI, graph) {
-    super(IRI, graph);
-  }
-
-  /**
-   * Retrieves the term type of this Property (is always "rdf:Property")
-   *
-   * @returns {string} The term type of this Property -> "rdf:Property"
-   */
-  getTermType() {
-    return "rdf:Property";
-  }
-
-  /**
-   * Retrieves the term object of this Property
-   *
-   * @returns {string} The term object of this Property
-   */
-  getTermObj() {
-    return this.graph.properties[this.IRI];
-  }
-
-  /**
-   * Retrieves the explicit/implicit ranges (schema:rangeIncludes) of this Property
-   *
-   * @param {boolean} [implicit = true] - retrieves also implicit ranges (inheritance from sub-classes of the ranges) - (default = true)
-   * @param {filterObject} [filter] - (optional) The filter settings to be applied on the result
-   * @returns {string[]} The ranges of this Property
-   */
-  getRanges(implicit = true, filter = undefined) {
-    let propertyObj = this.getTermObj();
-    let result = [];
-    result.push(...propertyObj["schema:rangeIncludes"]);
-    if (implicit) {
-      // add sub-classes and sub-datatypes from ranges
-      for (const actRes of result) {
-        result.push(...this.graph.reasoner.inferSubDataTypes(actRes));
-      }
-      for (const actRes of result) {
-        result.push(...this.graph.reasoner.inferSubClasses(actRes));
-      }
-    }
-    return this.util.applyFilter(
-      this.util.uniquifyArray(result),
-      filter,
-      this.graph
-    );
-  }
-
-  /**
-   * Retrieves the explicit/implicit domains (schema:domainIncludes) of this Property
-   *
-   * @param {boolean} [implicit = true] - retrieves also implicit domains (inheritance from sub-classes of the domains) - (default = true)
-   * @param {filterObject} [filter] - (optional) The filter settings to be applied on the result
-   * @returns {string[]} The domains of this Property
-   */
-  getDomains(implicit = true, filter = undefined) {
-    let propertyObj = this.getTermObj();
-    let result = [];
-    result.push(...propertyObj["schema:domainIncludes"]);
-    if (implicit) {
-      // add sub-classes from ranges
-      let inferredSubClasses = [];
-      for (const actRes of result) {
-        inferredSubClasses.push(...this.graph.reasoner.inferSubClasses(actRes));
-      }
-      result.push(...inferredSubClasses);
-    }
-    return this.util.applyFilter(
-      this.util.uniquifyArray(result),
-      filter,
-      this.graph
-    );
-  }
-
-  /**
-   * Retrieves the explicit/implicit super-properties (rdfs:subPropertyOf) of this Property
-   *
-   * @param {boolean} [implicit = true] - retrieves also implicit super-properties (recursive from super-properties) - (default = true)
-   * @param {filterObject} [filter] - (optional) The filter settings to be applied on the result
-   * @returns {string[]} The super-properties of this Property
-   */
-  getSuperProperties(implicit = true, filter = undefined) {
-    let propertyObj = this.getTermObj();
-    let result = [];
-
-    if (implicit) {
-      result.push(...this.graph.reasoner.inferSuperProperties(this.IRI));
-    } else {
-      result.push(...propertyObj["rdfs:subPropertyOf"]);
-    }
-    return this.util.applyFilter(
-      this.util.uniquifyArray(result),
-      filter,
-      this.graph
-    );
-  }
-
-  /**
-   * Retrieves the explicit/implicit sub-properties (soa:superPropertyOf) of this Property
-   *
-   * @param {boolean} [implicit = true] - retrieves also implicit sub-properties (recursive from sub-properties) - (default = true)
-   * @param {filterObject} [filter] - (optional) The filter settings to be applied on the result
-   * @returns {string[]} The sub-properties of this Property
-   */
-  getSubProperties(implicit = true, filter = undefined) {
-    let propertyObj = this.getTermObj();
-    let result = [];
-
-    if (implicit) {
-      result.push(...this.graph.reasoner.inferSubProperties(this.IRI));
-    } else {
-      result.push(...propertyObj["soa:superPropertyOf"]);
-    }
-    return this.util.applyFilter(
-      this.util.uniquifyArray(result),
-      filter,
-      this.graph
-    );
-  }
-
-  /**
-   * Retrieves the inverse Property (schema:inverseOf) of this Property
-   *
-   * @returns {string} The IRI of the inverse Property of this Property
-   */
-  getInverseOf() {
-    let propertyObj = this.getTermObj();
-    return propertyObj["schema:inverseOf"];
-  }
-
-  /**
-   * Generates an explicit/implicit JSON representation of this Property.
-   *
-   * @param {boolean} [implicit = true] - includes also implicit data (e.g. domains, ranges, etc.) - (default = true)
-   * @param {filterObject} [filter] - (optional) The filter settings to be applied on the result
-   * @returns {object} The JSON representation of this Class
-   */
-  toJSON(implicit = true, filter = undefined) {
-    const result = super.toJSON();
-    result["ranges"] = this.getRanges(implicit, filter);
-    result["domains"] = this.getDomains(implicit, filter);
-    result["superProperties"] = this.getSuperProperties(implicit, filter);
-    result["subProperties"] = this.getSubProperties(implicit, filter);
-    result["inverseOf"] = this.getInverseOf();
-    return result;
-  }
-}
-
-module.exports = Property;
-
-},{"./Term":78}],76:[function(_dereq_,module,exports){
-class ReasoningEngine {
-  /**
-   * This internal js-class offers reasoning-related functions that can be used by the other js-classes of this library
-   *
-   * @class
-   * @param {Graph} graph The parent Graph-class to which this ReasoningEngine belongs
-   */
-  constructor(graph) {
-    this.graph = graph;
-    this.util = _dereq_("./utilities");
-  }
-
-  /**
-   * Infers all properties that can be used by the given classes and all their implicit and explicit superClasses
-   *
-   * @param {string[]} superClasses - Array with IRIs of classes/enumerations
-   * @returns {string[]} Array of IRIs of all properties from the given classes and their implicit and explicit superClasses
-   */
-  inferPropertiesFromSuperClasses(superClasses) {
-    const result = [];
-    for (const superClass of superClasses) {
-      let superClassObj =
-        this.graph.classes[superClass] || this.graph.enumerations[superClass];
-      if (superClassObj) {
-        result.push(...superClassObj["soa:hasProperty"]);
-        if (superClassObj["rdfs:subClassOf"].length !== 0) {
-          result.push(
-            ...this.inferPropertiesFromSuperClasses(
-              superClassObj["rdfs:subClassOf"]
-            )
-          );
-        }
-      }
-    }
-    return this.util.uniquifyArray(result);
-  }
-
-  /**
-   * Infers all implicit and explicit superClasses of a given Class/Enumeration
-   *
-   * @param {string} classIRI - IRI of a Class/Enumeration
-   * @returns {string[]} Array of IRI of all implicit and explicit superClasses
-   */
-  inferSuperClasses(classIRI) {
-    let result = [];
-    const classObj =
-      this.graph.classes[classIRI] || this.graph.enumerations[classIRI];
-    if (classObj) {
-      result.push(...classObj["rdfs:subClassOf"]);
-      let addition = this.util.cloneJson(result); // make a copy
-      do {
-        let newAddition = [];
-        for (const curAdd of addition) {
-          let parentClassObj =
-            this.graph.classes[curAdd] || this.graph.enumerations[curAdd];
-          if (parentClassObj) {
-            newAddition.push(...parentClassObj["rdfs:subClassOf"]);
-          }
-        }
-        newAddition = this.util.uniquifyArray(newAddition);
-        addition = this.util.cloneJson(newAddition);
-        result.push(...newAddition);
-      } while (addition.length !== 0);
-      result = this.util.uniquifyArray(result);
-    }
-    return result;
-  }
-
-  /**
-   * Infers all implicit and explicit subClasses of a given Class/Enumeration
-   *
-   * @param {string} classIRI - IRI of a Class/Enumeration
-   * @returns {string[]} Array of IRI of all implicit and explicit subClasses
-   */
-  inferSubClasses(classIRI) {
-    let result = [];
-    const classObj =
-      this.graph.classes[classIRI] || this.graph.enumerations[classIRI];
-    if (classObj) {
-      result.push(...classObj["soa:superClassOf"]);
-      let addition = this.util.cloneJson(result); // make a copy
-      do {
-        let newAddition = [];
-        for (const curAdd of addition) {
-          let parentClassObj =
-            this.graph.classes[curAdd] || this.graph.enumerations[curAdd];
-          if (parentClassObj) {
-            newAddition.push(...parentClassObj["soa:superClassOf"]);
-          }
-        }
-        newAddition = this.util.uniquifyArray(newAddition);
-        addition = this.util.cloneJson(newAddition);
-        result.push(...newAddition);
-      } while (addition.length !== 0);
-      result = this.util.uniquifyArray(result);
-    }
-    return result;
-  }
-
-  /**
-   * Infers all implicit and explicit superDataTypes of a given DataType
-   *
-   * @param {string} dataTypeIRI - IRI of a DataType
-   * @returns {string[]} Array of IRI of all implicit and explicit superDataTypes
-   */
-  inferSuperDataTypes(dataTypeIRI) {
-    let result = [];
-    const dataTypeObj = this.graph.dataTypes[dataTypeIRI];
-    if (dataTypeObj) {
-      result.push(...dataTypeObj["rdfs:subClassOf"]);
-      let addition = this.util.cloneJson(result); // make a copy
-      do {
-        let newAddition = [];
-        for (const curAdd of addition) {
-          const parentDataTypeObj = this.graph.dataTypes[curAdd];
-          if (parentDataTypeObj) {
-            newAddition.push(...parentDataTypeObj["rdfs:subClassOf"]);
-          }
-        }
-        newAddition = this.util.uniquifyArray(newAddition);
-        addition = this.util.cloneJson(newAddition);
-        result.push(...newAddition);
-      } while (addition.length !== 0);
-      result = this.util.uniquifyArray(result);
-    }
-    return result;
-  }
-
-  /**
-   * Infers all implicit and explicit subDataTypes of a given DataType
-   *
-   * @param {string} dataTypeIRI - IRI of a DataType
-   * @returns {string[]} Array of IRI of all implicit and explicit subDataTypes
-   */
-  inferSubDataTypes(dataTypeIRI) {
-    let result = [];
-    const dataTypeObj = this.graph.dataTypes[dataTypeIRI];
-    if (dataTypeObj) {
-      result.push(...dataTypeObj["soa:superClassOf"]);
-      let addition = this.util.cloneJson(result); // make a copy
-      do {
-        let newAddition = [];
-        for (const curAdd of addition) {
-          const childDataTypeObj = this.graph.dataTypes[curAdd];
-          if (childDataTypeObj) {
-            newAddition.push(...childDataTypeObj["soa:superClassOf"]);
-          }
-        }
-        newAddition = this.util.uniquifyArray(newAddition);
-        addition = this.util.cloneJson(newAddition);
-        result.push(...newAddition);
-      } while (addition.length !== 0);
-      result = this.util.uniquifyArray(result);
-    }
-    return result;
-  }
-
-  /**
-   * Infers all implicit and explicit superProperties of a given Property
-   *
-   * @param {string} propertyIRI - IRI of a Property
-   * @returns {string[]} Array of IRI of all implicit and explicit superProperties
-   */
-  inferSuperProperties(propertyIRI) {
-    let result = [];
-    const propertyObj = this.graph.properties[propertyIRI];
-    if (propertyObj) {
-      result.push(...propertyObj["rdfs:subPropertyOf"]);
-      let addition = this.util.cloneJson(result); // make a copy
-      do {
-        let newAddition = [];
-        for (let curAdd of addition) {
-          const parentPropertyObj = this.graph.properties[curAdd];
-          if (parentPropertyObj) {
-            newAddition.push(...parentPropertyObj["rdfs:subPropertyOf"]);
-          }
-        }
-        newAddition = this.util.uniquifyArray(newAddition);
-        addition = this.util.cloneJson(newAddition);
-        result.push(...newAddition);
-      } while (addition.length !== 0);
-      result = this.util.uniquifyArray(result);
-    }
-    return result;
-  }
-
-  /**
-   * Infers all implicit and explicit subProperties of a given Property
-   *
-   * @param {string} propertyIRI - IRI of a Property
-   * @returns {string[]} Array of IRI of all implicit and explicit subProperties
-   */
-  inferSubProperties(propertyIRI) {
-    let result = [];
-    const propertyObj = this.graph.properties[propertyIRI];
-    if (propertyObj) {
-      result.push(...propertyObj["soa:superPropertyOf"]);
-      let addition = this.util.cloneJson(result); // make a copy
-      do {
-        let newAddition = [];
-        for (const curAdd of addition) {
-          const parentPropertyObj = this.graph.properties[curAdd];
-          if (parentPropertyObj) {
-            newAddition.push(...parentPropertyObj["soa:superPropertyOf"]);
-          }
-        }
-        newAddition = this.util.uniquifyArray(newAddition);
-        addition = this.util.cloneJson(newAddition);
-        result.push(...newAddition);
-      } while (addition.length !== 0);
-      result = this.util.uniquifyArray(result);
-    }
-    return result;
-  }
-
-  /**
-   * Infers all implicit and explicit properties that can have the given Class/Enumeration/DataType as range
-   *
-   * @param {string} rangeIRI - IRI of the range (Class/Enumeration/DataType)
-   * @returns {string[]} Array of IRI of all implicit and explicit properties that can use the given range
-   */
-  inferRangeOf(rangeIRI) {
-    const classObj =
-      this.graph.classes[rangeIRI] || this.graph.enumerations[rangeIRI];
-    let result = [];
-    if (classObj) {
-      result.push(...classObj["soa:isRangeOf"]);
-      let superClasses = this.inferSuperClasses(rangeIRI);
-      for (const superClass of superClasses) {
-        let superClassObj =
-          this.graph.classes[superClass] || this.graph.enumerations[superClass];
-        if (superClassObj) {
-          result.push(...superClassObj["soa:isRangeOf"]);
-        }
-      }
-    } else {
-      const dataTypeObj = this.graph.dataTypes[rangeIRI];
-      if (dataTypeObj) {
-        result.push(...dataTypeObj["soa:isRangeOf"]);
-        let superDataTypes = this.inferSuperDataTypes(rangeIRI);
-        for (const superDataType of superDataTypes) {
-          let superDataTypeObj = this.graph.dataTypes[superDataType];
-          if (superDataTypeObj) {
-            result.push(...superDataTypeObj["soa:isRangeOf"]);
-          }
-        }
-      }
-    }
-    return this.util.uniquifyArray(result);
-  }
-}
-
-module.exports = ReasoningEngine;
-
-},{"./utilities":79}],77:[function(_dereq_,module,exports){
-const Graph = _dereq_("./Graph");
-const Term = _dereq_("./Term");
-const Class = _dereq_("./Class");
-const Property = _dereq_("./Property");
-const DataType = _dereq_("./DataType");
-const Enumeration = _dereq_("./Enumeration");
-const EnumerationMember = _dereq_("./EnumerationMember");
-const axios = _dereq_("axios");
-
-const URI_SEMANTIFY_GITHUB =
-  "https://raw.githubusercontent.com/semantifyit/schemaorg/main/";
-const URI_SEMANTIFY_RELEASES = URI_SEMANTIFY_GITHUB + "data/releases/";
-const URI_SEMANTIFY_VERSIONS = URI_SEMANTIFY_GITHUB + "versions.json";
-
-/**
- * @typedef SDOAdapterParameterObject
- * @type {object}
- * @property {string} [commitBase] - The commit string from https://github.com/schemaorg/schemaorg which is the base for the adapter (if not given, we take the latest commit of our fork at https://github.com/semantifyit/schemaorg)
- * @property {boolean} [schemaHttps = true] - Enables the use of the https version of the schema.org vocabulary, it defaults to true. Only available for schema.org version 9.0 upwards.
- * @property {boolean} [equateVocabularyProtocols = false] - If true, treat namespaces as equal even if their protocols (http/https) are different, it defaults to false.
- * @property {Function} [onError] - A callback function(string) that is called when an unexpected error happens
- */
-
-/**
- * @typedef filterObject
- * @type {object}
- * @property {boolean} [isSuperseded] - defines the superseded status for the filter (true: only terms that are superseded, false: only terms that are NOT superseded)
- * @property {string|string[]} [fromVocabulary] - defines a set of allowed vocabularies for the filter - vocabularies are given as indicators (e.g. "schema")
- * @property {string|string[]} [termType] - defines a set of allowed term types for the filter (e.g. "Class", "Property")
- */
-
-class SDOAdapter {
-  /**
-   * The SDOAdapter is a JS-Class that represents the interface between the user and this library. Its methods enable to add vocabularies to its memory as well as retrieving vocabulary items. It is possible to create multiple instances of this JS-Class which use different vocabularies.
-   *
-   * @class
-   * @param {SDOAdapterParameterObject} [parameterObject] - an optional parameter object with optional options for the constructor.
-   */
-  constructor(parameterObject = undefined) {
-    this.util = _dereq_("./utilities");
-    this.retrievalMemory = {
-      versionsFile: null,
-      latest: null,
-    };
-    // option commitBase - defaults to undefined
-    if (parameterObject && parameterObject.commitBase) {
-      this.commitBase = parameterObject.commitBase;
-    }
-    // option onError - defaults to a function that does nothing
-    if (parameterObject && typeof parameterObject.onError === "function") {
-      this.onError = parameterObject.onError;
-    } else {
-      this.onError = function () {
-        // do nothing; The users should pass their own function to handle errors, they have else no way to hide automatic error messages once the SDO Adapter is compiled
-      };
-    }
-    // option schemaHttps - defaults to true
-    if (parameterObject && parameterObject.schemaHttps !== undefined) {
-      this.schemaHttps = parameterObject.schemaHttps;
-    } else {
-      this.schemaHttps = true;
-    }
-    // option equateVocabularyProtocols - defaults to false
-    if (
-      parameterObject &&
-      parameterObject.equateVocabularyProtocols !== undefined
-    ) {
-      this.equateVocabularyProtocols =
-        parameterObject.equateVocabularyProtocols;
-    } else {
-      this.equateVocabularyProtocols = false;
-    }
-    this.graph = new Graph(this);
-  }
-
-  /**
-   * Adds vocabularies (in JSON-LD format or as URL) to the memory of this SDOAdapter. The function "constructSDOVocabularyURL()" helps you to construct URLs for the schema.org vocabulary
-   *
-   * @param {string[]|object[]|string|object} vocabArray - The vocabular(y/ies) to add the graph, in JSON-LD format. Given directly as JSON or by a URL to fetch.
-   * @returns {Promise<boolean>} This is an async function, returns true when done.
-   */
-  async addVocabularies(vocabArray) {
-    if (
-      !this.util.isArray(vocabArray) &&
-      (this.util.isString(vocabArray) || this.util.isObject(vocabArray))
-    ) {
-      vocabArray = [vocabArray];
-    }
-    if (this.util.isArray(vocabArray)) {
-      // check every vocab if it is a valid JSON-LD. If string -> try to JSON.parse()
-      for (const vocab of vocabArray) {
-        if (this.util.isString(vocab)) {
-          if (vocab.startsWith("www") || vocab.startsWith("http")) {
-            // assume it is a URL
-            try {
-              let fetchedVocab = await this.fetchVocabularyFromURL(vocab);
-              if (this.util.isString(fetchedVocab)) {
-                fetchedVocab = JSON.parse(fetchedVocab); // try to parse the fetched content as JSON
-              }
-              await this.graph.addVocabulary(fetchedVocab, vocab);
-            } catch (e) {
-              console.log(e);
-              throw new Error(
-                "The given URL " +
-                  vocab +
-                  " did not contain a valid JSON-LD vocabulary."
-              );
-            }
-          } else {
-            // assume it is a string-version of a JSON-LD
-            try {
-              await this.graph.addVocabulary(JSON.parse(vocab));
-            } catch (e) {
-              throw new Error(
-                "Parsing of vocabulary string produced an invalid JSON-LD."
-              );
-            }
-          }
-        } else if (this.util.isObject(vocab)) {
-          await this.graph.addVocabulary(vocab);
-        } else {
-          // invalid argument type!
-          throw new Error(
-            "The first argument of the function must be an Array of vocabularies or a single vocabulary (JSON-LD as Object/String)"
-          );
-        }
-      }
-    } else {
-      throw new Error(
-        "The first argument of the function must be an Array of vocabularies or a single vocabulary (JSON-LD as Object/String)"
-      );
-    }
-    return true;
-  }
-
-  /**
-   * Fetches a vocabulary from the given URL.
-   *
-   * @param {string} url - the URL from which the vocabulary should be fetched
-   * @returns {Promise<object|string>} The fetched vocabulary object (or string, if the server returns a string instead of an object)
-   */
-  async fetchVocabularyFromURL(url) {
-    return new Promise(function (resolve, reject) {
-      axios
-        .get(url, {
-          headers: {
-            Accept: "application/ld+json, application/json",
-          },
-        })
-        .then(function (res) {
-          resolve(res.data);
-        })
-        .catch(function () {
-          reject("Could not find any resource at the given URL.");
-        });
-    });
-  }
-
-  /**
-   * Creates a corresponding JS-Class for the given IRI, depending on its term-category
-   *
-   * @param {string} id - The id of the wished term, can be an IRI (absolute or compact) or a label
-   * @param {filterObject} [filter] - (optional) The filter settings to be applied on the result
-   * @returns {Term} The JS-Class for the given IRI
-   */
-  getTerm(id, filter = undefined) {
-    return this.graph.getTerm(id, filter);
-  }
-
-  /**
-   * Creates an array of JS-Classes for all vocabulary Terms (corresponding JS-Classes depending on the Term types)
-   *
-   * @param {filterObject} [filter] - (optional) The filter settings to be applied on the result
-   * @returns {Class[]} An array of JS-Classes representing all vocabulary Terms
-   */
-  getAllTerms(filter = undefined) {
-    const result = [];
-    const classesIRIList = this.getListOfClasses(filter);
-    const enumerationsIRIList = this.getListOfEnumerations(filter);
-    const propertiesIRIList = this.getListOfProperties(filter);
-    const dataTypesIRIList = this.getListOfDataTypes(filter);
-    const enumerationMembersIRIList = this.getListOfEnumerationMembers(filter);
-    for (let c of classesIRIList) {
-      try {
-        result.push(this.getClass(c));
-      } catch (e) {
-        throw new Error("There is no class with the IRI " + c);
-      }
-    }
-    for (let en of enumerationsIRIList) {
-      try {
-        result.push(this.getEnumeration(en));
-      } catch (e) {
-        throw new Error("There is no enumeration with the IRI " + en);
-      }
-    }
-    for (let p of propertiesIRIList) {
-      try {
-        result.push(this.getProperty(p));
-      } catch (e) {
-        throw new Error("There is no property with the IRI " + p);
-      }
-    }
-    for (let dt of dataTypesIRIList) {
-      try {
-        result.push(this.getDataType(dt));
-      } catch (e) {
-        throw new Error("There is no data type with the IRI " + dt);
-      }
-    }
-    for (let enm of enumerationMembersIRIList) {
-      try {
-        result.push(this.getEnumerationMember(enm));
-      } catch (e) {
-        throw new Error("There is no enumeration member with the IRI " + enm);
-      }
-    }
-    return result;
-  }
-
-  /**
-   * Creates an array of IRIs for all vocabulary Terms
-   *
-   * @param {filterObject} [filter] - (optional) The filter settings to be applied on the result
-   * @returns {string[]} An array of IRIs representing all vocabulary Terms
-   */
-  getListOfTerms(filter = undefined) {
-    // do not include enumerations
-    let result = [];
-    result.push(...Object.keys(this.graph.classes));
-    result.push(...Object.keys(this.graph.enumerations));
-    result.push(...Object.keys(this.graph.properties));
-    result.push(...Object.keys(this.graph.dataTypes));
-    result.push(...Object.keys(this.graph.enumerationMembers));
-    return this.util.applyFilter(result, filter, this.graph);
-  }
-
-  /**
-   * Creates a JS-Class for a vocabulary Class by the given identifier (@id) or name
-   *
-   * @param {string} id - The identifier of the wished Class. It can be either a compact IRI -> "schema:Hotel", an absolute IRI -> "http://schema.org/Hotel", or the name (rdfs:label) -> "name" of the class (which may be ambiguous if multiple vocabularies/languages are used).
-   * @param {filterObject} [filter] - (optional) The filter settings to be applied on the result
-   * @returns {Class|Enumeration} The JS-Class representing a Class of an Enumeration (depending on the given id)
-   */
-  getClass(id, filter = undefined) {
-    // returns also enumerations
-    return this.graph.getClass(id, filter);
-  }
-
-  /**
-   * Creates an array of JS-Classes for all vocabulary Classes
-   *
-   * @param {filterObject} [filter] - (optional) The filter settings to be applied on the result
-   * @returns {Class[]} An array of JS-Classes representing all vocabulary Classes, does not include Enumerations
-   */
-  getAllClasses(filter = undefined) {
-    const result = [];
-    const classesIRIList = this.getListOfClasses(filter);
-    for (let c of classesIRIList) {
-      try {
-        result.push(this.getClass(c));
-      } catch (e) {
-        throw new Error("There is no class with the IRI " + c);
-      }
-    }
-    return result;
-  }
-
-  /**
-   * Creates an array of IRIs for all vocabulary Classes
-   *
-   * @param {filterObject} [filter] - (optional) The filter settings to be applied on the result
-   * @returns {string[]} An array of IRIs representing all vocabulary Classes, does not include Enumerations
-   */
-  getListOfClasses(filter = undefined) {
-    // do not include enumerations
-    return this.util.applyFilter(
-      Object.keys(this.graph.classes),
-      filter,
-      this.graph
-    );
-  }
-
-  /**
-   * Creates a JS-Class for a vocabulary Property by the given identifier (@id) or name
-   *
-   * @param {string} id - The identifier of the wished Property. It can be either a compact IRI -> "schema:address", an absolute IRI -> "http://schema.org/address", or the name (rdfs:label) -> "address" of the Property (which may be ambiguous if multiple vocabularies/languages are used).
-   * @param {filterObject} [filter] - (optional) The filter settings to be applied on the result
-   * @returns {Property} The JS-Class representing a Property
-   */
-  getProperty(id, filter = undefined) {
-    return this.graph.getProperty(id, filter);
-  }
-
-  /**
-   * Creates an array of JS-Classes for all vocabulary Properties
-   *
-   * @param {filterObject} [filter] - (optional) The filter settings to be applied on the result
-   * @returns {Property[]} An array of JS-Classes representing all vocabulary Properties
-   */
-  getAllProperties(filter = undefined) {
-    const result = [];
-    const propertiesIRIList = this.getListOfProperties(filter);
-    for (let p of propertiesIRIList) {
-      try {
-        result.push(this.getProperty(p));
-      } catch (e) {
-        throw new Error("There is no property with the IRI " + p);
-      }
-    }
-    return result;
-  }
-
-  /**
-   * Creates an array of IRIs for all vocabulary Properties
-   *
-   * @param {filterObject} [filter] - (optional) The filter settings to be applied on the result
-   * @returns {string[]} An array of IRIs representing all vocabulary Properties
-   */
-  getListOfProperties(filter = undefined) {
-    return this.util.applyFilter(
-      Object.keys(this.graph.properties),
-      filter,
-      this.graph
-    );
-  }
-
-  /**
-   * Creates a JS-Class for a vocabulary DataType by the given identifier (@id) or name
-   *
-   * @param {string} id - The identifier of the wished DataType. It can be either a compact IRI -> "schema:Number", an absolute IRI -> "http://schema.org/Number", or the name (rdfs:label) -> "Number" of the DataType (which may be ambiguous if multiple vocabularies/languages are used).
-   * @param {filterObject} [filter] - (optional) The filter settings to be applied on the result
-   * @returns {DataType} The JS-Class representing a DataType
-   */
-  getDataType(id, filter = undefined) {
-    return this.graph.getDataType(id, filter);
-  }
-
-  /**
-   * Creates an array of JS-Classes for all vocabulary DataTypes
-   *
-   * @param {filterObject} [filter] - (optional) The filter settings to be applied on the result
-   * @returns {DataType[]} An array of JS-Classes representing all vocabulary DataTypes
-   */
-  getAllDataTypes(filter = undefined) {
-    const result = [];
-    const dataTypesIRIList = this.getListOfDataTypes(filter);
-    for (let dt of dataTypesIRIList) {
-      try {
-        result.push(this.getDataType(dt));
-      } catch (e) {
-        throw new Error("There is no data type with the IRI " + dt);
-      }
-    }
-    return result;
-  }
-
-  /**
-   * Creates an array of IRIs for all vocabulary DataTypes
-   *
-   * @param {filterObject} [filter] - (optional) The filter settings to be applied on the result
-   * @returns {string[]} An array of IRIs representing all vocabulary DataTypes
-   */
-  getListOfDataTypes(filter = undefined) {
-    return this.util.applyFilter(
-      Object.keys(this.graph.dataTypes),
-      filter,
-      this.graph
-    );
-  }
-
-  /**
-   * Creates a JS-Class for a vocabulary Enumeration by the given identifier (@id) or name
-   *
-   * @param {string} id - The identifier of the wished Enumeration. It can be either a compact IRI -> "schema:DayOfWeek", an absolute IRI -> "http://schema.org/DayOfWeek", or the name (rdfs:label) -> "DayOfWeek" of the Enumeration (which may be ambiguous if multiple vocabularies/languages are used).
-   * @param {filterObject} [filter] - (optional) The filter settings to be applied on the result
-   * @returns {Enumeration} The JS-Class representing an Enumeration
-   */
-  getEnumeration(id, filter = undefined) {
-    return this.graph.getEnumeration(id, filter);
-  }
-
-  /**
-   * Creates an array of JS-Classes for all vocabulary Enumerations
-   *
-   * @param {filterObject} [filter] - (optional) The filter settings to be applied on the result
-   * @returns {Enumeration[]} An array of JS-Classes representing all vocabulary Enumerations
-   */
-  getAllEnumerations(filter = undefined) {
-    const result = [];
-    const enumerationsIRIList = this.getListOfEnumerations(filter);
-    for (let en of enumerationsIRIList) {
-      try {
-        result.push(this.getEnumeration(en));
-      } catch (e) {
-        throw new Error("There is no enumeration with the IRI " + en);
-      }
-    }
-    return result;
-  }
-
-  /**
-   * Creates an array of IRIs for all vocabulary Enumerations
-   *
-   * @param {filterObject} [filter] - (optional) The filter settings to be applied on the result
-   * @returns {string[]} An array of IRIs representing all vocabulary Enumerations
-   */
-  getListOfEnumerations(filter = undefined) {
-    return this.util.applyFilter(
-      Object.keys(this.graph.enumerations),
-      filter,
-      this.graph
-    );
-  }
-
-  /**
-   * Creates a JS-Class for a vocabulary EnumerationMember by the given identifier (@id) or name
-   *
-   * @param {string} id - The identifier of the wished EnumerationMember. It can be either a compact IRI -> "schema:Friday", an absolute IRI -> "http://schema.org/Friday", or the name (rdfs:label) -> "Friday" of the EnumerationMember (which may be ambiguous if multiple vocabularies/languages are used).
-   * @param {filterObject} [filter] - (optional) The filter settings to be applied on the result
-   * @returns {EnumerationMember} The JS-Class representing an EnumerationMember
-   */
-  getEnumerationMember(id, filter = undefined) {
-    return this.graph.getEnumerationMember(id, filter);
-  }
-
-  /**
-   * Creates an array of JS-Classes for all vocabulary EnumerationMember
-   *
-   * @param {filterObject} [filter] - (optional) The filter settings to be applied on the result
-   * @returns {EnumerationMember[]} An array of JS-Classes representing all vocabulary EnumerationMember
-   */
-  getAllEnumerationMembers(filter = undefined) {
-    const result = [];
-    const enumerationMembersIRIList = this.getListOfEnumerationMembers(filter);
-    for (let enm of enumerationMembersIRIList) {
-      try {
-        result.push(this.getEnumerationMember(enm));
-      } catch (e) {
-        throw new Error("There is no enumeration member with the IRI " + enm);
-      }
-    }
-    return result;
-  }
-
-  /**
-   * Creates an array of IRIs for all vocabulary EnumerationMember
-   *
-   * @param {filterObject} [filter] - (optional) The filter settings to be applied on the result
-   * @returns {string[]} An array of IRIs representing all vocabulary EnumerationMember
-   */
-  getListOfEnumerationMembers(filter = undefined) {
-    return this.util.applyFilter(
-      Object.keys(this.graph.enumerationMembers),
-      filter,
-      this.graph
-    );
-  }
-
-  /**
-   * Returns key-value pairs of the vocabularies used in this SDOAdapter
-   *
-   * @returns {object} An object containing the key-value pairs representing the used vocabularies
-   */
-  getVocabularies() {
-    const vocabKeys = Object.keys(this.graph.context);
-    const result = {};
-    const blacklist = ["soa", "xsd", "rdf", "rdfa", "rdfs", "dc"]; // standard vocabs that should not be exposed
-    for (let i = 0; i < vocabKeys.length; i++) {
-      if (this.util.isString(this.graph.context[vocabKeys[i]])) {
-        if (blacklist.indexOf(vocabKeys[i]) === -1) {
-          result[vocabKeys[i]] = this.graph.context[vocabKeys[i]];
-        }
-      }
-    }
-    return result;
-  }
-
-  /**
-   * Creates a URL pointing to the Schema.org vocabulary (the wished version can be specified). This URL can then be added to the SDOAdapter to retrieve the Schema.org vocabulary. Invalid version argument will result in errors, check https://schema.org/docs/developers.html for more information
-   * To achieve this, the Schema.org version listing on https://raw.githubusercontent.com/schemaorg/schemaorg/main/versions.json is used.
-   *
-   * @param {string} [version = latest] - the wished Schema.org vocabulary version for the resulting URL (e.g. "5.0", "3.7", or "latest"). default: "latest"
-   * @returns {Promise<string>} The URL to the Schema.org vocabulary
-   */
-  async constructSDOVocabularyURL(version = "latest") {
-    if (version === "latest") {
-      try {
-        if (!this.retrievalMemory.versionsFile) {
-          // retrieve versionFile if needed (checks for latest and valid version)
-          await this.getSDOVersionFile();
-        }
-        version = this.retrievalMemory.latest;
-      } catch (e) {
-        console.error(
-          "Could not determine/retrieve the latest version of schema.org"
-        );
-        throw e;
-      }
-    }
-    const fileName = this.util.getFileNameForSchemaOrgVersion(
-      version,
-      this.schemaHttps
-    ); // This can throw an error if the version is <= 3.0
-    return this.getReleasesURI() + version + "/" + fileName;
-    // e.g. "https://raw.githubusercontent.com/schemaorg/schemaorg/main/data/releases/3.9/all-layers.jsonld";
-  }
-
-  /**
-   * Retrieves the schema.org version listing at https://raw.githubusercontent.com/schemaorg/schemaorg/main/versions.json
-   * and saves it in the local memory. Also sends head-requests to determine if the 'latest' version is really 'fetch-able'.
-   * If not, this head-requests are done again for older versions until the latest valid version is determined and saved in the memory.
-   *
-   * @returns {Promise<boolean>} Returns true when the process ends
-   */
-  async getSDOVersionFile() {
-    let versionFile;
-    // 1. retrieve versions file
-    try {
-      versionFile = await axios.get(this.getVersionFileURI());
-    } catch (e) {
-      this.onError(
-        "Unable to retrieve the schema.org versions file at " +
-          this.getVersionFileURI()
-      );
-      throw e;
-    }
-    // 2. determine the latest valid version
-    if (versionFile && versionFile.data) {
-      this.retrievalMemory.versionsFile = versionFile.data;
-      if (this.retrievalMemory.versionsFile.schemaversion) {
-        if (
-          await this.checkURL(
-            await this.constructSDOVocabularyURL(
-              this.retrievalMemory.versionsFile.schemaversion
-            )
-          )
-        ) {
-          this.retrievalMemory.latest =
-            this.retrievalMemory.versionsFile.schemaversion;
-        } else {
-          // If the version stated as latest by schema.org doesnt exist, then try the other versions given in the release log until we find a valid one
-          if (this.retrievalMemory.versionsFile.releaseLog) {
-            const sortedArray = this.util.sortReleaseEntriesByDate(
-              this.retrievalMemory.versionsFile.releaseLog
-            );
-            // Sort release entries by the date. latest is first in array
-            for (const currVersion of sortedArray) {
-              if (
-                await this.checkURL(
-                  await this.constructSDOVocabularyURL(currVersion[0])
-                )
-              ) {
-                this.retrievalMemory.latest = currVersion[0];
-                break;
-              }
-            }
-          }
-          if (!this.retrievalMemory.latest) {
-            let errMsg =
-              'Could not find any valid vocabulary file in the Schema.org versions file (to be declared as "latest".';
-            this.onError(errMsg);
-            throw new Error(errMsg);
-          }
-        }
-        return true;
-      }
-      let errMsg = "Schema.org versions file has an unexpected structure!";
-      this.onError(errMsg + " -> " + this.getVersionFileURI());
-      throw new Error(errMsg);
-    }
-    return true;
-  }
-
-  /**
-   * Sends a head-request to the given URL, checking if content exists.
-   *
-   * @param {string} url - the URL to check
-   * @returns {Promise<boolean>} Returns true if there is content
-   */
-  async checkURL(url) {
-    try {
-      await axios.head(url);
-      return true;
-    } catch (e) {
-      return false;
-    }
-  }
-
-  /**
-   * Returns the latest version number of the schema.org vocabulary
-   * To achieve this, the Schema.org version listing on https://raw.githubusercontent.com/schemaorg/schemaorg/main/versions.json is used.
-   *
-   * @returns {Promise<string>} The latest version of the schema.org vocabulary
-   */
-  async getLatestSDOVersion() {
-    if (!this.retrievalMemory.latest) {
-      // retrieve versions file if needed (checks for latest and valid version)
-      await this.getSDOVersionFile();
-    }
-    return this.retrievalMemory.latest;
-  }
-
-  /**
-   * Returns the base part of respective release URI
-   *
-   * @returns {string} The base part of respective release URI
-   */
-  getReleasesURI() {
-    return this.commitBase
-      ? "https://raw.githubusercontent.com/schemaorg/schemaorg/" +
-          this.commitBase +
-          "/data/releases/"
-      : URI_SEMANTIFY_RELEASES;
-  }
-
-  /**
-   * Returns the URI of the respective versions file
-   *
-   * @returns {string} The URI of the respective versions file
-   */
-  getVersionFileURI() {
-    return this.commitBase
-      ? "https://raw.githubusercontent.com/schemaorg/schemaorg/" +
-          this.commitBase +
-          "/versions.json"
-      : URI_SEMANTIFY_VERSIONS;
-  }
-}
-
-module.exports = SDOAdapter;
-
-},{"./Class":70,"./DataType":71,"./Enumeration":72,"./EnumerationMember":73,"./Graph":74,"./Property":75,"./Term":78,"./utilities":79,"axios":1}],78:[function(_dereq_,module,exports){
-const Graph = _dereq_("./Graph");
-
-// the functions for a term Object
-class Term {
-  /**
-   * A vocabulary term. It is identified by its IRI.
-   *
-   * @class
-   * @param {string} IRI - The compacted IRI of this Term
-   * @param {Graph} graph - The underlying data graph to enable the methods of this Term
-   */
-  constructor(IRI, graph) {
-    this.IRI = IRI;
-    this.graph = graph;
-    this.util = _dereq_("./utilities");
-  }
-
-  /**
-   * Retrieves the IRI (@id) of this Term in compact/absolute form
-   *
-   * @param {boolean} [compactForm = false] - if true -> return compact IRI -> "schema:Friday", if false -> return absolute IRI -> "http://schema.org/Friday" (default: false)
-   * @returns {string} The IRI (@id) of this Term
-   */
-  getIRI(compactForm = false) {
-    if (compactForm) {
-      return this.IRI;
-    }
-    return this.util.toAbsoluteIRI(this.IRI, this.graph.context);
-  }
-
-  /**
-   * Retrieves the term type (@type) of this Term
-   *
-   * @abstract
-   * @returns {string} The term type of this Term
-   */
-  getTermType() {
-    throw new Error("must be implemented by subclass!");
-  }
-
-  /**
-   * Retrieves the term object of this Term
-   *
-   * @abstract
-   * @returns {string} The term object of this Term
-   */
-  getTermObj() {
-    throw new Error("must be implemented by subclass!");
-  }
-
-  /**
-   * Retrieves the original vocabulary urls of this Term
-   *
-   * @returns {Array|null} The original vocabulary urls of this Term
-   */
-  getVocabURLs() {
-    let termObj = this.getTermObj();
-    if (!this.util.isNil(termObj["vocabURLs"])) {
-      return termObj["vocabURLs"];
-    }
-    return null;
-  }
-
-  /**
-   * Retrieves the original vocabulary (schema:isPartOf) of this Term
-   *
-   * @returns {?string} The vocabulary IRI given by the "schema:isPartOf" of this Term
-   */
-  getVocabulary() {
-    let termObj = this.getTermObj();
-    if (!this.util.isNil(termObj["schema:isPartOf"])) {
-      return termObj["schema:isPartOf"];
-    }
-    return null;
-  }
-
-  /**
-   * Retrieves the source (dc:source) of this Term
-   *
-   * @returns {string|Array|null} The source IRI given by the "dc:source" of this Term (null if none)
-   */
-  getSource() {
-    let termObj = this.getTermObj();
-    if (!this.util.isNil(termObj["dc:source"])) {
-      return termObj["dc:source"];
-    } else if (!this.util.isNil(termObj["schema:source"])) {
-      return termObj["schema:source"];
-    }
-    return null;
-  }
-
-  /**
-   * Retrieves the Term superseding (schema:supersededBy) this Term
-   *
-   * @returns {?string} The Term superseding this Term (null if none)
-   */
-  isSupersededBy() {
-    let termObj = this.getTermObj();
-    if (this.util.isString(termObj["schema:supersededBy"])) {
-      return termObj["schema:supersededBy"];
-    }
-    return null;
-  }
-
-  /**
-   * Retrieves the name (rdfs:label) of this Term in a wished language (optional)
-   *
-   * @param {string} [language = en] - the wished language for the name (default = "en")
-   * @returns {?string} The name of this Term (null if not given for specified language)
-   */
-  getName(language = "en") {
-    let termObj = this.getTermObj()["rdfs:label"];
-    if (this.util.isNil(termObj) || this.util.isNil(termObj[language])) {
-      return null;
-    }
-    return termObj[language];
-  }
-
-  /**
-   * Retrieves the description (rdfs:comment) of this Term in a wished language (optional)
-   *
-   * @param {string} [language = en] - the wished language for the description (default = "en")
-   * @returns {?string} The description of this Term (null if not given for specified language)
-   */
-  getDescription(language = "en") {
-    let termObj = this.getTermObj()["rdfs:comment"];
-    if (this.util.isNil(termObj) || this.util.isNil(termObj[language])) {
-      return null;
-    }
-    return termObj[language];
-  }
-
-  /**
-   * Generates a string representation of this Term (Based on its JSON representation)
-   *
-   * @returns {string} The string representation of this Term
-   */
-  toString() {
-    return JSON.stringify(this.toJSON(false, null), null, 2);
-  }
-
-  /**
-   * Generates a JSON representation of this Term
-   *
-   * @returns {object} The JSON representation of this Term
-   */
-  toJSON() {
-    const result = {};
-    result["id"] = this.getIRI(true);
-    result["IRI"] = this.getIRI();
-    result["type"] = this.getTermType();
-    result["vocabURLs"] = this.getVocabURLs();
-    result["vocabulary"] = this.getVocabulary();
-    result["source"] = this.getSource();
-    result["supersededBy"] = this.isSupersededBy();
-    result["name"] = this.getName();
-    result["description"] = this.getDescription();
-    return result;
-  }
-}
-
-module.exports = Term;
-
-},{"./Graph":74,"./utilities":79}],79:[function(_dereq_,module,exports){
-const jsonld = _dereq_("jsonld");
-// eslint-disable-next-line no-unused-vars
-const Graph = _dereq_("./Graph");
-
-/**
- * @typedef filterObject
- * @type {object}
- * @property {boolean} [isSuperseded] - defines the superseded status for the filter (true: only terms that are superseded, false: only terms that are NOT superseded)
- * @property {string|string[]} [fromVocabulary] - defines a set of allowed vocabularies for the filter - vocabularies are given as indicators (e.g. "schema")
- * @property {string|string[]} [termType] - defines a set of allowed term types for the filter (e.g. "Class", "Property")
- */
-
-/**
- * Applies a filter to the IRIs in the given Array
- *
- * @param {string[]} dataArray - Array of IRIs that should be filtered
- * @param {filterObject} filter - The filter settings used to filter the dataArray (can be undefined to return all data back)
- * @param {Graph} graph - the graph calling this function
- * @returns {string[]} Array of IRIs that are in compliance with the given filter options
- */
-function applyFilter(dataArray, filter, graph) {
-  if (
-    !Array.isArray(dataArray) ||
-    dataArray.length === 0 ||
-    !filter ||
-    Object.keys(filter).length === 0
-  ) {
-    return dataArray;
-  }
-  const result = [];
-  // check if given value is absolute IRI, if yes, get the vocab indicator for it
-  const context = graph.context;
-  if (isString(filter.fromVocabulary)) {
-    for (const actKey of Object.keys(context)) {
-      if (context[actKey] === filter.fromVocabulary) {
-        filter.fromVocabulary = actKey;
-        break;
-      }
-    }
-  } else if (isArray(filter.fromVocabulary)) {
-    for (let v = 0; v < filter.fromVocabulary.length; v++) {
-      for (let vi = 0; vi < Object.keys(context).length; vi++) {
-        if (context[Object.keys(context)[vi]] === filter.fromVocabulary[v]) {
-          filter.fromVocabulary[v] = Object.keys(context)[vi];
-          break;
-        }
-      }
-    }
-  }
-  // check for every term, if it passes the filter conditions
-  for (let i = 0; i < dataArray.length; i++) {
-    const actualTerm = graph.getTerm(dataArray[i]);
-    // superseded
-    if (filter.isSuperseded !== undefined) {
-      if (
-        filter.isSuperseded === false &&
-        actualTerm.isSupersededBy() != null
-      ) {
-        continue; // skip this element
-      } else if (
-        filter.isSuperseded === true &&
-        actualTerm.isSupersededBy() == null
-      ) {
-        continue; // skip this element
-      }
-    }
-    // partOf - vocabularies are given as indicators (e.g. "schema")
-    if (filter.fromVocabulary) {
-      let matchFound = false;
-      if (isString(filter.fromVocabulary)) {
-        if (filter.fromVocabulary)
-          if (actualTerm.getIRI(true).startsWith(filter.fromVocabulary)) {
-            matchFound = true;
-          }
-      } else if (isArray(filter.fromVocabulary)) {
-        for (let v = 0; v < filter.fromVocabulary.length; v++) {
-          if (actualTerm.getIRI(true).startsWith(filter.fromVocabulary[v])) {
-            matchFound = true;
-          }
-        }
-      }
-      if (!matchFound) {
-        continue; // skip this element
-      }
-    }
-    // termType
-    if (filter.termType) {
-      let matchFound = false;
-      let toCheck = [];
-      if (isString(filter.termType)) {
-        toCheck.push(filter.termType);
-      } else if (isArray(filter.termType)) {
-        toCheck = filter.termType;
-      }
-      for (let t = 0; t < toCheck.length; t++) {
-        let typeIRI;
-        switch (toCheck[t]) {
-          case "Class":
-            typeIRI = "rdfs:Class";
-            break;
-          case "Property":
-            typeIRI = "rdf:Property";
-            break;
-          case "Enumeration":
-            typeIRI = "schema:Enumeration";
-            break;
-          case "EnumerationMember":
-            typeIRI = "soa:EnumerationMember";
-            break;
-          case "DataType":
-            typeIRI = "schema:DataType";
-            break;
-          default:
-            throw new Error("Invalid filter.termType " + toCheck[t]);
-        }
-        if (typeIRI === actualTerm.getTermType()) {
-          matchFound = true;
-          break;
-        }
-      }
-      if (!matchFound) {
-        continue; // skip this element
-      }
-    }
-
-    result.push(dataArray[i]);
-  }
-  return result;
-}
-
-/**
- * Creates a clone of the given JSON input (without reference to the original input)
- *
- * @param {any} input - the JSON element that should be copied
- * @returns {any} copy of the given JSON element
- */
-function cloneJson(input) {
-  if (input === undefined) {
-    return undefined;
-  }
-  return JSON.parse(JSON.stringify(input));
-}
-
-/**
- * Checks if the given input is a JS object
- *
- * @param {any} value - the input element to check
- * @returns {boolean} true if the given input is a JS object
- */
-function isObject(value) {
-  if (Array.isArray(value)) {
-    return false;
-  }
-  if (isNil(value)) {
-    return false;
-  }
-  return typeof value === "object";
-}
-
-/**
- * Checks if the given input is undefined or null
- *
- * @param {any} value - the input element to check
- * @returns {boolean} true if the given input is undefined or null
- */
-function isNil(value) {
-  return value === undefined || value === null;
-}
-
-/**
- * Checks if the given input is a string
- *
- * @param {any} value - the input element to check
- * @returns {boolean} true if the given input is a string
- */
-function isString(value) {
-  if (isNil(value)) {
-    return false;
-  }
-  return typeof value === "string" || value instanceof String;
-}
-
-/**
- * Checks if the given input is a JS array
- *
- * @param {any} value - the input element to check
- * @returns {boolean} true if the given input is a JS array
- */
-function isArray(value) {
-  return Array.isArray(value);
-}
-
-//
-/**
- * Removes duplicates from a given Array
- *
- * @param {Array} array - the input array
- * @returns {Array} the input array without duplicates
- */
-function uniquifyArray(array) {
-  const seen = {};
-  const result = [];
-  for (const item of array) {
-    if (!seen[item]) {
-      seen[item] = 1;
-      result.push(item);
-    }
-  }
-  return result;
-}
-
-/**
- * Merges 2 JSON-LD context objects into a new one
- *
- * @param {object} currentContext - the first context object
- * @param {object} newContext - the second context object
- * @returns {object} the resulting context object
- */
-function generateContext(currentContext, newContext) {
-  const keysCurrentContext = Object.keys(currentContext);
-  const keysNewContext = Object.keys(newContext);
-  // add all of the old context
-  let resultContext = cloneJson(currentContext);
-  // add vocabs of new context that are not already used (value is URI)
-  for (const keyNC of keysNewContext) {
-    if (isString(newContext[keyNC])) {
-      // first: check if the URI is already used, with any indicator
-      let foundMatch = false;
-      for (const keyCC of keysCurrentContext) {
-        if (isString(resultContext[keyCC])) {
-          if (resultContext[keyCC] === newContext[keyNC]) {
-            // found match, the URI is already covered
-            foundMatch = true;
-            break;
-          }
-        }
-      }
-      if (foundMatch) {
-        continue; // URI is already covered, continue with next
-      }
-      if (!resultContext[keyNC]) {
-        // add new vocab indicator
-        resultContext[keyNC] = newContext[keyNC];
-      } else {
-        // check if the URI is the same, if not: add new uri under new vocab indicator
-        if (resultContext[keyNC] !== newContext[keyNC]) {
-          let foundFreeName = false;
-          let counter = 1;
-          while (foundFreeName === false) {
-            const newVocabIndicator = keyNC + counter++;
-            if (!resultContext[newVocabIndicator]) {
-              foundFreeName = true;
-              resultContext[newVocabIndicator] = newContext[keyNC];
-            }
-          }
-        }
-      }
-    }
-  }
-  // sort vocab URIs by alphabet
-  const ordered = {};
-  Object.keys(resultContext)
-    .sort()
-    .forEach(function (key) {
-      ordered[key] = resultContext[key];
-    });
-  // reorder context: Vocab Indicators first (value = string), then term handlers (value = object)
-  resultContext = ordered;
-  const keysResultContext = Object.keys(resultContext);
-  const orderedResultContext = {};
-  // add the Vocab Indicators (value = string)
-  for (const keyRC of keysResultContext) {
-    if (isString(resultContext[keyRC])) {
-      orderedResultContext[keyRC] = resultContext[keyRC];
-    }
-  }
-  // add the term handlers (value = object)
-  for (const keyRC of keysResultContext) {
-    if (isObject(resultContext[keyRC])) {
-      orderedResultContext[keyRC] = resultContext[keyRC];
-    }
-  }
-  return orderedResultContext;
-}
-
-/**
- * Transforms a given vocabulary to a wished format (including a given JSON-LD context)
- *
- * @param {object} vocab - the vocabulary to process
- * @param {object} newContext - the wished JSON-LD context that the vocabulary should have
- * @returns {object} the transformed vocabulary
- */
-async function preProcessVocab(vocab, newContext) {
-  // recursively put all nodes from inner @graphs to the outermost @graph (is the case for older schema.jsonld versions)
-  let foundInnerGraph = false;
-  do {
-    const newGraph = [];
-    foundInnerGraph = false;
-    for (let i = 0; i < vocab["@graph"].length; i++) {
-      if (vocab["@graph"][i]["@graph"] !== undefined) {
-        newGraph.push(...cloneJson(vocab["@graph"][i]["@graph"])); // copy all elements of the inner @graph into the outer @graph
-        foundInnerGraph = true;
-      } else {
-        newGraph.push(cloneJson(vocab["@graph"][i])); // copy this element to the outer @graph
-      }
-    }
-    vocab["@graph"] = cloneJson(newGraph);
-  } while (foundInnerGraph === true);
-
-  // compact to apply the new context (which is supposed to have been merged before with the old context through the function generateContext())
-  // option "graph": true not feasible here, because then vocabs with "@id" result in inner @graphs again
-  // solution: edge case handling (see below)
-  const compactedVocab = await jsonld.compact(vocab, newContext);
-
-  // edge case: @graph had only one node, so values of @graph are in outermost layer
-  if (compactedVocab["@graph"] === undefined) {
-    delete compactedVocab["@context"];
-    return {
-      "@context": newContext,
-      "@graph": [compactedVocab],
-    };
-  } else {
-    return compactedVocab;
-  }
-}
-
-/**
- * Processes a given vocabulary node to a wished format (we call this process "curation")
- *
- * @param {object} vocabNode - the input vocabulary node
- * @param {Array} vocabularies - the vocabularies used by the graph so far
- * @returns {object} the curated node
- */
-function curateVocabNode(vocabNode, vocabularies) {
-  if (vocabNode["rdfs:comment"] !== undefined) {
-    // make a vocab object with "en" as the standard value
-    if (isString(vocabNode["rdfs:comment"])) {
-      // standard -> "en"
-      vocabNode["rdfs:comment"] = {
-        en: vocabNode["rdfs:comment"],
-      };
-    } else if (isObject(vocabNode["rdfs:comment"])) {
-      const newVal = {};
-      newVal[vocabNode["rdfs:comment"]["@language"]] =
-        vocabNode["rdfs:comment"]["@value"];
-      vocabNode["rdfs:comment"] = cloneJson(newVal);
-    } else if (isArray(vocabNode["rdfs:comment"])) {
-      const newVal = {};
-      for (let i = 0; i < vocabNode["rdfs:comment"].length; i++) {
-        if (isObject(vocabNode["rdfs:comment"][i])) {
-          newVal[vocabNode["rdfs:comment"][i]["@language"]] =
-            vocabNode["rdfs:comment"][i]["@value"];
-        }
-      }
-      vocabNode["rdfs:comment"] = cloneJson(newVal);
-    }
-  } else {
-    vocabNode["rdfs:comment"] = {};
-  }
-  if (vocabNode["rdfs:label"] !== undefined) {
-    // make a vocab object with "en" as the standard value
-    if (isString(vocabNode["rdfs:label"])) {
-      // "rdfs:label": "transcript"
-      // standard -> "en"
-      vocabNode["rdfs:label"] = {
-        en: vocabNode["rdfs:label"],
-      };
-    } else if (isObject(vocabNode["rdfs:label"])) {
-      // "rdfs:label": {
-      //   "@language": "en",
-      //   "@value": "translationOfWork"
-      // }
-      const newVal = {};
-      newVal[vocabNode["rdfs:label"]["@language"]] =
-        vocabNode["rdfs:label"]["@value"];
-      vocabNode["rdfs:label"] = cloneJson(newVal);
-    } else if (isArray(vocabNode["rdfs:label"])) {
-      // "rdfs:label": [{
-      //   "@language": "en",
-      //   "@value": "translationOfWork"
-      // },
-      // {
-      //   "@language": "de",
-      //   "@value": "UebersetzungsArbeit"
-      // }]
-      const newVal = {};
-      for (let i = 0; i < vocabNode["rdfs:label"].length; i++) {
-        if (isObject(vocabNode["rdfs:label"][i])) {
-          newVal[vocabNode["rdfs:label"][i]["@language"]] =
-            vocabNode["rdfs:label"][i]["@value"];
-        }
-      }
-      vocabNode["rdfs:label"] = cloneJson(newVal);
-    }
-  } else {
-    vocabNode["rdfs:label"] = {};
-  }
-  // make arrays for some terms in any case
-  if (isString(vocabNode["rdfs:subClassOf"])) {
-    vocabNode["rdfs:subClassOf"] = [vocabNode["rdfs:subClassOf"]];
-  } else if (
-    vocabNode["rdfs:subClassOf"] === undefined &&
-    vocabNode["@type"] === "rdfs:Class"
-  ) {
-    vocabNode["rdfs:subClassOf"] = [];
-  }
-  if (isString(vocabNode["rdfs:subPropertyOf"])) {
-    vocabNode["rdfs:subPropertyOf"] = [vocabNode["rdfs:subPropertyOf"]];
-  } else if (
-    vocabNode["rdfs:subPropertyOf"] === undefined &&
-    vocabNode["@type"] === "rdf:Property"
-  ) {
-    vocabNode["rdfs:subPropertyOf"] = [];
-  }
-  if (isString(vocabNode["schema:domainIncludes"])) {
-    vocabNode["schema:domainIncludes"] = [vocabNode["schema:domainIncludes"]];
-  } else if (
-    vocabNode["schema:domainIncludes"] === undefined &&
-    vocabNode["@type"] === "rdf:Property"
-  ) {
-    vocabNode["schema:domainIncludes"] = [];
-  }
-  if (isString(vocabNode["schema:rangeIncludes"])) {
-    vocabNode["schema:rangeIncludes"] = [vocabNode["schema:rangeIncludes"]];
-  } else if (
-    vocabNode["schema:rangeIncludes"] === undefined &&
-    vocabNode["@type"] === "rdf:Property"
-  ) {
-    vocabNode["schema:rangeIncludes"] = [];
-  }
-  if (
-    vocabNode["schema:inverseOf"] === undefined &&
-    vocabNode["@type"] === "rdf:Property"
-  ) {
-    vocabNode["schema:inverseOf"] = null;
-  }
-  if (!isString(vocabNode["schema:isPartOf"])) {
-    const vocabKeys = Object.keys(vocabularies);
-    let vocab;
-    for (let i = 0; i < vocabKeys.length; i++) {
-      if (
-        vocabNode["@id"].substring(0, vocabNode["@id"].indexOf(":")) ===
-        vocabKeys[i]
-      ) {
-        vocab = vocabularies[vocabKeys[i]];
-        break;
-      }
-    }
-    if (vocab !== undefined) {
-      let newChange;
-      do {
-        newChange = false;
-        if (vocab.endsWith("/") || vocab.endsWith("#")) {
-          vocab = vocab.substring(0, vocab.length - 1);
-          newChange = true;
-        }
-      } while (newChange === true);
-      vocabNode["schema:isPartOf"] = vocab;
-    }
-  }
-  return vocabNode;
-}
-
-/*
-term - A term is a short word defined in a context that MAY be expanded to an IRI
-compact IRI - A compact IRI has the form of prefix:suffix and is used as a way of expressing an IRI without needing to define separate term definitions for each IRI contained within a common vocabulary identified by prefix.
-prefix - A prefix is the first component of a compact IRI which comes from a term that maps to a string that, when prepended to the suffix of the compact IRI results in an absolute IRI. */
-
-/**
- * Returns the compact IRI from a given absolute IRI and a corresponding context. If the context does not contain the used namespace, then 'null' is returned
- *
- * @param {string} absoluteIRI - the absolute IRI to transform
- * @param {object} context - the context object holding key-value pairs that represent indicator-namespace pairs
- * @param {boolean} [equateVocabularyProtocols = false] - treats namespaces as equal even if their protocols (http/https) are different, it defaults to false.
- * @returns {?string} the compact IRI (null, if given context does not contain the used namespace)
- */
-function toCompactIRI(absoluteIRI, context, equateVocabularyProtocols = false) {
-  for (const contextTerm of Object.keys(context)) {
-    const vocabIRI = context[contextTerm];
-    if (isString(vocabIRI) && absoluteIRI.startsWith(vocabIRI)) {
-      return contextTerm + ":" + absoluteIRI.substring(vocabIRI.length);
-    }
-    if (equateVocabularyProtocols && isString(vocabIRI)) {
-      const protocolSwitchedIRI = switchIRIProtocol(vocabIRI);
-      if (absoluteIRI.startsWith(protocolSwitchedIRI)) {
-        return (
-          contextTerm + ":" + absoluteIRI.substring(protocolSwitchedIRI.length)
-        );
-      }
-    }
-  }
-  return null;
-}
-
-/**
- * Returns the absolute IRI from a given compact IRI and a corresponding context. If the context does not contain the used namespace, then 'null' is returned
- *
- * @param {string} compactIRI - the compact IRI to transform
- * @param {object} context - the context object holding key-value pairs that represent indicator-namespace pairs
- * @returns {?string} the absolute IRI (null, if given context does not contain the used namespace)
- */
-function toAbsoluteIRI(compactIRI, context) {
-  const terms = Object.keys(context);
-  for (let i = 0; i < terms.length; i++) {
-    const vocabIRI = context[terms[i]];
-    if (compactIRI.substring(0, compactIRI.indexOf(":")) === terms[i]) {
-      return vocabIRI.concat(compactIRI.substring(compactIRI.indexOf(":") + 1));
-    }
-  }
-  return null;
-}
-
-/**
- * Returns a sorted Array of Arrays that have a schema.org vocabulary version as first entry and it's release date as second entry. Latest is first in array.
- *
- * @param {object} releaseLog - the releaseLog object from the versionsFile of schema.org
- * @returns {Array} - Array with sorted release Arrays -> [version, date]
- */
-function sortReleaseEntriesByDate(releaseLog) {
-  let versionEntries = Object.entries(releaseLog);
-  return versionEntries.sort((a, b) => new Date(b[1]) - new Date(a[1]));
-}
-
-/**
- * Returns the jsonld filename that holds the schema.org vocabulary for a given version.
- *
- * @param {string} version - the schema.org version
- * @param {boolean} [schemaHttps = true] - use https as protocol for the schema.org vocabulary - works only from version 9.0 upwards
- * @returns {string} - the corresponding jsonld filename
- */
-function getFileNameForSchemaOrgVersion(version, schemaHttps = true) {
-  switch (version) {
-    case "2.0":
-    case "2.1":
-    case "2.2":
-    case "3.0":
-      throw new Error("There is no jsonld file for that schema.org version.");
-    case "3.1":
-    case "3.2":
-    case "3.3":
-    case "3.4":
-    case "3.5":
-    case "3.6":
-    case "3.7":
-    case "3.8":
-    case "3.9":
-    case "4.0":
-    case "5.0":
-    case "6.0":
-    case "7.0":
-    case "7.01":
-    case "7.02":
-    case "7.03":
-    case "7.04":
-    case "8.0":
-      return "all-layers.jsonld";
-    case "9.0":
-      if (schemaHttps) {
-        return "schemaorg-all-https.jsonld";
-      } else {
-        return "schemaorg-all-http.jsonld";
-      }
-    default:
-      // this is expected for newer releases that are not covered yet
-      if (schemaHttps) {
-        return "schemaorg-all-https.jsonld";
-      } else {
-        return "schemaorg-all-http.jsonld";
-      }
-  }
-}
-
-/**
- * Returns the protocol version used for schema.org in the given vocabulary. Returns "https" as the default
- *
- * @param {object} vocabulary - the vocabulary in question
- * @returns {?string} - the corresponding protocol version, either "http" or "https"
- */
-function discoverUsedSchemaOrgProtocol(vocabulary) {
-  const httpsIRI = "https://schema.org/";
-  const httpIRI = "http://schema.org/";
-  // 1. check if namespace is used in @context
-  if (vocabulary["@context"]) {
-    for (const contextEntry of Object.values(vocabulary["@context"])) {
-      if (isObject(contextEntry) && contextEntry["@vocab"]) {
-        if (contextEntry["@vocab"] === httpsIRI) {
-          return "https";
-        } else if (contextEntry["@vocab"] === httpIRI) {
-          return "http";
-        }
-      } else if (isString(contextEntry)) {
-        if (contextEntry === httpsIRI) {
-          return "https";
-        } else if (contextEntry === httpIRI) {
-          return "http";
-        }
-      }
-    }
-  }
-  // 2. easiest way -> make a string and count occurrences for each protocol version
-  const stringifiedVocab = JSON.stringify(vocabulary);
-  const amountHttps = stringifiedVocab.split(httpsIRI).length - 1;
-  const amountHttp = stringifiedVocab.split(httpIRI).length - 1;
-  if (amountHttps > amountHttp) {
-    return "https";
-  } else if (amountHttp > amountHttps) {
-    return "http";
-  } else {
-    return httpsIRI; // default case
-  }
-}
-
-/**
- * Checks if the given vocabulary uses terms (in context or content) that are present in the current given context but with another protocol (http/https), and returns those in a list
- *
- * @param {object} currentContext - the current context
- * @param {object} vocabulary - the vocabulary to be analyzed
- * @returns {string[]} - an array with the found equate namespaces
- */
-function discoverEquateNamespaces(currentContext, vocabulary) {
-  let result = new Set();
-  // 1. Make List of protocol switched namespaces from the current context
-  let protocolSwitchedNamespaces = [];
-  Object.values(currentContext).forEach(function (el) {
-    if (isString(el)) {
-      protocolSwitchedNamespaces.push(switchIRIProtocol(el));
-    }
-  });
-  // 2. Look in vocabulary context if any protocol switched namespaces are present
-  if (vocabulary["@context"]) {
-    Object.values(vocabulary["@context"]).forEach(function (el) {
-      if (isString(el) && protocolSwitchedNamespaces.includes(el)) {
-        result.add(el);
-      }
-    });
-  }
-  // 3. Look in vocabulary content if any protocol switched namespaces are present (everywhere, where @ids are expected)
-  if (Array.isArray(vocabulary["@graph"])) {
-    vocabulary["@graph"].forEach(function (vocabNode) {
-      checkIfNamespaceFromListIsUsed(
-        vocabNode["@id"],
-        protocolSwitchedNamespaces,
-        result
-      );
-      checkIfNamespaceFromListIsUsed(
-        vocabNode["@type"],
-        protocolSwitchedNamespaces,
-        result
-      );
-      // super class
-      checkIfNamespaceFromListIsUsed(
-        vocabNode["rdfs:subClassOf"],
-        protocolSwitchedNamespaces,
-        result
-      );
-      checkIfNamespaceFromListIsUsed(
-        vocabNode["http://www.w3.org/2000/01/rdf-schema#subClassOf"],
-        protocolSwitchedNamespaces,
-        result
-      );
-      // domain class
-      checkIfNamespaceFromListIsUsed(
-        vocabNode["schema:domainIncludes"],
-        protocolSwitchedNamespaces,
-        result
-      );
-      checkIfNamespaceFromListIsUsed(
-        vocabNode["http://schema.org/domainIncludes"],
-        protocolSwitchedNamespaces,
-        result
-      );
-      checkIfNamespaceFromListIsUsed(
-        vocabNode["https://schema.org/domainIncludes"],
-        protocolSwitchedNamespaces,
-        result
-      );
-      // range class
-      checkIfNamespaceFromListIsUsed(
-        vocabNode["schema:rangeIncludes"],
-        protocolSwitchedNamespaces,
-        result
-      );
-      checkIfNamespaceFromListIsUsed(
-        vocabNode["http://schema.org/rangeIncludes"],
-        protocolSwitchedNamespaces,
-        result
-      );
-      checkIfNamespaceFromListIsUsed(
-        vocabNode["https://schema.org/rangeIncludes"],
-        protocolSwitchedNamespaces,
-        result
-      );
-      // super property
-      checkIfNamespaceFromListIsUsed(
-        vocabNode["rdfs:subPropertyOf"],
-        protocolSwitchedNamespaces,
-        result
-      );
-      checkIfNamespaceFromListIsUsed(
-        vocabNode["http://www.w3.org/2000/01/rdf-schema#subPropertyOf"],
-        protocolSwitchedNamespaces,
-        result
-      );
-      // inverse property
-      checkIfNamespaceFromListIsUsed(
-        vocabNode["schema:inverseOf"],
-        protocolSwitchedNamespaces,
-        result
-      );
-      checkIfNamespaceFromListIsUsed(
-        vocabNode["http://schema.org/inverseOf"],
-        protocolSwitchedNamespaces,
-        result
-      );
-      checkIfNamespaceFromListIsUsed(
-        vocabNode["https://schema.org/inverseOf"],
-        protocolSwitchedNamespaces,
-        result
-      );
-    });
-  }
-  return Array.from(result);
-}
-
-/**
- * Checks if the value includes an absolute IRI that is present in the given namespaceArray. If so, that match is added to the given result Set.
- *
- * @param {any} value - the value to check, is expected to be either an array, an object, or a string.
- * @param {string[]} namespaceArray - an array of IRIs to search for
- * @param {Set} result - a Set to save the found matches
- */
-function checkIfNamespaceFromListIsUsed(value, namespaceArray, result) {
-  if (Array.isArray(value)) {
-    value.forEach(function (val) {
-      checkIfNamespaceFromListIsUsed(val, namespaceArray, result);
-    });
-  } else {
-    let toCheck;
-    if (isObject(value) && isString(value["@id"])) {
-      toCheck = value["@id"];
-    } else if (isString(value)) {
-      toCheck = value;
-    }
-    if (isString(toCheck) && toCheck.startsWith("http")) {
-      let match = namespaceArray.find((el) => toCheck.startsWith(el));
-      if (match && !result.has(match)) {
-        result.add(match);
-      }
-    }
-  }
-}
-
-/**
- * Returns the given absolute IRI, but with the opposite protocol (http vs. https)
- *
- * @param  {string}IRI - the IRI that should be transformed
- * @returns {string} - the resulting transformed IRI
- */
-function switchIRIProtocol(IRI) {
-  if (IRI.startsWith("https://")) {
-    return "http" + IRI.substring(5);
-  } else if (IRI.startsWith("http://")) {
-    return "https" + IRI.substring(4);
-  }
-  return IRI;
-}
-
-module.exports = {
-  applyFilter,
-  cloneJson,
-  isArray,
-  isString,
-  isObject,
-  isNil,
-  uniquifyArray,
-  preProcessVocab,
-  generateContext,
-  curateVocabNode,
-  toCompactIRI,
-  toAbsoluteIRI,
-  sortReleaseEntriesByDate,
-  getFileNameForSchemaOrgVersion,
-  discoverUsedSchemaOrgProtocol,
-  discoverEquateNamespaces,
-  switchIRIProtocol,
-};
-
-},{"./Graph":74,"jsonld":47}]},{},[77])(77)
+},{"./iterator.js":82}]},{},[11])(11)
 });
