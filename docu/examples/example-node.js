@@ -1,12 +1,12 @@
-const SDOAdapter = require("../lib/index");
-const VOC_OBJ_ZOO = require("../tests/data/vocabulary-animal.json");
+const SOA = require("../../lib/index"); // run the npm-script "buildTs" to generate js files for this example
+const VOC_OBJ_ZOO = require("../../tests/data/vocabulary-animal.json");
 main();
 
 /**
  * example usage of the library within node.js
  */
 async function main() {
-  const mySA = await SDOAdapter.create();
+  const mySA = await SOA.create();
   const mySDOUrl = await mySA.constructURLSchemaVocabulary("latest");
   console.log("The latest version is " + mySDOUrl);
   await mySA.addVocabularies([mySDOUrl, VOC_OBJ_ZOO]);
@@ -15,7 +15,7 @@ async function main() {
   console.log("getIRI() " + testClass.getIRI());
   console.log("getIRI(true) " + testClass.getIRI(true));
   console.log("getName() " + testClass.getName());
-  console.log('getDescription("en") ' + testClass.getDescription("en"));
+  console.log("getDescription(\"en\") " + testClass.getDescription("en"));
   console.log("getProperties(false) " + testClass.getProperties(false));
   console.log("getProperties(true) " + testClass.getProperties(true));
   console.log("getProperties(true, {}) " + testClass.getProperties(true, {}));

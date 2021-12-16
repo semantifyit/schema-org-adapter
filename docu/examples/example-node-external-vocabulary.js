@@ -1,5 +1,5 @@
-const SDOAdapter = require("../lib/index"); // load the SDOAdapter library
-const VOC_EXAMPLE = require("../tests/data/vocabulary-animal.json"); // load our external vocabulary
+const SOA = require("../../lib/index"); // run the npm-script "buildTs" to generate js files for this example
+const VOC_EXAMPLE = require("../../tests/data/vocabulary-animal.json"); // load our external vocabulary
 
 main();
 
@@ -8,7 +8,7 @@ main();
  */
 async function main() {
   // create an instance of the SDOAdapter with the latest schema.org vocabulary and the example vocabulary
-  const mySA = await SDOAdapter.create({schemaVersion: "latest", vocabularies:[VOC_EXAMPLE]});
+  const mySA = await SOA.create({schemaVersion: "latest", vocabularies:[VOC_EXAMPLE]});
   let AnimalClass = mySA.getClass("ex:Animal"); // get a JS-Class for the Class-Term https://example-vocab.ex/Animal , note that the compacted version of the IRI is also a valid parameter for the function
   console.log(JSON.stringify(AnimalClass.toJSON(true, null), null, 2)); // AnimalClass.toJSON() prints a JSON version of the Class, note that here we pass 'true' as parameter for the reasoning (the result will contain attributes resolved though reasoning, e.g. properties of super-classes)
   /*

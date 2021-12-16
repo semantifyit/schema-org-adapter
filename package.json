@@ -11,12 +11,12 @@
     "buildAll": "npm run-script buildTs && npm run-script buildDist && npm run-script buildDistMinified",
     "watchTs": "tsc -b src --watch",
     "buildTs": "tsc -b src",
-    "buildDist": "browserify lib/index.js -s SDOAdapter | derequire -cm --toplevel > dist/schema-org-adapter.js",
-    "buildDistMinified": "browserify lib/index.js -s SDOAdapter -g [uglifyify] | derequire -cm --toplevel > dist/schema-org-adapter.min.js",
+    "buildDist": "browserify lib/index.js -s SOA | derequire -cm --toplevel > dist/schema-org-adapter.js",
+    "buildDistMinified": "browserify lib/index.js -s SOA -g [uglifyify] | derequire -cm --toplevel > dist/schema-org-adapter.min.js",
     "test:badges": "npm run-script testSoaRepo && npm run-script badges",
     "testSoaRepo": "jest",
     "testSchemaRepo": "COMMIT=9a3ba4684a21c88506d0fed5ea37e5c6bbb115a1 jest",
-    "badges": "jest-coverage-badges",
+    "badges": "jest-coverage-badges input './docu/coverage/coverage-summary.json' output './docu/badges'",
     "eslint-check": "eslint src/*.ts tests/*.ts",
     "eslint-repair": "eslint --fix src/*.ts tests/*.ts",
     "prettier-check": "prettier --check src/*.ts tests/*.ts",
@@ -75,10 +75,9 @@
     "collectCoverageFrom": [
       "src/*.ts"
     ],
+    "coverageDirectory": "docu/coverage",
     "coverageReporters": [
-      "json-summary",
-      "text",
-      "lcov"
+      "json-summary"
     ],
     "globals": {
       "ts-jest": {

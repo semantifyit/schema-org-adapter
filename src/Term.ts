@@ -113,7 +113,7 @@ export abstract class Term {
    * @example
    * ```JS
    * // the parameter `schemaVersion: "12.0"` tells the SDO-Adapter instance to initialize with the schema.org vocabulary version 12.0
-   * const mySdoAdapter = await SDOAdapter.create({schemaVersion: "12.0"});
+   * const mySdoAdapter = await SOA.create({schemaVersion: "12.0"});
    *
    * const personClass = mySdoAdapter.getClass("schema:Person");
    * personClass.getVocabURLs();

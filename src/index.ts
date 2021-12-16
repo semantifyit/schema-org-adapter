@@ -8,9 +8,9 @@ import { constructURLSchemaVocabulary } from "./utilities";
  * @example
  *
  * ```JS
- * const SDOAdapter = require("schema-org-adapter");
+ * const SOA = require("schema-org-adapter");
  * // create a new SDOAdapter instance with the latest version of schema.org
- * const mySdoAdapter = await SDOAdapter.create({schemaVersion: "latest"});
+ * const mySdoAdapter = await SOA.create({schemaVersion: "latest"});
  * ```
  *
  * @param paramObj An optional parameter object that describes initialization settings for the newly created SDO Adapter instance.

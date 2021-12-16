@@ -12,26 +12,26 @@
 </div>
 
 </body>
-<!--<script src="../dist/schema-org-adapter.min.js"></script>-->
-<script src="../dist/schema-org-adapter.js"></script>
+<!--<script src="../../dist/schema-org-adapter.min.js"></script>-->
+<script src="../../dist/schema-org-adapter.js"></script>
 <!--You can also use a CDN!-->
 <!--<script src="https://cdn.jsdelivr.net/gh/semantifyit/schema-org-adapter/dist/schema-org-adapter.min.js"></script>-->
 <script>
     (async function() {
-        let mySA = await SDOAdapter.create({ schemaHttps: true });
-        console.log(await mySA.constructURLSchemaVocabulary('latest'));
+        let mySdoAdapter = await SOA.create({ schemaHttps: true });
+        console.log(await mySdoAdapter.constructURLSchemaVocabulary('latest'));
         let externalVocabURL = 'https://raw.githubusercontent.com/semantifyit/schema-org-adapter/master/tests/data/vocabulary-animal.json';
 
-        mySA.constructURLSchemaVocabulary('10.0').then(function(sdoURL) {
-            mySA.addVocabularies([sdoURL, externalVocabURL]).then(function() {
-                let testClass = mySA.getClass('Hotel');
-                console.log(mySA.getVocabularies());
+        mySdoAdapter.constructURLSchemaVocabulary('10.0').then(function(sdoURL) {
+            mySdoAdapter.addVocabularies([sdoURL, externalVocabURL]).then(function() {
+                let testClass = mySdoAdapter.getClass('Hotel');
+                console.log(mySdoAdapter.getVocabularies());
                 console.log(testClass.getName());
                 console.log(testClass.getDescription('en'));
                 console.log(testClass.toJSON(true));
-                let testClassExternal = mySA.getClass('Tiger');
+                let testClassExternal = mySdoAdapter.getClass('Tiger');
                 console.log(testClassExternal.toJSON(true));
-                let testProperty = mySA.getProperty('accountablePerson');
+                let testProperty = mySdoAdapter.getProperty('accountablePerson');
                 console.log(testProperty.getRanges());
                 document.getElementById('output').innerHTML = JSON.stringify(testClass.toJSON(true), null, 2);
             });

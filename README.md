@@ -1,6 +1,5 @@
-# Schema.org Adapter
-
 <div align="center">
+<h1>Schema.org Adapter</h1>
 <b>Fast, simple & flexible API for the Schema.org Vocabulary (and vocabulary extensions!) for Node and Browsers</b>
 <br><br>
 <a href="https://libraries.io/npm/schema-org-adapter"><img src="https://img.shields.io/librariesio/release/npm/schema-org-adapter" alt="Dependencies" /></a>
@@ -10,7 +9,7 @@
 <a href="https://www.typescriptlang.org/"><img src="https://img.shields.io/npm/types/scrub-js.svg" alt="Built with TypeScript" /></a>
 <a href="https://eslint.org/"><img src="https://img.shields.io/badge/code%20style-ESLint-brightgreen" alt="Code style in ESLint" /></a>
 <a href="https://npms.io/search?q=schema-org-adapter"><img src="https://img.shields.io/npms-io/quality-score/schema-org-adapter" alt="npms.io Code Quality" /></a>
-<img src="https://raw.githubusercontent.com/semantifyit/schema-org-adapter/master/coverage/badge-functions.svg?sanitize=true" alt="Jest Test Coverage Functions" />
+<img src="https://raw.githubusercontent.com/semantifyit/schema-org-adapter/master/docu/coverage/badge-functions.svg?sanitize=true" alt="Functions test coverage" />
 <br>
 <a href="https://www.npmjs.com/package/schema-org-adapter" rel="nofollow"><img src="https://img.shields.io/npm/v/schema-org-adapter.svg" alt="NPM Version"></a>
 <a href="https://github.com/semantifyit/schema-org-adapter/"><img src="https://img.shields.io/tokei/lines/github/semantifyit/schema-org-adapter" alt="Total lines of code" /></a>
@@ -19,17 +18,18 @@
 <br>
 
 ## Features
-&#8984; **Empowers the semantic web:** <a href="http://schema.org/" target="_blank">Schema.org</a> has become the standard vocabulary for the semantic web. The **Schema.org Adapter** gives developers a clear API to access the schema.org vocabulary in a simple way.
+&#8984; **Empowers the semantic web:** <a href="http://schema.org/" target="_blank">Schema.org</a> has become the standard vocabulary for the semantic web. The **Schema.org Adapter** (SDO-Adapter) gives developers a clear API to access the schema.org vocabulary in a simple way.
 
-&#9733; **Clear data model:** The data model of the rdf-based, machine-readable version of Schema.org is slightly adapted (see <a href="https://github.com/semantifyit/schema-org-adapter/blob/master/docu/algorithm.md" target="_blank">documentation</a> for details) to create the <a href="https://github.com/semantifyit/schema-org-adapter/blob/master/docu/dataModel.md" target="_blank">clear and pragmatic data model</a> for the **Schema.org Adapter**.
+&#9733; **Clear data model:** The data model of the rdf-based, machine-readable version of Schema.org is slightly adapted (see <a href="https://github.com/semantifyit/schema-org-adapter/blob/master/docu/algorithm.md" target="_blank">algorithm documentation</a> for details) to create the <a href="https://github.com/semantifyit/schema-org-adapter/blob/master/docu/dataModel.md" target="_blank">clear and pragmatic data model</a> for the **Schema.org Adapter**.
 
-&#8633; **Supports schema.org versions and external vocabularies:** The **Schema.org Adapter** is lightweight because it does NOT include the vocabulary data, instead it allows the user to input his needed local/remote vocabularies (JSON-LD or URL to JSON-LD). This gives users the possibility to specify the <a href="https://schema.org/docs/developers.html" target="_blank">version of Schema.org</a> (including http/https variations) they need, also to use <a href="https://github.com/semantifyit/schema-org-adapter/blob/master/docu/vocabulary.md" target="_blank">external vocabularies</a>. It is possible to input the wished schema.org vocabulary file/URL directly, or build such a vocabulary URL using functions provided by the library (it uses a repository-fork with tested updates from the official schema.org repository to ensure the correct function of the library while also keeping up-to-date with schema.org releases).
+&#8633; **Supports schema.org versions and external vocabularies:** The **Schema.org Adapter** is lightweight because it does NOT include the vocabulary data, instead it allows the user to input his needed local/remote vocabularies (JSON-LD or URL to JSON-LD). This gives users the possibility to specify the <a href="https://schema.org/docs/developers.html" target="_blank">version of Schema.org</a> (including http/https variations) they need, also to use <a href="https://github.com/semantifyit/schema-org-adapter/blob/master/docu/vocabulary.md" target="_blank">external vocabularies</a>.
 
-&#9851; **Built-in reasoning:** The API of **Schema.org Adapter** offers functions and parameters to enable built-in reasoning on the used vocabulary-terms (e.g. resolution of properties, sub-classes, ranges, etc.)
+&#9883; **Built-in reasoning:** The simple-to-use [API of this library](https://semantifyit.github.io/schema-org-adapter/)  offers functions and parameters that enable built-in reasoning on the used vocabulary-terms (e.g. resolution of properties, sub-classes, ranges, etc.)
+
 
 ## Install and load
 
-Independent of the installation and loading method there will be a variable `SDOAdapter` holding this library.
+Independent of the installation and loading method it is expected that a variable named `SOA` provides this library.
 
 ### NPM
 
@@ -42,9 +42,9 @@ npm install schema-org-adapter
 Require/import the package:
 
 ```javascript
-const SDOAdapter = require('schema-org-adapter');
+const SOA = require('schema-org-adapter');
 // or
-import SDOAdapter from 'schema-org-adapter';
+import SOA from 'schema-org-adapter';
 ```
 
 #### Browser
@@ -53,6 +53,7 @@ Script-include the bundled package in **/dist**:
 
 ```html
 <script src="/dist/schema-org-adapter.min.js"></script>
+<!--Global variable 'SOA' is available-->
 ```
 
 ### CDN
@@ -61,13 +62,14 @@ For the browser you can also directly load the library via CDN:
 
 ```html
 <script src="https://cdn.jsdelivr.net/gh/semantifyit/schema-org-adapter/dist/schema-org-adapter.min.js"></script>
+<!--Global variable 'SOA' is available-->
 ```
 
 ## Usage
 
 ```javascript
-// 1. Create a Schema.org Adapter instance with the wished schema.org vocabulary version
-const mySdoAdapter = await SDOAdapter.create({
+// 1. Create an SDO-Adapter instance with the latest schema.org vocabulary version
+const mySdoAdapter = await SOA.create({
   schemaVersion: "latest"
 });
 
@@ -86,17 +88,20 @@ const addressRanges = addressInstance.getRanges();
 
 ## Documentation
 
-[Documentation is available](https://semantifyit.github.io/schema-org-adapter/) including examples for each method provided by the library.
+### [Technical API documentation](https://semantifyit.github.io/schema-org-adapter/)
+### [Data Model of the Schema.org Adapter](https://github.com/semantifyit/schema-org-adapter/blob/master/docu/dataModel.md)
+### [Expected Vocabulary Structure](https://github.com/semantifyit/schema-org-adapter/blob/master/docu/vocabulary.md)
+### [Conversion Algorithm for Vocabularies](https://github.com/semantifyit/schema-org-adapter/blob/master/docu/algorithm.md)
 
-## Examples
+## Code Examples
 
-Check the examples for <a href="https://github.com/semantifyit/schema-org-adapter/blob/master/examples/example-node.js" target="_blank">Node</a> and <a href="https://github.com/semantifyit/schema-org-adapter/blob/master/examples/example-browser.html" target="_blank">Browser</a> on GitHub.
+### [Example for Node](https://github.com/semantifyit/schema-org-adapter/blob/master/docu/examples/example-node-2.js)
+### [Example for Browser](https://github.com/semantifyit/schema-org-adapter/blob/master/docu/examples/example-browser-2.html)
+### [All examples](https://github.com/semantifyit/schema-org-adapter/blob/master/docu/examples)
 
 ## Changelog
 
-See <a href="https://github.com/semantifyit/schema-org-adapter/blob/master/History.md" target="_blank">History.md</a>.
-
-## Acknowledgement
+### [History.md](https://github.com/semantifyit/schema-org-adapter/blob/master/History.md)
 
 <div align="center">
 <h3><a href="https://semantify.it/" target="_blank">semantify.it</a></h3>

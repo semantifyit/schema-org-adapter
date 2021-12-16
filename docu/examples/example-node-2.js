@@ -1,13 +1,13 @@
-const SDOAdapter = require("../lib/index");
+const SOA = require("../../lib/index"); // run the npm-script "buildTs" to generate js files for this example
 const SCHEMA_URL = "https://raw.githubusercontent.com/semantifyit/schemaorg/main/data/releases/13.0/schemaorg-all-https.jsonld";
-const VOC_OBJ_ZOO = require("../tests/data/vocabulary-animal.json");
+const VOC_OBJ_ZOO = require("../../tests/data/vocabulary-animal.json");
 main();
 
 /**
  * example usage of the library within node.js
  */
 async function main() {
-  const mySA = await SDOAdapter.create({vocabularies:[SCHEMA_URL,VOC_OBJ_ZOO]});
+  const mySA = await SOA.create({ vocabularies: [SCHEMA_URL, VOC_OBJ_ZOO] });
   const mySDOUrl = await mySA.constructURLSchemaVocabulary("latest");
   console.log("The latest version is " + mySDOUrl);
   let testClass = mySA.getClass("https://schema.org/Person");
@@ -15,7 +15,7 @@ async function main() {
   console.log("getIRI() " + testClass.getIRI());
   console.log("getIRI(true) " + testClass.getIRI(true));
   console.log("getName() " + testClass.getName());
-  console.log('getDescription("en") ' + testClass.getDescription("en"));
+  console.log("getDescription(\"en\") " + testClass.getDescription("en"));
   console.log("getProperties(false) " + testClass.getProperties(false));
   console.log("getProperties(true) " + testClass.getProperties(true));
   console.log("getProperties(true, {}) " + testClass.getProperties(true, {}));

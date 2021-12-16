@@ -24,9 +24,9 @@ import { DataType } from "./DataType";
  * An **SDOAdapter** is an instance of the library itself that holds its own settings and vocabularies (specified by the user). Based on these internal settings and vocabularies the SDOAdapter provides corresponding data through the methods described below (an SDOAdapter can only provide data about a vocabulary, if that vocabulary has been added to the instance). An SDOAdapter instance is created with {@link create | .create()}, have a look at the different settings.
  * ```JS
  * // load the library
- * const SDOAdapter = require("schema-org-adapter");
+ * const SOA = require("schema-org-adapter");
  * // create a new SDOAdapter instance, in this case with the latest schema.org vocabulary
- * const mySdoAdapter = await SDOAdapter.create({schemaVersion: "latest"});
+ * const mySdoAdapter = await SOA.create({schemaVersion: "latest"});
  * ```
  */
 export class SDOAdapter {
@@ -83,7 +83,7 @@ export class SDOAdapter {
    * const vocabularyTwo = "https://raw.githubusercontent.com/semantifyit/schemaorg/main/data/releases/13.0/schemaorg-all-https.jsonld"; // URL pointing to the schema.org vocabulary
    *
    * // add the two vocabularies to the SDOAdapter instance
-   * await SDOAdapter.addVocabularies( [vocabularyOne, vocabularyTwo] );
+   * await mySdoAdapter.addVocabularies( [vocabularyOne, vocabularyTwo] );
    * ```
    *
    * @param vocabArray - The vocabularies to add the graph. Given directly as JSON-LD or as an URL to fetch.
@@ -624,7 +624,7 @@ export class SDOAdapter {
    * @example
    * ```JS
    *
-   * const schemaUrl = await SDOAdapter.constructURLSchemaVocabulary("13.0");
+   * const schemaUrl = await mySdoAdapter.constructURLSchemaVocabulary("13.0");
    * // creates following URL pointing to the schema.org vocabulary version 13.0
    * "https://raw.githubusercontent.com/semantifyit/schemaorg/main/data/releases/13.0/schemaorg-all-https.jsonld"
    * ```

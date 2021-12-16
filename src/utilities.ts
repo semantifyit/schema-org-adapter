@@ -279,8 +279,8 @@ export function getURLSchemaVersions(commitBase?: string) {
  *
  * @example
  * ```JS
- * const SDOAdapter = require("schema-org-adapter");
- * const schemaUrl = await SDOAdapter.constructURLSchemaVocabulary("13.0");
+ * const SOA = require("schema-org-adapter");
+ * const schemaUrl = await SOA.constructURLSchemaVocabulary("13.0");
  * // creates following URL pointing to the schema.org vocabulary version 13.0
  * "https://raw.githubusercontent.com/semantifyit/schemaorg/main/data/releases/13.0/schemaorg-all-https.jsonld"
  * ```
@@ -311,16 +311,16 @@ export async function constructURLSchemaVocabulary(
  *
  * @example
  * ```JS
- * const SDOAdapter = require("schema-org-adapter");
+ * const SOA = require("schema-org-adapter");
  *
  * // version file needed for the first time -> the file is fetched and then saved in cache
- * let schemaVersions = await SDOAdapter.fetchSchemaVersions();
+ * let schemaVersions = await SOA.fetchSchemaVersions();
  *
  * // version file already in cache -> no fetching needed
- * schemaVersions = await SDOAdapter.fetchSchemaVersions();
+ * schemaVersions = await SOA.fetchSchemaVersions();
  *
  * // passing cacheClear = true -> the file is fetched and then saved in cache again
- * schemaVersions = await SDOAdapter.fetchSchemaVersions(true);
+ * schemaVersions = await SOA.fetchSchemaVersions(true);
  * ```
  *
  * @param cacheClear - If true, delete the local cache of the version file and retrieve it again. (default = false)
@@ -410,8 +410,8 @@ export async function checkURL(url: string) {
  *
  * @example
  * ```JS
- * const SDOAdapter = require("schema-org-adapter");
- * const latestSchemaVersion = await SDOAdapter.getLatestSchemaVersion();
+ * const SOA = require("schema-org-adapter");
+ * const latestSchemaVersion = await SOA.getLatestSchemaVersion();
  * // get the latest schema.org vocabulary version identifier
  * "13.0"
  * ```

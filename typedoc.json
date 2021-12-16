@@ -11,5 +11,6 @@
   ],
   "hideGenerator": true,
   "customCss": "./docu/typedoc.css",
-  "readme": "none"
+  "readme": "./docu/docuReadme.md",
+  "name": "Schema.org Adapter"
 }

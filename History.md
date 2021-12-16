@@ -1,12 +1,13 @@
 5.0.0 / 2022 TBA
 ==================
 * Refactored entire code to TypeScript.
-* Replaced the function `getTermType()` with 2 new functions, namely `getTermTypeIRI()` and `getTermTypeLabel()`. `getTermTypeIRI()` returns the compacted term type IRI (e.g. `"rdf:Property"` ) that was previously provided by `getTermType()`. `getTermTypeLabel()` on the other hand returns a human-readable label for the term type (e.g. `"Property"`). The corresponding `toJson()` and `toString()` functions reflect these changes.
 * The way how to create an SDO-Adapter instance has been improved.
+* The global name for the library has changed from `SDOAdapter` to `SOA`, in order to clarify the difference between the library itself and the SDOAdapter instances.
 * Every `implicit` parameter is `true` by default.
+* Replaced the function `getTermType()` with 2 new functions, namely `getTermTypeIRI()` and `getTermTypeLabel()`. `getTermTypeIRI()` returns the compacted term type IRI (e.g. `"rdf:Property"` ) that was previously provided by `getTermType()`. `getTermTypeLabel()` on the other hand returns a human-readable label for the term type (e.g. `"Property"`). The corresponding `toJson()` and `toString()` functions reflect these changes.
 * Changes to several functions, parameters and how certain methods work.
 * Introduction of a library-wide cache and exposure of different static methods for handy utilities.
-* To reflect all these changes the documentation has been updated, please have a look on it and adapt your code if you want to upgrade to this version of SDO-Adapter: https://semantifyit.github.io/schema-org-adapter/
+* To reflect all these changes the documentation has been updated, please have a look at it and adapt your code if you want to upgrade to this version of SDO-Adapter: https://semantifyit.github.io/schema-org-adapter/
 
 
 4.3.0 / 2021-10-05
