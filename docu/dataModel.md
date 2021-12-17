@@ -1,6 +1,6 @@
 # Data Model
 
-The data model used in **SDOAdapter** is based on the <a href="https://schema.org/docs/datamodel.html" target="_blank">data model of Schema.org</a>. If you are not familiar with it, we recommend to check that out before reading this document.
+The data model used in **SDOAdapter** is based on the <a href="https://schema.org/docs/datamodel.html" target="_blank">data model of Schema.org</a>.
 
 The data model used in **SDOAdapter** consists of following 5 types:
 
