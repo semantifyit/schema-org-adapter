@@ -1,6 +1,6 @@
 # Data Model
 
-The data model used in **SDOAdapter** is based on the <a href="https://schema.org/docs/datamodel.html" target="_blank">data model of Schema.org</a>. If you are not familiar with it, we recommend to check that out before reading this document.
+The data model used in **SDOAdapter** is based on the <a href="https://schema.org/docs/datamodel.html" target="_blank">data model of Schema.org</a>.
 
 The data model used in **SDOAdapter** consists of following 5 types:
 
@@ -10,7 +10,7 @@ The data model used in **SDOAdapter** consists of following 5 types:
 * <a href="#EnumerationMember">EnumerationMember</a>
 * <a href="#DataType">DataType</a>
 
-The algorithm that translates the data model of schema.org to the one used by this library is described in <a href="https://github.com/semantifyit/schema-org-adapter/blob/master/docu/algorithm.md" target="_blank">algorithm.md</a>. How the data model of schema.org is used to define external vocabularies is describe in <a href="https://github.com/semantifyit/schema-org-adapter/blob/master/docu/vocabulary.md" target="_blank">vocabularies.md</a> 
+The algorithm that translates the data model of schema.org to the one used by this library is described in <a href="https://github.com/semantifyit/schema-org-adapter/blob/master/docu/algorithm.md" target="_blank">algorithm.md</a>. How the data model of schema.org is used to define external vocabularies is described in <a href="https://github.com/semantifyit/schema-org-adapter/blob/master/docu/vocabulary.md" target="_blank">vocabularies.md</a> 
 
 <a name="Class"></a>
 ### Class

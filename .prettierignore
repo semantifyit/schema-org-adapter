@@ -1,6 +1,6 @@
-coverage
 dist
+lib
+docs
 docu
-jsDoc
 node_modules
 tests/data

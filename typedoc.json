@@ -1,0 +1,16 @@
+{
+  "out": "docs",
+  "entryPoints": [
+    "./src/"
+  ],
+  "entryPointStrategy": "Expand",
+  "tsconfig": "./src/tsconfig.json",
+  "disableSources": true,
+  "excludeTags": [
+    "privateremarks"
+  ],
+  "hideGenerator": true,
+  "customCss": "./docu/typedoc.css",
+  "readme": "./docu/docuReadme.md",
+  "name": "Schema.org Adapter"
+}

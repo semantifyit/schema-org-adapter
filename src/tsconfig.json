@@ -1,0 +1,23 @@
+{
+  "compilerOptions": {
+    "target": "ES6",
+    "module": "CommonJS",
+    "outDir": "../lib/",
+    "noImplicitAny": true,
+    "sourceMap": true,
+    "esModuleInterop": true,
+    "baseUrl": "./",
+    "rootDir": "./",
+    "sourceRoot": "./",
+    "resolveJsonModule": true,
+    "removeComments": true,
+    "noEmitOnError": true,
+    "strict": true,
+    "experimentalDecorators": true,
+    "declaration": true,
+    "declarationMap": true
+  },
+  "include": [
+    "./**/*.ts"
+  ]
+}

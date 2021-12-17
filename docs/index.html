@@ -1,0 +1,60 @@
+<!DOCTYPE html><html class="default"><head><meta charSet="utf-8"/><meta http-equiv="x-ua-compatible" content="IE=edge"/><title>Schema.org Adapter</title><meta name="description" content="Documentation for Schema.org Adapter"/><meta name="viewport" content="width=device-width, initial-scale=1"/><link rel="stylesheet" href="assets/style.css"/><link rel="stylesheet" href="assets/highlight.css"/><link rel="stylesheet" href="assets/custom.css"/><script async src="assets/search.js" id="search-script"></script></head><body><script>document.body.classList.add(localStorage.getItem("tsd-theme") || "os")</script><header><div class="tsd-page-toolbar"><div class="container"><div class="table-wrap"><div class="table-cell" id="tsd-search" data-base="."><div class="field"><label for="tsd-search-field" class="tsd-widget search no-caption">Search</label><input type="text" id="tsd-search-field"/></div><ul class="results"><li class="state loading">Preparing search index...</li><li class="state failure">The search index is not available</li></ul><a href="index.html" class="title">Schema.org Adapter</a></div><div class="table-cell" id="tsd-widgets"><div id="tsd-filter"><a href="#" class="tsd-widget options no-caption" data-toggle="options">Options</a><div class="tsd-filter-group"><div class="tsd-select" id="tsd-filter-visibility"><span class="tsd-select-label">All</span><ul class="tsd-select-list"><li data-value="public">Public</li><li data-value="protected">Public/Protected</li><li data-value="private" class="selected">All</li></ul></div> <input type="checkbox" id="tsd-filter-inherited" checked/><label class="tsd-widget" for="tsd-filter-inherited">Inherited</label><input type="checkbox" id="tsd-filter-externals" checked/><label class="tsd-widget" for="tsd-filter-externals">Externals</label></div></div><a href="#" class="tsd-widget menu no-caption" data-toggle="menu">Menu</a></div></div></div></div><div class="tsd-page-title"><div class="container"><h1> Schema.org Adapter</h1></div></div></header><div class="container container-main"><div class="row"><div class="col-8 col-content"><div class="tsd-panel tsd-typography">
+<a href="#api-documentation" id="api-documentation" style="color: inherit; text-decoration: none;">
+  <h1>API documentation</h1>
+</a>
+<p>This is the <strong>technical API documentation</strong> for the <a href="https://www.npmjs.com/package/schema-org-adapter">schema-org-adapter</a> library. </p>
+<p>Additional documentation is linked at the end of this page.</p>
+
+<a href="#setup" id="setup" style="color: inherit; text-decoration: none;">
+  <h2>Setup</h2>
+</a>
+<p>The <a href="https://github.com/semantifyit/schema-org-adapter#schemaorg-adapter">readme</a> explains the installation, loading and basic usage of this library. In any case, it is expected that the variable <code>SOA</code> references the library.</p>
+<pre><code class="language-javascript"><span class="hl-3">const</span><span class="hl-1"> </span><span class="hl-6">SOA</span><span class="hl-1"> = </span><span class="hl-7">require</span><span class="hl-1">(</span><span class="hl-4">&#39;schema-org-adapter&#39;</span><span class="hl-1">);</span><br/><span class="hl-0">// or</span><br/><span class="hl-8">import</span><span class="hl-1"> </span><span class="hl-9">SOA</span><span class="hl-1"> </span><span class="hl-8">from</span><span class="hl-1"> </span><span class="hl-4">&#39;schema-org-adapter&#39;</span><span class="hl-1">;</span>
+</code></pre>
+
+<a href="#usage" id="usage" style="color: inherit; text-decoration: none;">
+  <h2>Usage</h2>
+</a>
+<p>The <strong>schema-org-adapter</strong> library itself (called <strong>SOA</strong> from now on) provides following static functions:</p>
+<ul>
+<li><a href="./modules.html#create">create()</a></li>
+<li><a href="./modules.html#fetchSchemaVersions">fetchSchemaVersions()</a></li>
+<li><a href="./modules.html#getLatestSchemaVersion">getLatestSchemaVersion()</a></li>
+<li><a href="./modules.html#constructURLSchemaVocabulary">constructURLSchemaVocabulary()</a></li>
+</ul>
+<p>The most important function of <strong>SOA</strong> is <a href="modules.html#create">.create()</a>: it returns a new <a href="classes/SDOAdapter.html">SDOAdapter instance</a>. An <code>SDOAdapter</code> instance has its own settings and vocabularies, which are the base for the output given by its provided API. It is possible to pass these settings and vocabularies with a <a href="modules.html#ParamObjCreateSdoAdapter">parameter object</a> to the <code>.create()</code> function. </p>
+<p>In the following common use-case the SDOAdapter instance <code>mySdoAdapter</code> is created with default settings and the latest version of schema.org.</p>
+<pre><code class="language-javascript"><span class="hl-3">const</span><span class="hl-1"> </span><span class="hl-6">mySdoAdapter</span><span class="hl-1"> = </span><span class="hl-8">await</span><span class="hl-1"> </span><span class="hl-6">SOA</span><span class="hl-1">.</span><span class="hl-7">create</span><span class="hl-1">({</span><br/><span class="hl-1">  </span><span class="hl-9">schemaVersion:</span><span class="hl-1"> </span><span class="hl-4">&quot;latest&quot;</span><br/><span class="hl-1">});</span>
+</code></pre>
+<p>After the initialization of <code>mySdoAdapter</code>, its API can be used to retrieve information about the schema.org vocabulary. Check the <a href="classes/SDOAdapter.html">SDOAdapter reference page</a> to discover its API. The most important methods are those that create instances for vocabulary terms:</p>
+<ul>
+<li><a href="classes/SDOAdapter.html#getClass">getClass()</a> - creates a new <a href="classes/Class.html">Class instance</a> for a specific class</li>
+<li><a href="classes/SDOAdapter.html#getProperty">getProperty()</a>  - creates a new <a href="classes/Property.html">Property instance</a> for a specific property</li>
+<li><a href="classes/SDOAdapter.html#getDataType">getDataType()</a> - creates a new <a href="classes/DataType.html">DataType instance</a> for a specific data-type</li>
+<li><a href="classes/SDOAdapter.html#getEnumeration">getEnumeration()</a> - creates a new <a href="classes/Enumeration.html">Enumeration instance</a> for a specific enumeration</li>
+<li><a href="classes/SDOAdapter.html#getEnumerationMember">getEnumerationMember()</a> - creates a new <a href="classes/EnumerationMember.html">EnumerationMember instance</a> for a specific enumeration member (a predefined value that an enumeration can have)</li>
+</ul>
+<p>In the following example a new Class instance is generated for the schema.org class <a href="https://schema.org/Hotel">https://schema.org/Hotel</a></p>
+<pre><code class="language-javascript"><span class="hl-3">const</span><span class="hl-1"> </span><span class="hl-6">hotelClass</span><span class="hl-1"> = </span><span class="hl-9">mySdoAdapter</span><span class="hl-1">.</span><span class="hl-7">getClass</span><span class="hl-1">(</span><span class="hl-4">&quot;schema:Hotel&quot;</span><span class="hl-1">);</span>
+</code></pre>
+<p>The term instances have their own API depending on their type. A <a href="classes/Class.html">Class instance</a>, for example, provides a function to get all properties that the Class can use:</p>
+<pre><code class="language-javascript"><span class="hl-9">console</span><span class="hl-1">.</span><span class="hl-7">log</span><span class="hl-1">(</span><span class="hl-9">hotelClass</span><span class="hl-1">.</span><span class="hl-7">getProperties</span><span class="hl-1">());</span><br/><span class="hl-0">/* output:</span><br/><span class="hl-0"> * [</span><br/><span class="hl-0"> *  &#39;schema:amenityFeature&#39;,</span><br/><span class="hl-0"> *  &#39;schema:numberOfRooms&#39;,</span><br/><span class="hl-0"> *  &#39;schema:starRating&#39;,</span><br/><span class="hl-0"> *  &#39;schema:checkinTime&#39;,</span><br/><span class="hl-0"> *  &#39;schema:petsAllowed&#39;,</span><br/><span class="hl-0"> *  ...</span><br/><span class="hl-0"> * ]</span><br/><span class="hl-0"> */</span>
+</code></pre>
+<p>There is many more methods, options and functionalities to use! Explore them in the <a href="./modules.html">index page</a>.</p>
+
+<a href="#additional-documentation" id="additional-documentation" style="color: inherit; text-decoration: none;">
+  <h2>Additional Documentation</h2>
+</a>
+
+<a href="#data-model-of-sdo-adapter" id="data-model-of-sdo-adapter" style="color: inherit; text-decoration: none;">
+  <h4><a href="https://github.com/semantifyit/schema-org-adapter/blob/master/docu/dataModel.md">Data Model of SDO-Adapter</a></h4>
+</a>
+
+<a href="#expected-vocabulary-structure" id="expected-vocabulary-structure" style="color: inherit; text-decoration: none;">
+  <h4><a href="https://github.com/semantifyit/schema-org-adapter/blob/master/docu/vocabulary.md">Expected Vocabulary Structure</a></h4>
+</a>
+
+<a href="#conversion-algorithm-for-vocabularies" id="conversion-algorithm-for-vocabularies" style="color: inherit; text-decoration: none;">
+  <h4><a href="https://github.com/semantifyit/schema-org-adapter/blob/master/docu/algorithm.md">Conversion Algorithm for Vocabularies</a></h4>
+</a>
+</div></div><div class="col-4 col-menu menu-sticky-wrap menu-highlight"><nav class="tsd-navigation primary"><ul><li class="current"><a href="modules.html">Exports</a></li></ul></nav><nav class="tsd-navigation secondary menu-sticky"><ul><li class="tsd-kind-class"><a href="classes/Class.html" class="tsd-kind-icon">Class</a></li><li class="tsd-kind-class"><a href="classes/DataType.html" class="tsd-kind-icon">Data<wbr/>Type</a></li><li class="tsd-kind-class"><a href="classes/Enumeration.html" class="tsd-kind-icon">Enumeration</a></li><li class="tsd-kind-class"><a href="classes/EnumerationMember.html" class="tsd-kind-icon">Enumeration<wbr/>Member</a></li><li class="tsd-kind-class"><a href="classes/Property.html" class="tsd-kind-icon">Property</a></li><li class="tsd-kind-class"><a href="classes/SDOAdapter.html" class="tsd-kind-icon">SDOAdapter</a></li><li class="tsd-kind-type-alias"><a href="modules.html#Context" class="tsd-kind-icon">Context</a></li><li class="tsd-kind-type-alias"><a href="modules.html#FilterObject" class="tsd-kind-icon">Filter<wbr/>Object</a></li><li class="tsd-kind-type-alias"><a href="modules.html#ParamObjCreateSdoAdapter" class="tsd-kind-icon">Param<wbr/>Obj<wbr/>Create<wbr/>Sdo<wbr/>Adapter</a></li><li class="tsd-kind-type-alias"><a href="modules.html#TermTypeIRIValue" class="tsd-kind-icon">Term<wbr/>TypeIRIValue</a></li><li class="tsd-kind-type-alias"><a href="modules.html#TermTypeLabelValue" class="tsd-kind-icon">Term<wbr/>Type<wbr/>Label<wbr/>Value</a></li><li class="tsd-kind-type-alias"><a href="modules.html#Vocabulary" class="tsd-kind-icon">Vocabulary</a></li><li class="tsd-kind-function"><a href="modules.html#constructURLSchemaVocabulary" class="tsd-kind-icon">constructURLSchema<wbr/>Vocabulary</a></li><li class="tsd-kind-function"><a href="modules.html#create" class="tsd-kind-icon">create</a></li><li class="tsd-kind-function"><a href="modules.html#fetchSchemaVersions" class="tsd-kind-icon">fetch<wbr/>Schema<wbr/>Versions</a></li><li class="tsd-kind-function"><a href="modules.html#getLatestSchemaVersion" class="tsd-kind-icon">get<wbr/>Latest<wbr/>Schema<wbr/>Version</a></li></ul></nav></div></div></div><footer class=""><div class="container"><h2>Legend</h2><div class="tsd-legend-group"><ul class="tsd-legend"><li class="tsd-kind-method tsd-parent-kind-class"><span class="tsd-kind-icon">Method</span></li></ul><ul class="tsd-legend"><li class="tsd-kind-method tsd-parent-kind-class tsd-is-inherited"><span class="tsd-kind-icon">Inherited method</span></li></ul></div><h2>Settings</h2><p>Theme <select id="theme"><option value="os">OS</option><option value="light">Light</option><option value="dark">Dark</option></select></p></div></footer><div class="overlay"></div><script src="assets/main.js"></script></body></html>
