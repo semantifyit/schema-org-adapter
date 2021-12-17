@@ -1,4 +1,4 @@
-5.0.0 / 2022 TBA
+5.0.0 / 2021-12-17
 ==================
 * Refactored entire code to TypeScript.
 * The way how to create an SDO-Adapter instance has been improved.
