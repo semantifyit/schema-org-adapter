@@ -85,5 +85,3 @@ fabric.properties
 
 # Generated js files should not be on github (but on npm) - dist files should be in both
 lib/
-
-docu/coverage/
