@@ -1,3 +1,8 @@
+5.0.1 / 2021-12-17
+==================
+* Vocabulary addition algorithm improved (for the rare use-case that an enumeration or data-type is used in multiple vocabularies added).
+
+
 5.0.0 / 2021-12-17
 ==================
 * Refactored entire code to TypeScript.

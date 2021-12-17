@@ -328,6 +328,12 @@ class Graph {
                                         this.enumerations[actClassKey] = (0, utilities_1.cloneJson)(this.classes[actClassKey]);
                                         delete this.classes[actClassKey];
                                     }
+                                    else if (this.classes[actClassKey] &&
+                                        this.enumerations[actClassKey]) {
+                                        newEnum = true;
+                                        this.addGraphNode(this.enumerations, this.classes[actClassKey], vocabURL);
+                                        delete this.classes[actClassKey];
+                                    }
                                 }
                             }
                         }
@@ -347,6 +353,12 @@ class Graph {
                                     if (this.classes[actClassKey] && !this.dataTypes[actClassKey]) {
                                         newDatatype = true;
                                         this.dataTypes[actClassKey] = (0, utilities_1.cloneJson)(this.classes[actClassKey]);
+                                        delete this.classes[actClassKey];
+                                    }
+                                    else if (this.classes[actClassKey] &&
+                                        this.dataTypes[actClassKey]) {
+                                        newDatatype = true;
+                                        this.addGraphNode(this.dataTypes, this.classes[actClassKey], vocabURL);
                                         delete this.classes[actClassKey];
                                     }
                                 }

@@ -1,4 +1,5 @@
 import { SDOAdapter } from "../src/SDOAdapter";
+import * as SOA from "../src/index";
 import { isObject } from "../src/utilities";
 import { commit, debugFunc, debugFuncErr } from "./testUtility";
 
@@ -167,5 +168,27 @@ describe("Enumeration methods", () => {
     const PaymentMethod = mySA.getClass("schema:PaymentMethod");
     debugFunc(PaymentMethod.toString());
     expect(isObject(JSON.parse(PaymentMethod.toString()))).toBe(true);
+  });
+
+  test("double definition", async () => {
+    // when a term is defined 2 times, it should still be an enumeration in the graph
+    const url1 = await SOA.constructURLSchemaVocabulary("12.0", true, commit);
+    const url2 = await SOA.constructURLSchemaVocabulary("13.0", true, commit);
+    const mySA = await SOA.create({
+      commit: commit,
+      onError: debugFuncErr,
+      vocabularies: [url1, url2],
+    });
+    const ps = mySA.getTerm("schema:DayOfWeek");
+    expect(ps).not.toBe(undefined);
+    const ps2 = mySA.getTerm("schema:DayOfWeek", {
+      termType: "Enumeration",
+    });
+    expect(ps2).not.toBe(undefined);
+    expect(() =>
+      mySA.getTerm("schema:DayOfWeek", {
+        termType: "Class",
+      })
+    ).toThrow();
   });
 });

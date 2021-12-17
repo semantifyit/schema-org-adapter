@@ -186,6 +186,18 @@ export class Graph {
                     this.classes[actClassKey]
                   );
                   delete this.classes[actClassKey];
+                } else if (
+                  this.classes[actClassKey] &&
+                  this.enumerations[actClassKey]
+                ) {
+                  newEnum = true;
+                  // merge
+                  this.addGraphNode(
+                    this.enumerations,
+                    this.classes[actClassKey],
+                    vocabURL
+                  );
+                  delete this.classes[actClassKey];
                 }
               }
             }
@@ -210,6 +222,18 @@ export class Graph {
                   newDatatype = true;
                   this.dataTypes[actClassKey] = cloneJson(
                     this.classes[actClassKey]
+                  );
+                  delete this.classes[actClassKey];
+                } else if (
+                  this.classes[actClassKey] &&
+                  this.dataTypes[actClassKey]
+                ) {
+                  // merge
+                  newDatatype = true;
+                  this.addGraphNode(
+                    this.dataTypes,
+                    this.classes[actClassKey],
+                    vocabURL
                   );
                   delete this.classes[actClassKey];
                 }
