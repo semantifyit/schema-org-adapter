@@ -1,4 +1,4 @@
-5.0.1 / 2021-12-17
+5.0.1 / 2021-12-20
 ==================
 * Vocabulary addition algorithm improved (for the rare use-case that an enumeration or data-type is used in multiple vocabularies added).
 
