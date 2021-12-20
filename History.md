@@ -1,7 +1,10 @@
+5.0.2 / 2021-12-20
+==================
+* Added file-endings for `main` and `types` in `package.json` to enable correct import in non-TS environments.
+
 5.0.1 / 2021-12-20
 ==================
 * Vocabulary addition algorithm improved (for the rare use-case that an enumeration or data-type is used in multiple vocabularies added).
-
 
 5.0.0 / 2021-12-17
 ==================
