@@ -4,11 +4,16 @@ import { Enumeration } from "./Enumeration";
 import { EnumerationMember } from "./EnumerationMember";
 import { DataType } from "./DataType";
 import { SDOAdapter } from "./SDOAdapter";
-import { Context, FilterObject, Vocabulary, VocabularyNode } from "./types";
+import {
+  Context,
+  FilterObject,
+  TermMemory,
+  Vocabulary,
+  VocabularyNode,
+} from "./types";
 import {
   cloneJson,
   isArray,
-  isNil,
   isObject,
   isString,
   switchIRIProtocol,
@@ -16,11 +21,18 @@ import {
 } from "./utilities";
 import { DC, RDFS, SCHEMA, SOA, TermTypeIRI } from "./namespaces";
 import {
+  addEmptyArray,
+  addInheritanceTermsClassAndEnum,
+  addInheritanceTermsDataTypesAndProperties,
   curateVocabNode,
   discoverEquateNamespaces,
   discoverUsedSchemaOrgProtocol,
+  extractFromClassMemory,
   generateContext,
   getStandardContext,
+  nodeMergeAddIds,
+  nodeMergeLanguageTerm,
+  nodeMergeOverwrite,
   preProcessVocab,
 } from "./graphUtilities";
 import { applyFilter } from "./reasoning";
@@ -30,11 +42,11 @@ export class Graph {
   sdoAdapter: SDOAdapter;
   context: Context;
   // keys are the compacted IRI
-  classes: { [key: string]: VocabularyNode };
-  properties: { [key: string]: VocabularyNode };
-  dataTypes: { [key: string]: VocabularyNode };
-  enumerations: { [key: string]: VocabularyNode };
-  enumerationMembers: { [key: string]: VocabularyNode };
+  classes: TermMemory;
+  properties: TermMemory;
+  dataTypes: TermMemory;
+  enumerations: TermMemory;
+  enumerationMembers: TermMemory;
 
   /**
    * @param sdoAdapter - The parent sdoAdapter-class to which this Graph belongs
@@ -158,200 +170,60 @@ export class Graph {
       }
       // C) Classification cleaning
       /* To have a correct classification for our data model it is needed to clean the data generated in the previous step. Inaccurate records include:
-                         Enumerations which are handled as Classes.
-                         DataTypes which are handled as Classes.
-                         */
+       * Enumerations which are handled as Classes.
+       * DataTypes which are handled as Classes.
+       */
 
       // C.1)  Extract enumerations from classes memory
       // For each entry in the classes memory check if its superClasses contain Enumeration or another Enumeration. If this is the case, it is known that this class is an enumeration.
-      let newEnum;
-      do {
-        newEnum = false;
-        const classesKeys = Object.keys(this.classes);
-        const enumKeys = Object.keys(this.enumerations);
-        for (const actClassKey of classesKeys) {
-          if (this.classes[actClassKey][RDFS.subClassOf] !== undefined) {
-            const subClassArray = this.classes[actClassKey][RDFS.subClassOf];
-            for (const actSubClass of subClassArray) {
-              if (
-                actSubClass === TermTypeIRI.enumeration ||
-                enumKeys.includes(actSubClass)
-              ) {
-                if (
-                  this.classes[actClassKey] &&
-                  !this.enumerations[actClassKey]
-                ) {
-                  newEnum = true;
-                  this.enumerations[actClassKey] = cloneJson(
-                    this.classes[actClassKey]
-                  );
-                  delete this.classes[actClassKey];
-                } else if (
-                  this.classes[actClassKey] &&
-                  this.enumerations[actClassKey]
-                ) {
-                  newEnum = true;
-                  // merge
-                  this.addGraphNode(
-                    this.enumerations,
-                    this.classes[actClassKey],
-                    vocabURL
-                  );
-                  delete this.classes[actClassKey];
-                }
-              }
-            }
-          }
-        }
-      } while (newEnum);
+      extractFromClassMemory(
+        this.classes,
+        this.enumerations,
+        this.addGraphNode,
+        vocabURL
+      );
       // C.2) check if there are subclasses of dataTypes which are in the classes data, put them in dataType data
-      let newDatatype;
-      do {
-        newDatatype = false;
-        const classesKeys = Object.keys(this.classes);
-        const dtKeys = Object.keys(this.dataTypes);
-        for (const actClassKey of classesKeys) {
-          if (this.classes[actClassKey][RDFS.subClassOf] !== undefined) {
-            const subClassArray = this.classes[actClassKey][RDFS.subClassOf];
-            for (const actSubClass of subClassArray) {
-              if (
-                actSubClass === TermTypeIRI.dataType ||
-                dtKeys.includes(actSubClass)
-              ) {
-                if (this.classes[actClassKey] && !this.dataTypes[actClassKey]) {
-                  newDatatype = true;
-                  this.dataTypes[actClassKey] = cloneJson(
-                    this.classes[actClassKey]
-                  );
-                  delete this.classes[actClassKey];
-                } else if (
-                  this.classes[actClassKey] &&
-                  this.dataTypes[actClassKey]
-                ) {
-                  // merge
-                  newDatatype = true;
-                  this.addGraphNode(
-                    this.dataTypes,
-                    this.classes[actClassKey],
-                    vocabURL
-                  );
-                  delete this.classes[actClassKey];
-                }
-              }
-            }
-          }
-        }
-      } while (newDatatype);
+      extractFromClassMemory(
+        this.classes,
+        this.dataTypes,
+        this.addGraphNode,
+        vocabURL
+      );
       // C.3) change the @type of data-types to a single value, which is "schema:DataType"
-      const dtKeys = Object.keys(this.dataTypes);
-      for (const actDtKey of dtKeys) {
-        this.dataTypes[actDtKey]["@type"] = TermTypeIRI.dataType;
-      }
+      Object.values(this.dataTypes).forEach(
+        (el) => (el["@type"] = TermTypeIRI.dataType)
+      );
 
       // D) Inheritance
       /*    Schema.org's Inheritance design states if an entity is the superClass/superProperty of another entity. In our data model design we also hold the information if an entity is the subClass/subProperty of another entity. In this step this inheritance information is generated. */
       // D.1) Add subClasses for Classes and Enumerations
       // check superclasses for all classes and enumerations. Add these classes/enumerations as subclasses (soa:superClassOf) for the parent class/enumeration
-      let classesKeys = Object.keys(this.classes);
-      for (const actClassKey of classesKeys) {
-        const superClasses = this.classes[actClassKey][RDFS.subClassOf];
-        // add empty superClassOf if not defined
-        if (!this.classes[actClassKey][SOA.superClassOf]) {
-          this.classes[actClassKey][SOA.superClassOf] = [];
-        }
-        for (const actSuperClass of superClasses) {
-          let superClass = this.classes[actSuperClass];
-          if (!superClass) {
-            superClass = this.enumerations[actSuperClass];
-          }
-          if (superClass) {
-            if (superClass[SOA.superClassOf]) {
-              if (!superClass[SOA.superClassOf].includes(actClassKey)) {
-                superClass[SOA.superClassOf].push(actClassKey);
-              }
-            } else {
-              superClass[SOA.superClassOf] = [actClassKey];
-            }
-          }
-        }
-      }
-      let enumKeys = Object.keys(this.enumerations);
-      for (const actEnumKey of enumKeys) {
-        const superClasses = this.enumerations[actEnumKey][RDFS.subClassOf];
-        // add empty superClassOf if not defined
-        if (!this.enumerations[actEnumKey][SOA.superClassOf]) {
-          this.enumerations[actEnumKey][SOA.superClassOf] = [];
-        }
-        for (const actSuperClass of superClasses) {
-          let superClass = this.classes[actSuperClass];
-          if (!superClass) {
-            superClass = this.enumerations[actSuperClass];
-          }
-          if (superClass) {
-            if (superClass[SOA.superClassOf]) {
-              if (!superClass[SOA.superClassOf].includes(actEnumKey)) {
-                superClass[SOA.superClassOf].push(actEnumKey);
-              }
-            } else {
-              superClass[SOA.superClassOf] = [actEnumKey];
-            }
-          }
-        }
-      }
+      addInheritanceTermsClassAndEnum(
+        this.classes,
+        this.enumerations,
+        RDFS.subClassOf,
+        SOA.superClassOf
+      );
+      addInheritanceTermsClassAndEnum(
+        this.enumerations,
+        this.enumerations,
+        RDFS.subClassOf,
+        SOA.superClassOf
+      );
       // D.2) Add subClasses for DataTypes
       // For each entry in the dataTypes memory the superClasses are checked (if they are in dataTypes memory) and those super types add the actual entry in their subClasses.
-      let dataTypeKeys = Object.keys(this.dataTypes);
-      for (const actDtKey of dataTypeKeys) {
-        const superClasses = this.dataTypes[actDtKey][RDFS.subClassOf];
-        // add empty superClassOf if not defined
-        if (!this.dataTypes[actDtKey][SOA.superClassOf]) {
-          this.dataTypes[actDtKey][SOA.superClassOf] = [];
-        }
-        // add empty subClassOf if not defined
-        if (!superClasses) {
-          this.dataTypes[actDtKey][RDFS.subClassOf] = [];
-        } else {
-          for (const actSuperClass of superClasses) {
-            const superClass = this.dataTypes[actSuperClass];
-            if (superClass) {
-              if (superClass[SOA.superClassOf]) {
-                if (!superClass[SOA.superClassOf].includes(actDtKey)) {
-                  superClass[SOA.superClassOf].push(actDtKey);
-                }
-              } else {
-                superClass[SOA.superClassOf] = [actDtKey];
-              }
-            }
-          }
-        }
-      }
+      addInheritanceTermsDataTypesAndProperties(
+        this.dataTypes,
+        RDFS.subClassOf,
+        SOA.superClassOf
+      );
       // D.3) Add subProperties for Properties
       // For each entry in the properties memory the superProperties are checked (if they are in properties memory) and those super properties add the actual entry in their subProperties. (soa:superPropertyOf)
-      let propertyKeys = Object.keys(this.properties);
-      for (const actPropKey of propertyKeys) {
-        const superProperties = this.properties[actPropKey][RDFS.subPropertyOf];
-        // add empty superPropertyOf if not defined
-        if (!this.properties[actPropKey][SOA.superPropertyOf]) {
-          this.properties[actPropKey][SOA.superPropertyOf] = [];
-        }
-        // add empty subPropertyOf if not defined
-        if (!superProperties) {
-          this.properties[actPropKey][RDFS.subPropertyOf] = [];
-        } else {
-          for (const actSuperProp of superProperties) {
-            const superClass = this.properties[actSuperProp];
-            if (superClass) {
-              if (superClass[SOA.superPropertyOf]) {
-                if (!superClass[SOA.superPropertyOf].includes(actPropKey)) {
-                  superClass[SOA.superPropertyOf].push(actPropKey);
-                }
-              } else {
-                superClass[SOA.superPropertyOf] = [actPropKey];
-              }
-            }
-          }
-        }
-      }
+      addInheritanceTermsDataTypesAndProperties(
+        this.properties,
+        RDFS.subPropertyOf,
+        SOA.superPropertyOf
+      );
       // E) Relationships
       /*  In this step additional fields are added to certain data entries to add links to other data entries, which should make it easier to use the generated data set.#
                         soa:hasProperty is an inverse of schema:domainIncludes
@@ -359,48 +231,26 @@ export class Graph {
                         soa:hasEnumerationMember is used for enumerations to list all its enumeration members (their @type includes the @id of the enumeration)
                         soa:enumerationDomainIncludes is an inverse of soa:hasEnumerationMember */
       // E.0) add empty arrays for the relationships
-      classesKeys = Object.keys(this.classes);
-      for (const actClassKey of classesKeys) {
-        if (!this.classes[actClassKey][SOA.hasProperty]) {
-          this.classes[actClassKey][SOA.hasProperty] = [];
-        }
-        if (!this.classes[actClassKey][SOA.isRangeOf]) {
-          this.classes[actClassKey][SOA.isRangeOf] = [];
-        }
-      }
-      enumKeys = Object.keys(this.enumerations);
-      for (const actEnumKey of enumKeys) {
-        if (!this.enumerations[actEnumKey][SOA.hasEnumerationMember]) {
-          this.enumerations[actEnumKey][SOA.hasEnumerationMember] = [];
-        }
-        if (!this.enumerations[actEnumKey][SOA.isRangeOf]) {
-          this.enumerations[actEnumKey][SOA.isRangeOf] = [];
-        }
-        if (!this.enumerations[actEnumKey][SOA.hasProperty]) {
-          this.enumerations[actEnumKey][SOA.hasProperty] = [];
-        }
-      }
-      dataTypeKeys = Object.keys(this.dataTypes);
-      for (const actDataTypeKey of dataTypeKeys) {
-        if (!this.dataTypes[actDataTypeKey][SOA.isRangeOf]) {
-          this.dataTypes[actDataTypeKey][SOA.isRangeOf] = [];
-        }
-      }
-      let enumMemKeys = Object.keys(this.enumerationMembers);
-      for (const actEnumMemKey of enumMemKeys) {
-        if (
-          !this.enumerationMembers[actEnumMemKey][SOA.enumerationDomainIncludes]
-        ) {
-          this.enumerationMembers[actEnumMemKey][
-            SOA.enumerationDomainIncludes
-          ] = [];
-        }
-      }
+      Object.values(this.classes).forEach((el) => {
+        addEmptyArray(el, SOA.hasProperty);
+        addEmptyArray(el, SOA.isRangeOf);
+      });
+      Object.values(this.enumerations).forEach((el) => {
+        addEmptyArray(el, SOA.hasEnumerationMember);
+        addEmptyArray(el, SOA.isRangeOf);
+        addEmptyArray(el, SOA.hasProperty);
+      });
+      Object.values(this.dataTypes).forEach((el) => {
+        addEmptyArray(el, SOA.isRangeOf);
+      });
+      Object.values(this.enumerationMembers).forEach((el) => {
+        addEmptyArray(el, SOA.enumerationDomainIncludes);
+      });
       /* E.1) Add explicit hasProperty and isRangeOf to classes, enumerations, and data types
                         For each entry in the classes/enumeration/dataType memory, the soa:hasProperty field is added.
                         This data field holds all properties which belong to this class/enumeration (class/enumeration is domain for property).
                         Also the soa:isRangeOf field is added -> holds all properties which use to this class/enumeration/dataType as range (class/enumeration/dataType is range for property). */
-      propertyKeys = Object.keys(this.properties);
+      const propertyKeys = Object.keys(this.properties);
       for (const actPropKey of propertyKeys) {
         const domainIncludesArray: string[] =
           this.properties[actPropKey][SCHEMA.domainIncludes];
@@ -441,7 +291,7 @@ export class Graph {
                         For each entry in the enumeration memory the soa:hasEnumerationMember field is added, this data field holds all enumeration members which belong to this enumeration.
                         For each entry in the enumerationMembers memory the soa:enumerationDomainIncludes field is added, this data field holds all enumerations that are a domain for this enumerationMember
                         */
-      enumMemKeys = Object.keys(this.enumerationMembers);
+      const enumMemKeys = Object.keys(this.enumerationMembers);
       for (const actEnumMemKey of enumMemKeys) {
         const enumMem = this.enumerationMembers[actEnumMemKey];
         let enumMemTypeArray = enumMem["@type"];
@@ -496,130 +346,38 @@ export class Graph {
         // @id stays the same
         // @type should stay the same (we already defined the memory to save it)
         // schema:isPartOf -> overwrite
-        if (!isNil(newNode[SCHEMA.isPartOf])) {
-          oldNode[SCHEMA.isPartOf] = newNode[SCHEMA.isPartOf];
-        }
+        nodeMergeOverwrite(oldNode, newNode, SCHEMA.isPartOf);
         // dc:source/schema:source -> overwrite
-        if (!isNil(newNode[DC.source])) {
-          oldNode[DC.source] = newNode[DC.source];
-        }
-        if (!isNil(newNode[SCHEMA.source])) {
-          oldNode[SCHEMA.source] = newNode[SCHEMA.source];
-        }
+        nodeMergeOverwrite(oldNode, newNode, DC.source);
+        nodeMergeOverwrite(oldNode, newNode, SCHEMA.source);
         // schema:category -> overwrite
-        if (!isNil(newNode[SCHEMA.category])) {
-          oldNode[SCHEMA.category] = newNode[SCHEMA.category];
-        }
+        nodeMergeOverwrite(oldNode, newNode, SCHEMA.category);
         // schema:supersededBy -> overwrite
-        if (!isNil(newNode[SCHEMA.supersededBy])) {
-          oldNode[SCHEMA.supersededBy] = newNode[SCHEMA.supersededBy];
-        }
+        nodeMergeOverwrite(oldNode, newNode, SCHEMA.supersededBy);
         // rdfs:label -> add new languages, overwrite old ones if needed
-        if (!isNil(newNode[RDFS.label])) {
-          const labelKeysNew = Object.keys(newNode[RDFS.label]);
-          for (const actLabelKey of labelKeysNew) {
-            oldNode[RDFS.label][actLabelKey] = newNode[RDFS.label][actLabelKey];
-          }
-        }
+        nodeMergeLanguageTerm(oldNode, newNode, RDFS.label);
         // rdfs:comment -> add new languages, overwrite old ones if needed
-        if (!isNil(newNode[RDFS.comment])) {
-          const commentKeysNew = Object.keys(newNode[RDFS.comment]);
-          for (const actCommentKey of commentKeysNew) {
-            oldNode[RDFS.comment][actCommentKey] =
-              newNode[RDFS.comment][actCommentKey];
-          }
-        }
+        nodeMergeLanguageTerm(oldNode, newNode, RDFS.comment);
         // rdfs:subClassOf -> add new ids
-        if (!isNil(newNode[RDFS.subClassOf])) {
-          for (const actSuperClass of newNode[RDFS.subClassOf]) {
-            if (!oldNode[RDFS.subClassOf].includes(actSuperClass)) {
-              // add new entry
-              oldNode[RDFS.subClassOf].push(actSuperClass);
-            }
-          }
-        }
+        nodeMergeAddIds(oldNode, newNode, RDFS.subClassOf);
         // soa:superClassOf -> add new ids
-        if (!isNil(newNode[SOA.superClassOf])) {
-          for (const actSubClass of newNode[SOA.superClassOf]) {
-            if (!oldNode[SOA.superClassOf].includes(actSubClass)) {
-              // add new entry
-              oldNode[SOA.superClassOf].push(actSubClass);
-            }
-          }
-        }
+        nodeMergeAddIds(oldNode, newNode, SOA.superClassOf);
         // soa:hasProperty -> add new ids
-        if (!isNil(newNode[SOA.hasProperty])) {
-          for (const actProp of newNode[SOA.hasProperty]) {
-            if (!oldNode[SOA.hasProperty].includes(actProp)) {
-              // add new entry
-              oldNode[SOA.hasProperty].push(actProp);
-            }
-          }
-        }
+        nodeMergeAddIds(oldNode, newNode, SOA.hasProperty);
         // soa:isRangeOf -> add new ids
-        if (!isNil(newNode[SOA.isRangeOf])) {
-          for (const actProp of newNode[SOA.isRangeOf]) {
-            if (!oldNode[SOA.isRangeOf].includes(actProp)) {
-              // add new entry
-              oldNode[SOA.isRangeOf].push(actProp);
-            }
-          }
-        }
+        nodeMergeAddIds(oldNode, newNode, SOA.isRangeOf);
         // soa:enumerationDomainIncludes -> add new ids
-        if (!isNil(newNode[SOA.enumerationDomainIncludes])) {
-          for (const actEnum of newNode[SOA.enumerationDomainIncludes]) {
-            if (!oldNode[SOA.enumerationDomainIncludes].includes(actEnum)) {
-              // add new entry
-              oldNode[SOA.enumerationDomainIncludes].push(actEnum);
-            }
-          }
-        }
+        nodeMergeAddIds(oldNode, newNode, SOA.enumerationDomainIncludes);
         // soa:hasEnumerationMember -> add new ids
-        if (!isNil(newNode[SOA.hasEnumerationMember])) {
-          for (const actEnumMem of newNode[SOA.hasEnumerationMember]) {
-            if (!oldNode[SOA.hasEnumerationMember].includes(actEnumMem)) {
-              // add new entry
-              oldNode[SOA.hasEnumerationMember].push(actEnumMem);
-            }
-          }
-        }
+        nodeMergeAddIds(oldNode, newNode, SOA.hasEnumerationMember);
         // rdfs:subPropertyOf -> add new ids
-        if (!isNil(newNode[RDFS.subPropertyOf])) {
-          for (const actProp of newNode[RDFS.subPropertyOf]) {
-            if (!oldNode[RDFS.subPropertyOf].includes(actProp)) {
-              // add new entry
-              oldNode[RDFS.subPropertyOf].push(actProp);
-            }
-          }
-        }
+        nodeMergeAddIds(oldNode, newNode, RDFS.subPropertyOf);
         // schema:domainIncludes -> add new ids
-        if (!isNil(newNode[SCHEMA.domainIncludes])) {
-          for (const actDomain of newNode[SCHEMA.domainIncludes]) {
-            if (!oldNode[SCHEMA.domainIncludes].includes(actDomain)) {
-              // add new entry
-              oldNode[SCHEMA.domainIncludes].push(actDomain);
-            }
-          }
-        }
+        nodeMergeAddIds(oldNode, newNode, SCHEMA.domainIncludes);
         // schema:rangeIncludes -> add new ids
-        if (!isNil(newNode[SCHEMA.rangeIncludes])) {
-          for (const actRange of newNode[SCHEMA.rangeIncludes]) {
-            if (!oldNode[SCHEMA.rangeIncludes].includes(actRange)) {
-              // add new entry
-              oldNode[SCHEMA.rangeIncludes].push(actRange);
-            }
-          }
-        }
+        nodeMergeAddIds(oldNode, newNode, SCHEMA.rangeIncludes);
         // soa:superPropertyOf -> add new ids
-        if (!isNil(newNode[SOA.superPropertyOf])) {
-          for (const actProp of newNode[SOA.superPropertyOf]) {
-            if (!oldNode[SOA.superPropertyOf].includes(actProp)) {
-              // add new entry
-              oldNode[SOA.superPropertyOf].push(actProp);
-            }
-          }
-        }
-
+        nodeMergeAddIds(oldNode, newNode, SOA.superPropertyOf);
         if (vocabURL) {
           if (oldNode["vocabURLs"]) {
             if (!oldNode["vocabURLs"].includes(vocabURL)) {
@@ -630,7 +388,6 @@ export class Graph {
           }
         }
       }
-
       return true;
     } catch (e) {
       this.sdoAdapter.onError(e as string);

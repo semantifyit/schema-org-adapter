@@ -163,6 +163,9 @@ export type Vocabulary = {
 };
 
 /** @ignore */
+export type TermMemory = Record<string, VocabularyNode>;
+
+/** @ignore */
 export interface VersionsFile {
   schemaversion: string;
   releaseLog: Record<string, string>;

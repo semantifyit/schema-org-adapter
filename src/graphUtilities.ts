@@ -1,6 +1,7 @@
 import {
   Context,
   LanguageObjectSdoAdapter,
+  TermMemory,
   Vocabulary,
   VocabularyNode,
 } from "./types";
@@ -17,6 +18,7 @@ import {
   cloneJson,
   isArray,
   isLanguageObjectVocab,
+  isNil,
   isObject,
   isString,
   switchIRIProtocol,
@@ -477,6 +479,7 @@ export function checkIfNamespaceFromListIsUsed(
     }
   }
 }
+
 /** @ignore */
 export function getStandardContext(): Context {
   // Simply speaking, a context is used to map terms to IRIs. Terms are case sensitive and any valid string that is not a reserved JSON-LD keyword can be used as a term.
@@ -519,4 +522,180 @@ export function getStandardContext(): Context {
     };
   });
   return standardContext;
+}
+
+/** @ignore
+ * Part C) of the addVocabulary-algorithm
+ * This function is used to extract enumerations and data-types form the class memory and move them to the corresponding memories
+ * */
+export function extractFromClassMemory(
+  classMemory: TermMemory,
+  otherMemory: TermMemory,
+  addGraphNodeFn: (
+    // eslint-disable-next-line no-unused-vars
+    memory: Record<string, VocabularyNode>,
+    // eslint-disable-next-line no-unused-vars
+    newNode: VocabularyNode,
+    // eslint-disable-next-line no-unused-vars
+    vocabURL?: string
+  ) => boolean,
+  vocabURL?: string
+) {
+  let termSwitched;
+  do {
+    termSwitched = false;
+    const classesKeys = Object.keys(classMemory);
+    const otherKeys = Object.keys(otherMemory);
+    for (const actClassKey of classesKeys) {
+      if (classMemory[actClassKey][RDFS.subClassOf] !== undefined) {
+        const subClassArray = classMemory[actClassKey][RDFS.subClassOf];
+        for (const actSubClass of subClassArray) {
+          if (
+            actSubClass === TermTypeIRI.enumeration ||
+            otherKeys.includes(actSubClass)
+          ) {
+            if (classMemory[actClassKey] && !otherMemory[actClassKey]) {
+              termSwitched = true;
+              otherMemory[actClassKey] = cloneJson(classMemory[actClassKey]);
+              delete classMemory[actClassKey];
+            } else if (classMemory[actClassKey] && otherMemory[actClassKey]) {
+              termSwitched = true;
+              // merge
+              addGraphNodeFn(otherMemory, classMemory[actClassKey], vocabURL);
+              delete classMemory[actClassKey];
+            }
+          }
+        }
+      }
+    }
+  } while (termSwitched);
+}
+
+/** @ignore
+ * Part D.1) of the addVocabulary-algorithm
+ * Add link to sub-class for classes and enumerations
+ */
+export function addInheritanceTermsClassAndEnum(
+  memory: TermMemory,
+  enumerationsMemory: TermMemory,
+  subOfProperty: string,
+  superOfProperty: string
+) {
+  const classesKeys = Object.keys(memory);
+  for (const actClassKey of classesKeys) {
+    const superClasses = memory[actClassKey][subOfProperty];
+    // add empty superClassOf if not defined
+    if (!memory[actClassKey][superOfProperty]) {
+      memory[actClassKey][superOfProperty] = [];
+    }
+    for (const actSuperClass of superClasses) {
+      let superClass = memory[actSuperClass];
+      if (!superClass) {
+        superClass = enumerationsMemory[actSuperClass];
+      }
+      if (superClass) {
+        if (superClass[superOfProperty]) {
+          if (!superClass[superOfProperty].includes(actClassKey)) {
+            superClass[superOfProperty].push(actClassKey);
+          }
+        } else {
+          superClass[superOfProperty] = [actClassKey];
+        }
+      }
+    }
+  }
+}
+
+/** @ignore
+ * Part D.2) and D.3) of the addVocabulary-algorithm
+ * Add link to sub-class for classes and enumerations
+ */
+export function addInheritanceTermsDataTypesAndProperties(
+  memory: TermMemory,
+  subOfProperty: string,
+  superOfProperty: string
+) {
+  const dataTypeKeys = Object.keys(memory);
+  for (const actDtKey of dataTypeKeys) {
+    const superClasses = memory[actDtKey][subOfProperty];
+    // add empty superClassOf if not defined
+    if (!memory[actDtKey][superOfProperty]) {
+      memory[actDtKey][superOfProperty] = [];
+    }
+    // add empty subClassOf if not defined
+    if (!superClasses) {
+      memory[actDtKey][subOfProperty] = [];
+    } else {
+      for (const actSuperClass of superClasses) {
+        const superClass = memory[actSuperClass];
+        if (superClass) {
+          if (superClass[superOfProperty]) {
+            if (!superClass[superOfProperty].includes(actDtKey)) {
+              superClass[superOfProperty].push(actDtKey);
+            }
+          } else {
+            superClass[superOfProperty] = [actDtKey];
+          }
+        }
+      }
+    }
+  }
+}
+
+/**
+ * @ignore
+ * Adds an empty array for the given attribute, if it doesnt exist yet
+ */
+export function addEmptyArray(termObject: VocabularyNode, property: string) {
+  if (!termObject[property]) {
+    termObject[property] = [];
+  }
+}
+
+/**
+ * @ignore
+ */
+export function nodeMergeOverwrite(
+  oldNode: VocabularyNode,
+  newNode: VocabularyNode,
+  property: string
+) {
+  if (!isNil(newNode[property])) {
+    oldNode[property] = newNode[property];
+  }
+}
+
+/**
+ * @ignore
+ */
+export function nodeMergeLanguageTerm(
+  oldNode: VocabularyNode,
+  newNode: VocabularyNode,
+  property: string
+) {
+  if (!isNil(newNode[property])) {
+    const langKeys = Object.keys(newNode[property]);
+    // overwrite old one, if there was one
+    for (const actLangKey of langKeys) {
+      oldNode[property][actLangKey] = newNode[property][actLangKey];
+    }
+  }
+}
+
+/**
+ * @ignore
+ */
+export function nodeMergeAddIds(
+  oldNode: VocabularyNode,
+  newNode: VocabularyNode,
+  property: string
+) {
+  if (!isNil(newNode[property])) {
+    for (const arrayElement of newNode[property]) {
+      if (!oldNode[property].includes(arrayElement)) {
+        // add new entry
+        oldNode[property].push(arrayElement);
+      }
+    }
+  }
 }
