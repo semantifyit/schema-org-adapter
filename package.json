@@ -1,12 +1,12 @@
 {
   "name": "schema-org-adapter",
-  "version": "5.0.1",
+  "version": "5.0.2",
   "engines": {
     "node": ">=16.0.0"
   },
   "description": "Fast, simple & flexible API for the Schema.org Vocabulary (and vocabulary extensions!) for Node and Browsers",
-  "main": "lib/index",
-  "types": "lib/index",
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
   "scripts": {
     "buildAll": "npm run-script buildTs && npm run-script buildDist && npm run-script buildDistMinified",
     "watchTs": "tsc -b src --watch",
