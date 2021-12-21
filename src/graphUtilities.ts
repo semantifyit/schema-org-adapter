@@ -24,6 +24,7 @@ import {
   switchIRIProtocol,
 } from "./utilities";
 import jsonld from "jsonld";
+import "core-js/actual/set";
 
 /**
  * curates the language-tagged value for a given term in a given vocabulary node

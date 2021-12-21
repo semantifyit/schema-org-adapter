@@ -8,10 +8,18 @@ Additional documentation is linked at the end of this page.
 
 The [readme](https://github.com/semantifyit/schema-org-adapter#schemaorg-adapter) explains the installation, loading and basic usage of this library. In any case, it is expected that the variable `SOA` references the library.
 
+Node.js
+
 ```javascript
-const SOA = require('schema-org-adapter');
+const { SOA } = require('schema-org-adapter');
 // or
-import SOA from 'schema-org-adapter';
+import { SOA } from 'schema-org-adapter';
+```
+
+Browser
+
+```html
+<script src="/dist/schema-org-adapter.min.js"></script>
 ```
 
 ## Usage

@@ -1,5 +1,6 @@
 import { CacheLiteral, CacheMap } from "./types";
 import { cloneJson } from "./utilities";
+import "core-js/actual/map";
 
 /** @ignore
  * RetrievalMemory is a singleton class that caches retrieved data

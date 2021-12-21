@@ -279,7 +279,7 @@ export function getURLSchemaVersions(commitBase?: string) {
  *
  * @example
  * ```JS
- * const SOA = require("schema-org-adapter");
+ * const { SOA } = require("schema-org-adapter");
  * const schemaUrl = await SOA.constructURLSchemaVocabulary("13.0");
  * // creates following URL pointing to the schema.org vocabulary version 13.0
  * "https://raw.githubusercontent.com/semantifyit/schemaorg/main/data/releases/13.0/schemaorg-all-https.jsonld"
@@ -311,7 +311,7 @@ export async function constructURLSchemaVocabulary(
  *
  * @example
  * ```JS
- * const SOA = require("schema-org-adapter");
+ * const { SOA } = require("schema-org-adapter");
  *
  * // version file needed for the first time -> the file is fetched and then saved in cache
  * let schemaVersions = await SOA.fetchSchemaVersions();
@@ -410,7 +410,7 @@ export async function checkURL(url: string) {
  *
  * @example
  * ```JS
- * const SOA = require("schema-org-adapter");
+ * const { SOA } = require("schema-org-adapter");
  * const latestSchemaVersion = await SOA.getLatestSchemaVersion();
  * // get the latest schema.org vocabulary version identifier
  * "13.0"

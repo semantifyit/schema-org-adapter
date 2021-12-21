@@ -1,3 +1,8 @@
+5.0.4 / 2021-12-21
+==================
+* `schema-org-adapter` now supports node from version 10.
+* Fixed expected import signature for node to a named import: `import { SOA } from 'schema-org-adapter';`
+
 5.0.2 / 2021-12-20
 ==================
 * Added file-endings for `main` and `types` in `package.json` to enable correct import in non-TS environments.

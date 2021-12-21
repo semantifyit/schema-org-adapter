@@ -1,5 +1,5 @@
 import { SDOAdapter } from "../src/SDOAdapter";
-import * as SOA from "../src/index";
+import { SOA } from "../src/index";
 import { isObject } from "../src/utilities";
 import { commit, debugFunc, debugFuncErr } from "./testUtility";
 

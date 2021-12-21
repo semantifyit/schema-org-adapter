@@ -1,3 +1,5 @@
+import "core-js/proposals/object-from-entries";
+
 /** @ignore
  * Namespace URLs
  */
@@ -13,7 +15,7 @@ export const NsUrl = {
 /** @ignore
  * Namespace prefixes
  */
-export const NsPre = {
+const NsPre = {
   xsd: "xsd",
   rdf: "rdf",
   rdfs: "rdfs",

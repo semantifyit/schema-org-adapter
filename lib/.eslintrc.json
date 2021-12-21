@@ -1,33 +1,21 @@
 {
   "plugins": [
-    "jest",
-    "prettier",
-    "@typescript-eslint"
+    "es"
   ],
   "extends": [
-    "plugin:@typescript-eslint/recommended",
-    "prettier",
-    "plugin:jest/recommended"
+    "eslint:recommended",
+    "plugin:es/restrict-to-es2018"
   ],
   "env": {
-    "node": true,
-    "browser": true,
-    "jest": true,
-    "jest/globals": true
+    "node": true
   },
   "root": true,
-  "parser": "@typescript-eslint/parser",
   "parserOptions": {
-    "ecmaVersion": 2020,
-    "project": [
-      "src/tsconfig.json",
-      "tests/tsconfig.json"
-    ],
+    "ecmaVersion": 2018,
     "sourceType": "module"
   },
   "rules": {
     // respect the prettier style guide
-    "prettier/prettier": "error",
     "spaced-comment": [
       "warn",
       "always",
@@ -51,7 +39,6 @@
       }
     ],
     "node/no-unpublished-require": "off",
-    "no-unused-vars": "warn",
-    "@typescript-eslint/ban-ts-comment": "warn"
+    "no-unused-vars": "warn"
   }
 }

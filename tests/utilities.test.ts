@@ -3,7 +3,7 @@ import {
   toAbsoluteIRI,
   toCompactIRI,
 } from "../src/utilities";
-import * as Index from "../src/index";
+import { SOA } from "../src/index";
 import VOC_OBJ_ZOO from "./data/vocabulary-animal.json";
 import VOC_OBJ_SDO_3_7 from "./data/schema-3.7.json";
 import VOC_OBJ_SDO_10 from "./data/schema-10.0.json";
@@ -17,7 +17,7 @@ import {
 import { FilterObject } from "../lib/types";
 
 async function initAdapter() {
-  return await Index.create({
+  return await SOA.create({
     commit: commit,
     onError: debugFuncErr,
     schemaVersion: "latest",

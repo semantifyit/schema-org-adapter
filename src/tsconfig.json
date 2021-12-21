@@ -1,7 +1,8 @@
 {
   "compilerOptions": {
-    "target": "ES6",
-    "module": "CommonJS",
+    "target": "es2018",
+    "lib": ["es2018"],
+    "module": "commonjs",
     "outDir": "../lib/",
     "noImplicitAny": true,
     "sourceMap": true,
@@ -15,7 +16,8 @@
     "strict": true,
     "experimentalDecorators": true,
     "declaration": true,
-    "declarationMap": true
+    "declarationMap": true,
+    "forceConsistentCasingInFileNames": true
   },
   "include": [
     "./**/*.ts"

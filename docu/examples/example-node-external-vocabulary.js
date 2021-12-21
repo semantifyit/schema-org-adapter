@@ -1,4 +1,4 @@
-const SOA = require("../../lib/index"); // run the npm-script "buildTs" to generate js files for this example
+const { SOA } = require("../../lib/index"); // run the npm-script "buildTs" to generate js files for this example
 const VOC_EXAMPLE = require("../../tests/data/vocabulary-animal.json"); // load our external vocabulary
 
 main();

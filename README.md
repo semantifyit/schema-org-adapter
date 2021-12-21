@@ -42,9 +42,9 @@ npm install schema-org-adapter
 Require/import the package:
 
 ```javascript
-const SOA = require('schema-org-adapter');
+const { SOA } = require('schema-org-adapter');
 // or
-import SOA from 'schema-org-adapter';
+import { SOA } from 'schema-org-adapter';
 ```
 
 #### Browser
