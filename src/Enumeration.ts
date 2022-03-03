@@ -3,7 +3,7 @@ import { Class } from "./Class";
 import { Graph } from "./Graph";
 import { isNil } from "./utilities";
 import { FilterObject, ToJsonEnumeration, VocabularyNode } from "./types";
-import { SOA, TermTypeIRI, TermTypeLabel } from "./namespaces";
+import { _SOA, TermTypeIRI, TermTypeLabel } from "./namespaces";
 import { applyFilter } from "./reasoning";
 
 /**
@@ -59,13 +59,13 @@ export class Enumeration extends Class {
    */
   getEnumerationMembers(implicit = true, filter?: FilterObject): string[] {
     const result = [];
-    result.push(...this.getTermObj()[SOA.hasEnumerationMember]);
+    result.push(...this.getTermObj()[_SOA.hasEnumerationMember]);
     if (implicit) {
       const subClasses = this.getSubClasses(true);
       for (const actSubClass of subClasses) {
         const actualEnumeration = this.graph.enumerations[actSubClass];
         if (!isNil(actualEnumeration)) {
-          result.push(...actualEnumeration[SOA.hasEnumerationMember]);
+          result.push(...actualEnumeration[_SOA.hasEnumerationMember]);
         }
       }
     }

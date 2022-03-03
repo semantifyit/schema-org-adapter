@@ -4,7 +4,7 @@ import { Graph } from "./Graph";
 import { cloneJson } from "./utilities";
 import { FilterObject, ToJsonEnumerationMember, VocabularyNode } from "./types";
 import { applyFilter, inferSuperClasses } from "./reasoning";
-import { SOA, TermTypeIRI, TermTypeLabel } from "./namespaces";
+import { _SOA, TermTypeIRI, TermTypeLabel } from "./namespaces";
 
 /**
  * An **EnumerationMember** represents an enumeration instance term. The understanding of SDO-Adapter for Classes, Enumerations and Enumeration Members is described in the {@link Enumeration | Enumeration page}. An EnumerationMember is created with {@link SDOAdapter.getEnumerationMember | SDOAdapter.getEnumerationMember()} and offers the methods described below.
@@ -57,7 +57,7 @@ export class EnumerationMember extends Term {
   getDomainEnumerations(implicit = true, filter?: FilterObject): string[] {
     const enumObj = this.getTermObj();
     let result = [];
-    result.push(...enumObj[SOA.enumerationDomainIncludes]);
+    result.push(...enumObj[_SOA.enumerationDomainIncludes]);
     if (implicit) {
       const domainEnumerationsToCheck = cloneJson(result);
       for (const actDE of domainEnumerationsToCheck) {

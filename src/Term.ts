@@ -2,9 +2,9 @@ import { Graph } from "./Graph";
 import { isNil, isString, toAbsoluteIRI } from "./utilities";
 import { ToJsonTerm, VocabularyNode } from "./types";
 import {
-  DC,
-  RDFS,
-  SCHEMA,
+  _DC,
+  _RDFS,
+  _SCHEMA,
   TermTypeIRIValue,
   TermTypeLabelValue,
 } from "./namespaces";
@@ -149,8 +149,8 @@ export abstract class Term {
    */
   getVocabulary(): string | null {
     const termObj = this.getTermObj();
-    if (!isNil(termObj[SCHEMA.isPartOf])) {
-      return termObj[SCHEMA.isPartOf];
+    if (!isNil(termObj[_SCHEMA.isPartOf])) {
+      return termObj[_SCHEMA.isPartOf];
     }
     return null;
   }
@@ -170,10 +170,10 @@ export abstract class Term {
    */
   getSource(): string | string[] | null {
     const termObj = this.getTermObj();
-    if (!isNil(termObj[DC.source])) {
-      return termObj[DC.source];
-    } else if (!isNil(termObj[SCHEMA.source])) {
-      return termObj[SCHEMA.source];
+    if (!isNil(termObj[_DC.source])) {
+      return termObj[_DC.source];
+    } else if (!isNil(termObj[_SCHEMA.source])) {
+      return termObj[_SCHEMA.source];
     }
     return null;
   }
@@ -193,8 +193,8 @@ export abstract class Term {
    */
   isSupersededBy(): string | null {
     const termObj = this.getTermObj();
-    if (isString(termObj[SCHEMA.supersededBy])) {
-      return termObj[SCHEMA.supersededBy];
+    if (isString(termObj[_SCHEMA.supersededBy])) {
+      return termObj[_SCHEMA.supersededBy];
     }
     return null;
   }
@@ -214,7 +214,7 @@ export abstract class Term {
    * @returns  The name of this Term
    */
   getName(language = "en"): string | null {
-    const termObj = this.getTermObj()[RDFS.label];
+    const termObj = this.getTermObj()[_RDFS.label];
     if (isNil(termObj) || isNil(termObj[language])) {
       return null;
     }
@@ -236,7 +236,7 @@ export abstract class Term {
    * @returns The description of this Term
    */
   getDescription(language = "en"): string | null {
-    const termObj = this.getTermObj()[RDFS.comment];
+    const termObj = this.getTermObj()[_RDFS.comment];
     if (isNil(termObj) || isNil(termObj[language])) {
       return null;
     }

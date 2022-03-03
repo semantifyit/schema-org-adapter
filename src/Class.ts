@@ -10,8 +10,8 @@ import {
   inferSuperClasses,
 } from "./reasoning";
 import {
-  RDFS,
-  SOA,
+  _RDFS,
+  _SOA,
   TermTypeIRI,
   TermTypeIRIValue,
   TermTypeLabel,
@@ -73,12 +73,12 @@ export class Class extends Term {
   getProperties(implicit = true, filter?: FilterObject): string[] {
     const classObj = this.getTermObj();
     const result = [];
-    result.push(...classObj[SOA.hasProperty]);
+    result.push(...classObj[_SOA.hasProperty]);
     if (implicit) {
       // add properties from super-classes
       result.push(
         ...inferPropertiesFromSuperClasses(
-          classObj[RDFS.subClassOf],
+          classObj[_RDFS.subClassOf],
           this.graph
         )
       );
@@ -108,7 +108,7 @@ export class Class extends Term {
     if (implicit) {
       result.push(...inferSuperClasses(this.IRI, this.graph));
     } else {
-      result.push(...classObj[RDFS.subClassOf]);
+      result.push(...classObj[_RDFS.subClassOf]);
     }
     return applyFilter({ data: result, filter, graph: this.graph });
   }
@@ -134,7 +134,7 @@ export class Class extends Term {
     if (implicit) {
       result.push(...inferSubClasses(this.IRI, this.graph));
     } else {
-      result.push(...classObj[SOA.superClassOf]);
+      result.push(...classObj[_SOA.superClassOf]);
     }
     return applyFilter({ data: result, filter, graph: this.graph });
   }
@@ -164,7 +164,7 @@ export class Class extends Term {
     if (implicit) {
       result.push(...inferRangeOf(this.IRI, this.graph));
     } else {
-      result.push(...this.getTermObj()[SOA.isRangeOf]);
+      result.push(...this.getTermObj()[_SOA.isRangeOf]);
     }
     return applyFilter({ data: result, filter, graph: this.graph });
   }

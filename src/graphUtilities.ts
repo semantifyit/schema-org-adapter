@@ -6,11 +6,11 @@ import {
   VocabularyNode,
 } from "./types";
 import {
-  DC,
+  _DC,
   NsUrl,
-  RDFS,
-  SCHEMA,
-  SOA,
+  _RDFS,
+  _SCHEMA,
+  _SOA,
   TermTypeIRI,
   TermTypeIRIValue,
 } from "./namespaces";
@@ -115,34 +115,34 @@ export function curateVocabNode(
   vocabNode: VocabularyNode,
   vocabularies: Record<string, string>
 ): VocabularyNode {
-  curateLanguageTerm(vocabNode, RDFS.comment);
-  curateLanguageTerm(vocabNode, RDFS.label);
+  curateLanguageTerm(vocabNode, _RDFS.comment);
+  curateLanguageTerm(vocabNode, _RDFS.label);
   // terms with an array as default
-  curateRelationshipTermArray(vocabNode, RDFS.subClassOf, TermTypeIRI.class);
+  curateRelationshipTermArray(vocabNode, _RDFS.subClassOf, TermTypeIRI.class);
   curateRelationshipTermArray(
     vocabNode,
-    RDFS.subPropertyOf,
+    _RDFS.subPropertyOf,
     TermTypeIRI.property
   );
   curateRelationshipTermArray(
     vocabNode,
-    SCHEMA.domainIncludes,
+    _SCHEMA.domainIncludes,
     TermTypeIRI.property
   );
   curateRelationshipTermArray(
     vocabNode,
-    SCHEMA.rangeIncludes,
+    _SCHEMA.rangeIncludes,
     TermTypeIRI.property
   );
   // terms with a string | null as default
   if (
-    vocabNode[SCHEMA.inverseOf] === undefined &&
+    vocabNode[_SCHEMA.inverseOf] === undefined &&
     vocabNode["@type"] === TermTypeIRI.property
   ) {
-    vocabNode[SCHEMA.inverseOf] = null;
+    vocabNode[_SCHEMA.inverseOf] = null;
   }
   // if no schema:isPartOf property is stated yet (e.g. "https://pending.schema.org"), we detect the vocabulary used from the context, and put the corresponding (curated) IRI as value for this property (e.g. "https://schema.org")
-  if (!isString(vocabNode[SCHEMA.isPartOf])) {
+  if (!isString(vocabNode[_SCHEMA.isPartOf])) {
     const vocabKeys = Object.keys(vocabularies);
     // e.g. schema
     let vocab = vocabKeys.find(
@@ -161,7 +161,7 @@ export function curateVocabNode(
         }
       } while (newChange);
       // e.g. https://schema.org
-      vocabNode[SCHEMA.isPartOf] = vocab;
+      vocabNode[_SCHEMA.isPartOf] = vocab;
     }
   }
   return vocabNode;
@@ -374,7 +374,7 @@ export function discoverEquateNamespaces(
       );
       // super class
       checkIfNamespaceFromListIsUsed(
-        vocabNode[RDFS.subClassOf],
+        vocabNode[_RDFS.subClassOf],
         protocolSwitchedNamespaces,
         result
       );
@@ -385,7 +385,7 @@ export function discoverEquateNamespaces(
       );
       // domain class
       checkIfNamespaceFromListIsUsed(
-        vocabNode[SCHEMA.domainIncludes],
+        vocabNode[_SCHEMA.domainIncludes],
         protocolSwitchedNamespaces,
         result
       );
@@ -401,7 +401,7 @@ export function discoverEquateNamespaces(
       );
       // range class
       checkIfNamespaceFromListIsUsed(
-        vocabNode[SCHEMA.rangeIncludes],
+        vocabNode[_SCHEMA.rangeIncludes],
         protocolSwitchedNamespaces,
         result
       );
@@ -417,7 +417,7 @@ export function discoverEquateNamespaces(
       );
       // super property
       checkIfNamespaceFromListIsUsed(
-        vocabNode[RDFS.subPropertyOf],
+        vocabNode[_RDFS.subPropertyOf],
         protocolSwitchedNamespaces,
         result
       );
@@ -428,7 +428,7 @@ export function discoverEquateNamespaces(
       );
       // inverse property
       checkIfNamespaceFromListIsUsed(
-        vocabNode[SCHEMA.inverseOf],
+        vocabNode[_SCHEMA.inverseOf],
         protocolSwitchedNamespaces,
         result
       );
@@ -500,21 +500,21 @@ export function getStandardContext(): Context {
     soa: NsUrl.soa,
   };
   const idEntries = [
-    SOA.superClassOf,
-    SOA.superPropertyOf,
-    SOA.hasProperty,
-    SOA.isRangeOf,
-    SOA.hasEnumerationMember,
-    SOA.enumerationDomainIncludes,
-    RDFS.subClassOf,
-    RDFS.subPropertyOf,
-    SCHEMA.isPartOf,
-    SCHEMA.domainIncludes,
-    SCHEMA.rangeIncludes,
-    SCHEMA.supersededBy,
-    SCHEMA.inverseOf,
-    SCHEMA.source,
-    DC.source,
+    _SOA.superClassOf,
+    _SOA.superPropertyOf,
+    _SOA.hasProperty,
+    _SOA.isRangeOf,
+    _SOA.hasEnumerationMember,
+    _SOA.enumerationDomainIncludes,
+    _RDFS.subClassOf,
+    _RDFS.subPropertyOf,
+    _SCHEMA.isPartOf,
+    _SCHEMA.domainIncludes,
+    _SCHEMA.rangeIncludes,
+    _SCHEMA.supersededBy,
+    _SCHEMA.inverseOf,
+    _SCHEMA.source,
+    _DC.source,
   ];
   idEntries.map((el) => {
     standardContext[el] = {
@@ -548,8 +548,8 @@ export function extractFromClassMemory(
     const classesKeys = Object.keys(classMemory);
     const otherKeys = Object.keys(otherMemory);
     for (const actClassKey of classesKeys) {
-      if (classMemory[actClassKey][RDFS.subClassOf] !== undefined) {
-        const subClassArray = classMemory[actClassKey][RDFS.subClassOf];
+      if (classMemory[actClassKey][_RDFS.subClassOf] !== undefined) {
+        const subClassArray = classMemory[actClassKey][_RDFS.subClassOf];
         for (const actSubClass of subClassArray) {
           if (
             actSubClass === TermTypeIRI.enumeration ||

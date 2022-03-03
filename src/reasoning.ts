@@ -1,6 +1,6 @@
 import { Graph } from "./Graph";
 import { cloneJson, toArray, uniquifyArray } from "./utilities";
-import { RDFS, SOA, TermTypeLabel, TermTypeLabelValue } from "./namespaces";
+import { _RDFS, _SOA, TermTypeLabel, TermTypeLabelValue } from "./namespaces";
 import { FilterParamObj } from "./types";
 
 // This file offers reasoning-related functions that can be used by the other js-classes of this library
@@ -106,11 +106,11 @@ export function inferPropertiesFromSuperClasses(
     const superClassObj =
       graph.classes[superClass] || graph.enumerations[superClass];
     if (superClassObj) {
-      result.push(...superClassObj[SOA.hasProperty]);
-      if (superClassObj[RDFS.subClassOf].length !== 0) {
+      result.push(...superClassObj[_SOA.hasProperty]);
+      if (superClassObj[_RDFS.subClassOf].length !== 0) {
         result.push(
           ...inferPropertiesFromSuperClasses(
-            superClassObj[RDFS.subClassOf],
+            superClassObj[_RDFS.subClassOf],
             graph
           )
         );
@@ -131,7 +131,7 @@ export function inferSuperClasses(classIRI: string, graph: Graph): string[] {
   let result = [];
   const classObj = graph.classes[classIRI] || graph.enumerations[classIRI];
   if (classObj) {
-    result.push(...classObj[RDFS.subClassOf]);
+    result.push(...classObj[_RDFS.subClassOf]);
     let addition = cloneJson(result); // make a copy
     do {
       let newAddition = [];
@@ -139,7 +139,7 @@ export function inferSuperClasses(classIRI: string, graph: Graph): string[] {
         const parentClassObj =
           graph.classes[curAdd] || graph.enumerations[curAdd];
         if (parentClassObj) {
-          newAddition.push(...parentClassObj[RDFS.subClassOf]);
+          newAddition.push(...parentClassObj[_RDFS.subClassOf]);
         }
       }
       newAddition = uniquifyArray(newAddition);
@@ -162,7 +162,7 @@ export function inferSubClasses(classIRI: string, graph: Graph): string[] {
   let result = [];
   const classObj = graph.classes[classIRI] || graph.enumerations[classIRI];
   if (classObj) {
-    result.push(...classObj[SOA.superClassOf]);
+    result.push(...classObj[_SOA.superClassOf]);
     let addition = cloneJson(result); // make a copy
     do {
       let newAddition = [];
@@ -170,7 +170,7 @@ export function inferSubClasses(classIRI: string, graph: Graph): string[] {
         const parentClassObj =
           graph.classes[curAdd] || graph.enumerations[curAdd];
         if (parentClassObj) {
-          newAddition.push(...parentClassObj[SOA.superClassOf]);
+          newAddition.push(...parentClassObj[_SOA.superClassOf]);
         }
       }
       newAddition = uniquifyArray(newAddition);
@@ -196,14 +196,14 @@ export function inferSuperDataTypes(
   let result = [];
   const dataTypeObj = graph.dataTypes[dataTypeIRI];
   if (dataTypeObj) {
-    result.push(...dataTypeObj[RDFS.subClassOf]);
+    result.push(...dataTypeObj[_RDFS.subClassOf]);
     let addition = cloneJson(result); // make a copy
     do {
       let newAddition = [];
       for (const curAdd of addition) {
         const parentDataTypeObj = graph.dataTypes[curAdd];
         if (parentDataTypeObj) {
-          newAddition.push(...parentDataTypeObj[RDFS.subClassOf]);
+          newAddition.push(...parentDataTypeObj[_RDFS.subClassOf]);
         }
       }
       newAddition = uniquifyArray(newAddition);
@@ -226,14 +226,14 @@ export function inferSubDataTypes(dataTypeIRI: string, graph: Graph): string[] {
   let result = [];
   const dataTypeObj = graph.dataTypes[dataTypeIRI];
   if (dataTypeObj) {
-    result.push(...dataTypeObj[SOA.superClassOf]);
+    result.push(...dataTypeObj[_SOA.superClassOf]);
     let addition = cloneJson(result); // make a copy
     do {
       let newAddition = [];
       for (const curAdd of addition) {
         const childDataTypeObj = graph.dataTypes[curAdd];
         if (childDataTypeObj) {
-          newAddition.push(...childDataTypeObj[SOA.superClassOf]);
+          newAddition.push(...childDataTypeObj[_SOA.superClassOf]);
         }
       }
       newAddition = uniquifyArray(newAddition);
@@ -259,14 +259,14 @@ export function inferSuperProperties(
   let result = [];
   const propertyObj = graph.properties[propertyIRI];
   if (propertyObj) {
-    result.push(...propertyObj[RDFS.subPropertyOf]);
+    result.push(...propertyObj[_RDFS.subPropertyOf]);
     let addition = cloneJson(result); // make a copy
     do {
       let newAddition = [];
       for (const curAdd of addition) {
         const parentPropertyObj = graph.properties[curAdd];
         if (parentPropertyObj) {
-          newAddition.push(...parentPropertyObj[RDFS.subPropertyOf]);
+          newAddition.push(...parentPropertyObj[_RDFS.subPropertyOf]);
         }
       }
       newAddition = uniquifyArray(newAddition);
@@ -292,14 +292,14 @@ export function inferSubProperties(
   let result = [];
   const propertyObj = graph.properties[propertyIRI];
   if (propertyObj) {
-    result.push(...propertyObj[SOA.superPropertyOf]);
+    result.push(...propertyObj[_SOA.superPropertyOf]);
     let addition = cloneJson(result); // make a copy
     do {
       let newAddition = [];
       for (const curAdd of addition) {
         const parentPropertyObj = graph.properties[curAdd];
         if (parentPropertyObj) {
-          newAddition.push(...parentPropertyObj[SOA.superPropertyOf]);
+          newAddition.push(...parentPropertyObj[_SOA.superPropertyOf]);
         }
       }
       newAddition = uniquifyArray(newAddition);
@@ -322,24 +322,24 @@ export function inferRangeOf(rangeIRI: string, graph: Graph): string[] {
   const classObj = graph.classes[rangeIRI] || graph.enumerations[rangeIRI];
   const result = [];
   if (classObj) {
-    result.push(...classObj[SOA.isRangeOf]);
+    result.push(...classObj[_SOA.isRangeOf]);
     const superClasses = inferSuperClasses(rangeIRI, graph);
     for (const superClass of superClasses) {
       const superClassObj =
         graph.classes[superClass] || graph.enumerations[superClass];
       if (superClassObj) {
-        result.push(...superClassObj[SOA.isRangeOf]);
+        result.push(...superClassObj[_SOA.isRangeOf]);
       }
     }
   } else {
     const dataTypeObj = graph.dataTypes[rangeIRI];
     if (dataTypeObj) {
-      result.push(...dataTypeObj[SOA.isRangeOf]);
+      result.push(...dataTypeObj[_SOA.isRangeOf]);
       const superDataTypes = inferSuperDataTypes(rangeIRI, graph);
       for (const superDataType of superDataTypes) {
         const superDataTypeObj = graph.dataTypes[superDataType];
         if (superDataTypeObj) {
-          result.push(...superDataTypeObj[SOA.isRangeOf]);
+          result.push(...superDataTypeObj[_SOA.isRangeOf]);
         }
       }
     }

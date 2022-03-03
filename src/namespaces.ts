@@ -49,10 +49,10 @@ function toCompactUri<T extends string>(
 // Create term records for the different namespace prefixes
 
 /** @ignore */
-export const RDF = toCompactUri(NsPre.rdf, ["Property"]);
+export const _RDF = toCompactUri(NsPre.rdf, ["Property"]);
 
 /** @ignore */
-export const RDFS = toCompactUri("rdfs", [
+export const _RDFS = toCompactUri("rdfs", [
   "Class",
   "subClassOf",
   "subPropertyOf",
@@ -61,7 +61,7 @@ export const RDFS = toCompactUri("rdfs", [
 ]);
 
 /** @ignore */
-export const SOA = toCompactUri("soa", [
+export const _SOA = toCompactUri("soa", [
   "EnumerationMember",
   "superClassOf",
   "superPropertyOf",
@@ -72,7 +72,7 @@ export const SOA = toCompactUri("soa", [
 ]);
 
 /** @ignore */
-export const SCHEMA = toCompactUri("schema", [
+export const _SCHEMA = toCompactUri("schema", [
   "DataType",
   "Enumeration",
   "isPartOf",
@@ -85,11 +85,11 @@ export const SCHEMA = toCompactUri("schema", [
 ]);
 
 /** @ignore */
-export const DC = toCompactUri("dc", ["source"]);
+export const _DC = toCompactUri("dc", ["source"]);
 // actually, we dont need xsd for the sdo adapter. Although it is also not being used in the schema.org vocabularies either, it is listed in their context. Therefore, we treat this namespace as it was used - we just add some terms for xsd data types in the following
 
 /** @ignore */
-export const XSD = toCompactUri("xsd", [
+export const _XSD = toCompactUri("xsd", [
   "string",
   "decimal",
   "integer",

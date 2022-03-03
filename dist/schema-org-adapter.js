@@ -17,9 +17,9 @@ class Class extends Term_1.Term {
     getProperties(implicit = true, filter) {
         const classObj = this.getTermObj();
         const result = [];
-        result.push(...classObj[namespaces_1.SOA.hasProperty]);
+        result.push(...classObj[namespaces_1._SOA.hasProperty]);
         if (implicit) {
-            result.push(...(0, reasoning_1.inferPropertiesFromSuperClasses)(classObj[namespaces_1.RDFS.subClassOf], this.graph));
+            result.push(...(0, reasoning_1.inferPropertiesFromSuperClasses)(classObj[namespaces_1._RDFS.subClassOf], this.graph));
         }
         return (0, reasoning_1.applyFilter)({ data: result, filter, graph: this.graph });
     }
@@ -30,7 +30,7 @@ class Class extends Term_1.Term {
             result.push(...(0, reasoning_1.inferSuperClasses)(this.IRI, this.graph));
         }
         else {
-            result.push(...classObj[namespaces_1.RDFS.subClassOf]);
+            result.push(...classObj[namespaces_1._RDFS.subClassOf]);
         }
         return (0, reasoning_1.applyFilter)({ data: result, filter, graph: this.graph });
     }
@@ -41,7 +41,7 @@ class Class extends Term_1.Term {
             result.push(...(0, reasoning_1.inferSubClasses)(this.IRI, this.graph));
         }
         else {
-            result.push(...classObj[namespaces_1.SOA.superClassOf]);
+            result.push(...classObj[namespaces_1._SOA.superClassOf]);
         }
         return (0, reasoning_1.applyFilter)({ data: result, filter, graph: this.graph });
     }
@@ -51,7 +51,7 @@ class Class extends Term_1.Term {
             result.push(...(0, reasoning_1.inferRangeOf)(this.IRI, this.graph));
         }
         else {
-            result.push(...this.getTermObj()[namespaces_1.SOA.isRangeOf]);
+            result.push(...this.getTermObj()[namespaces_1._SOA.isRangeOf]);
         }
         return (0, reasoning_1.applyFilter)({ data: result, filter, graph: this.graph });
     }
@@ -92,7 +92,7 @@ class DataType extends Term_1.Term {
             result.push(...(0, reasoning_1.inferSuperDataTypes)(this.IRI, this.graph));
         }
         else {
-            result.push(...dataTypeObj[namespaces_1.RDFS.subClassOf]);
+            result.push(...dataTypeObj[namespaces_1._RDFS.subClassOf]);
         }
         return (0, reasoning_1.applyFilter)({ data: result, filter, graph: this.graph });
     }
@@ -103,7 +103,7 @@ class DataType extends Term_1.Term {
             result.push(...(0, reasoning_1.inferSubDataTypes)(this.IRI, this.graph));
         }
         else {
-            result.push(...dataTypeObj[namespaces_1.SOA.superClassOf]);
+            result.push(...dataTypeObj[namespaces_1._SOA.superClassOf]);
         }
         return (0, reasoning_1.applyFilter)({ data: result, filter, graph: this.graph });
     }
@@ -113,7 +113,7 @@ class DataType extends Term_1.Term {
             result.push(...(0, reasoning_1.inferRangeOf)(this.IRI, this.graph));
         }
         else {
-            result.push(...this.getTermObj()[namespaces_1.SOA.isRangeOf]);
+            result.push(...this.getTermObj()[namespaces_1._SOA.isRangeOf]);
         }
         return (0, reasoning_1.applyFilter)({ data: result, filter, graph: this.graph });
     }
@@ -149,13 +149,13 @@ class Enumeration extends Class_1.Class {
     }
     getEnumerationMembers(implicit = true, filter) {
         const result = [];
-        result.push(...this.getTermObj()[namespaces_1.SOA.hasEnumerationMember]);
+        result.push(...this.getTermObj()[namespaces_1._SOA.hasEnumerationMember]);
         if (implicit) {
             const subClasses = this.getSubClasses(true);
             for (const actSubClass of subClasses) {
                 const actualEnumeration = this.graph.enumerations[actSubClass];
                 if (!(0, utilities_1.isNil)(actualEnumeration)) {
-                    result.push(...actualEnumeration[namespaces_1.SOA.hasEnumerationMember]);
+                    result.push(...actualEnumeration[namespaces_1._SOA.hasEnumerationMember]);
                 }
             }
         }
@@ -192,7 +192,7 @@ class EnumerationMember extends Term_1.Term {
     getDomainEnumerations(implicit = true, filter) {
         const enumObj = this.getTermObj();
         let result = [];
-        result.push(...enumObj[namespaces_1.SOA.enumerationDomainIncludes]);
+        result.push(...enumObj[namespaces_1._SOA.enumerationDomainIncludes]);
         if (implicit) {
             const domainEnumerationsToCheck = (0, utilities_1.cloneJson)(result);
             for (const actDE of domainEnumerationsToCheck) {
@@ -304,28 +304,28 @@ class Graph {
             (0, graphUtilities_1.extractFromClassMemory)(this.classes, this.enumerations, this.addGraphNode, vocabURL);
             (0, graphUtilities_1.extractFromClassMemory)(this.classes, this.dataTypes, this.addGraphNode, vocabURL);
             Object.values(this.dataTypes).forEach((el) => (el["@type"] = namespaces_1.TermTypeIRI.dataType));
-            (0, graphUtilities_1.addInheritanceTermsClassAndEnum)(this.classes, this.enumerations, namespaces_1.RDFS.subClassOf, namespaces_1.SOA.superClassOf);
-            (0, graphUtilities_1.addInheritanceTermsClassAndEnum)(this.enumerations, this.enumerations, namespaces_1.RDFS.subClassOf, namespaces_1.SOA.superClassOf);
-            (0, graphUtilities_1.addInheritanceTermsDataTypesAndProperties)(this.dataTypes, namespaces_1.RDFS.subClassOf, namespaces_1.SOA.superClassOf);
-            (0, graphUtilities_1.addInheritanceTermsDataTypesAndProperties)(this.properties, namespaces_1.RDFS.subPropertyOf, namespaces_1.SOA.superPropertyOf);
+            (0, graphUtilities_1.addInheritanceTermsClassAndEnum)(this.classes, this.enumerations, namespaces_1._RDFS.subClassOf, namespaces_1._SOA.superClassOf);
+            (0, graphUtilities_1.addInheritanceTermsClassAndEnum)(this.enumerations, this.enumerations, namespaces_1._RDFS.subClassOf, namespaces_1._SOA.superClassOf);
+            (0, graphUtilities_1.addInheritanceTermsDataTypesAndProperties)(this.dataTypes, namespaces_1._RDFS.subClassOf, namespaces_1._SOA.superClassOf);
+            (0, graphUtilities_1.addInheritanceTermsDataTypesAndProperties)(this.properties, namespaces_1._RDFS.subPropertyOf, namespaces_1._SOA.superPropertyOf);
             Object.values(this.classes).forEach((el) => {
-                (0, graphUtilities_1.addEmptyArray)(el, namespaces_1.SOA.hasProperty);
-                (0, graphUtilities_1.addEmptyArray)(el, namespaces_1.SOA.isRangeOf);
+                (0, graphUtilities_1.addEmptyArray)(el, namespaces_1._SOA.hasProperty);
+                (0, graphUtilities_1.addEmptyArray)(el, namespaces_1._SOA.isRangeOf);
             });
             Object.values(this.enumerations).forEach((el) => {
-                (0, graphUtilities_1.addEmptyArray)(el, namespaces_1.SOA.hasEnumerationMember);
-                (0, graphUtilities_1.addEmptyArray)(el, namespaces_1.SOA.isRangeOf);
-                (0, graphUtilities_1.addEmptyArray)(el, namespaces_1.SOA.hasProperty);
+                (0, graphUtilities_1.addEmptyArray)(el, namespaces_1._SOA.hasEnumerationMember);
+                (0, graphUtilities_1.addEmptyArray)(el, namespaces_1._SOA.isRangeOf);
+                (0, graphUtilities_1.addEmptyArray)(el, namespaces_1._SOA.hasProperty);
             });
             Object.values(this.dataTypes).forEach((el) => {
-                (0, graphUtilities_1.addEmptyArray)(el, namespaces_1.SOA.isRangeOf);
+                (0, graphUtilities_1.addEmptyArray)(el, namespaces_1._SOA.isRangeOf);
             });
             Object.values(this.enumerationMembers).forEach((el) => {
-                (0, graphUtilities_1.addEmptyArray)(el, namespaces_1.SOA.enumerationDomainIncludes);
+                (0, graphUtilities_1.addEmptyArray)(el, namespaces_1._SOA.enumerationDomainIncludes);
             });
             const propertyKeys = Object.keys(this.properties);
             for (const actPropKey of propertyKeys) {
-                const domainIncludesArray = this.properties[actPropKey][namespaces_1.SCHEMA.domainIncludes];
+                const domainIncludesArray = this.properties[actPropKey][namespaces_1._SCHEMA.domainIncludes];
                 if ((0, utilities_1.isArray)(domainIncludesArray)) {
                     for (const actDomain of domainIncludesArray) {
                         let target = this.classes[actDomain];
@@ -333,22 +333,22 @@ class Graph {
                             target = this.enumerations[actDomain];
                         }
                         if (target &&
-                            (0, utilities_1.isArray)(target[namespaces_1.SOA.hasProperty]) &&
-                            !target[namespaces_1.SOA.hasProperty].includes(actPropKey)) {
-                            target[namespaces_1.SOA.hasProperty].push(actPropKey);
+                            (0, utilities_1.isArray)(target[namespaces_1._SOA.hasProperty]) &&
+                            !target[namespaces_1._SOA.hasProperty].includes(actPropKey)) {
+                            target[namespaces_1._SOA.hasProperty].push(actPropKey);
                         }
                     }
                 }
-                const rangeIncludesArray = this.properties[actPropKey][namespaces_1.SCHEMA.rangeIncludes];
+                const rangeIncludesArray = this.properties[actPropKey][namespaces_1._SCHEMA.rangeIncludes];
                 if ((0, utilities_1.isArray)(rangeIncludesArray)) {
                     for (const actRange of rangeIncludesArray) {
                         const target = this.classes[actRange] ||
                             this.enumerations[actRange] ||
                             this.dataTypes[actRange];
                         if (target &&
-                            (0, utilities_1.isArray)(target[namespaces_1.SOA.isRangeOf]) &&
-                            !target[namespaces_1.SOA.isRangeOf].includes(actPropKey)) {
-                            target[namespaces_1.SOA.isRangeOf].push(actPropKey);
+                            (0, utilities_1.isArray)(target[namespaces_1._SOA.isRangeOf]) &&
+                            !target[namespaces_1._SOA.isRangeOf].includes(actPropKey)) {
+                            target[namespaces_1._SOA.isRangeOf].push(actPropKey);
                         }
                     }
                 }
@@ -363,14 +363,14 @@ class Graph {
                 for (const actEnumMemType of enumMemTypeArray) {
                     const target = this.enumerations[actEnumMemType];
                     if (target &&
-                        (0, utilities_1.isArray)(target[namespaces_1.SOA.hasEnumerationMember]) &&
-                        !target[namespaces_1.SOA.hasEnumerationMember].includes(actEnumMemKey)) {
-                        target[namespaces_1.SOA.hasEnumerationMember].push(actEnumMemKey);
-                        if ((0, utilities_1.isArray)(enumMem[namespaces_1.SOA.enumerationDomainIncludes])) {
-                            enumMem[namespaces_1.SOA.enumerationDomainIncludes].push(actEnumMemType);
+                        (0, utilities_1.isArray)(target[namespaces_1._SOA.hasEnumerationMember]) &&
+                        !target[namespaces_1._SOA.hasEnumerationMember].includes(actEnumMemKey)) {
+                        target[namespaces_1._SOA.hasEnumerationMember].push(actEnumMemKey);
+                        if ((0, utilities_1.isArray)(enumMem[namespaces_1._SOA.enumerationDomainIncludes])) {
+                            enumMem[namespaces_1._SOA.enumerationDomainIncludes].push(actEnumMemType);
                         }
                         else {
-                            enumMem[namespaces_1.SOA.enumerationDomainIncludes] = [actEnumMemType];
+                            enumMem[namespaces_1._SOA.enumerationDomainIncludes] = [actEnumMemType];
                         }
                     }
                 }
@@ -392,23 +392,23 @@ class Graph {
             }
             else {
                 const oldNode = memory[newNode["@id"]];
-                (0, graphUtilities_1.nodeMergeOverwrite)(oldNode, newNode, namespaces_1.SCHEMA.isPartOf);
-                (0, graphUtilities_1.nodeMergeOverwrite)(oldNode, newNode, namespaces_1.DC.source);
-                (0, graphUtilities_1.nodeMergeOverwrite)(oldNode, newNode, namespaces_1.SCHEMA.source);
-                (0, graphUtilities_1.nodeMergeOverwrite)(oldNode, newNode, namespaces_1.SCHEMA.category);
-                (0, graphUtilities_1.nodeMergeOverwrite)(oldNode, newNode, namespaces_1.SCHEMA.supersededBy);
-                (0, graphUtilities_1.nodeMergeLanguageTerm)(oldNode, newNode, namespaces_1.RDFS.label);
-                (0, graphUtilities_1.nodeMergeLanguageTerm)(oldNode, newNode, namespaces_1.RDFS.comment);
-                (0, graphUtilities_1.nodeMergeAddIds)(oldNode, newNode, namespaces_1.RDFS.subClassOf);
-                (0, graphUtilities_1.nodeMergeAddIds)(oldNode, newNode, namespaces_1.SOA.superClassOf);
-                (0, graphUtilities_1.nodeMergeAddIds)(oldNode, newNode, namespaces_1.SOA.hasProperty);
-                (0, graphUtilities_1.nodeMergeAddIds)(oldNode, newNode, namespaces_1.SOA.isRangeOf);
-                (0, graphUtilities_1.nodeMergeAddIds)(oldNode, newNode, namespaces_1.SOA.enumerationDomainIncludes);
-                (0, graphUtilities_1.nodeMergeAddIds)(oldNode, newNode, namespaces_1.SOA.hasEnumerationMember);
-                (0, graphUtilities_1.nodeMergeAddIds)(oldNode, newNode, namespaces_1.RDFS.subPropertyOf);
-                (0, graphUtilities_1.nodeMergeAddIds)(oldNode, newNode, namespaces_1.SCHEMA.domainIncludes);
-                (0, graphUtilities_1.nodeMergeAddIds)(oldNode, newNode, namespaces_1.SCHEMA.rangeIncludes);
-                (0, graphUtilities_1.nodeMergeAddIds)(oldNode, newNode, namespaces_1.SOA.superPropertyOf);
+                (0, graphUtilities_1.nodeMergeOverwrite)(oldNode, newNode, namespaces_1._SCHEMA.isPartOf);
+                (0, graphUtilities_1.nodeMergeOverwrite)(oldNode, newNode, namespaces_1._DC.source);
+                (0, graphUtilities_1.nodeMergeOverwrite)(oldNode, newNode, namespaces_1._SCHEMA.source);
+                (0, graphUtilities_1.nodeMergeOverwrite)(oldNode, newNode, namespaces_1._SCHEMA.category);
+                (0, graphUtilities_1.nodeMergeOverwrite)(oldNode, newNode, namespaces_1._SCHEMA.supersededBy);
+                (0, graphUtilities_1.nodeMergeLanguageTerm)(oldNode, newNode, namespaces_1._RDFS.label);
+                (0, graphUtilities_1.nodeMergeLanguageTerm)(oldNode, newNode, namespaces_1._RDFS.comment);
+                (0, graphUtilities_1.nodeMergeAddIds)(oldNode, newNode, namespaces_1._RDFS.subClassOf);
+                (0, graphUtilities_1.nodeMergeAddIds)(oldNode, newNode, namespaces_1._SOA.superClassOf);
+                (0, graphUtilities_1.nodeMergeAddIds)(oldNode, newNode, namespaces_1._SOA.hasProperty);
+                (0, graphUtilities_1.nodeMergeAddIds)(oldNode, newNode, namespaces_1._SOA.isRangeOf);
+                (0, graphUtilities_1.nodeMergeAddIds)(oldNode, newNode, namespaces_1._SOA.enumerationDomainIncludes);
+                (0, graphUtilities_1.nodeMergeAddIds)(oldNode, newNode, namespaces_1._SOA.hasEnumerationMember);
+                (0, graphUtilities_1.nodeMergeAddIds)(oldNode, newNode, namespaces_1._RDFS.subPropertyOf);
+                (0, graphUtilities_1.nodeMergeAddIds)(oldNode, newNode, namespaces_1._SCHEMA.domainIncludes);
+                (0, graphUtilities_1.nodeMergeAddIds)(oldNode, newNode, namespaces_1._SCHEMA.rangeIncludes);
+                (0, graphUtilities_1.nodeMergeAddIds)(oldNode, newNode, namespaces_1._SOA.superPropertyOf);
                 if (vocabURL) {
                     if (oldNode["vocabURLs"]) {
                         if (!oldNode["vocabURLs"].includes(vocabURL)) {
@@ -633,10 +633,10 @@ class Graph {
         return null;
     }
     containsLabel(termObj, label) {
-        if (termObj && (0, utilities_1.isObject)(termObj[namespaces_1.RDFS.label])) {
-            const langKeys = Object.keys(termObj[namespaces_1.RDFS.label]);
+        if (termObj && (0, utilities_1.isObject)(termObj[namespaces_1._RDFS.label])) {
+            const langKeys = Object.keys(termObj[namespaces_1._RDFS.label]);
             for (const actLangKey of langKeys) {
-                if (termObj[namespaces_1.RDFS.label][actLangKey] === label) {
+                if (termObj[namespaces_1._RDFS.label][actLangKey] === label) {
                     return true;
                 }
             }
@@ -665,7 +665,7 @@ class Property extends Term_1.Term {
     getRanges(implicit = true, filter) {
         const propertyObj = this.getTermObj();
         const result = [];
-        result.push(...propertyObj[namespaces_1.SCHEMA.rangeIncludes]);
+        result.push(...propertyObj[namespaces_1._SCHEMA.rangeIncludes]);
         if (implicit) {
             for (const actRes of result) {
                 result.push(...(0, reasoning_1.inferSubDataTypes)(actRes, this.graph));
@@ -679,7 +679,7 @@ class Property extends Term_1.Term {
     getDomains(implicit = true, filter) {
         const propertyObj = this.getTermObj();
         const result = [];
-        result.push(...propertyObj[namespaces_1.SCHEMA.domainIncludes]);
+        result.push(...propertyObj[namespaces_1._SCHEMA.domainIncludes]);
         if (implicit) {
             const inferredSubClasses = [];
             for (const actRes of result) {
@@ -696,7 +696,7 @@ class Property extends Term_1.Term {
             result.push(...(0, reasoning_1.inferSuperProperties)(this.IRI, this.graph));
         }
         else {
-            result.push(...propertyObj[namespaces_1.RDFS.subPropertyOf]);
+            result.push(...propertyObj[namespaces_1._RDFS.subPropertyOf]);
         }
         return (0, reasoning_1.applyFilter)({ data: result, filter, graph: this.graph });
     }
@@ -707,13 +707,13 @@ class Property extends Term_1.Term {
             result.push(...(0, reasoning_1.inferSubProperties)(this.IRI, this.graph));
         }
         else {
-            result.push(...propertyObj[namespaces_1.SOA.superPropertyOf]);
+            result.push(...propertyObj[namespaces_1._SOA.superPropertyOf]);
         }
         return (0, reasoning_1.applyFilter)({ data: result, filter, graph: this.graph });
     }
     getInverseOf() {
         const propertyObj = this.getTermObj();
-        return propertyObj[namespaces_1.SCHEMA.inverseOf];
+        return propertyObj[namespaces_1._SCHEMA.inverseOf];
     }
     toString(implicit = true, filter) {
         return JSON.stringify(this.toJSON(implicit, filter), null, 2);
@@ -1032,37 +1032,37 @@ class Term {
     }
     getVocabulary() {
         const termObj = this.getTermObj();
-        if (!(0, utilities_1.isNil)(termObj[namespaces_1.SCHEMA.isPartOf])) {
-            return termObj[namespaces_1.SCHEMA.isPartOf];
+        if (!(0, utilities_1.isNil)(termObj[namespaces_1._SCHEMA.isPartOf])) {
+            return termObj[namespaces_1._SCHEMA.isPartOf];
         }
         return null;
     }
     getSource() {
         const termObj = this.getTermObj();
-        if (!(0, utilities_1.isNil)(termObj[namespaces_1.DC.source])) {
-            return termObj[namespaces_1.DC.source];
+        if (!(0, utilities_1.isNil)(termObj[namespaces_1._DC.source])) {
+            return termObj[namespaces_1._DC.source];
         }
-        else if (!(0, utilities_1.isNil)(termObj[namespaces_1.SCHEMA.source])) {
-            return termObj[namespaces_1.SCHEMA.source];
+        else if (!(0, utilities_1.isNil)(termObj[namespaces_1._SCHEMA.source])) {
+            return termObj[namespaces_1._SCHEMA.source];
         }
         return null;
     }
     isSupersededBy() {
         const termObj = this.getTermObj();
-        if ((0, utilities_1.isString)(termObj[namespaces_1.SCHEMA.supersededBy])) {
-            return termObj[namespaces_1.SCHEMA.supersededBy];
+        if ((0, utilities_1.isString)(termObj[namespaces_1._SCHEMA.supersededBy])) {
+            return termObj[namespaces_1._SCHEMA.supersededBy];
         }
         return null;
     }
     getName(language = "en") {
-        const termObj = this.getTermObj()[namespaces_1.RDFS.label];
+        const termObj = this.getTermObj()[namespaces_1._RDFS.label];
         if ((0, utilities_1.isNil)(termObj) || (0, utilities_1.isNil)(termObj[language])) {
             return null;
         }
         return termObj[language];
     }
     getDescription(language = "en") {
-        const termObj = this.getTermObj()[namespaces_1.RDFS.comment];
+        const termObj = this.getTermObj()[namespaces_1._RDFS.comment];
         if ((0, utilities_1.isNil)(termObj) || (0, utilities_1.isNil)(termObj[language])) {
             return null;
         }
@@ -1157,17 +1157,17 @@ function curateRelationshipTermArray(vocabNode, term, initDefaultIf) {
     }
 }
 function curateVocabNode(vocabNode, vocabularies) {
-    curateLanguageTerm(vocabNode, namespaces_1.RDFS.comment);
-    curateLanguageTerm(vocabNode, namespaces_1.RDFS.label);
-    curateRelationshipTermArray(vocabNode, namespaces_1.RDFS.subClassOf, namespaces_1.TermTypeIRI.class);
-    curateRelationshipTermArray(vocabNode, namespaces_1.RDFS.subPropertyOf, namespaces_1.TermTypeIRI.property);
-    curateRelationshipTermArray(vocabNode, namespaces_1.SCHEMA.domainIncludes, namespaces_1.TermTypeIRI.property);
-    curateRelationshipTermArray(vocabNode, namespaces_1.SCHEMA.rangeIncludes, namespaces_1.TermTypeIRI.property);
-    if (vocabNode[namespaces_1.SCHEMA.inverseOf] === undefined &&
+    curateLanguageTerm(vocabNode, namespaces_1._RDFS.comment);
+    curateLanguageTerm(vocabNode, namespaces_1._RDFS.label);
+    curateRelationshipTermArray(vocabNode, namespaces_1._RDFS.subClassOf, namespaces_1.TermTypeIRI.class);
+    curateRelationshipTermArray(vocabNode, namespaces_1._RDFS.subPropertyOf, namespaces_1.TermTypeIRI.property);
+    curateRelationshipTermArray(vocabNode, namespaces_1._SCHEMA.domainIncludes, namespaces_1.TermTypeIRI.property);
+    curateRelationshipTermArray(vocabNode, namespaces_1._SCHEMA.rangeIncludes, namespaces_1.TermTypeIRI.property);
+    if (vocabNode[namespaces_1._SCHEMA.inverseOf] === undefined &&
         vocabNode["@type"] === namespaces_1.TermTypeIRI.property) {
-        vocabNode[namespaces_1.SCHEMA.inverseOf] = null;
+        vocabNode[namespaces_1._SCHEMA.inverseOf] = null;
     }
-    if (!(0, utilities_1.isString)(vocabNode[namespaces_1.SCHEMA.isPartOf])) {
+    if (!(0, utilities_1.isString)(vocabNode[namespaces_1._SCHEMA.isPartOf])) {
         const vocabKeys = Object.keys(vocabularies);
         let vocab = vocabKeys.find((el) => vocabNode["@id"].substring(0, vocabNode["@id"].indexOf(":")) === el);
         if ((0, utilities_1.isString)(vocab)) {
@@ -1180,7 +1180,7 @@ function curateVocabNode(vocabNode, vocabularies) {
                     newChange = true;
                 }
             } while (newChange);
-            vocabNode[namespaces_1.SCHEMA.isPartOf] = vocab;
+            vocabNode[namespaces_1._SCHEMA.isPartOf] = vocab;
         }
     }
     return vocabNode;
@@ -1329,17 +1329,17 @@ function discoverEquateNamespaces(currentContext, vocabulary) {
         vocabulary["@graph"].forEach(function (vocabNode) {
             checkIfNamespaceFromListIsUsed(vocabNode["@id"], protocolSwitchedNamespaces, result);
             checkIfNamespaceFromListIsUsed(vocabNode["@type"], protocolSwitchedNamespaces, result);
-            checkIfNamespaceFromListIsUsed(vocabNode[namespaces_1.RDFS.subClassOf], protocolSwitchedNamespaces, result);
+            checkIfNamespaceFromListIsUsed(vocabNode[namespaces_1._RDFS.subClassOf], protocolSwitchedNamespaces, result);
             checkIfNamespaceFromListIsUsed(vocabNode["http://www.w3.org/2000/01/rdf-schema#subClassOf"], protocolSwitchedNamespaces, result);
-            checkIfNamespaceFromListIsUsed(vocabNode[namespaces_1.SCHEMA.domainIncludes], protocolSwitchedNamespaces, result);
+            checkIfNamespaceFromListIsUsed(vocabNode[namespaces_1._SCHEMA.domainIncludes], protocolSwitchedNamespaces, result);
             checkIfNamespaceFromListIsUsed(vocabNode["http://schema.org/domainIncludes"], protocolSwitchedNamespaces, result);
             checkIfNamespaceFromListIsUsed(vocabNode["https://schema.org/domainIncludes"], protocolSwitchedNamespaces, result);
-            checkIfNamespaceFromListIsUsed(vocabNode[namespaces_1.SCHEMA.rangeIncludes], protocolSwitchedNamespaces, result);
+            checkIfNamespaceFromListIsUsed(vocabNode[namespaces_1._SCHEMA.rangeIncludes], protocolSwitchedNamespaces, result);
             checkIfNamespaceFromListIsUsed(vocabNode["http://schema.org/rangeIncludes"], protocolSwitchedNamespaces, result);
             checkIfNamespaceFromListIsUsed(vocabNode["https://schema.org/rangeIncludes"], protocolSwitchedNamespaces, result);
-            checkIfNamespaceFromListIsUsed(vocabNode[namespaces_1.RDFS.subPropertyOf], protocolSwitchedNamespaces, result);
+            checkIfNamespaceFromListIsUsed(vocabNode[namespaces_1._RDFS.subPropertyOf], protocolSwitchedNamespaces, result);
             checkIfNamespaceFromListIsUsed(vocabNode["http://www.w3.org/2000/01/rdf-schema#subPropertyOf"], protocolSwitchedNamespaces, result);
-            checkIfNamespaceFromListIsUsed(vocabNode[namespaces_1.SCHEMA.inverseOf], protocolSwitchedNamespaces, result);
+            checkIfNamespaceFromListIsUsed(vocabNode[namespaces_1._SCHEMA.inverseOf], protocolSwitchedNamespaces, result);
             checkIfNamespaceFromListIsUsed(vocabNode["http://schema.org/inverseOf"], protocolSwitchedNamespaces, result);
             checkIfNamespaceFromListIsUsed(vocabNode["https://schema.org/inverseOf"], protocolSwitchedNamespaces, result);
         });
@@ -1379,21 +1379,21 @@ function getStandardContext() {
         soa: namespaces_1.NsUrl.soa,
     };
     const idEntries = [
-        namespaces_1.SOA.superClassOf,
-        namespaces_1.SOA.superPropertyOf,
-        namespaces_1.SOA.hasProperty,
-        namespaces_1.SOA.isRangeOf,
-        namespaces_1.SOA.hasEnumerationMember,
-        namespaces_1.SOA.enumerationDomainIncludes,
-        namespaces_1.RDFS.subClassOf,
-        namespaces_1.RDFS.subPropertyOf,
-        namespaces_1.SCHEMA.isPartOf,
-        namespaces_1.SCHEMA.domainIncludes,
-        namespaces_1.SCHEMA.rangeIncludes,
-        namespaces_1.SCHEMA.supersededBy,
-        namespaces_1.SCHEMA.inverseOf,
-        namespaces_1.SCHEMA.source,
-        namespaces_1.DC.source,
+        namespaces_1._SOA.superClassOf,
+        namespaces_1._SOA.superPropertyOf,
+        namespaces_1._SOA.hasProperty,
+        namespaces_1._SOA.isRangeOf,
+        namespaces_1._SOA.hasEnumerationMember,
+        namespaces_1._SOA.enumerationDomainIncludes,
+        namespaces_1._RDFS.subClassOf,
+        namespaces_1._RDFS.subPropertyOf,
+        namespaces_1._SCHEMA.isPartOf,
+        namespaces_1._SCHEMA.domainIncludes,
+        namespaces_1._SCHEMA.rangeIncludes,
+        namespaces_1._SCHEMA.supersededBy,
+        namespaces_1._SCHEMA.inverseOf,
+        namespaces_1._SCHEMA.source,
+        namespaces_1._DC.source,
     ];
     idEntries.map((el) => {
         standardContext[el] = {
@@ -1411,8 +1411,8 @@ function extractFromClassMemory(classMemory, otherMemory, addGraphNodeFn, vocabU
         const classesKeys = Object.keys(classMemory);
         const otherKeys = Object.keys(otherMemory);
         for (const actClassKey of classesKeys) {
-            if (classMemory[actClassKey][namespaces_1.RDFS.subClassOf] !== undefined) {
-                const subClassArray = classMemory[actClassKey][namespaces_1.RDFS.subClassOf];
+            if (classMemory[actClassKey][namespaces_1._RDFS.subClassOf] !== undefined) {
+                const subClassArray = classMemory[actClassKey][namespaces_1._RDFS.subClassOf];
                 for (const actSubClass of subClassArray) {
                     if (actSubClass === namespaces_1.TermTypeIRI.enumeration ||
                         otherKeys.includes(actSubClass)) {
@@ -1522,7 +1522,7 @@ exports.nodeMergeAddIds = nodeMergeAddIds;
 },{"./namespaces":12,"./utilities":14,"core-js/actual/set":47,"jsonld":179}],12:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.TermTypeIRI = exports.TermTypeLabel = exports.XSD = exports.DC = exports.SCHEMA = exports.SOA = exports.RDFS = exports.RDF = exports.NsUrl = void 0;
+exports.TermTypeIRI = exports.TermTypeLabel = exports._XSD = exports._DC = exports._SCHEMA = exports._SOA = exports._RDFS = exports._RDF = exports.NsUrl = void 0;
 require("core-js/proposals/object-from-entries");
 exports.NsUrl = {
     xsd: "http://www.w3.org/2001/XMLSchema#",
@@ -1543,15 +1543,15 @@ const NsPre = {
 function toCompactUri(prefix, properties) {
     return Object.freeze(Object.fromEntries(properties.map((p) => [p, prefix + ":" + p])));
 }
-exports.RDF = toCompactUri(NsPre.rdf, ["Property"]);
-exports.RDFS = toCompactUri("rdfs", [
+exports._RDF = toCompactUri(NsPre.rdf, ["Property"]);
+exports._RDFS = toCompactUri("rdfs", [
     "Class",
     "subClassOf",
     "subPropertyOf",
     "label",
     "comment",
 ]);
-exports.SOA = toCompactUri("soa", [
+exports._SOA = toCompactUri("soa", [
     "EnumerationMember",
     "superClassOf",
     "superPropertyOf",
@@ -1560,7 +1560,7 @@ exports.SOA = toCompactUri("soa", [
     "hasEnumerationMember",
     "enumerationDomainIncludes",
 ]);
-exports.SCHEMA = toCompactUri("schema", [
+exports._SCHEMA = toCompactUri("schema", [
     "DataType",
     "Enumeration",
     "isPartOf",
@@ -1571,8 +1571,8 @@ exports.SCHEMA = toCompactUri("schema", [
     "source",
     "category",
 ]);
-exports.DC = toCompactUri("dc", ["source"]);
-exports.XSD = toCompactUri("xsd", [
+exports._DC = toCompactUri("dc", ["source"]);
+exports._XSD = toCompactUri("xsd", [
     "string",
     "decimal",
     "integer",
@@ -1674,9 +1674,9 @@ function inferPropertiesFromSuperClasses(superClasses, graph) {
     for (const superClass of superClasses) {
         const superClassObj = graph.classes[superClass] || graph.enumerations[superClass];
         if (superClassObj) {
-            result.push(...superClassObj[namespaces_1.SOA.hasProperty]);
-            if (superClassObj[namespaces_1.RDFS.subClassOf].length !== 0) {
-                result.push(...inferPropertiesFromSuperClasses(superClassObj[namespaces_1.RDFS.subClassOf], graph));
+            result.push(...superClassObj[namespaces_1._SOA.hasProperty]);
+            if (superClassObj[namespaces_1._RDFS.subClassOf].length !== 0) {
+                result.push(...inferPropertiesFromSuperClasses(superClassObj[namespaces_1._RDFS.subClassOf], graph));
             }
         }
     }
@@ -1687,14 +1687,14 @@ function inferSuperClasses(classIRI, graph) {
     let result = [];
     const classObj = graph.classes[classIRI] || graph.enumerations[classIRI];
     if (classObj) {
-        result.push(...classObj[namespaces_1.RDFS.subClassOf]);
+        result.push(...classObj[namespaces_1._RDFS.subClassOf]);
         let addition = (0, utilities_1.cloneJson)(result);
         do {
             let newAddition = [];
             for (const curAdd of addition) {
                 const parentClassObj = graph.classes[curAdd] || graph.enumerations[curAdd];
                 if (parentClassObj) {
-                    newAddition.push(...parentClassObj[namespaces_1.RDFS.subClassOf]);
+                    newAddition.push(...parentClassObj[namespaces_1._RDFS.subClassOf]);
                 }
             }
             newAddition = (0, utilities_1.uniquifyArray)(newAddition);
@@ -1710,14 +1710,14 @@ function inferSubClasses(classIRI, graph) {
     let result = [];
     const classObj = graph.classes[classIRI] || graph.enumerations[classIRI];
     if (classObj) {
-        result.push(...classObj[namespaces_1.SOA.superClassOf]);
+        result.push(...classObj[namespaces_1._SOA.superClassOf]);
         let addition = (0, utilities_1.cloneJson)(result);
         do {
             let newAddition = [];
             for (const curAdd of addition) {
                 const parentClassObj = graph.classes[curAdd] || graph.enumerations[curAdd];
                 if (parentClassObj) {
-                    newAddition.push(...parentClassObj[namespaces_1.SOA.superClassOf]);
+                    newAddition.push(...parentClassObj[namespaces_1._SOA.superClassOf]);
                 }
             }
             newAddition = (0, utilities_1.uniquifyArray)(newAddition);
@@ -1733,14 +1733,14 @@ function inferSuperDataTypes(dataTypeIRI, graph) {
     let result = [];
     const dataTypeObj = graph.dataTypes[dataTypeIRI];
     if (dataTypeObj) {
-        result.push(...dataTypeObj[namespaces_1.RDFS.subClassOf]);
+        result.push(...dataTypeObj[namespaces_1._RDFS.subClassOf]);
         let addition = (0, utilities_1.cloneJson)(result);
         do {
             let newAddition = [];
             for (const curAdd of addition) {
                 const parentDataTypeObj = graph.dataTypes[curAdd];
                 if (parentDataTypeObj) {
-                    newAddition.push(...parentDataTypeObj[namespaces_1.RDFS.subClassOf]);
+                    newAddition.push(...parentDataTypeObj[namespaces_1._RDFS.subClassOf]);
                 }
             }
             newAddition = (0, utilities_1.uniquifyArray)(newAddition);
@@ -1756,14 +1756,14 @@ function inferSubDataTypes(dataTypeIRI, graph) {
     let result = [];
     const dataTypeObj = graph.dataTypes[dataTypeIRI];
     if (dataTypeObj) {
-        result.push(...dataTypeObj[namespaces_1.SOA.superClassOf]);
+        result.push(...dataTypeObj[namespaces_1._SOA.superClassOf]);
         let addition = (0, utilities_1.cloneJson)(result);
         do {
             let newAddition = [];
             for (const curAdd of addition) {
                 const childDataTypeObj = graph.dataTypes[curAdd];
                 if (childDataTypeObj) {
-                    newAddition.push(...childDataTypeObj[namespaces_1.SOA.superClassOf]);
+                    newAddition.push(...childDataTypeObj[namespaces_1._SOA.superClassOf]);
                 }
             }
             newAddition = (0, utilities_1.uniquifyArray)(newAddition);
@@ -1779,14 +1779,14 @@ function inferSuperProperties(propertyIRI, graph) {
     let result = [];
     const propertyObj = graph.properties[propertyIRI];
     if (propertyObj) {
-        result.push(...propertyObj[namespaces_1.RDFS.subPropertyOf]);
+        result.push(...propertyObj[namespaces_1._RDFS.subPropertyOf]);
         let addition = (0, utilities_1.cloneJson)(result);
         do {
             let newAddition = [];
             for (const curAdd of addition) {
                 const parentPropertyObj = graph.properties[curAdd];
                 if (parentPropertyObj) {
-                    newAddition.push(...parentPropertyObj[namespaces_1.RDFS.subPropertyOf]);
+                    newAddition.push(...parentPropertyObj[namespaces_1._RDFS.subPropertyOf]);
                 }
             }
             newAddition = (0, utilities_1.uniquifyArray)(newAddition);
@@ -1802,14 +1802,14 @@ function inferSubProperties(propertyIRI, graph) {
     let result = [];
     const propertyObj = graph.properties[propertyIRI];
     if (propertyObj) {
-        result.push(...propertyObj[namespaces_1.SOA.superPropertyOf]);
+        result.push(...propertyObj[namespaces_1._SOA.superPropertyOf]);
         let addition = (0, utilities_1.cloneJson)(result);
         do {
             let newAddition = [];
             for (const curAdd of addition) {
                 const parentPropertyObj = graph.properties[curAdd];
                 if (parentPropertyObj) {
-                    newAddition.push(...parentPropertyObj[namespaces_1.SOA.superPropertyOf]);
+                    newAddition.push(...parentPropertyObj[namespaces_1._SOA.superPropertyOf]);
                 }
             }
             newAddition = (0, utilities_1.uniquifyArray)(newAddition);
@@ -1825,24 +1825,24 @@ function inferRangeOf(rangeIRI, graph) {
     const classObj = graph.classes[rangeIRI] || graph.enumerations[rangeIRI];
     const result = [];
     if (classObj) {
-        result.push(...classObj[namespaces_1.SOA.isRangeOf]);
+        result.push(...classObj[namespaces_1._SOA.isRangeOf]);
         const superClasses = inferSuperClasses(rangeIRI, graph);
         for (const superClass of superClasses) {
             const superClassObj = graph.classes[superClass] || graph.enumerations[superClass];
             if (superClassObj) {
-                result.push(...superClassObj[namespaces_1.SOA.isRangeOf]);
+                result.push(...superClassObj[namespaces_1._SOA.isRangeOf]);
             }
         }
     }
     else {
         const dataTypeObj = graph.dataTypes[rangeIRI];
         if (dataTypeObj) {
-            result.push(...dataTypeObj[namespaces_1.SOA.isRangeOf]);
+            result.push(...dataTypeObj[namespaces_1._SOA.isRangeOf]);
             const superDataTypes = inferSuperDataTypes(rangeIRI, graph);
             for (const superDataType of superDataTypes) {
                 const superDataTypeObj = graph.dataTypes[superDataType];
                 if (superDataTypeObj) {
-                    result.push(...superDataTypeObj[namespaces_1.SOA.isRangeOf]);
+                    result.push(...superDataTypeObj[namespaces_1._SOA.isRangeOf]);
                 }
             }
         }

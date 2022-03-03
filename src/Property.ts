@@ -9,7 +9,7 @@ import {
   inferSubProperties,
   inferSuperProperties,
 } from "./reasoning";
-import { RDFS, SCHEMA, SOA, TermTypeIRI, TermTypeLabel } from "./namespaces";
+import { _RDFS, _SCHEMA, _SOA, TermTypeIRI, TermTypeLabel } from "./namespaces";
 
 /**
  * A **Property** represents a property term, which is used to describe a relationship between subject resources (their domains) and object resources (their ranges). A Property is identified by its IRI (e.g. [schema:name](https://schema.org/name)), where, by convention, the property name itself starts with a lowercase letter. A Property instance is created with {@link SDOAdapter.getProperty | SDOAdapter.getProperty()} and offers the methods described below.
@@ -67,7 +67,7 @@ export class Property extends Term {
   getRanges(implicit = true, filter?: FilterObject): string[] {
     const propertyObj = this.getTermObj();
     const result = [];
-    result.push(...propertyObj[SCHEMA.rangeIncludes]);
+    result.push(...propertyObj[_SCHEMA.rangeIncludes]);
     if (implicit) {
       // add sub-classes and sub-data-types from ranges
       for (const actRes of result) {
@@ -103,7 +103,7 @@ export class Property extends Term {
   getDomains(implicit = true, filter?: FilterObject): string[] {
     const propertyObj = this.getTermObj();
     const result = [];
-    result.push(...propertyObj[SCHEMA.domainIncludes]);
+    result.push(...propertyObj[_SCHEMA.domainIncludes]);
     if (implicit) {
       // add sub-classes from ranges
       const inferredSubClasses = [];
@@ -139,7 +139,7 @@ export class Property extends Term {
     if (implicit) {
       result.push(...inferSuperProperties(this.IRI, this.graph));
     } else {
-      result.push(...propertyObj[RDFS.subPropertyOf]);
+      result.push(...propertyObj[_RDFS.subPropertyOf]);
     }
     return applyFilter({ data: result, filter, graph: this.graph });
   }
@@ -168,7 +168,7 @@ export class Property extends Term {
     if (implicit) {
       result.push(...inferSubProperties(this.IRI, this.graph));
     } else {
-      result.push(...propertyObj[SOA.superPropertyOf]);
+      result.push(...propertyObj[_SOA.superPropertyOf]);
     }
     return applyFilter({ data: result, filter, graph: this.graph });
   }
@@ -188,7 +188,7 @@ export class Property extends Term {
    */
   getInverseOf(): string {
     const propertyObj = this.getTermObj();
-    return propertyObj[SCHEMA.inverseOf];
+    return propertyObj[_SCHEMA.inverseOf];
   }
 
   /**
