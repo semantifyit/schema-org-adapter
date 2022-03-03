@@ -1,3 +1,8 @@
+5.1.0 / 2022-03-22
+==================
+* Node/TypeScript: All types and interfaces that may be interesting for the user are being reexported in index.d.ts now.
+* Update of dependencies.
+
 5.0.4 / 2021-12-21
 ==================
 * `schema-org-adapter` now supports node from version 10.
