@@ -495,7 +495,7 @@ export function getStandardContext(): Context {
     rdf: NsUrl.rdf,
     rdfs: NsUrl.rdfs,
     xsd: NsUrl.xsd,
-    dc: NsUrl.dc,
+    dcterms: NsUrl.dcterms,
     // schema: 'http://schema.org/', this entry will be generated the first time a vocabulary is added to the graph
     soa: NsUrl.soa,
   };

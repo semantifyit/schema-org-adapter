@@ -572,12 +572,12 @@ export class SDOAdapter {
   }
 
   /**
-   * Returns an object with key-value pairs representing the vocabulary indicators (used in compact IRIs) and their namespaces, that are used in this SDOAdapter.
+   * Returns an object with key-value pairs representing the vocabulary indicators (used in compact IRIs) and their namespaces, that are used in this SDOAdapter. Vocabularies that are perceived as standard namespaces (e.g. in the context of schema.org or sdo-adapter), and not as vocabularies for the content of SDOAdapter are omitted by default, you can change this behaviour by passing the argument `omitStandardVocabs: false`.
    *
    * @example
    * ```JS
    * // assume mySdoAdapter has been initialized with schema.org and another example vocabulary
-   * const usedVocabularies = mySdoAdapter.getVocabularies();
+   * const usedVocabularies = mySdoAdapter.getVocabularies(); // same as mySdoAdapter.getVocabularies(true)
    * // creates an object with vocabulary indicators as keys, and their vocabulary namespaces as values
    * {
    *   "schema": "https://schema.org/",
@@ -587,12 +587,44 @@ export class SDOAdapter {
    *
    * @returns An object containing key-value pairs representing the used vocabulary namespaces
    */
-  getVocabularies(): Record<string, string> {
+  getVocabularies(omitStandardVocabs = true): Record<string, string> {
     const vocabKeys = Object.keys(this.graph.context);
     const result = {} as Record<string, string>;
-    const blacklist = ["soa", "xsd", "rdf", "rdfa", "rdfs", "dc"]; // standard vocabs that should not be exposed
+    // standard vocabs that should not be exposed - schema: is used as a vocabulary for the content, so it is allowed
+    const blacklist = [
+      "soa",
+      "xsd",
+      "rdf",
+      "rdfa",
+      "rdfs",
+      "dcterms",
+      "brick",
+      "csvw",
+      "dc",
+      "dcam",
+      "dcat",
+      "dcmitype",
+      "doap",
+      "foaf",
+      "odrl",
+      "org",
+      "owl",
+      "prof",
+      "prov",
+      "qb",
+      "sh",
+      "skos",
+      "sosa",
+      "ssn",
+      "time",
+      "vann",
+      "void",
+    ];
     vocabKeys.forEach((el) => {
-      if (isString(this.graph.context[el]) && !blacklist.includes(el)) {
+      if (
+        isString(this.graph.context[el]) &&
+        (!omitStandardVocabs || !blacklist.includes(el))
+      ) {
         result[el] = this.graph.context[el] as string;
       }
     });

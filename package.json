@@ -1,6 +1,6 @@
 {
   "name": "schema-org-adapter",
-  "version": "5.1.1",
+  "version": "5.2.0",
   "engines": {
     "node": ">=10.0.0"
   },
@@ -14,7 +14,7 @@
     "buildDistMinified": "browserify lib/dist.js -p tinyify -s SOA > dist/schema-org-adapter.min.js",
     "test:badges": "npm run-script testSoaRepo && npm run-script badges",
     "testSoaRepo": "jest",
-    "testSchemaRepo": "COMMIT=9a3ba4684a21c88506d0fed5ea37e5c6bbb115a1 jest",
+    "testSchemaRepo": "COMMIT=9f74e3ead8068daf7352bb373941f303088d58bb jest",
     "badges": "jest-coverage-badges input './docu/coverage/coverage-summary.json' output './docu/coverage'",
     "eslint-check": "eslint src/*.ts tests/*.ts",
     "eslint-repair": "eslint --fix src/*.ts tests/*.ts",

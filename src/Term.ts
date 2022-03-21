@@ -156,7 +156,7 @@ export abstract class Term {
   }
 
   /**
-   * This method was introduced mainly to return of source(s) for a term, as defined in the vocabulary itself with [`dc:source`](https://www.dublincore.org/specifications/dublin-core/dcmi-terms/#http://purl.org/dc/terms/source) or [`schema:source`](https://schema.org/source). The later has been used to link to related github issues for the schema.org vocabulary.
+   * This method was introduced mainly to return of source(s) for a term, as defined in the vocabulary itself with [`dcterms:source`](https://www.dublincore.org/specifications/dublin-core/dcmi-terms/#http://purl.org/dc/terms/source) or [`schema:source`](https://schema.org/source). The later has been used to link to related github issues for the schema.org vocabulary.
    *
    * @example
    * ```JS
@@ -166,7 +166,7 @@ export abstract class Term {
    * "https://github.com/schemaorg/schemaorg/issues/2108"
    * ```
    *
-   * @returns The source IRI given by `dc:source` or `schema:source` of this Term
+   * @returns The source IRI given by `dcterms:source` or `schema:source` of this Term
    */
   getSource(): string | string[] | null {
     const termObj = this.getTermObj();

@@ -347,7 +347,7 @@ export class Graph {
         // @type should stay the same (we already defined the memory to save it)
         // schema:isPartOf -> overwrite
         nodeMergeOverwrite(oldNode, newNode, _SCHEMA.isPartOf);
-        // dc:source/schema:source -> overwrite
+        // dcterms:source/schema:source -> overwrite
         nodeMergeOverwrite(oldNode, newNode, _DC.source);
         nodeMergeOverwrite(oldNode, newNode, _SCHEMA.source);
         // schema:category -> overwrite

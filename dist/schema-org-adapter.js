@@ -980,12 +980,41 @@ class SDOAdapter {
             graph: this.graph,
         });
     }
-    getVocabularies() {
+    getVocabularies(omitStandardVocabs = true) {
         const vocabKeys = Object.keys(this.graph.context);
         const result = {};
-        const blacklist = ["soa", "xsd", "rdf", "rdfa", "rdfs", "dc"];
+        const blacklist = [
+            "soa",
+            "xsd",
+            "rdf",
+            "rdfa",
+            "rdfs",
+            "dcterms",
+            "brick",
+            "csvw",
+            "dc",
+            "dcam",
+            "dcat",
+            "dcmitype",
+            "doap",
+            "foaf",
+            "odrl",
+            "org",
+            "owl",
+            "prof",
+            "prov",
+            "qb",
+            "sh",
+            "skos",
+            "sosa",
+            "ssn",
+            "time",
+            "vann",
+            "void",
+        ];
         vocabKeys.forEach((el) => {
-            if ((0, utilities_1.isString)(this.graph.context[el]) && !blacklist.includes(el)) {
+            if ((0, utilities_1.isString)(this.graph.context[el]) &&
+                (!omitStandardVocabs || !blacklist.includes(el))) {
                 result[el] = this.graph.context[el];
             }
         });
@@ -1375,7 +1404,7 @@ function getStandardContext() {
         rdf: namespaces_1.NsUrl.rdf,
         rdfs: namespaces_1.NsUrl.rdfs,
         xsd: namespaces_1.NsUrl.xsd,
-        dc: namespaces_1.NsUrl.dc,
+        dcterms: namespaces_1.NsUrl.dcterms,
         soa: namespaces_1.NsUrl.soa,
     };
     const idEntries = [
@@ -1529,7 +1558,7 @@ exports.NsUrl = {
     rdf: "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
     rdfs: "http://www.w3.org/2000/01/rdf-schema#",
     schema: "https://schema.org/",
-    dc: "http://purl.org/dc/terms/",
+    dcterms: "http://purl.org/dc/terms/",
     soa: "http://schema-org-adapter.at/vocabTerms/",
 };
 const NsPre = {
@@ -1537,7 +1566,7 @@ const NsPre = {
     rdf: "rdf",
     rdfs: "rdfs",
     schema: "schema",
-    dc: "dc",
+    dcterms: "dcterms",
     soa: "soa",
 };
 function toCompactUri(prefix, properties) {
@@ -1571,7 +1600,7 @@ exports._SCHEMA = toCompactUri("schema", [
     "source",
     "category",
 ]);
-exports._DC = toCompactUri("dc", ["source"]);
+exports._DC = toCompactUri("dcterms", ["source"]);
 exports._XSD = toCompactUri("xsd", [
     "string",
     "decimal",

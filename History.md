@@ -1,8 +1,15 @@
-5.1.1 / 2022-03-22
+5.2.0 / 2022-03-21
+==================
+* Adapter code according to new context changes of the schema.org vocabulary 14.0
+  * `dc:` is now `dcterms:`
+  * `SDOAdapter.getVocabularies()` adapted to exclude the new namespaces introduced with schema 14.0
+  * `SDOAdapter.getVocabularies(omitStandardVocabs = true)` now has a boolean parameter that can be passed as `false` to return all namespaces used by the SDOAdapter instance (not only the vocabulary namespaces for the content).
+
+5.1.1 / 2022-02-22
 ==================
 * Types for Classes provided by this library are now also exported.
 
-5.1.0 / 2022-03-22
+5.1.0 / 2022-02-22
 ==================
 * Node/TypeScript: All types and interfaces that may be interesting for the user are being reexported in index.d.ts now.
 * Update of dependencies.

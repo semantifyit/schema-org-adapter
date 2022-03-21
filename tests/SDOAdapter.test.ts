@@ -74,6 +74,13 @@ describe("SDO Adapter methods", () => {
     expect(vocabs.schema).not.toBe(undefined);
     expect(vocabs.ex).not.toBe(undefined);
     expect(vocabs.ex).toBe("https://example-vocab.ex/");
+    const allVocabs = mySA.getVocabularies(false);
+    expect(Object.keys(allVocabs).length).not.toBe(2);
+    expect(allVocabs.schema).not.toBe(undefined);
+    expect(allVocabs.dcterms).not.toBe(undefined);
+    expect(allVocabs.rdf).not.toBe(undefined);
+    expect(allVocabs.ex).not.toBe(undefined);
+    expect(allVocabs.ex).toBe("https://example-vocab.ex/");
   });
 
   test("getVocabularies() latest", async () => {
@@ -90,6 +97,14 @@ describe("SDO Adapter methods", () => {
     expect(vocabs.schema).not.toBe(undefined);
     expect(vocabs.ex).not.toBe(undefined);
     expect(vocabs.ex).toBe("https://example-vocab.ex/");
+    const allVocabs = mySA.getVocabularies(false);
+    expect(Object.keys(allVocabs).length).not.toBe(2);
+    expect(allVocabs.schema).not.toBe(undefined);
+    expect(allVocabs.dcterms).not.toBe(undefined);
+    expect(allVocabs.rdf).not.toBe(undefined);
+    expect(allVocabs.rdfs).not.toBe(undefined);
+    expect(allVocabs.ex).not.toBe(undefined);
+    expect(allVocabs.ex).toBe("https://example-vocab.ex/");
   });
 
   test("getTerm()", async () => {

@@ -8,7 +8,7 @@ export const NsUrl = {
   rdf: "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
   rdfs: "http://www.w3.org/2000/01/rdf-schema#",
   schema: "https://schema.org/",
-  dc: "http://purl.org/dc/terms/",
+  dcterms: "http://purl.org/dc/terms/",
   soa: "http://schema-org-adapter.at/vocabTerms/",
 } as const;
 
@@ -20,7 +20,7 @@ const NsPre = {
   rdf: "rdf",
   rdfs: "rdfs",
   schema: "schema",
-  dc: "dc",
+  dcterms: "dcterms",
   soa: "soa",
 } as const;
 
@@ -85,9 +85,9 @@ export const _SCHEMA = toCompactUri("schema", [
 ]);
 
 /** @ignore */
-export const _DC = toCompactUri("dc", ["source"]);
-// actually, we dont need xsd for the sdo adapter. Although it is also not being used in the schema.org vocabularies either, it is listed in their context. Therefore, we treat this namespace as it was used - we just add some terms for xsd data types in the following
+export const _DC = toCompactUri("dcterms", ["source"]);
 
+// actually, we dont need xsd for the sdo adapter. Although it is also not being used in the schema.org vocabularies either, it is listed in their context. Therefore, we treat this namespace as it was used - we just add some terms for xsd data types in the following
 /** @ignore */
 export const _XSD = toCompactUri("xsd", [
   "string",

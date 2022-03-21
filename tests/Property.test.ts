@@ -6,12 +6,12 @@ import VOC_OBJ_Zoo from "./data/vocabulary-animal.json";
 /**
  *  @returns {SDOAdapter} - the initialized SDO-Adapter ready for testing.
  */
-async function initAdapter() {
+async function initAdapter(schemaVersion = "latest") {
   const mySA = new SDOAdapter({
     commit: commit,
     onError: debugFuncErr,
   });
-  const mySDOUrl = await mySA.constructURLSchemaVocabulary("latest");
+  const mySDOUrl = await mySA.constructURLSchemaVocabulary(schemaVersion);
   await mySA.addVocabularies([mySDOUrl, VOC_OBJ_Zoo]);
   return mySA;
 }
@@ -188,5 +188,45 @@ describe("Property methods", () => {
     const name = mySA.getProperty("schema:name");
     debugFunc(name.toString());
     expect(isObject(JSON.parse(name.toString()))).toBe(true);
+  });
+
+  test("toString() - source", async () => {
+    const mySA = await initAdapter();
+    // no source
+    const subOrganization = mySA.getProperty("schema:subOrganization");
+    debugFunc(subOrganization.toString());
+    expect(JSON.parse(subOrganization.toString()).source).toBe(null);
+    // dc terms source
+    const expressedIn = mySA.getProperty("schema:expressedIn");
+    debugFunc(expressedIn.toString());
+    expect(JSON.parse(expressedIn.toString()).source).toBe(
+      "http://www.bioschemas.org/Gene"
+    );
+    // schema schource
+    const weight = mySA.getProperty("schema:weight");
+    debugFunc(weight.toString());
+    expect(JSON.parse(weight.toString()).source).toBe(
+      "http://www.w3.org/wiki/WebSchemas/SchemaDotOrgSources#source_GoodRelationsTerms"
+    );
+  });
+
+  test("toString() - source v13", async () => {
+    const mySA = await initAdapter("13.0");
+    // no source
+    const subOrganization = mySA.getProperty("schema:subOrganization");
+    debugFunc(subOrganization.toString());
+    expect(JSON.parse(subOrganization.toString()).source).toBe(null);
+    // dc terms source
+    const expressedIn = mySA.getProperty("schema:expressedIn");
+    debugFunc(expressedIn.toString());
+    expect(JSON.parse(expressedIn.toString()).source).toBe(
+      "http://www.bioschemas.org/Gene"
+    );
+    // schema schource
+    const weight = mySA.getProperty("schema:weight");
+    debugFunc(weight.toString());
+    expect(JSON.parse(weight.toString()).source).toBe(
+      "http://www.w3.org/wiki/WebSchemas/SchemaDotOrgSources#source_GoodRelationsTerms"
+    );
   });
 });
