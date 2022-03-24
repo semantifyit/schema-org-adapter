@@ -71,7 +71,7 @@ console.log(hotelClass.getProperties());
  */
 ```
 
-There is many more methods, options and functionalities to use! Explore them in the <a href="./modules.html">index page</a>.
+There are many more methods, options and functionalities to use! Explore them in the <a href="./modules.html">index page</a>.
 
 ## Additional Documentation
 
