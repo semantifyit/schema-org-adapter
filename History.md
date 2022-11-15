@@ -1,6 +1,11 @@
+5.3.0 / 2022-11-15
+==================
+* Adapted code according to new context changes of the schema.org vocabulary 15.0
+  * `SDOAdapter.getVocabularies()` adapted to exclude the new namespaces introduced with schema 15.0
+
 5.2.0 / 2022-03-21
 ==================
-* Adapter code according to new context changes of the schema.org vocabulary 14.0
+* Adapted code according to new context changes of the schema.org vocabulary 14.0
   * `dc:` is now `dcterms:`
   * `SDOAdapter.getVocabularies()` adapted to exclude the new namespaces introduced with schema 14.0
   * `SDOAdapter.getVocabularies(omitStandardVocabs = true)` now has a boolean parameter that can be passed as `false` to return all namespaces used by the SDOAdapter instance (not only the vocabulary namespaces for the content).

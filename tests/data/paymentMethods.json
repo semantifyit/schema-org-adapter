@@ -1,0 +1,191 @@
+{
+  "@context": {
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+    "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "schema": "https://schema.org/",
+    "xsd": "http://www.w3.org/2001/XMLSchema#",
+    "gr":"http://purl.org/goodrelations/v1#"
+  },
+  "@graph": [
+    {
+      "@id": "gr:ByBankTransferInAdvance",
+      "@type": "schema:PaymentMethod",
+      "rdfs:label": {
+        "@value": "By bank transfer in advance",
+        "@language": "en"
+      },
+      "rdfs:comment": {
+        "@value": "Payment by bank transfer in advance, i.e., the offering gr:BusinessEntity will inform the buying party about their bank account details and will deliver the goods upon receipt of the due amount.\nThis is equivalent to payment by wire transfer.",
+        "@language": "en"
+      }
+    },
+    {
+      "@id": "gr:ByInvoice",
+      "@type": "schema:PaymentMethod",
+      "rdfs:label": {
+        "@value": "By invoice",
+        "@language": "en"
+      },
+      "rdfs:comment": {
+        "@value": "Payment by bank transfer after delivery, i.e., the offering gr:BusinessEntity will deliver first, inform the buying party about the due amount and their bank account details, and expect payment shortly after delivery.",
+        "@language": "en"
+      }
+    },
+    {
+      "@id": "gr:Cash",
+      "@type": "schema:PaymentMethod",
+      "rdfs:label": {
+        "@value": "Cash",
+        "@language": "en"
+      },
+      "rdfs:comment": {
+        "@value": "Payment by cash upon delivery or pickup.",
+        "@language": "en"
+      }
+    },
+    {
+      "@id": "gr:CheckInAdvance",
+      "@type": "schema:PaymentMethod",
+      "rdfs:label": {
+        "@value": "Check in advance",
+        "@language": "en"
+      },
+      "rdfs:comment": {
+        "@value": "Payment by sending a check in advance, i.e., the offering gr:BusinessEntity will deliver the goods upon receipt of a check over the due amount. There are variations in handling payment by check - sometimes, shipment will be upon receipt of the check as a document, sometimes the shipment will take place only upon successful crediting of the check.",
+        "@language": "en"
+      }
+    },
+    {
+      "@id": "gr:COD",
+      "@type": "schema:PaymentMethod",
+      "rdfs:label": {
+        "@value": "COD",
+        "@language": "en"
+      },
+      "rdfs:comment": {
+        "@value": "Collect on delivery / Cash on delivery - A payment method where the recipient of goods pays at the time of delivery. Usually, the amount of money is collected by the transportation company handling the goods.",
+        "@language": "en"
+      }
+    },
+    {
+      "@id": "gr:DirectDebit",
+      "@type": "schema:PaymentMethod",
+      "rdfs:label": {
+        "@value": "Direct debit",
+        "@language": "en"
+      },
+      "rdfs:comment": {
+        "@value": "Payment by direct debit, i.e., the buying party will inform the offering gr:BusinessEntity about its bank account details and authorizes the gr:BusinessEntity to collect the agreed amount directly from that account.",
+        "@language": "en"
+      }
+    },
+    {
+      "@id": "gr:GoogleCheckout",
+      "@type": "schema:PaymentMethod",
+      "rdfs:label": {
+        "@value": "Google Checkout",
+        "@language": "en"
+      },
+      "rdfs:comment": {
+        "@value": "Payment via the Google Checkout payment service.",
+        "@language": "en"
+      }
+    },
+    {
+      "@id": "gr:PayPal",
+      "@type": "schema:PaymentMethod",
+      "rdfs:label": {
+        "@value": "PayPal",
+        "@language": "en"
+      },
+      "rdfs:comment": {
+        "@value": "Payment via the PayPal payment service.",
+        "@language": "en"
+      }
+    },
+    {
+      "@id": "gr:PaySwarm",
+      "@type": "schema:PaymentMethod",
+      "rdfs:label": {
+        "@value": "PaySwarm",
+        "@language": "en"
+      },
+      "rdfs:comment": {
+        "@value": "Payment via the PaySwarm distributed micropayment service.",
+        "@language": "en"
+      }
+    },
+    {
+      "@id": "gr:AmericanExpress",
+      "@type": "schema:PaymentMethod",
+      "rdfs:label": {
+        "@value": "American Express",
+        "@language": "en"
+      },
+      "rdfs:comment": {
+        "@value": "Payment by credit or debit cards issued by the American Express network.",
+        "@language": "en"
+      }
+    },
+    {
+      "@id": "gr:DinersClub",
+      "@type": "schema:PaymentMethod",
+      "rdfs:label": {
+        "@value": "Diners Club",
+        "@language": "en"
+      },
+      "rdfs:comment": {
+        "@value": "Payment by credit or debit cards issued by the Diner's Club network.",
+        "@language": "en"
+      }
+    },
+    {
+      "@id": "gr:Discover",
+      "@type": "schema:PaymentMethod",
+      "rdfs:label": {
+        "@value": "Discover",
+        "@language": "en"
+      },
+      "rdfs:comment": {
+        "@value": "Payment by credit or debit cards issued by the Discover network.",
+        "@language": "en"
+      }
+    },
+    {
+      "@id": "gr:JCB",
+      "@type": "schema:PaymentMethod",
+      "rdfs:label": {
+        "@value": "JCB",
+        "@language": "en"
+      },
+      "rdfs:comment": {
+        "@value": "Payment by credit or debit cards issued by the JCB network.",
+        "@language": "en"
+      }
+    },
+    {
+      "@id": "gr:MasterCard",
+      "@type": "schema:PaymentMethod",
+      "rdfs:label": {
+        "@value": "MasterCard",
+        "@language": "en"
+      },
+      "rdfs:comment": {
+        "@value": "Payment by credit or debit cards issued by the MasterCard network.",
+        "@language": "en"
+      }
+    },
+    {
+      "@id": "gr:VISA",
+      "@type": "schema:PaymentMethod",
+      "rdfs:label": {
+        "@value": "VISA",
+        "@language": "en"
+      },
+      "rdfs:comment": {
+        "@value": "Payment by credit or debit cards issued by the VISA network.",
+        "@language": "en"
+      }
+    }
+  ]
+}

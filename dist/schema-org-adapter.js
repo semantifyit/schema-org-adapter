@@ -1011,6 +1011,8 @@ class SDOAdapter {
             "time",
             "vann",
             "void",
+            "geo",
+            "wgs",
         ];
         vocabKeys.forEach((el) => {
             if ((0, utilities_1.isString)(this.graph.context[el]) &&

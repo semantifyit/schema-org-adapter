@@ -619,6 +619,8 @@ export class SDOAdapter {
       "time",
       "vann",
       "void",
+      "geo",
+      "wgs",
     ];
     vocabKeys.forEach((el) => {
       if (
