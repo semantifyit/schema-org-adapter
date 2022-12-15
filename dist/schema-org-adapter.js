@@ -1013,6 +1013,7 @@ class SDOAdapter {
             "void",
             "geo",
             "wgs",
+            "ds",
         ];
         vocabKeys.forEach((el) => {
             if ((0, utilities_1.isString)(this.graph.context[el]) &&
@@ -1408,6 +1409,7 @@ function getStandardContext() {
         xsd: namespaces_1.NsUrl.xsd,
         dcterms: namespaces_1.NsUrl.dcterms,
         soa: namespaces_1.NsUrl.soa,
+        ds: namespaces_1.NsUrl.ds,
     };
     const idEntries = [
         namespaces_1._SOA.superClassOf,
@@ -1550,7 +1552,7 @@ function nodeMergeAddIds(oldNode, newNode, property) {
 }
 exports.nodeMergeAddIds = nodeMergeAddIds;
 
-},{"./namespaces":12,"./utilities":14,"core-js/actual/set":47,"jsonld":179}],12:[function(require,module,exports){
+},{"./namespaces":12,"./utilities":14,"core-js/actual/set":47,"jsonld":180}],12:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.TermTypeIRI = exports.TermTypeLabel = exports._XSD = exports._DC = exports._SCHEMA = exports._SOA = exports._RDFS = exports._RDF = exports.NsUrl = void 0;
@@ -1562,6 +1564,7 @@ exports.NsUrl = {
     schema: "https://schema.org/",
     dcterms: "http://purl.org/dc/terms/",
     soa: "http://schema-org-adapter.at/vocabTerms/",
+    ds: "https://vocab.sti2.at/ds/",
 };
 const NsPre = {
     xsd: "xsd",
@@ -1570,6 +1573,7 @@ const NsPre = {
     schema: "schema",
     dcterms: "dcterms",
     soa: "soa",
+    ds: "ds",
 };
 function toCompactUri(prefix, properties) {
     return Object.freeze(Object.fromEntries(properties.map((p) => [p, prefix + ":" + p])));
@@ -3117,7 +3121,7 @@ utils.forEach(['post', 'put', 'patch'], function forEachMethodWithData(method) {
 module.exports = defaults;
 
 }).call(this)}).call(this,require('_process'))
-},{"./adapters/http":16,"./adapters/xhr":16,"./core/enhanceError":26,"./helpers/normalizeHeaderName":38,"./utils":42,"_process":187}],31:[function(require,module,exports){
+},{"./adapters/http":16,"./adapters/xhr":16,"./core/enhanceError":26,"./helpers/normalizeHeaderName":38,"./utils":42,"_process":189}],31:[function(require,module,exports){
 'use strict';
 
 module.exports = function bind(fn, thisArg) {
@@ -3930,53 +3934,38 @@ module.exports = {
 
 },{"./helpers/bind":31}],43:[function(require,module,exports){
 module.exports={
-  "_args": [
-    [
-      "axios@0.21.4",
-      "/home/nicarao/STI2/Dev/schema-org-adapter"
-    ]
+  "name": "axios",
+  "version": "0.21.4",
+  "description": "Promise based HTTP client for the browser and node.js",
+  "main": "index.js",
+  "scripts": {
+    "test": "grunt test",
+    "start": "node ./sandbox/server.js",
+    "build": "NODE_ENV=production grunt build",
+    "preversion": "npm test",
+    "version": "npm run build && grunt version && git add -A dist && git add CHANGELOG.md bower.json package.json",
+    "postversion": "git push && git push --tags",
+    "examples": "node ./examples/server.js",
+    "coveralls": "cat coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js",
+    "fix": "eslint --fix lib/**/*.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/axios/axios.git"
+  },
+  "keywords": [
+    "xhr",
+    "http",
+    "ajax",
+    "promise",
+    "node"
   ],
-  "_from": "axios@0.21.4",
-  "_id": "axios@0.21.4",
-  "_inBundle": false,
-  "_integrity": "sha512-ut5vewkiu8jjGBdqpM44XxjuCjq9LAKeHVmoVfHVzy8eHgxxq8SbAVQNovDA8mVi05kP0Ea/n/UzcSHcTJQfNg==",
-  "_location": "/axios",
-  "_phantomChildren": {},
-  "_requested": {
-    "type": "version",
-    "registry": true,
-    "raw": "axios@0.21.4",
-    "name": "axios",
-    "escapedName": "axios",
-    "rawSpec": "0.21.4",
-    "saveSpec": null,
-    "fetchSpec": "0.21.4"
-  },
-  "_requiredBy": [
-    "/"
-  ],
-  "_resolved": "https://registry.npmjs.org/axios/-/axios-0.21.4.tgz",
-  "_spec": "0.21.4",
-  "_where": "/home/nicarao/STI2/Dev/schema-org-adapter",
-  "author": {
-    "name": "Matt Zabriskie"
-  },
-  "browser": {
-    "./lib/adapters/http.js": "./lib/adapters/xhr.js"
-  },
+  "author": "Matt Zabriskie",
+  "license": "MIT",
   "bugs": {
     "url": "https://github.com/axios/axios/issues"
   },
-  "bundlesize": [
-    {
-      "path": "./dist/axios.min.js",
-      "threshold": "5kB"
-    }
-  ],
-  "dependencies": {
-    "follow-redirects": "^1.14.0"
-  },
-  "description": "Promise based HTTP client for the browser and node.js",
+  "homepage": "https://axios-http.com",
   "devDependencies": {
     "coveralls": "^3.0.0",
     "es6-promise": "^4.2.4",
@@ -4012,36 +4001,21 @@ module.exports={
     "webpack": "^4.44.2",
     "webpack-dev-server": "^3.11.0"
   },
-  "homepage": "https://axios-http.com",
+  "browser": {
+    "./lib/adapters/http.js": "./lib/adapters/xhr.js"
+  },
   "jsdelivr": "dist/axios.min.js",
-  "keywords": [
-    "xhr",
-    "http",
-    "ajax",
-    "promise",
-    "node"
-  ],
-  "license": "MIT",
-  "main": "index.js",
-  "name": "axios",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/axios/axios.git"
-  },
-  "scripts": {
-    "build": "NODE_ENV=production grunt build",
-    "coveralls": "cat coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js",
-    "examples": "node ./examples/server.js",
-    "fix": "eslint --fix lib/**/*.js",
-    "postversion": "git push && git push --tags",
-    "preversion": "npm test",
-    "start": "node ./sandbox/server.js",
-    "test": "grunt test",
-    "version": "npm run build && grunt version && git add -A dist && git add CHANGELOG.md bower.json package.json"
-  },
-  "typings": "./index.d.ts",
   "unpkg": "dist/axios.min.js",
-  "version": "0.21.4"
+  "typings": "./index.d.ts",
+  "dependencies": {
+    "follow-redirects": "^1.14.0"
+  },
+  "bundlesize": [
+    {
+      "path": "./dist/axios.min.js",
+      "threshold": "5kB"
+    }
+  ]
 }
 
 },{}],44:[function(require,module,exports){
@@ -6957,7 +6931,7 @@ module.exports = jsonld => {
 // TODO: move `NQuads` to its own package
 module.exports = require('rdf-canonize').NQuads;
 
-},{"rdf-canonize":188}],168:[function(require,module,exports){
+},{"rdf-canonize":198}],168:[function(require,module,exports){
 /*
  * Copyright (c) 2017-2019 Digital Bazaar, Inc. All rights reserved.
  */
@@ -8209,7 +8183,7 @@ function _checkNestProperty(activeCtx, nestProperty, options) {
   }
 }
 
-},{"./JsonLdError":165,"./context":172,"./graphTypes":178,"./types":183,"./url":184,"./util":185}],171:[function(require,module,exports){
+},{"./JsonLdError":165,"./context":172,"./graphTypes":179,"./types":183,"./url":184,"./util":185}],171:[function(require,module,exports){
 /*
  * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
  */
@@ -9167,8 +9141,7 @@ api.createTermDefinition = ({
       const protectedMode = (options && options.protectedMode) || 'error';
       if(protectedMode === 'error') {
         throw new JsonLdError(
-          `Invalid JSON-LD syntax; tried to redefine "${term}" which is a ` +
-          'protected term.',
+          `Invalid JSON-LD syntax; tried to redefine "${term}" which is a protected term.`,
           'jsonld.SyntaxError',
           {code: 'protected term redefinition', context: localCtx, term});
       } else if(protectedMode === 'warn') {
@@ -9727,6 +9700,183 @@ const JsonLdError = require('../JsonLdError');
 const RequestQueue = require('../RequestQueue');
 const {prependBase} = require('../url');
 
+/**
+ * Creates a built-in node document loader.
+ *
+ * @param options the options to use:
+ *          secure: require all URLs to use HTTPS.
+ *          strictSSL: true to require SSL certificates to be valid,
+ *            false not to (default: true).
+ *          maxRedirects: the maximum number of redirects to permit, none by
+ *            default.
+ *          request: the object which will make the request, default is
+ *            provided by `https://www.npmjs.com/package/request`.
+ *          headers: an object (map) of headers which will be passed as request
+ *            headers for the requested document. Accept is not allowed.
+ *
+ * @return the node document loader.
+ */
+module.exports = ({
+  secure,
+  strictSSL = true,
+  maxRedirects = -1,
+  request,
+  headers = {}
+} = {strictSSL: true, maxRedirects: -1, headers: {}}) => {
+  headers = buildHeaders(headers);
+  // TODO: use `axios`
+  request = request || require('request');
+  const http = require('http');
+
+  const queue = new RequestQueue();
+  return queue.wrapLoader(function(url) {
+    return loadDocument(url, []);
+  });
+
+  async function loadDocument(url, redirects) {
+    if(url.indexOf('http:') !== 0 && url.indexOf('https:') !== 0) {
+      throw new JsonLdError(
+        'URL could not be dereferenced; only "http" and "https" URLs are ' +
+        'supported.',
+        'jsonld.InvalidUrl', {code: 'loading document failed', url});
+    }
+    if(secure && url.indexOf('https') !== 0) {
+      throw new JsonLdError(
+        'URL could not be dereferenced; secure mode is enabled and ' +
+        'the URL\'s scheme is not "https".',
+        'jsonld.InvalidUrl', {code: 'loading document failed', url});
+    }
+    // TODO: disable cache until HTTP caching implemented
+    let doc = null;//cache.get(url);
+    if(doc !== null) {
+      return doc;
+    }
+
+    let result;
+    let alternate = null;
+    try {
+      result = await _request(request, {
+        url,
+        headers,
+        strictSSL,
+        followRedirect: false
+      });
+    } catch(e) {
+      throw new JsonLdError(
+        'URL could not be dereferenced, an error occurred.',
+        'jsonld.LoadDocumentError',
+        {code: 'loading document failed', url, cause: e});
+    }
+
+    const {res, body} = result;
+
+    doc = {contextUrl: null, documentUrl: url, document: body || null};
+
+    // handle error
+    const statusText = http.STATUS_CODES[res.statusCode];
+    if(res.statusCode >= 400) {
+      throw new JsonLdError(
+        `URL "${url}" could not be dereferenced: ${statusText}`,
+        'jsonld.InvalidUrl', {
+          code: 'loading document failed',
+          url,
+          httpStatusCode: res.statusCode
+        });
+    }
+
+    // handle Link Header
+    if(res.headers.link &&
+      res.headers['content-type'] !== 'application/ld+json') {
+      // only 1 related link header permitted
+      const linkHeaders = parseLinkHeader(res.headers.link);
+      const linkedContext = linkHeaders[LINK_HEADER_CONTEXT];
+      if(Array.isArray(linkedContext)) {
+        throw new JsonLdError(
+          'URL could not be dereferenced, it has more than one associated ' +
+          'HTTP Link Header.',
+          'jsonld.InvalidUrl',
+          {code: 'multiple context link headers', url});
+      }
+      if(linkedContext) {
+        doc.contextUrl = linkedContext.target;
+      }
+
+      // "alternate" link header is a redirect
+      alternate = linkHeaders['alternate'];
+      if(alternate &&
+        alternate.type == 'application/ld+json' &&
+        !(res.headers['content-type'] || '')
+          .match(/^application\/(\w*\+)?json$/)) {
+        res.headers.location = prependBase(url, alternate.target);
+      }
+    }
+
+    // handle redirect
+    if((alternate ||
+      res.statusCode >= 300 && res.statusCode < 400) && res.headers.location) {
+      if(redirects.length === maxRedirects) {
+        throw new JsonLdError(
+          'URL could not be dereferenced; there were too many redirects.',
+          'jsonld.TooManyRedirects', {
+            code: 'loading document failed',
+            url,
+            httpStatusCode: res.statusCode,
+            redirects
+          });
+      }
+      if(redirects.indexOf(url) !== -1) {
+        throw new JsonLdError(
+          'URL could not be dereferenced; infinite redirection was detected.',
+          'jsonld.InfiniteRedirectDetected', {
+            code: 'recursive context inclusion',
+            url,
+            httpStatusCode: res.statusCode,
+            redirects
+          });
+      }
+      redirects.push(url);
+      return loadDocument(res.headers.location, redirects);
+    }
+
+    // cache for each redirected URL
+    redirects.push(url);
+    // TODO: disable cache until HTTP caching implemented
+    /*
+    for(let i = 0; i < redirects.length; ++i) {
+      cache.set(
+        redirects[i],
+        {contextUrl: null, documentUrl: redirects[i], document: body});
+    }
+    */
+
+    return doc;
+  }
+};
+
+function _request(request, options) {
+  return new Promise((resolve, reject) => {
+    request(options, (err, res, body) => {
+      if(err) {
+        reject(err);
+      } else {
+        resolve({res, body});
+      }
+    });
+  });
+}
+
+},{"../JsonLdError":165,"../RequestQueue":168,"../constants":171,"../url":184,"../util":185,"http":44,"request":44}],174:[function(require,module,exports){
+/*
+ * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
+ */
+'use strict';
+
+const {parseLinkHeader, buildHeaders} = require('../util');
+const {LINK_HEADER_CONTEXT} = require('../constants');
+const JsonLdError = require('../JsonLdError');
+const RequestQueue = require('../RequestQueue');
+const {prependBase} = require('../url');
+
 const REGEX_LINK_HEADER = /(^|(\r\n))link:/i;
 
 /**
@@ -9834,7 +9984,7 @@ function _get(xhr, url, headers) {
   });
 }
 
-},{"../JsonLdError":165,"../RequestQueue":168,"../constants":171,"../url":184,"../util":185}],174:[function(require,module,exports){
+},{"../JsonLdError":165,"../RequestQueue":168,"../constants":171,"../url":184,"../util":185}],175:[function(require,module,exports){
 /*
  * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
  */
@@ -10951,7 +11101,7 @@ async function _expandIndexMap(
   return rval;
 }
 
-},{"./JsonLdError":165,"./context":172,"./graphTypes":178,"./types":183,"./url":184,"./util":185}],175:[function(require,module,exports){
+},{"./JsonLdError":165,"./context":172,"./graphTypes":179,"./types":183,"./url":184,"./util":185}],176:[function(require,module,exports){
 /*
  * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
  */
@@ -10991,7 +11141,7 @@ api.flatten = input => {
   return flattened;
 };
 
-},{"./graphTypes":178,"./nodeMap":180}],176:[function(require,module,exports){
+},{"./graphTypes":179,"./nodeMap":181}],177:[function(require,module,exports){
 /*
  * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
  */
@@ -11818,7 +11968,7 @@ function _valueMatch(pattern, value) {
   return true;
 }
 
-},{"./JsonLdError":165,"./context":172,"./graphTypes":178,"./nodeMap":180,"./types":183,"./url":184,"./util":185}],177:[function(require,module,exports){
+},{"./JsonLdError":165,"./context":172,"./graphTypes":179,"./nodeMap":181,"./types":183,"./url":184,"./util":185}],178:[function(require,module,exports){
 /*
  * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
  */
@@ -12167,7 +12317,7 @@ function _RDFToObject(o, useNativeTypes, rdfDirection) {
   return rval;
 }
 
-},{"./JsonLdError":165,"./constants":171,"./graphTypes":178,"./types":183,"./util":185}],178:[function(require,module,exports){
+},{"./JsonLdError":165,"./constants":171,"./graphTypes":179,"./types":183,"./util":185}],179:[function(require,module,exports){
 /*
  * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
  */
@@ -12288,7 +12438,8 @@ api.isBlankNode = v => {
   return false;
 };
 
-},{"./types":183}],179:[function(require,module,exports){
+},{"./types":183}],180:[function(require,module,exports){
+(function (process,global){(function (){
 /**
  * A JavaScript implementation of the JSON-LD API.
  *
@@ -12325,7 +12476,6 @@ api.isBlankNode = v => {
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 const canonize = require('rdf-canonize');
-const platform = require('./platform');
 const util = require('./util');
 const ContextResolver = require('./ContextResolver');
 const IdentifierIssuer = util.IdentifierIssuer;
@@ -12370,6 +12520,12 @@ const {
   createMergedNodeMap: _createMergedNodeMap,
   mergeNodeMaps: _mergeNodeMaps
 } = require('./nodeMap');
+
+// determine if in-browser or using Node.js
+const _nodejs = (
+  typeof process !== 'undefined' && process.versions && process.versions.node);
+const _browser = !_nodejs &&
+  (typeof window !== 'undefined' || typeof self !== 'undefined');
 
 /* eslint-disable indent */
 // attaches jsonld API to the given object
@@ -12967,7 +13123,7 @@ jsonld.toRDF = async function(input, options) {
   if(options.format) {
     if(options.format === 'application/n-quads' ||
       options.format === 'application/nquads') {
-      return NQuads.serialize(dataset);
+      return await NQuads.serialize(dataset);
     }
     throw new JsonLdError(
       'Unknown output format.',
@@ -13224,6 +13380,8 @@ jsonld.getContextValue = require('./context').getContextValue;
  * Document loaders.
  */
 jsonld.documentLoaders = {};
+jsonld.documentLoaders.node = require('./documentLoaders/node');
+jsonld.documentLoaders.xhr = require('./documentLoaders/xhr');
 
 /**
  * Assigns the default document loader for external document URLs to a built-in
@@ -13289,8 +13447,24 @@ jsonld.RequestQueue = require('./RequestQueue');
 /* WebIDL API */
 jsonld.JsonLdProcessor = require('./JsonLdProcessor')(jsonld);
 
-platform.setupGlobals(jsonld);
-platform.setupDocumentLoaders(jsonld);
+// setup browser global JsonLdProcessor
+if(_browser && typeof global.JsonLdProcessor === 'undefined') {
+  Object.defineProperty(global, 'JsonLdProcessor', {
+    writable: true,
+    enumerable: false,
+    configurable: true,
+    value: jsonld.JsonLdProcessor
+  });
+}
+
+// set platform-specific defaults/APIs
+if(_nodejs) {
+  // use node document loader by default
+  jsonld.useDocumentLoader('node');
+} else if(typeof XMLHttpRequest !== 'undefined') {
+  // use xhr document loader by default
+  jsonld.useDocumentLoader('xhr');
+}
 
 function _setDefaults(options, {
   documentLoader = jsonld.documentLoader,
@@ -13317,7 +13491,8 @@ wrapper(factory);
 // export API
 module.exports = factory;
 
-},{"./ContextResolver":164,"./JsonLdError":165,"./JsonLdProcessor":166,"./NQuads":167,"./RequestQueue":168,"./compact":170,"./context":172,"./expand":174,"./flatten":175,"./frame":176,"./fromRdf":177,"./graphTypes":178,"./nodeMap":180,"./platform":181,"./toRdf":182,"./types":183,"./url":184,"./util":185,"lru-cache":186,"rdf-canonize":188}],180:[function(require,module,exports){
+}).call(this)}).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
+},{"./ContextResolver":164,"./JsonLdError":165,"./JsonLdProcessor":166,"./NQuads":167,"./RequestQueue":168,"./compact":170,"./context":172,"./documentLoaders/node":173,"./documentLoaders/xhr":174,"./expand":175,"./flatten":176,"./frame":177,"./fromRdf":178,"./graphTypes":179,"./nodeMap":181,"./toRdf":182,"./types":183,"./url":184,"./util":185,"_process":189,"lru-cache":186,"rdf-canonize":198}],181:[function(require,module,exports){
 /*
  * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
  */
@@ -13609,48 +13784,7 @@ api.mergeNodeMaps = graphs => {
   return defaultGraph;
 };
 
-},{"./JsonLdError":165,"./context":172,"./graphTypes":178,"./types":183,"./util":185}],181:[function(require,module,exports){
-/*
- * Copyright (c) 2021 Digital Bazaar, Inc. All rights reserved.
- */
-'use strict';
-
-const xhrLoader = require('./documentLoaders/xhr');
-
-const api = {};
-module.exports = api;
-
-/**
- * Setup browser document loaders.
- *
- * @param jsonld the jsonld api.
- */
-api.setupDocumentLoaders = function(jsonld) {
-  if(typeof XMLHttpRequest !== 'undefined') {
-    jsonld.documentLoaders.xhr = xhrLoader;
-    // use xhr document loader by default
-    jsonld.useDocumentLoader('xhr');
-  }
-};
-
-/**
- * Setup browser globals.
- *
- * @param jsonld the jsonld api.
- */
-api.setupGlobals = function(jsonld) {
-  // setup browser global JsonLdProcessor
-  if(typeof globalThis.JsonLdProcessor === 'undefined') {
-    Object.defineProperty(globalThis, 'JsonLdProcessor', {
-      writable: true,
-      enumerable: false,
-      configurable: true,
-      value: jsonld.JsonLdProcessor
-    });
-  }
-};
-
-},{"./documentLoaders/xhr":173}],182:[function(require,module,exports){
+},{"./JsonLdError":165,"./context":172,"./graphTypes":179,"./types":183,"./util":185}],182:[function(require,module,exports){
 /*
  * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
  */
@@ -13932,7 +14066,7 @@ function _objectToRDF(item, issuer, dataset, graphTerm, rdfDirection) {
   return object;
 }
 
-},{"./constants":171,"./context":172,"./graphTypes":178,"./nodeMap":180,"./types":183,"./url":184,"./util":185,"canonicalize":45}],183:[function(require,module,exports){
+},{"./constants":171,"./context":172,"./graphTypes":179,"./nodeMap":181,"./types":183,"./url":184,"./util":185,"canonicalize":45}],183:[function(require,module,exports){
 /*
  * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
  */
@@ -14782,7 +14916,7 @@ function _labelBlankNodes(issuer, element) {
   return element;
 }
 
-},{"./JsonLdError":165,"./graphTypes":178,"./types":183,"rdf-canonize":188}],186:[function(require,module,exports){
+},{"./JsonLdError":165,"./graphTypes":179,"./types":183,"rdf-canonize":198}],186:[function(require,module,exports){
 'use strict'
 
 // A linked list to keep track of recently-used-ness
@@ -15118,7 +15252,445 @@ const forEachStep = (self, fn, node, thisp) => {
 
 module.exports = LRUCache
 
-},{"yallist":201}],187:[function(require,module,exports){
+},{"yallist":188}],187:[function(require,module,exports){
+'use strict'
+module.exports = function (Yallist) {
+  Yallist.prototype[Symbol.iterator] = function* () {
+    for (let walker = this.head; walker; walker = walker.next) {
+      yield walker.value
+    }
+  }
+}
+
+},{}],188:[function(require,module,exports){
+'use strict'
+module.exports = Yallist
+
+Yallist.Node = Node
+Yallist.create = Yallist
+
+function Yallist (list) {
+  var self = this
+  if (!(self instanceof Yallist)) {
+    self = new Yallist()
+  }
+
+  self.tail = null
+  self.head = null
+  self.length = 0
+
+  if (list && typeof list.forEach === 'function') {
+    list.forEach(function (item) {
+      self.push(item)
+    })
+  } else if (arguments.length > 0) {
+    for (var i = 0, l = arguments.length; i < l; i++) {
+      self.push(arguments[i])
+    }
+  }
+
+  return self
+}
+
+Yallist.prototype.removeNode = function (node) {
+  if (node.list !== this) {
+    throw new Error('removing node which does not belong to this list')
+  }
+
+  var next = node.next
+  var prev = node.prev
+
+  if (next) {
+    next.prev = prev
+  }
+
+  if (prev) {
+    prev.next = next
+  }
+
+  if (node === this.head) {
+    this.head = next
+  }
+  if (node === this.tail) {
+    this.tail = prev
+  }
+
+  node.list.length--
+  node.next = null
+  node.prev = null
+  node.list = null
+
+  return next
+}
+
+Yallist.prototype.unshiftNode = function (node) {
+  if (node === this.head) {
+    return
+  }
+
+  if (node.list) {
+    node.list.removeNode(node)
+  }
+
+  var head = this.head
+  node.list = this
+  node.next = head
+  if (head) {
+    head.prev = node
+  }
+
+  this.head = node
+  if (!this.tail) {
+    this.tail = node
+  }
+  this.length++
+}
+
+Yallist.prototype.pushNode = function (node) {
+  if (node === this.tail) {
+    return
+  }
+
+  if (node.list) {
+    node.list.removeNode(node)
+  }
+
+  var tail = this.tail
+  node.list = this
+  node.prev = tail
+  if (tail) {
+    tail.next = node
+  }
+
+  this.tail = node
+  if (!this.head) {
+    this.head = node
+  }
+  this.length++
+}
+
+Yallist.prototype.push = function () {
+  for (var i = 0, l = arguments.length; i < l; i++) {
+    push(this, arguments[i])
+  }
+  return this.length
+}
+
+Yallist.prototype.unshift = function () {
+  for (var i = 0, l = arguments.length; i < l; i++) {
+    unshift(this, arguments[i])
+  }
+  return this.length
+}
+
+Yallist.prototype.pop = function () {
+  if (!this.tail) {
+    return undefined
+  }
+
+  var res = this.tail.value
+  this.tail = this.tail.prev
+  if (this.tail) {
+    this.tail.next = null
+  } else {
+    this.head = null
+  }
+  this.length--
+  return res
+}
+
+Yallist.prototype.shift = function () {
+  if (!this.head) {
+    return undefined
+  }
+
+  var res = this.head.value
+  this.head = this.head.next
+  if (this.head) {
+    this.head.prev = null
+  } else {
+    this.tail = null
+  }
+  this.length--
+  return res
+}
+
+Yallist.prototype.forEach = function (fn, thisp) {
+  thisp = thisp || this
+  for (var walker = this.head, i = 0; walker !== null; i++) {
+    fn.call(thisp, walker.value, i, this)
+    walker = walker.next
+  }
+}
+
+Yallist.prototype.forEachReverse = function (fn, thisp) {
+  thisp = thisp || this
+  for (var walker = this.tail, i = this.length - 1; walker !== null; i--) {
+    fn.call(thisp, walker.value, i, this)
+    walker = walker.prev
+  }
+}
+
+Yallist.prototype.get = function (n) {
+  for (var i = 0, walker = this.head; walker !== null && i < n; i++) {
+    // abort out of the list early if we hit a cycle
+    walker = walker.next
+  }
+  if (i === n && walker !== null) {
+    return walker.value
+  }
+}
+
+Yallist.prototype.getReverse = function (n) {
+  for (var i = 0, walker = this.tail; walker !== null && i < n; i++) {
+    // abort out of the list early if we hit a cycle
+    walker = walker.prev
+  }
+  if (i === n && walker !== null) {
+    return walker.value
+  }
+}
+
+Yallist.prototype.map = function (fn, thisp) {
+  thisp = thisp || this
+  var res = new Yallist()
+  for (var walker = this.head; walker !== null;) {
+    res.push(fn.call(thisp, walker.value, this))
+    walker = walker.next
+  }
+  return res
+}
+
+Yallist.prototype.mapReverse = function (fn, thisp) {
+  thisp = thisp || this
+  var res = new Yallist()
+  for (var walker = this.tail; walker !== null;) {
+    res.push(fn.call(thisp, walker.value, this))
+    walker = walker.prev
+  }
+  return res
+}
+
+Yallist.prototype.reduce = function (fn, initial) {
+  var acc
+  var walker = this.head
+  if (arguments.length > 1) {
+    acc = initial
+  } else if (this.head) {
+    walker = this.head.next
+    acc = this.head.value
+  } else {
+    throw new TypeError('Reduce of empty list with no initial value')
+  }
+
+  for (var i = 0; walker !== null; i++) {
+    acc = fn(acc, walker.value, i)
+    walker = walker.next
+  }
+
+  return acc
+}
+
+Yallist.prototype.reduceReverse = function (fn, initial) {
+  var acc
+  var walker = this.tail
+  if (arguments.length > 1) {
+    acc = initial
+  } else if (this.tail) {
+    walker = this.tail.prev
+    acc = this.tail.value
+  } else {
+    throw new TypeError('Reduce of empty list with no initial value')
+  }
+
+  for (var i = this.length - 1; walker !== null; i--) {
+    acc = fn(acc, walker.value, i)
+    walker = walker.prev
+  }
+
+  return acc
+}
+
+Yallist.prototype.toArray = function () {
+  var arr = new Array(this.length)
+  for (var i = 0, walker = this.head; walker !== null; i++) {
+    arr[i] = walker.value
+    walker = walker.next
+  }
+  return arr
+}
+
+Yallist.prototype.toArrayReverse = function () {
+  var arr = new Array(this.length)
+  for (var i = 0, walker = this.tail; walker !== null; i++) {
+    arr[i] = walker.value
+    walker = walker.prev
+  }
+  return arr
+}
+
+Yallist.prototype.slice = function (from, to) {
+  to = to || this.length
+  if (to < 0) {
+    to += this.length
+  }
+  from = from || 0
+  if (from < 0) {
+    from += this.length
+  }
+  var ret = new Yallist()
+  if (to < from || to < 0) {
+    return ret
+  }
+  if (from < 0) {
+    from = 0
+  }
+  if (to > this.length) {
+    to = this.length
+  }
+  for (var i = 0, walker = this.head; walker !== null && i < from; i++) {
+    walker = walker.next
+  }
+  for (; walker !== null && i < to; i++, walker = walker.next) {
+    ret.push(walker.value)
+  }
+  return ret
+}
+
+Yallist.prototype.sliceReverse = function (from, to) {
+  to = to || this.length
+  if (to < 0) {
+    to += this.length
+  }
+  from = from || 0
+  if (from < 0) {
+    from += this.length
+  }
+  var ret = new Yallist()
+  if (to < from || to < 0) {
+    return ret
+  }
+  if (from < 0) {
+    from = 0
+  }
+  if (to > this.length) {
+    to = this.length
+  }
+  for (var i = this.length, walker = this.tail; walker !== null && i > to; i--) {
+    walker = walker.prev
+  }
+  for (; walker !== null && i > from; i--, walker = walker.prev) {
+    ret.push(walker.value)
+  }
+  return ret
+}
+
+Yallist.prototype.splice = function (start, deleteCount /*, ...nodes */) {
+  if (start > this.length) {
+    start = this.length - 1
+  }
+  if (start < 0) {
+    start = this.length + start;
+  }
+
+  for (var i = 0, walker = this.head; walker !== null && i < start; i++) {
+    walker = walker.next
+  }
+
+  var ret = []
+  for (var i = 0; walker && i < deleteCount; i++) {
+    ret.push(walker.value)
+    walker = this.removeNode(walker)
+  }
+  if (walker === null) {
+    walker = this.tail
+  }
+
+  if (walker !== this.head && walker !== this.tail) {
+    walker = walker.prev
+  }
+
+  for (var i = 2; i < arguments.length; i++) {
+    walker = insert(this, walker, arguments[i])
+  }
+  return ret;
+}
+
+Yallist.prototype.reverse = function () {
+  var head = this.head
+  var tail = this.tail
+  for (var walker = head; walker !== null; walker = walker.prev) {
+    var p = walker.prev
+    walker.prev = walker.next
+    walker.next = p
+  }
+  this.head = tail
+  this.tail = head
+  return this
+}
+
+function insert (self, node, value) {
+  var inserted = node === self.head ?
+    new Node(value, null, node, self) :
+    new Node(value, node, node.next, self)
+
+  if (inserted.next === null) {
+    self.tail = inserted
+  }
+  if (inserted.prev === null) {
+    self.head = inserted
+  }
+
+  self.length++
+
+  return inserted
+}
+
+function push (self, item) {
+  self.tail = new Node(item, self.tail, null, self)
+  if (!self.head) {
+    self.head = self.tail
+  }
+  self.length++
+}
+
+function unshift (self, item) {
+  self.head = new Node(item, null, self.head, self)
+  if (!self.tail) {
+    self.tail = self.head
+  }
+  self.length++
+}
+
+function Node (value, prev, next, list) {
+  if (!(this instanceof Node)) {
+    return new Node(value, prev, next, list)
+  }
+
+  this.list = list
+  this.value = value
+
+  if (prev) {
+    prev.next = this
+    this.prev = prev
+  } else {
+    this.prev = null
+  }
+
+  if (next) {
+    next.prev = this
+    this.next = next
+  } else {
+    this.next = null
+  }
+}
+
+try {
+  // add if support for Symbol.iterator is present
+  require('./iterator.js')(Yallist)
+} catch (er) {}
+
+},{"./iterator.js":187}],189:[function(require,module,exports){
 // shim for using process in browser
 var process = module.exports = {};
 
@@ -15304,19 +15876,9 @@ process.chdir = function (dir) {
 };
 process.umask = function() { return 0; };
 
-},{}],188:[function(require,module,exports){
-/**
- * An implementation of the RDF Dataset Normalization specification.
- *
- * @author Dave Longley
- *
- * Copyright 2010-2021 Digital Bazaar, Inc.
- */
-module.exports = require('./lib');
-
-},{"./lib":197}],189:[function(require,module,exports){
+},{}],190:[function(require,module,exports){
 /*
- * Copyright (c) 2016-2021 Digital Bazaar, Inc. All rights reserved.
+ * Copyright (c) 2016-2020 Digital Bazaar, Inc. All rights reserved.
  */
 'use strict';
 
@@ -15396,9 +15958,9 @@ module.exports = class IdentifierIssuer {
   }
 };
 
-},{}],190:[function(require,module,exports){
+},{}],191:[function(require,module,exports){
 /*
- * Copyright (c) 2016-2021 Digital Bazaar, Inc. All rights reserved.
+ * Copyright (c) 2016-2020 Digital Bazaar, Inc. All rights reserved.
  */
 'use strict';
 
@@ -15447,9 +16009,9 @@ module.exports = class MessageDigest {
   }
 };
 
-},{"setimmediate":198}],191:[function(require,module,exports){
+},{"setimmediate":199}],192:[function(require,module,exports){
 /*
- * Copyright (c) 2016-2021 Digital Bazaar, Inc. All rights reserved.
+ * Copyright (c) 2016-2020 Digital Bazaar, Inc. All rights reserved.
  */
 'use strict';
 
@@ -15842,9 +16404,9 @@ function _unescape(s) {
   });
 }
 
-},{}],192:[function(require,module,exports){
+},{}],193:[function(require,module,exports){
 /*
- * Copyright (c) 2016-2021 Digital Bazaar, Inc. All rights reserved.
+ * Copyright (c) 2016-2020 Digital Bazaar, Inc. All rights reserved.
  */
 'use strict';
 
@@ -15929,10 +16491,10 @@ module.exports = class Permuter {
   }
 };
 
-},{}],193:[function(require,module,exports){
+},{}],194:[function(require,module,exports){
 (function (setImmediate){(function (){
 /*
- * Copyright (c) 2016-2021 Digital Bazaar, Inc. All rights reserved.
+ * Copyright (c) 2016-2020 Digital Bazaar, Inc. All rights reserved.
  */
 'use strict';
 
@@ -16443,9 +17005,9 @@ function _stringHashCompare(a, b) {
 }
 
 }).call(this)}).call(this,require("timers").setImmediate)
-},{"./IdentifierIssuer":189,"./MessageDigest":190,"./NQuads":191,"./Permuter":192,"timers":199}],194:[function(require,module,exports){
+},{"./IdentifierIssuer":190,"./MessageDigest":191,"./NQuads":192,"./Permuter":193,"timers":200}],195:[function(require,module,exports){
 /*
- * Copyright (c) 2016-2021 Digital Bazaar, Inc. All rights reserved.
+ * Copyright (c) 2016-2020 Digital Bazaar, Inc. All rights reserved.
  */
 'use strict';
 
@@ -16933,9 +17495,9 @@ function _stringHashCompare(a, b) {
   return a.hash < b.hash ? -1 : a.hash > b.hash ? 1 : 0;
 }
 
-},{"./IdentifierIssuer":189,"./MessageDigest":190,"./NQuads":191,"./Permuter":192}],195:[function(require,module,exports){
+},{"./IdentifierIssuer":190,"./MessageDigest":191,"./NQuads":192,"./Permuter":193}],196:[function(require,module,exports){
 /*
- * Copyright (c) 2016-2021 Digital Bazaar, Inc. All rights reserved.
+ * Copyright (c) 2016-2020 Digital Bazaar, Inc. All rights reserved.
  */
 'use strict';
 
@@ -17025,9 +17587,9 @@ module.exports = class URDNA2012 extends URDNA2015 {
   }
 };
 
-},{"./URDNA2015":193}],196:[function(require,module,exports){
+},{"./URDNA2015":194}],197:[function(require,module,exports){
 /*
- * Copyright (c) 2016-2021 Digital Bazaar, Inc. All rights reserved.
+ * Copyright (c) 2016-2020 Digital Bazaar, Inc. All rights reserved.
  */
 'use strict';
 
@@ -17111,13 +17673,13 @@ module.exports = class URDNA2012Sync extends URDNA2015Sync {
   }
 };
 
-},{"./URDNA2015Sync":194}],197:[function(require,module,exports){
+},{"./URDNA2015Sync":195}],198:[function(require,module,exports){
 /**
  * An implementation of the RDF Dataset Normalization specification.
  * This library works in the browser and node.js.
  *
  * BSD 3-Clause License
- * Copyright (c) 2016-2021 Digital Bazaar, Inc.
+ * Copyright (c) 2016-2020 Digital Bazaar, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -17258,7 +17820,7 @@ api._canonizeSync = function(dataset, options) {
     'Invalid RDF Dataset Canonicalization algorithm: ' + options.algorithm);
 };
 
-},{"./IdentifierIssuer":189,"./NQuads":191,"./URDNA2015":193,"./URDNA2015Sync":194,"./URGNA2012":195,"./URGNA2012Sync":196,"rdf-canonize-native":44}],198:[function(require,module,exports){
+},{"./IdentifierIssuer":190,"./NQuads":192,"./URDNA2015":194,"./URDNA2015Sync":195,"./URGNA2012":196,"./URGNA2012Sync":197,"rdf-canonize-native":44}],199:[function(require,module,exports){
 (function (process,global){(function (){
 (function (global, undefined) {
     "use strict";
@@ -17448,7 +18010,7 @@ api._canonizeSync = function(dataset, options) {
 }(typeof self === "undefined" ? typeof global === "undefined" ? this : global : self));
 
 }).call(this)}).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"_process":187}],199:[function(require,module,exports){
+},{"_process":189}],200:[function(require,module,exports){
 (function (setImmediate,clearImmediate){(function (){
 var nextTick = require('process/browser.js').nextTick;
 var apply = Function.prototype.apply;
@@ -17527,443 +18089,5 @@ exports.clearImmediate = typeof clearImmediate === "function" ? clearImmediate :
   delete immediateIds[id];
 };
 }).call(this)}).call(this,require("timers").setImmediate,require("timers").clearImmediate)
-},{"process/browser.js":187,"timers":199}],200:[function(require,module,exports){
-'use strict'
-module.exports = function (Yallist) {
-  Yallist.prototype[Symbol.iterator] = function* () {
-    for (let walker = this.head; walker; walker = walker.next) {
-      yield walker.value
-    }
-  }
-}
-
-},{}],201:[function(require,module,exports){
-'use strict'
-module.exports = Yallist
-
-Yallist.Node = Node
-Yallist.create = Yallist
-
-function Yallist (list) {
-  var self = this
-  if (!(self instanceof Yallist)) {
-    self = new Yallist()
-  }
-
-  self.tail = null
-  self.head = null
-  self.length = 0
-
-  if (list && typeof list.forEach === 'function') {
-    list.forEach(function (item) {
-      self.push(item)
-    })
-  } else if (arguments.length > 0) {
-    for (var i = 0, l = arguments.length; i < l; i++) {
-      self.push(arguments[i])
-    }
-  }
-
-  return self
-}
-
-Yallist.prototype.removeNode = function (node) {
-  if (node.list !== this) {
-    throw new Error('removing node which does not belong to this list')
-  }
-
-  var next = node.next
-  var prev = node.prev
-
-  if (next) {
-    next.prev = prev
-  }
-
-  if (prev) {
-    prev.next = next
-  }
-
-  if (node === this.head) {
-    this.head = next
-  }
-  if (node === this.tail) {
-    this.tail = prev
-  }
-
-  node.list.length--
-  node.next = null
-  node.prev = null
-  node.list = null
-
-  return next
-}
-
-Yallist.prototype.unshiftNode = function (node) {
-  if (node === this.head) {
-    return
-  }
-
-  if (node.list) {
-    node.list.removeNode(node)
-  }
-
-  var head = this.head
-  node.list = this
-  node.next = head
-  if (head) {
-    head.prev = node
-  }
-
-  this.head = node
-  if (!this.tail) {
-    this.tail = node
-  }
-  this.length++
-}
-
-Yallist.prototype.pushNode = function (node) {
-  if (node === this.tail) {
-    return
-  }
-
-  if (node.list) {
-    node.list.removeNode(node)
-  }
-
-  var tail = this.tail
-  node.list = this
-  node.prev = tail
-  if (tail) {
-    tail.next = node
-  }
-
-  this.tail = node
-  if (!this.head) {
-    this.head = node
-  }
-  this.length++
-}
-
-Yallist.prototype.push = function () {
-  for (var i = 0, l = arguments.length; i < l; i++) {
-    push(this, arguments[i])
-  }
-  return this.length
-}
-
-Yallist.prototype.unshift = function () {
-  for (var i = 0, l = arguments.length; i < l; i++) {
-    unshift(this, arguments[i])
-  }
-  return this.length
-}
-
-Yallist.prototype.pop = function () {
-  if (!this.tail) {
-    return undefined
-  }
-
-  var res = this.tail.value
-  this.tail = this.tail.prev
-  if (this.tail) {
-    this.tail.next = null
-  } else {
-    this.head = null
-  }
-  this.length--
-  return res
-}
-
-Yallist.prototype.shift = function () {
-  if (!this.head) {
-    return undefined
-  }
-
-  var res = this.head.value
-  this.head = this.head.next
-  if (this.head) {
-    this.head.prev = null
-  } else {
-    this.tail = null
-  }
-  this.length--
-  return res
-}
-
-Yallist.prototype.forEach = function (fn, thisp) {
-  thisp = thisp || this
-  for (var walker = this.head, i = 0; walker !== null; i++) {
-    fn.call(thisp, walker.value, i, this)
-    walker = walker.next
-  }
-}
-
-Yallist.prototype.forEachReverse = function (fn, thisp) {
-  thisp = thisp || this
-  for (var walker = this.tail, i = this.length - 1; walker !== null; i--) {
-    fn.call(thisp, walker.value, i, this)
-    walker = walker.prev
-  }
-}
-
-Yallist.prototype.get = function (n) {
-  for (var i = 0, walker = this.head; walker !== null && i < n; i++) {
-    // abort out of the list early if we hit a cycle
-    walker = walker.next
-  }
-  if (i === n && walker !== null) {
-    return walker.value
-  }
-}
-
-Yallist.prototype.getReverse = function (n) {
-  for (var i = 0, walker = this.tail; walker !== null && i < n; i++) {
-    // abort out of the list early if we hit a cycle
-    walker = walker.prev
-  }
-  if (i === n && walker !== null) {
-    return walker.value
-  }
-}
-
-Yallist.prototype.map = function (fn, thisp) {
-  thisp = thisp || this
-  var res = new Yallist()
-  for (var walker = this.head; walker !== null;) {
-    res.push(fn.call(thisp, walker.value, this))
-    walker = walker.next
-  }
-  return res
-}
-
-Yallist.prototype.mapReverse = function (fn, thisp) {
-  thisp = thisp || this
-  var res = new Yallist()
-  for (var walker = this.tail; walker !== null;) {
-    res.push(fn.call(thisp, walker.value, this))
-    walker = walker.prev
-  }
-  return res
-}
-
-Yallist.prototype.reduce = function (fn, initial) {
-  var acc
-  var walker = this.head
-  if (arguments.length > 1) {
-    acc = initial
-  } else if (this.head) {
-    walker = this.head.next
-    acc = this.head.value
-  } else {
-    throw new TypeError('Reduce of empty list with no initial value')
-  }
-
-  for (var i = 0; walker !== null; i++) {
-    acc = fn(acc, walker.value, i)
-    walker = walker.next
-  }
-
-  return acc
-}
-
-Yallist.prototype.reduceReverse = function (fn, initial) {
-  var acc
-  var walker = this.tail
-  if (arguments.length > 1) {
-    acc = initial
-  } else if (this.tail) {
-    walker = this.tail.prev
-    acc = this.tail.value
-  } else {
-    throw new TypeError('Reduce of empty list with no initial value')
-  }
-
-  for (var i = this.length - 1; walker !== null; i--) {
-    acc = fn(acc, walker.value, i)
-    walker = walker.prev
-  }
-
-  return acc
-}
-
-Yallist.prototype.toArray = function () {
-  var arr = new Array(this.length)
-  for (var i = 0, walker = this.head; walker !== null; i++) {
-    arr[i] = walker.value
-    walker = walker.next
-  }
-  return arr
-}
-
-Yallist.prototype.toArrayReverse = function () {
-  var arr = new Array(this.length)
-  for (var i = 0, walker = this.tail; walker !== null; i++) {
-    arr[i] = walker.value
-    walker = walker.prev
-  }
-  return arr
-}
-
-Yallist.prototype.slice = function (from, to) {
-  to = to || this.length
-  if (to < 0) {
-    to += this.length
-  }
-  from = from || 0
-  if (from < 0) {
-    from += this.length
-  }
-  var ret = new Yallist()
-  if (to < from || to < 0) {
-    return ret
-  }
-  if (from < 0) {
-    from = 0
-  }
-  if (to > this.length) {
-    to = this.length
-  }
-  for (var i = 0, walker = this.head; walker !== null && i < from; i++) {
-    walker = walker.next
-  }
-  for (; walker !== null && i < to; i++, walker = walker.next) {
-    ret.push(walker.value)
-  }
-  return ret
-}
-
-Yallist.prototype.sliceReverse = function (from, to) {
-  to = to || this.length
-  if (to < 0) {
-    to += this.length
-  }
-  from = from || 0
-  if (from < 0) {
-    from += this.length
-  }
-  var ret = new Yallist()
-  if (to < from || to < 0) {
-    return ret
-  }
-  if (from < 0) {
-    from = 0
-  }
-  if (to > this.length) {
-    to = this.length
-  }
-  for (var i = this.length, walker = this.tail; walker !== null && i > to; i--) {
-    walker = walker.prev
-  }
-  for (; walker !== null && i > from; i--, walker = walker.prev) {
-    ret.push(walker.value)
-  }
-  return ret
-}
-
-Yallist.prototype.splice = function (start, deleteCount, ...nodes) {
-  if (start > this.length) {
-    start = this.length - 1
-  }
-  if (start < 0) {
-    start = this.length + start;
-  }
-
-  for (var i = 0, walker = this.head; walker !== null && i < start; i++) {
-    walker = walker.next
-  }
-
-  var ret = []
-  for (var i = 0; walker && i < deleteCount; i++) {
-    ret.push(walker.value)
-    walker = this.removeNode(walker)
-  }
-  if (walker === null) {
-    walker = this.tail
-  }
-
-  if (walker !== this.head && walker !== this.tail) {
-    walker = walker.prev
-  }
-
-  for (var i = 0; i < nodes.length; i++) {
-    walker = insert(this, walker, nodes[i])
-  }
-  return ret;
-}
-
-Yallist.prototype.reverse = function () {
-  var head = this.head
-  var tail = this.tail
-  for (var walker = head; walker !== null; walker = walker.prev) {
-    var p = walker.prev
-    walker.prev = walker.next
-    walker.next = p
-  }
-  this.head = tail
-  this.tail = head
-  return this
-}
-
-function insert (self, node, value) {
-  var inserted = node === self.head ?
-    new Node(value, null, node, self) :
-    new Node(value, node, node.next, self)
-
-  if (inserted.next === null) {
-    self.tail = inserted
-  }
-  if (inserted.prev === null) {
-    self.head = inserted
-  }
-
-  self.length++
-
-  return inserted
-}
-
-function push (self, item) {
-  self.tail = new Node(item, self.tail, null, self)
-  if (!self.head) {
-    self.head = self.tail
-  }
-  self.length++
-}
-
-function unshift (self, item) {
-  self.head = new Node(item, null, self.head, self)
-  if (!self.tail) {
-    self.tail = self.head
-  }
-  self.length++
-}
-
-function Node (value, prev, next, list) {
-  if (!(this instanceof Node)) {
-    return new Node(value, prev, next, list)
-  }
-
-  this.list = list
-  this.value = value
-
-  if (prev) {
-    prev.next = this
-    this.prev = prev
-  } else {
-    this.prev = null
-  }
-
-  if (next) {
-    next.prev = this
-    this.next = next
-  } else {
-    this.next = null
-  }
-}
-
-try {
-  // add if support for Symbol.iterator is present
-  require('./iterator.js')(Yallist)
-} catch (er) {}
-
-},{"./iterator.js":200}]},{},[10])(10)
+},{"process/browser.js":189,"timers":200}]},{},[10])(10)
 });

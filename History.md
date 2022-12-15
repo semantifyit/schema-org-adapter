@@ -1,3 +1,7 @@
+5.3.1 / 2022-12-15
+==================
+* Added `ds` as an internal vocabulary for the domain specifications namespace
+
 5.3.0 / 2022-11-15
 ==================
 * Adapted code according to new context changes of the schema.org vocabulary 15.0

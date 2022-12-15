@@ -483,7 +483,7 @@ export function checkIfNamespaceFromListIsUsed(
 
 /** @ignore */
 export function getStandardContext(): Context {
-  // Simply speaking, a context is used to map terms to IRIs. Terms are case sensitive and any valid string that is not a reserved JSON-LD keyword can be used as a term.
+  // Simply speaking, a context is used to map terms to IRIs. Terms are case-sensitive and any valid string that is not a reserved JSON-LD keyword can be used as a term.
   // soa:superClassOf is an inverse of rdfs:subClassOf that should help us
   // soa:superPropertyOf is an inverse of rdfs:subPropertyOf that should help us
   // soa:hasProperty is an inverse of schema:domainIncludes
@@ -498,6 +498,7 @@ export function getStandardContext(): Context {
     dcterms: NsUrl.dcterms,
     // schema: 'http://schema.org/', this entry will be generated the first time a vocabulary is added to the graph
     soa: NsUrl.soa,
+    ds: NsUrl.ds,
   };
   const idEntries = [
     _SOA.superClassOf,

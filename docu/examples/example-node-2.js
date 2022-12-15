@@ -1,6 +1,7 @@
 const { SOA } = require("../../lib/index"); // run the npm-script "buildTs" to generate js files for this example
 const SCHEMA_URL = "https://raw.githubusercontent.com/semantifyit/schemaorg/main/data/releases/13.0/schemaorg-all-https.jsonld";
 const VOC_OBJ_ZOO = require("../../tests/data/vocabulary-animal.json");
+const VOC_OBJ_ZOO_DVS = require("../../tests/data/vocabulary-animal-dvs.json");
 main();
 
 /**
@@ -43,4 +44,10 @@ async function main() {
   console.log(
     JSON.stringify(testEnumerationMember.toJSON(true, null), null, 2)
   );
+
+  const mySA2 = await SOA.create({ vocabularies: [SCHEMA_URL, VOC_OBJ_ZOO_DVS] });
+  console.log(mySA2.getVocabularies())
+  console.log(mySA2.getListOfClasses({
+    fromVocabulary: "ex"
+  }))
 }

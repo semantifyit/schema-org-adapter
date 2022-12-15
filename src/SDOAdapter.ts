@@ -591,6 +591,10 @@ export class SDOAdapter {
     const vocabKeys = Object.keys(this.graph.context);
     const result = {} as Record<string, string>;
     // standard vocabs that should not be exposed - schema: is used as a vocabulary for the content, so it is allowed
+    // includes:
+    // 1. standard vocabularies used in the schema.org context
+    // 2. vocabularies used in SDO-Adapter internally (soa)
+    // 3. the vocabulary for Domain Specifications ("ds": "https://vocab.sti2.at/ds/")
     const blacklist = [
       "soa",
       "xsd",
@@ -621,6 +625,7 @@ export class SDOAdapter {
       "void",
       "geo",
       "wgs",
+      "ds",
     ];
     vocabKeys.forEach((el) => {
       if (

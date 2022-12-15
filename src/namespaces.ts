@@ -10,6 +10,7 @@ export const NsUrl = {
   schema: "https://schema.org/",
   dcterms: "http://purl.org/dc/terms/",
   soa: "http://schema-org-adapter.at/vocabTerms/",
+  ds: "https://vocab.sti2.at/ds/",
 } as const;
 
 /** @ignore
@@ -22,6 +23,7 @@ const NsPre = {
   schema: "schema",
   dcterms: "dcterms",
   soa: "soa",
+  ds: "ds",
 } as const;
 
 /** @ignore

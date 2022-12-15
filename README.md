@@ -2,11 +2,10 @@
 <h1>Schema.org Adapter</h1>
 <b>Fast, simple & flexible API for the Schema.org Vocabulary (and vocabulary extensions!) for Node and Browsers</b>
 <br><br>
-<a href="https://libraries.io/npm/schema-org-adapter"><img src="https://img.shields.io/librariesio/release/npm/schema-org-adapter" alt="Dependencies" /></a>
+<a href="https://www.typescriptlang.org/"><img src="https://img.shields.io/npm/types/scrub-js.svg" alt="Built with TypeScript" /></a>
 <a href="https://github.com/semantifyit/schema-org-adapter/issues"><img src="https://img.shields.io/github/issues/semantifyit/schema-org-adapter.svg" alt="Issues open" /></a>
 <a href="https://github.com/semantifyit/schema-org-adapter/issues"><img src="https://img.shields.io/snyk/vulnerabilities/github/semantifyit/schema-org-adapter" alt="Snyk Vulnerability Test" /></a>
 <br>
-<a href="https://www.typescriptlang.org/"><img src="https://img.shields.io/npm/types/scrub-js.svg" alt="Built with TypeScript" /></a>
 <a href="https://eslint.org/"><img src="https://img.shields.io/badge/code%20style-ESLint-brightgreen" alt="Code style in ESLint" /></a>
 <a href="https://npms.io/search?q=schema-org-adapter"><img src="https://img.shields.io/npms-io/quality-score/schema-org-adapter" alt="npms.io Code Quality" /></a>
 <img src="https://raw.githubusercontent.com/semantifyit/schema-org-adapter/master/docu/coverage/badge-functions.svg?sanitize=true" alt="Functions test coverage" />

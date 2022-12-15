@@ -2,6 +2,7 @@ import { SDOAdapter } from "../src/SDOAdapter";
 import { commit, debugFunc, debugFuncErr } from "./testUtility";
 import VOC_OBJ_ZOO from "./data/vocabulary-animal.json";
 import VOC_OBJ_ZOO_NO_SCHEMA_IN_CONTEXT from "./data/vocabulary-animal-2.json";
+import VOC_OBJ_ZOO_DVS from "./data/vocabulary-animal-dvs.json";
 import VOC_OBJ_SDO3_7 from "./data/schema-3.7.json";
 import VOC_OBJ_SDO10_0 from "./data/schema-10.0.json";
 import VOC_OBJ_GWON from "./data/graph-with-one-node.json";
@@ -74,6 +75,7 @@ describe("SDO Adapter methods", () => {
     expect(vocabs.schema).not.toBe(undefined);
     expect(vocabs.ex).not.toBe(undefined);
     expect(vocabs.ex).toBe("https://example-vocab.ex/");
+    expect(Object.keys(vocabs).includes("ds")).toBe(false); // the ds namespace should not be here
     const allVocabs = mySA.getVocabularies(false);
     expect(Object.keys(allVocabs).length).not.toBe(2);
     expect(allVocabs.schema).not.toBe(undefined);
@@ -81,6 +83,14 @@ describe("SDO Adapter methods", () => {
     expect(allVocabs.rdf).not.toBe(undefined);
     expect(allVocabs.ex).not.toBe(undefined);
     expect(allVocabs.ex).toBe("https://example-vocab.ex/");
+    expect(Object.keys(allVocabs).includes("ds")).toBe(true); // the ds namespace should not be here
+    const mySA2 = new SDOAdapter({
+      commit: commit,
+      onError: debugFuncErr,
+    });
+    await mySA2.addVocabularies([VOC_OBJ_SDO10_0, VOC_OBJ_ZOO_DVS]);
+    expect(Object.keys(mySA2.getVocabularies(true))).toHaveLength(2); // the ds namespace should not be here
+    expect(Object.keys(mySA2.getVocabularies(false)).includes("ds")).toBe(true); // the ds namespace should not be here
   });
 
   test("getVocabularies() latest", async () => {
