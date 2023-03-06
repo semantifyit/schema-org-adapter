@@ -1,0 +1,86 @@
+{
+  "@context": {
+    "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+    "xsd": "http://www.w3.org/2001/XMLSchema#",
+    "schema": "https://schema.org/",
+    "ex": "https://example-vocab.ex/",
+    "rdfs:subClassOf": {
+      "@id": "rdfs:subClassOf",
+      "@type": "@id"
+    },
+    "schema:domainIncludes": {
+      "@id": "schema:domainIncludes",
+      "@type": "@id"
+    },
+    "schema:rangeIncludes": {
+      "@id": "schema:rangeIncludes",
+      "@type": "@id"
+    }
+  },
+  "@graph": [
+    {
+      "@id": "schema:DayOfWeek",
+      "rdfs:label": [
+        {
+          "@value": "Wochentag",
+          "@language": "de"
+        },
+        {
+          "@value": "DayOfWeek",
+          "@language": "en"
+        },
+        {
+          "@value": "Giorno della settimana",
+          "@language": "it"
+        },
+        {
+          "@value": "Jour de la semaine",
+          "@language": "fr"
+        },
+        {
+          "@value": "Dag van de week",
+          "@language": "nl"
+        },
+        {
+          "@value": "Dzień tygodnia",
+          "@language": "pl"
+        }
+      ],
+      "@type": "rdfs:Class"
+    },
+    {
+      "@id": "schema:PathologyTest",
+      "rdfs:label": [
+        {
+          "@value": "PathologyTest",
+          "@language": "de"
+        },
+        {
+          "@value": "PathologyTest",
+          "@language": "en"
+        },
+        {
+          "@value": "Patologia",
+          "@language": "it"
+        },
+        {
+          "@value": "Pathologie",
+          "@language": "fr"
+        },
+        {
+          "@value": "Pathologytest",
+          "@language": "nl"
+        },
+        {
+          "@value": "PatologyTest",
+          "@language": "pl"
+        }
+      ],
+      "@type": "rdfs:Class",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/Enumeration"
+      }
+    }
+  ]
+}

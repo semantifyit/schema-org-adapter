@@ -1444,7 +1444,12 @@ function extractFromClassMemory(classMemory, otherMemory, addGraphNodeFn, vocabU
         const classesKeys = Object.keys(classMemory);
         const otherKeys = Object.keys(otherMemory);
         for (const actClassKey of classesKeys) {
-            if (classMemory[actClassKey][namespaces_1._RDFS.subClassOf] !== undefined) {
+            if (otherKeys.includes(actClassKey)) {
+                termSwitched = true;
+                addGraphNodeFn(otherMemory, classMemory[actClassKey], vocabURL);
+                delete classMemory[actClassKey];
+            }
+            else if (classMemory[actClassKey][namespaces_1._RDFS.subClassOf] !== undefined) {
                 const subClassArray = classMemory[actClassKey][namespaces_1._RDFS.subClassOf];
                 for (const actSubClass of subClassArray) {
                     if (actSubClass === namespaces_1.TermTypeIRI.enumeration ||

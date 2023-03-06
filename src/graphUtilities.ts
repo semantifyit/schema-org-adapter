@@ -549,7 +549,13 @@ export function extractFromClassMemory(
     const classesKeys = Object.keys(classMemory);
     const otherKeys = Object.keys(otherMemory);
     for (const actClassKey of classesKeys) {
-      if (classMemory[actClassKey][_RDFS.subClassOf] !== undefined) {
+      if (otherKeys.includes(actClassKey)) {
+        // if an entity of the class memory is already in the other memory, then merge them in the other memory (use-case: a new vocabulary adds data to an already existing non-class)
+        termSwitched = true;
+        // merge
+        addGraphNodeFn(otherMemory, classMemory[actClassKey], vocabURL);
+        delete classMemory[actClassKey];
+      } else if (classMemory[actClassKey][_RDFS.subClassOf] !== undefined) {
         const subClassArray = classMemory[actClassKey][_RDFS.subClassOf];
         for (const actSubClass of subClassArray) {
           if (

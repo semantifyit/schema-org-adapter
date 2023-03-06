@@ -1,3 +1,7 @@
+5.4.0 / 2023-03-06
+==================
+* Cover edge-cases for addition of multiple vocabularies
+
 5.3.1 / 2022-12-15
 ==================
 * Added `ds` as an internal vocabulary for the domain specifications namespace
