@@ -1,6 +1,6 @@
 {
   "name": "schema-org-adapter",
-  "version": "5.4.1",
+  "version": "5.4.2",
   "engines": {
     "node": ">=10.0.0"
   },

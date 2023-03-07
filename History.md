@@ -1,3 +1,7 @@
+5.4.2 / 2023-03-07
+==================
+* Added package-lock.json from 5.4.1
+
 5.4.1 / 2023-03-07
 ==================
 * Set dependency version of JSONLD to 5.2.0 (the only version that works in frontend - including webpack, backend, and JEST tests)
