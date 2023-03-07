@@ -1557,7 +1557,7 @@ function nodeMergeAddIds(oldNode, newNode, property) {
 }
 exports.nodeMergeAddIds = nodeMergeAddIds;
 
-},{"./namespaces":12,"./utilities":14,"core-js/actual/set":47,"jsonld":180}],12:[function(require,module,exports){
+},{"./namespaces":12,"./utilities":14,"core-js/actual/set":47,"jsonld":179}],12:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.TermTypeIRI = exports.TermTypeLabel = exports._XSD = exports._DC = exports._SCHEMA = exports._SOA = exports._RDFS = exports._RDF = exports.NsUrl = void 0;
@@ -3126,7 +3126,7 @@ utils.forEach(['post', 'put', 'patch'], function forEachMethodWithData(method) {
 module.exports = defaults;
 
 }).call(this)}).call(this,require('_process'))
-},{"./adapters/http":16,"./adapters/xhr":16,"./core/enhanceError":26,"./helpers/normalizeHeaderName":38,"./utils":42,"_process":189}],31:[function(require,module,exports){
+},{"./adapters/http":16,"./adapters/xhr":16,"./core/enhanceError":26,"./helpers/normalizeHeaderName":38,"./utils":42,"_process":187}],31:[function(require,module,exports){
 'use strict';
 
 module.exports = function bind(fn, thisArg) {
@@ -6936,7 +6936,7 @@ module.exports = jsonld => {
 // TODO: move `NQuads` to its own package
 module.exports = require('rdf-canonize').NQuads;
 
-},{"rdf-canonize":198}],168:[function(require,module,exports){
+},{"rdf-canonize":188}],168:[function(require,module,exports){
 /*
  * Copyright (c) 2017-2019 Digital Bazaar, Inc. All rights reserved.
  */
@@ -8188,7 +8188,7 @@ function _checkNestProperty(activeCtx, nestProperty, options) {
   }
 }
 
-},{"./JsonLdError":165,"./context":172,"./graphTypes":179,"./types":183,"./url":184,"./util":185}],171:[function(require,module,exports){
+},{"./JsonLdError":165,"./context":172,"./graphTypes":178,"./types":183,"./url":184,"./util":185}],171:[function(require,module,exports){
 /*
  * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
  */
@@ -9146,7 +9146,8 @@ api.createTermDefinition = ({
       const protectedMode = (options && options.protectedMode) || 'error';
       if(protectedMode === 'error') {
         throw new JsonLdError(
-          `Invalid JSON-LD syntax; tried to redefine "${term}" which is a protected term.`,
+          `Invalid JSON-LD syntax; tried to redefine "${term}" which is a ` +
+          'protected term.',
           'jsonld.SyntaxError',
           {code: 'protected term redefinition', context: localCtx, term});
       } else if(protectedMode === 'warn') {
@@ -9705,183 +9706,6 @@ const JsonLdError = require('../JsonLdError');
 const RequestQueue = require('../RequestQueue');
 const {prependBase} = require('../url');
 
-/**
- * Creates a built-in node document loader.
- *
- * @param options the options to use:
- *          secure: require all URLs to use HTTPS.
- *          strictSSL: true to require SSL certificates to be valid,
- *            false not to (default: true).
- *          maxRedirects: the maximum number of redirects to permit, none by
- *            default.
- *          request: the object which will make the request, default is
- *            provided by `https://www.npmjs.com/package/request`.
- *          headers: an object (map) of headers which will be passed as request
- *            headers for the requested document. Accept is not allowed.
- *
- * @return the node document loader.
- */
-module.exports = ({
-  secure,
-  strictSSL = true,
-  maxRedirects = -1,
-  request,
-  headers = {}
-} = {strictSSL: true, maxRedirects: -1, headers: {}}) => {
-  headers = buildHeaders(headers);
-  // TODO: use `axios`
-  request = request || require('request');
-  const http = require('http');
-
-  const queue = new RequestQueue();
-  return queue.wrapLoader(function(url) {
-    return loadDocument(url, []);
-  });
-
-  async function loadDocument(url, redirects) {
-    if(url.indexOf('http:') !== 0 && url.indexOf('https:') !== 0) {
-      throw new JsonLdError(
-        'URL could not be dereferenced; only "http" and "https" URLs are ' +
-        'supported.',
-        'jsonld.InvalidUrl', {code: 'loading document failed', url});
-    }
-    if(secure && url.indexOf('https') !== 0) {
-      throw new JsonLdError(
-        'URL could not be dereferenced; secure mode is enabled and ' +
-        'the URL\'s scheme is not "https".',
-        'jsonld.InvalidUrl', {code: 'loading document failed', url});
-    }
-    // TODO: disable cache until HTTP caching implemented
-    let doc = null;//cache.get(url);
-    if(doc !== null) {
-      return doc;
-    }
-
-    let result;
-    let alternate = null;
-    try {
-      result = await _request(request, {
-        url,
-        headers,
-        strictSSL,
-        followRedirect: false
-      });
-    } catch(e) {
-      throw new JsonLdError(
-        'URL could not be dereferenced, an error occurred.',
-        'jsonld.LoadDocumentError',
-        {code: 'loading document failed', url, cause: e});
-    }
-
-    const {res, body} = result;
-
-    doc = {contextUrl: null, documentUrl: url, document: body || null};
-
-    // handle error
-    const statusText = http.STATUS_CODES[res.statusCode];
-    if(res.statusCode >= 400) {
-      throw new JsonLdError(
-        `URL "${url}" could not be dereferenced: ${statusText}`,
-        'jsonld.InvalidUrl', {
-          code: 'loading document failed',
-          url,
-          httpStatusCode: res.statusCode
-        });
-    }
-
-    // handle Link Header
-    if(res.headers.link &&
-      res.headers['content-type'] !== 'application/ld+json') {
-      // only 1 related link header permitted
-      const linkHeaders = parseLinkHeader(res.headers.link);
-      const linkedContext = linkHeaders[LINK_HEADER_CONTEXT];
-      if(Array.isArray(linkedContext)) {
-        throw new JsonLdError(
-          'URL could not be dereferenced, it has more than one associated ' +
-          'HTTP Link Header.',
-          'jsonld.InvalidUrl',
-          {code: 'multiple context link headers', url});
-      }
-      if(linkedContext) {
-        doc.contextUrl = linkedContext.target;
-      }
-
-      // "alternate" link header is a redirect
-      alternate = linkHeaders['alternate'];
-      if(alternate &&
-        alternate.type == 'application/ld+json' &&
-        !(res.headers['content-type'] || '')
-          .match(/^application\/(\w*\+)?json$/)) {
-        res.headers.location = prependBase(url, alternate.target);
-      }
-    }
-
-    // handle redirect
-    if((alternate ||
-      res.statusCode >= 300 && res.statusCode < 400) && res.headers.location) {
-      if(redirects.length === maxRedirects) {
-        throw new JsonLdError(
-          'URL could not be dereferenced; there were too many redirects.',
-          'jsonld.TooManyRedirects', {
-            code: 'loading document failed',
-            url,
-            httpStatusCode: res.statusCode,
-            redirects
-          });
-      }
-      if(redirects.indexOf(url) !== -1) {
-        throw new JsonLdError(
-          'URL could not be dereferenced; infinite redirection was detected.',
-          'jsonld.InfiniteRedirectDetected', {
-            code: 'recursive context inclusion',
-            url,
-            httpStatusCode: res.statusCode,
-            redirects
-          });
-      }
-      redirects.push(url);
-      return loadDocument(res.headers.location, redirects);
-    }
-
-    // cache for each redirected URL
-    redirects.push(url);
-    // TODO: disable cache until HTTP caching implemented
-    /*
-    for(let i = 0; i < redirects.length; ++i) {
-      cache.set(
-        redirects[i],
-        {contextUrl: null, documentUrl: redirects[i], document: body});
-    }
-    */
-
-    return doc;
-  }
-};
-
-function _request(request, options) {
-  return new Promise((resolve, reject) => {
-    request(options, (err, res, body) => {
-      if(err) {
-        reject(err);
-      } else {
-        resolve({res, body});
-      }
-    });
-  });
-}
-
-},{"../JsonLdError":165,"../RequestQueue":168,"../constants":171,"../url":184,"../util":185,"http":44,"request":44}],174:[function(require,module,exports){
-/*
- * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
- */
-'use strict';
-
-const {parseLinkHeader, buildHeaders} = require('../util');
-const {LINK_HEADER_CONTEXT} = require('../constants');
-const JsonLdError = require('../JsonLdError');
-const RequestQueue = require('../RequestQueue');
-const {prependBase} = require('../url');
-
 const REGEX_LINK_HEADER = /(^|(\r\n))link:/i;
 
 /**
@@ -9989,7 +9813,7 @@ function _get(xhr, url, headers) {
   });
 }
 
-},{"../JsonLdError":165,"../RequestQueue":168,"../constants":171,"../url":184,"../util":185}],175:[function(require,module,exports){
+},{"../JsonLdError":165,"../RequestQueue":168,"../constants":171,"../url":184,"../util":185}],174:[function(require,module,exports){
 /*
  * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
  */
@@ -11106,7 +10930,7 @@ async function _expandIndexMap(
   return rval;
 }
 
-},{"./JsonLdError":165,"./context":172,"./graphTypes":179,"./types":183,"./url":184,"./util":185}],176:[function(require,module,exports){
+},{"./JsonLdError":165,"./context":172,"./graphTypes":178,"./types":183,"./url":184,"./util":185}],175:[function(require,module,exports){
 /*
  * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
  */
@@ -11146,7 +10970,7 @@ api.flatten = input => {
   return flattened;
 };
 
-},{"./graphTypes":179,"./nodeMap":181}],177:[function(require,module,exports){
+},{"./graphTypes":178,"./nodeMap":180}],176:[function(require,module,exports){
 /*
  * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
  */
@@ -11973,7 +11797,7 @@ function _valueMatch(pattern, value) {
   return true;
 }
 
-},{"./JsonLdError":165,"./context":172,"./graphTypes":179,"./nodeMap":181,"./types":183,"./url":184,"./util":185}],178:[function(require,module,exports){
+},{"./JsonLdError":165,"./context":172,"./graphTypes":178,"./nodeMap":180,"./types":183,"./url":184,"./util":185}],177:[function(require,module,exports){
 /*
  * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
  */
@@ -12322,7 +12146,7 @@ function _RDFToObject(o, useNativeTypes, rdfDirection) {
   return rval;
 }
 
-},{"./JsonLdError":165,"./constants":171,"./graphTypes":179,"./types":183,"./util":185}],179:[function(require,module,exports){
+},{"./JsonLdError":165,"./constants":171,"./graphTypes":178,"./types":183,"./util":185}],178:[function(require,module,exports){
 /*
  * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
  */
@@ -12443,8 +12267,7 @@ api.isBlankNode = v => {
   return false;
 };
 
-},{"./types":183}],180:[function(require,module,exports){
-(function (process,global){(function (){
+},{"./types":183}],179:[function(require,module,exports){
 /**
  * A JavaScript implementation of the JSON-LD API.
  *
@@ -12481,6 +12304,7 @@ api.isBlankNode = v => {
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 const canonize = require('rdf-canonize');
+const platform = require('./platform');
 const util = require('./util');
 const ContextResolver = require('./ContextResolver');
 const IdentifierIssuer = util.IdentifierIssuer;
@@ -12525,12 +12349,6 @@ const {
   createMergedNodeMap: _createMergedNodeMap,
   mergeNodeMaps: _mergeNodeMaps
 } = require('./nodeMap');
-
-// determine if in-browser or using Node.js
-const _nodejs = (
-  typeof process !== 'undefined' && process.versions && process.versions.node);
-const _browser = !_nodejs &&
-  (typeof window !== 'undefined' || typeof self !== 'undefined');
 
 /* eslint-disable indent */
 // attaches jsonld API to the given object
@@ -13128,7 +12946,7 @@ jsonld.toRDF = async function(input, options) {
   if(options.format) {
     if(options.format === 'application/n-quads' ||
       options.format === 'application/nquads') {
-      return await NQuads.serialize(dataset);
+      return NQuads.serialize(dataset);
     }
     throw new JsonLdError(
       'Unknown output format.',
@@ -13385,8 +13203,6 @@ jsonld.getContextValue = require('./context').getContextValue;
  * Document loaders.
  */
 jsonld.documentLoaders = {};
-jsonld.documentLoaders.node = require('./documentLoaders/node');
-jsonld.documentLoaders.xhr = require('./documentLoaders/xhr');
 
 /**
  * Assigns the default document loader for external document URLs to a built-in
@@ -13452,24 +13268,8 @@ jsonld.RequestQueue = require('./RequestQueue');
 /* WebIDL API */
 jsonld.JsonLdProcessor = require('./JsonLdProcessor')(jsonld);
 
-// setup browser global JsonLdProcessor
-if(_browser && typeof global.JsonLdProcessor === 'undefined') {
-  Object.defineProperty(global, 'JsonLdProcessor', {
-    writable: true,
-    enumerable: false,
-    configurable: true,
-    value: jsonld.JsonLdProcessor
-  });
-}
-
-// set platform-specific defaults/APIs
-if(_nodejs) {
-  // use node document loader by default
-  jsonld.useDocumentLoader('node');
-} else if(typeof XMLHttpRequest !== 'undefined') {
-  // use xhr document loader by default
-  jsonld.useDocumentLoader('xhr');
-}
+platform.setupGlobals(jsonld);
+platform.setupDocumentLoaders(jsonld);
 
 function _setDefaults(options, {
   documentLoader = jsonld.documentLoader,
@@ -13496,8 +13296,7 @@ wrapper(factory);
 // export API
 module.exports = factory;
 
-}).call(this)}).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./ContextResolver":164,"./JsonLdError":165,"./JsonLdProcessor":166,"./NQuads":167,"./RequestQueue":168,"./compact":170,"./context":172,"./documentLoaders/node":173,"./documentLoaders/xhr":174,"./expand":175,"./flatten":176,"./frame":177,"./fromRdf":178,"./graphTypes":179,"./nodeMap":181,"./toRdf":182,"./types":183,"./url":184,"./util":185,"_process":189,"lru-cache":186,"rdf-canonize":198}],181:[function(require,module,exports){
+},{"./ContextResolver":164,"./JsonLdError":165,"./JsonLdProcessor":166,"./NQuads":167,"./RequestQueue":168,"./compact":170,"./context":172,"./expand":174,"./flatten":175,"./frame":176,"./fromRdf":177,"./graphTypes":178,"./nodeMap":180,"./platform":181,"./toRdf":182,"./types":183,"./url":184,"./util":185,"lru-cache":186,"rdf-canonize":188}],180:[function(require,module,exports){
 /*
  * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
  */
@@ -13789,7 +13588,48 @@ api.mergeNodeMaps = graphs => {
   return defaultGraph;
 };
 
-},{"./JsonLdError":165,"./context":172,"./graphTypes":179,"./types":183,"./util":185}],182:[function(require,module,exports){
+},{"./JsonLdError":165,"./context":172,"./graphTypes":178,"./types":183,"./util":185}],181:[function(require,module,exports){
+/*
+ * Copyright (c) 2021 Digital Bazaar, Inc. All rights reserved.
+ */
+'use strict';
+
+const xhrLoader = require('./documentLoaders/xhr');
+
+const api = {};
+module.exports = api;
+
+/**
+ * Setup browser document loaders.
+ *
+ * @param jsonld the jsonld api.
+ */
+api.setupDocumentLoaders = function(jsonld) {
+  if(typeof XMLHttpRequest !== 'undefined') {
+    jsonld.documentLoaders.xhr = xhrLoader;
+    // use xhr document loader by default
+    jsonld.useDocumentLoader('xhr');
+  }
+};
+
+/**
+ * Setup browser globals.
+ *
+ * @param jsonld the jsonld api.
+ */
+api.setupGlobals = function(jsonld) {
+  // setup browser global JsonLdProcessor
+  if(typeof globalThis.JsonLdProcessor === 'undefined') {
+    Object.defineProperty(globalThis, 'JsonLdProcessor', {
+      writable: true,
+      enumerable: false,
+      configurable: true,
+      value: jsonld.JsonLdProcessor
+    });
+  }
+};
+
+},{"./documentLoaders/xhr":173}],182:[function(require,module,exports){
 /*
  * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
  */
@@ -14071,7 +13911,7 @@ function _objectToRDF(item, issuer, dataset, graphTerm, rdfDirection) {
   return object;
 }
 
-},{"./constants":171,"./context":172,"./graphTypes":179,"./nodeMap":181,"./types":183,"./url":184,"./util":185,"canonicalize":45}],183:[function(require,module,exports){
+},{"./constants":171,"./context":172,"./graphTypes":178,"./nodeMap":180,"./types":183,"./url":184,"./util":185,"canonicalize":45}],183:[function(require,module,exports){
 /*
  * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
  */
@@ -14921,7 +14761,7 @@ function _labelBlankNodes(issuer, element) {
   return element;
 }
 
-},{"./JsonLdError":165,"./graphTypes":179,"./types":183,"rdf-canonize":198}],186:[function(require,module,exports){
+},{"./JsonLdError":165,"./graphTypes":178,"./types":183,"rdf-canonize":188}],186:[function(require,module,exports){
 'use strict'
 
 // A linked list to keep track of recently-used-ness
@@ -15257,7 +15097,2494 @@ const forEachStep = (self, fn, node, thisp) => {
 
 module.exports = LRUCache
 
-},{"yallist":188}],187:[function(require,module,exports){
+},{"yallist":201}],187:[function(require,module,exports){
+// shim for using process in browser
+var process = module.exports = {};
+
+// cached from whatever global is present so that test runners that stub it
+// don't break things.  But we need to wrap it in a try catch in case it is
+// wrapped in strict mode code which doesn't define any globals.  It's inside a
+// function because try/catches deoptimize in certain engines.
+
+var cachedSetTimeout;
+var cachedClearTimeout;
+
+function defaultSetTimout() {
+    throw new Error('setTimeout has not been defined');
+}
+function defaultClearTimeout () {
+    throw new Error('clearTimeout has not been defined');
+}
+(function () {
+    try {
+        if (typeof setTimeout === 'function') {
+            cachedSetTimeout = setTimeout;
+        } else {
+            cachedSetTimeout = defaultSetTimout;
+        }
+    } catch (e) {
+        cachedSetTimeout = defaultSetTimout;
+    }
+    try {
+        if (typeof clearTimeout === 'function') {
+            cachedClearTimeout = clearTimeout;
+        } else {
+            cachedClearTimeout = defaultClearTimeout;
+        }
+    } catch (e) {
+        cachedClearTimeout = defaultClearTimeout;
+    }
+} ())
+function runTimeout(fun) {
+    if (cachedSetTimeout === setTimeout) {
+        //normal enviroments in sane situations
+        return setTimeout(fun, 0);
+    }
+    // if setTimeout wasn't available but was latter defined
+    if ((cachedSetTimeout === defaultSetTimout || !cachedSetTimeout) && setTimeout) {
+        cachedSetTimeout = setTimeout;
+        return setTimeout(fun, 0);
+    }
+    try {
+        // when when somebody has screwed with setTimeout but no I.E. maddness
+        return cachedSetTimeout(fun, 0);
+    } catch(e){
+        try {
+            // When we are in I.E. but the script has been evaled so I.E. doesn't trust the global object when called normally
+            return cachedSetTimeout.call(null, fun, 0);
+        } catch(e){
+            // same as above but when it's a version of I.E. that must have the global object for 'this', hopfully our context correct otherwise it will throw a global error
+            return cachedSetTimeout.call(this, fun, 0);
+        }
+    }
+
+
+}
+function runClearTimeout(marker) {
+    if (cachedClearTimeout === clearTimeout) {
+        //normal enviroments in sane situations
+        return clearTimeout(marker);
+    }
+    // if clearTimeout wasn't available but was latter defined
+    if ((cachedClearTimeout === defaultClearTimeout || !cachedClearTimeout) && clearTimeout) {
+        cachedClearTimeout = clearTimeout;
+        return clearTimeout(marker);
+    }
+    try {
+        // when when somebody has screwed with setTimeout but no I.E. maddness
+        return cachedClearTimeout(marker);
+    } catch (e){
+        try {
+            // When we are in I.E. but the script has been evaled so I.E. doesn't  trust the global object when called normally
+            return cachedClearTimeout.call(null, marker);
+        } catch (e){
+            // same as above but when it's a version of I.E. that must have the global object for 'this', hopfully our context correct otherwise it will throw a global error.
+            // Some versions of I.E. have different rules for clearTimeout vs setTimeout
+            return cachedClearTimeout.call(this, marker);
+        }
+    }
+
+
+
+}
+var queue = [];
+var draining = false;
+var currentQueue;
+var queueIndex = -1;
+
+function cleanUpNextTick() {
+    if (!draining || !currentQueue) {
+        return;
+    }
+    draining = false;
+    if (currentQueue.length) {
+        queue = currentQueue.concat(queue);
+    } else {
+        queueIndex = -1;
+    }
+    if (queue.length) {
+        drainQueue();
+    }
+}
+
+function drainQueue() {
+    if (draining) {
+        return;
+    }
+    var timeout = runTimeout(cleanUpNextTick);
+    draining = true;
+
+    var len = queue.length;
+    while(len) {
+        currentQueue = queue;
+        queue = [];
+        while (++queueIndex < len) {
+            if (currentQueue) {
+                currentQueue[queueIndex].run();
+            }
+        }
+        queueIndex = -1;
+        len = queue.length;
+    }
+    currentQueue = null;
+    draining = false;
+    runClearTimeout(timeout);
+}
+
+process.nextTick = function (fun) {
+    var args = new Array(arguments.length - 1);
+    if (arguments.length > 1) {
+        for (var i = 1; i < arguments.length; i++) {
+            args[i - 1] = arguments[i];
+        }
+    }
+    queue.push(new Item(fun, args));
+    if (queue.length === 1 && !draining) {
+        runTimeout(drainQueue);
+    }
+};
+
+// v8 likes predictible objects
+function Item(fun, array) {
+    this.fun = fun;
+    this.array = array;
+}
+Item.prototype.run = function () {
+    this.fun.apply(null, this.array);
+};
+process.title = 'browser';
+process.browser = true;
+process.env = {};
+process.argv = [];
+process.version = ''; // empty string to avoid regexp issues
+process.versions = {};
+
+function noop() {}
+
+process.on = noop;
+process.addListener = noop;
+process.once = noop;
+process.off = noop;
+process.removeListener = noop;
+process.removeAllListeners = noop;
+process.emit = noop;
+process.prependListener = noop;
+process.prependOnceListener = noop;
+
+process.listeners = function (name) { return [] }
+
+process.binding = function (name) {
+    throw new Error('process.binding is not supported');
+};
+
+process.cwd = function () { return '/' };
+process.chdir = function (dir) {
+    throw new Error('process.chdir is not supported');
+};
+process.umask = function() { return 0; };
+
+},{}],188:[function(require,module,exports){
+/**
+ * An implementation of the RDF Dataset Normalization specification.
+ *
+ * @author Dave Longley
+ *
+ * Copyright 2010-2021 Digital Bazaar, Inc.
+ */
+module.exports = require('./lib');
+
+},{"./lib":197}],189:[function(require,module,exports){
+/*
+ * Copyright (c) 2016-2021 Digital Bazaar, Inc. All rights reserved.
+ */
+'use strict';
+
+module.exports = class IdentifierIssuer {
+  /**
+   * Creates a new IdentifierIssuer. A IdentifierIssuer issues unique
+   * identifiers, keeping track of any previously issued identifiers.
+   *
+   * @param prefix the prefix to use ('<prefix><counter>').
+   * @param existing an existing Map to use.
+   * @param counter the counter to use.
+   */
+  constructor(prefix, existing = new Map(), counter = 0) {
+    this.prefix = prefix;
+    this._existing = existing;
+    this.counter = counter;
+  }
+
+  /**
+   * Copies this IdentifierIssuer.
+   *
+   * @return a copy of this IdentifierIssuer.
+   */
+  clone() {
+    const {prefix, _existing, counter} = this;
+    return new IdentifierIssuer(prefix, new Map(_existing), counter);
+  }
+
+  /**
+   * Gets the new identifier for the given old identifier, where if no old
+   * identifier is given a new identifier will be generated.
+   *
+   * @param [old] the old identifier to get the new identifier for.
+   *
+   * @return the new identifier.
+   */
+  getId(old) {
+    // return existing old identifier
+    const existing = old && this._existing.get(old);
+    if(existing) {
+      return existing;
+    }
+
+    // get next identifier
+    const identifier = this.prefix + this.counter;
+    this.counter++;
+
+    // save mapping
+    if(old) {
+      this._existing.set(old, identifier);
+    }
+
+    return identifier;
+  }
+
+  /**
+   * Returns true if the given old identifer has already been assigned a new
+   * identifier.
+   *
+   * @param old the old identifier to check.
+   *
+   * @return true if the old identifier has been assigned a new identifier,
+   *   false if not.
+   */
+  hasId(old) {
+    return this._existing.has(old);
+  }
+
+  /**
+   * Returns all of the IDs that have been issued new IDs in the order in
+   * which they were issued new IDs.
+   *
+   * @return the list of old IDs that has been issued new IDs in order.
+   */
+  getOldIds() {
+    return [...this._existing.keys()];
+  }
+};
+
+},{}],190:[function(require,module,exports){
+/*!
+ * Copyright (c) 2016-2022 Digital Bazaar, Inc. All rights reserved.
+ */
+'use strict';
+
+require('setimmediate');
+
+const crypto = self.crypto || self.msCrypto;
+
+module.exports = class MessageDigest {
+  /**
+   * Creates a new MessageDigest.
+   *
+   * @param algorithm the algorithm to use.
+   */
+  constructor(algorithm) {
+    // check if crypto.subtle is available
+    // check is here rather than top-level to only fail if class is used
+    if(!(crypto && crypto.subtle)) {
+      throw new Error('crypto.subtle not found.');
+    }
+    if(algorithm === 'sha256') {
+      this.algorithm = {name: 'SHA-256'};
+    } else if(algorithm === 'sha1') {
+      this.algorithm = {name: 'SHA-1'};
+    } else {
+      throw new Error(`Unsupported algorithm "${algorithm}".`);
+    }
+    this._content = '';
+  }
+
+  update(msg) {
+    this._content += msg;
+  }
+
+  async digest() {
+    const data = new TextEncoder().encode(this._content);
+    const buffer = new Uint8Array(
+      await crypto.subtle.digest(this.algorithm, data));
+    // return digest in hex
+    let hex = '';
+    for(let i = 0; i < buffer.length; ++i) {
+      hex += buffer[i].toString(16).padStart(2, '0');
+    }
+    return hex;
+  }
+};
+
+},{"setimmediate":198}],191:[function(require,module,exports){
+/*!
+ * Copyright (c) 2016-2022 Digital Bazaar, Inc. All rights reserved.
+ */
+'use strict';
+
+// eslint-disable-next-line no-unused-vars
+const TERMS = ['subject', 'predicate', 'object', 'graph'];
+const RDF = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#';
+const RDF_LANGSTRING = RDF + 'langString';
+const XSD_STRING = 'http://www.w3.org/2001/XMLSchema#string';
+
+const TYPE_NAMED_NODE = 'NamedNode';
+const TYPE_BLANK_NODE = 'BlankNode';
+const TYPE_LITERAL = 'Literal';
+const TYPE_DEFAULT_GRAPH = 'DefaultGraph';
+
+// build regexes
+const REGEX = {};
+(() => {
+  const iri = '(?:<([^:]+:[^>]*)>)';
+  // https://www.w3.org/TR/turtle/#grammar-production-BLANK_NODE_LABEL
+  const PN_CHARS_BASE =
+    'A-Z' + 'a-z' +
+    '\u00C0-\u00D6' +
+    '\u00D8-\u00F6' +
+    '\u00F8-\u02FF' +
+    '\u0370-\u037D' +
+    '\u037F-\u1FFF' +
+    '\u200C-\u200D' +
+    '\u2070-\u218F' +
+    '\u2C00-\u2FEF' +
+    '\u3001-\uD7FF' +
+    '\uF900-\uFDCF' +
+    '\uFDF0-\uFFFD';
+    // TODO:
+    //'\u10000-\uEFFFF';
+  const PN_CHARS_U =
+    PN_CHARS_BASE +
+    '_';
+  const PN_CHARS =
+    PN_CHARS_U +
+    '0-9' +
+    '-' +
+    '\u00B7' +
+    '\u0300-\u036F' +
+    '\u203F-\u2040';
+  const BLANK_NODE_LABEL =
+    '(_:' +
+      '(?:[' + PN_CHARS_U + '0-9])' +
+      '(?:(?:[' + PN_CHARS + '.])*(?:[' + PN_CHARS + ']))?' +
+    ')';
+  const bnode = BLANK_NODE_LABEL;
+  const plain = '"([^"\\\\]*(?:\\\\.[^"\\\\]*)*)"';
+  const datatype = '(?:\\^\\^' + iri + ')';
+  const language = '(?:@([a-zA-Z]+(?:-[a-zA-Z0-9]+)*))';
+  const literal = '(?:' + plain + '(?:' + datatype + '|' + language + ')?)';
+  const ws = '[ \\t]+';
+  const wso = '[ \\t]*';
+
+  // define quad part regexes
+  const subject = '(?:' + iri + '|' + bnode + ')' + ws;
+  const property = iri + ws;
+  const object = '(?:' + iri + '|' + bnode + '|' + literal + ')' + wso;
+  const graphName = '(?:\\.|(?:(?:' + iri + '|' + bnode + ')' + wso + '\\.))';
+
+  // end of line and empty regexes
+  REGEX.eoln = /(?:\r\n)|(?:\n)|(?:\r)/g;
+  REGEX.empty = new RegExp('^' + wso + '$');
+
+  // full quad regex
+  REGEX.quad = new RegExp(
+    '^' + wso + subject + property + object + graphName + wso + '$');
+})();
+
+module.exports = class NQuads {
+  /**
+   * Parses RDF in the form of N-Quads.
+   *
+   * @param input the N-Quads input to parse.
+   *
+   * @return an RDF dataset (an array of quads per http://rdf.js.org/).
+   */
+  static parse(input) {
+    // build RDF dataset
+    const dataset = [];
+
+    const graphs = {};
+
+    // split N-Quad input into lines
+    const lines = input.split(REGEX.eoln);
+    let lineNumber = 0;
+    for(const line of lines) {
+      lineNumber++;
+
+      // skip empty lines
+      if(REGEX.empty.test(line)) {
+        continue;
+      }
+
+      // parse quad
+      const match = line.match(REGEX.quad);
+      if(match === null) {
+        throw new Error('N-Quads parse error on line ' + lineNumber + '.');
+      }
+
+      // create RDF quad
+      const quad = {subject: null, predicate: null, object: null, graph: null};
+
+      // get subject
+      if(match[1] !== undefined) {
+        quad.subject = {termType: TYPE_NAMED_NODE, value: match[1]};
+      } else {
+        quad.subject = {termType: TYPE_BLANK_NODE, value: match[2]};
+      }
+
+      // get predicate
+      quad.predicate = {termType: TYPE_NAMED_NODE, value: match[3]};
+
+      // get object
+      if(match[4] !== undefined) {
+        quad.object = {termType: TYPE_NAMED_NODE, value: match[4]};
+      } else if(match[5] !== undefined) {
+        quad.object = {termType: TYPE_BLANK_NODE, value: match[5]};
+      } else {
+        quad.object = {
+          termType: TYPE_LITERAL,
+          value: undefined,
+          datatype: {
+            termType: TYPE_NAMED_NODE
+          }
+        };
+        if(match[7] !== undefined) {
+          quad.object.datatype.value = match[7];
+        } else if(match[8] !== undefined) {
+          quad.object.datatype.value = RDF_LANGSTRING;
+          quad.object.language = match[8];
+        } else {
+          quad.object.datatype.value = XSD_STRING;
+        }
+        quad.object.value = _unescape(match[6]);
+      }
+
+      // get graph
+      if(match[9] !== undefined) {
+        quad.graph = {
+          termType: TYPE_NAMED_NODE,
+          value: match[9]
+        };
+      } else if(match[10] !== undefined) {
+        quad.graph = {
+          termType: TYPE_BLANK_NODE,
+          value: match[10]
+        };
+      } else {
+        quad.graph = {
+          termType: TYPE_DEFAULT_GRAPH,
+          value: ''
+        };
+      }
+
+      // only add quad if it is unique in its graph
+      if(!(quad.graph.value in graphs)) {
+        graphs[quad.graph.value] = [quad];
+        dataset.push(quad);
+      } else {
+        let unique = true;
+        const quads = graphs[quad.graph.value];
+        for(const q of quads) {
+          if(_compareTriples(q, quad)) {
+            unique = false;
+            break;
+          }
+        }
+        if(unique) {
+          quads.push(quad);
+          dataset.push(quad);
+        }
+      }
+    }
+
+    return dataset;
+  }
+
+  /**
+   * Converts an RDF dataset to N-Quads.
+   *
+   * @param dataset (array of quads) the RDF dataset to convert.
+   *
+   * @return the N-Quads string.
+   */
+  static serialize(dataset) {
+    if(!Array.isArray(dataset)) {
+      dataset = NQuads.legacyDatasetToQuads(dataset);
+    }
+    const quads = [];
+    for(const quad of dataset) {
+      quads.push(NQuads.serializeQuad(quad));
+    }
+    return quads.sort().join('');
+  }
+
+  /**
+   * Converts RDF quad components to an N-Quad string (a single quad).
+   *
+   * @param {Object} s - N-Quad subject component.
+   * @param {Object} p - N-Quad predicate component.
+   * @param {Object} o - N-Quad object component.
+   * @param {Object} g - N-Quad graph component.
+   *
+   * @return {string} the N-Quad.
+   */
+  static serializeQuadComponents(s, p, o, g) {
+    let nquad = '';
+
+    // subject can only be NamedNode or BlankNode
+    if(s.termType === TYPE_NAMED_NODE) {
+      nquad += `<${s.value}>`;
+    } else {
+      nquad += `${s.value}`;
+    }
+
+    // predicate can only be NamedNode
+    nquad += ` <${p.value}> `;
+
+    // object is NamedNode, BlankNode, or Literal
+    if(o.termType === TYPE_NAMED_NODE) {
+      nquad += `<${o.value}>`;
+    } else if(o.termType === TYPE_BLANK_NODE) {
+      nquad += o.value;
+    } else {
+      nquad += `"${_escape(o.value)}"`;
+      if(o.datatype.value === RDF_LANGSTRING) {
+        if(o.language) {
+          nquad += `@${o.language}`;
+        }
+      } else if(o.datatype.value !== XSD_STRING) {
+        nquad += `^^<${o.datatype.value}>`;
+      }
+    }
+
+    // graph can only be NamedNode or BlankNode (or DefaultGraph, but that
+    // does not add to `nquad`)
+    if(g.termType === TYPE_NAMED_NODE) {
+      nquad += ` <${g.value}>`;
+    } else if(g.termType === TYPE_BLANK_NODE) {
+      nquad += ` ${g.value}`;
+    }
+
+    nquad += ' .\n';
+    return nquad;
+  }
+
+  /**
+   * Converts an RDF quad to an N-Quad string (a single quad).
+   *
+   * @param quad the RDF quad convert.
+   *
+   * @return the N-Quad string.
+   */
+  static serializeQuad(quad) {
+    return NQuads.serializeQuadComponents(
+      quad.subject, quad.predicate, quad.object, quad.graph);
+  }
+
+  /**
+   * Converts a legacy-formatted dataset to an array of quads dataset per
+   * http://rdf.js.org/.
+   *
+   * @param dataset the legacy dataset to convert.
+   *
+   * @return the array of quads dataset.
+   */
+  static legacyDatasetToQuads(dataset) {
+    const quads = [];
+
+    const termTypeMap = {
+      'blank node': TYPE_BLANK_NODE,
+      IRI: TYPE_NAMED_NODE,
+      literal: TYPE_LITERAL
+    };
+
+    for(const graphName in dataset) {
+      const triples = dataset[graphName];
+      triples.forEach(triple => {
+        const quad = {};
+        for(const componentName in triple) {
+          const oldComponent = triple[componentName];
+          const newComponent = {
+            termType: termTypeMap[oldComponent.type],
+            value: oldComponent.value
+          };
+          if(newComponent.termType === TYPE_LITERAL) {
+            newComponent.datatype = {
+              termType: TYPE_NAMED_NODE
+            };
+            if('datatype' in oldComponent) {
+              newComponent.datatype.value = oldComponent.datatype;
+            }
+            if('language' in oldComponent) {
+              if(!('datatype' in oldComponent)) {
+                newComponent.datatype.value = RDF_LANGSTRING;
+              }
+              newComponent.language = oldComponent.language;
+            } else if(!('datatype' in oldComponent)) {
+              newComponent.datatype.value = XSD_STRING;
+            }
+          }
+          quad[componentName] = newComponent;
+        }
+        if(graphName === '@default') {
+          quad.graph = {
+            termType: TYPE_DEFAULT_GRAPH,
+            value: ''
+          };
+        } else {
+          quad.graph = {
+            termType: graphName.startsWith('_:') ?
+              TYPE_BLANK_NODE : TYPE_NAMED_NODE,
+            value: graphName
+          };
+        }
+        quads.push(quad);
+      });
+    }
+
+    return quads;
+  }
+};
+
+/**
+ * Compares two RDF triples for equality.
+ *
+ * @param t1 the first triple.
+ * @param t2 the second triple.
+ *
+ * @return true if the triples are the same, false if not.
+ */
+function _compareTriples(t1, t2) {
+  // compare subject and object types first as it is the quickest check
+  if(!(t1.subject.termType === t2.subject.termType &&
+    t1.object.termType === t2.object.termType)) {
+    return false;
+  }
+  // compare values
+  if(!(t1.subject.value === t2.subject.value &&
+    t1.predicate.value === t2.predicate.value &&
+    t1.object.value === t2.object.value)) {
+    return false;
+  }
+  if(t1.object.termType !== TYPE_LITERAL) {
+    // no `datatype` or `language` to check
+    return true;
+  }
+  return (
+    (t1.object.datatype.termType === t2.object.datatype.termType) &&
+    (t1.object.language === t2.object.language) &&
+    (t1.object.datatype.value === t2.object.datatype.value)
+  );
+}
+
+const _escapeRegex = /["\\\n\r]/g;
+/**
+ * Escape string to N-Quads literal
+ */
+function _escape(s) {
+  return s.replace(_escapeRegex, function(match) {
+    switch(match) {
+      case '"': return '\\"';
+      case '\\': return '\\\\';
+      case '\n': return '\\n';
+      case '\r': return '\\r';
+    }
+  });
+}
+
+const _unescapeRegex =
+  /(?:\\([tbnrf"'\\]))|(?:\\u([0-9A-Fa-f]{4}))|(?:\\U([0-9A-Fa-f]{8}))/g;
+/**
+ * Unescape N-Quads literal to string
+ */
+function _unescape(s) {
+  return s.replace(_unescapeRegex, function(match, code, u, U) {
+    if(code) {
+      switch(code) {
+        case 't': return '\t';
+        case 'b': return '\b';
+        case 'n': return '\n';
+        case 'r': return '\r';
+        case 'f': return '\f';
+        case '"': return '"';
+        case '\'': return '\'';
+        case '\\': return '\\';
+      }
+    }
+    if(u) {
+      return String.fromCharCode(parseInt(u, 16));
+    }
+    if(U) {
+      // FIXME: support larger values
+      throw new Error('Unsupported U escape');
+    }
+  });
+}
+
+},{}],192:[function(require,module,exports){
+/*!
+ * Copyright (c) 2016-2022 Digital Bazaar, Inc. All rights reserved.
+ */
+'use strict';
+
+module.exports = class Permuter {
+  /**
+   * A Permuter iterates over all possible permutations of the given array
+   * of elements.
+   *
+   * @param list the array of elements to iterate over.
+   */
+  constructor(list) {
+    // original array
+    this.current = list.sort();
+    // indicates whether there are more permutations
+    this.done = false;
+    // directional info for permutation algorithm
+    this.dir = new Map();
+    for(let i = 0; i < list.length; ++i) {
+      this.dir.set(list[i], true);
+    }
+  }
+
+  /**
+   * Returns true if there is another permutation.
+   *
+   * @return true if there is another permutation, false if not.
+   */
+  hasNext() {
+    return !this.done;
+  }
+
+  /**
+   * Gets the next permutation. Call hasNext() to ensure there is another one
+   * first.
+   *
+   * @return the next permutation.
+   */
+  next() {
+    // copy current permutation to return it
+    const {current, dir} = this;
+    const rval = current.slice();
+
+    /* Calculate the next permutation using the Steinhaus-Johnson-Trotter
+     permutation algorithm. */
+
+    // get largest mobile element k
+    // (mobile: element is greater than the one it is looking at)
+    let k = null;
+    let pos = 0;
+    const length = current.length;
+    for(let i = 0; i < length; ++i) {
+      const element = current[i];
+      const left = dir.get(element);
+      if((k === null || element > k) &&
+        ((left && i > 0 && element > current[i - 1]) ||
+        (!left && i < (length - 1) && element > current[i + 1]))) {
+        k = element;
+        pos = i;
+      }
+    }
+
+    // no more permutations
+    if(k === null) {
+      this.done = true;
+    } else {
+      // swap k and the element it is looking at
+      const swap = dir.get(k) ? pos - 1 : pos + 1;
+      current[pos] = current[swap];
+      current[swap] = k;
+
+      // reverse the direction of all elements larger than k
+      for(const element of current) {
+        if(element > k) {
+          dir.set(element, !dir.get(element));
+        }
+      }
+    }
+
+    return rval;
+  }
+};
+
+},{}],193:[function(require,module,exports){
+(function (setImmediate){(function (){
+/*!
+ * Copyright (c) 2016-2022 Digital Bazaar, Inc. All rights reserved.
+ */
+'use strict';
+
+const IdentifierIssuer = require('./IdentifierIssuer');
+const MessageDigest = require('./MessageDigest');
+const Permuter = require('./Permuter');
+const NQuads = require('./NQuads');
+
+module.exports = class URDNA2015 {
+  constructor({
+    createMessageDigest = () => new MessageDigest('sha256'),
+    maxDeepIterations = Infinity
+  } = {}) {
+    this.name = 'URDNA2015';
+    this.blankNodeInfo = new Map();
+    this.canonicalIssuer = new IdentifierIssuer('_:c14n');
+    this.createMessageDigest = createMessageDigest;
+    this.maxDeepIterations = maxDeepIterations;
+    this.quads = null;
+    this.deepIterations = null;
+  }
+
+  // 4.4) Normalization Algorithm
+  async main(dataset) {
+    this.deepIterations = new Map();
+    this.quads = dataset;
+
+    // 1) Create the normalization state.
+    // 2) For every quad in input dataset:
+    for(const quad of dataset) {
+      // 2.1) For each blank node that occurs in the quad, add a reference
+      // to the quad using the blank node identifier in the blank node to
+      // quads map, creating a new entry if necessary.
+      this._addBlankNodeQuadInfo({quad, component: quad.subject});
+      this._addBlankNodeQuadInfo({quad, component: quad.object});
+      this._addBlankNodeQuadInfo({quad, component: quad.graph});
+    }
+
+    // 3) Create a list of non-normalized blank node identifiers
+    // non-normalized identifiers and populate it using the keys from the
+    // blank node to quads map.
+    // Note: We use a map here and it was generated during step 2.
+
+    // 4) `simple` flag is skipped -- loop is optimized away. This optimization
+    // is permitted because there was a typo in the hash first degree quads
+    // algorithm in the URDNA2015 spec that was implemented widely making it
+    // such that it could not be fixed; the result was that the loop only
+    // needs to be run once and the first degree quad hashes will never change.
+    // 5.1-5.2 are skipped; first degree quad hashes are generated just once
+    // for all non-normalized blank nodes.
+
+    // 5.3) For each blank node identifier identifier in non-normalized
+    // identifiers:
+    const hashToBlankNodes = new Map();
+    const nonNormalized = [...this.blankNodeInfo.keys()];
+    let i = 0;
+    for(const id of nonNormalized) {
+      // Note: batch hashing first degree quads 100 at a time
+      if(++i % 100 === 0) {
+        await this._yield();
+      }
+      // steps 5.3.1 and 5.3.2:
+      await this._hashAndTrackBlankNode({id, hashToBlankNodes});
+    }
+
+    // 5.4) For each hash to identifier list mapping in hash to blank
+    // nodes map, lexicographically-sorted by hash:
+    const hashes = [...hashToBlankNodes.keys()].sort();
+    // optimize away second sort, gather non-unique hashes in order as we go
+    const nonUnique = [];
+    for(const hash of hashes) {
+      // 5.4.1) If the length of identifier list is greater than 1,
+      // continue to the next mapping.
+      const idList = hashToBlankNodes.get(hash);
+      if(idList.length > 1) {
+        nonUnique.push(idList);
+        continue;
+      }
+
+      // 5.4.2) Use the Issue Identifier algorithm, passing canonical
+      // issuer and the single blank node identifier in identifier
+      // list, identifier, to issue a canonical replacement identifier
+      // for identifier.
+      const id = idList[0];
+      this.canonicalIssuer.getId(id);
+
+      // Note: These steps are skipped, optimized away since the loop
+      // only needs to be run once.
+      // 5.4.3) Remove identifier from non-normalized identifiers.
+      // 5.4.4) Remove hash from the hash to blank nodes map.
+      // 5.4.5) Set simple to true.
+    }
+
+    // 6) For each hash to identifier list mapping in hash to blank nodes map,
+    // lexicographically-sorted by hash:
+    // Note: sort optimized away, use `nonUnique`.
+    for(const idList of nonUnique) {
+      // 6.1) Create hash path list where each item will be a result of
+      // running the Hash N-Degree Quads algorithm.
+      const hashPathList = [];
+
+      // 6.2) For each blank node identifier identifier in identifier list:
+      for(const id of idList) {
+        // 6.2.1) If a canonical identifier has already been issued for
+        // identifier, continue to the next identifier.
+        if(this.canonicalIssuer.hasId(id)) {
+          continue;
+        }
+
+        // 6.2.2) Create temporary issuer, an identifier issuer
+        // initialized with the prefix _:b.
+        const issuer = new IdentifierIssuer('_:b');
+
+        // 6.2.3) Use the Issue Identifier algorithm, passing temporary
+        // issuer and identifier, to issue a new temporary blank node
+        // identifier for identifier.
+        issuer.getId(id);
+
+        // 6.2.4) Run the Hash N-Degree Quads algorithm, passing
+        // temporary issuer, and append the result to the hash path list.
+        const result = await this.hashNDegreeQuads(id, issuer);
+        hashPathList.push(result);
+      }
+
+      // 6.3) For each result in the hash path list,
+      // lexicographically-sorted by the hash in result:
+      hashPathList.sort(_stringHashCompare);
+      for(const result of hashPathList) {
+        // 6.3.1) For each blank node identifier, existing identifier,
+        // that was issued a temporary identifier by identifier issuer
+        // in result, issue a canonical identifier, in the same order,
+        // using the Issue Identifier algorithm, passing canonical
+        // issuer and existing identifier.
+        const oldIds = result.issuer.getOldIds();
+        for(const id of oldIds) {
+          this.canonicalIssuer.getId(id);
+        }
+      }
+    }
+
+    /* Note: At this point all blank nodes in the set of RDF quads have been
+    assigned canonical identifiers, which have been stored in the canonical
+    issuer. Here each quad is updated by assigning each of its blank nodes
+    its new identifier. */
+
+    // 7) For each quad, quad, in input dataset:
+    const normalized = [];
+    for(const quad of this.quads) {
+      // 7.1) Create a copy, quad copy, of quad and replace any existing
+      // blank node identifiers using the canonical identifiers
+      // previously issued by canonical issuer.
+      // Note: We optimize away the copy here.
+      const nQuad = NQuads.serializeQuadComponents(
+        this._componentWithCanonicalId(quad.subject),
+        quad.predicate,
+        this._componentWithCanonicalId(quad.object),
+        this._componentWithCanonicalId(quad.graph)
+      );
+      // 7.2) Add quad copy to the normalized dataset.
+      normalized.push(nQuad);
+    }
+
+    // sort normalized output
+    normalized.sort();
+
+    // 8) Return the normalized dataset.
+    return normalized.join('');
+  }
+
+  // 4.6) Hash First Degree Quads
+  async hashFirstDegreeQuads(id) {
+    // 1) Initialize nquads to an empty list. It will be used to store quads in
+    // N-Quads format.
+    const nquads = [];
+
+    // 2) Get the list of quads `quads` associated with the reference blank node
+    // identifier in the blank node to quads map.
+    const info = this.blankNodeInfo.get(id);
+    const quads = info.quads;
+
+    // 3) For each quad `quad` in `quads`:
+    for(const quad of quads) {
+      // 3.1) Serialize the quad in N-Quads format with the following special
+      // rule:
+
+      // 3.1.1) If any component in quad is an blank node, then serialize it
+      // using a special identifier as follows:
+      const copy = {
+        subject: null, predicate: quad.predicate, object: null, graph: null
+      };
+      // 3.1.2) If the blank node's existing blank node identifier matches
+      // the reference blank node identifier then use the blank node
+      // identifier _:a, otherwise, use the blank node identifier _:z.
+      copy.subject = this.modifyFirstDegreeComponent(
+        id, quad.subject, 'subject');
+      copy.object = this.modifyFirstDegreeComponent(
+        id, quad.object, 'object');
+      copy.graph = this.modifyFirstDegreeComponent(
+        id, quad.graph, 'graph');
+      nquads.push(NQuads.serializeQuad(copy));
+    }
+
+    // 4) Sort nquads in lexicographical order.
+    nquads.sort();
+
+    // 5) Return the hash that results from passing the sorted, joined nquads
+    // through the hash algorithm.
+    const md = this.createMessageDigest();
+    for(const nquad of nquads) {
+      md.update(nquad);
+    }
+    info.hash = await md.digest();
+    return info.hash;
+  }
+
+  // 4.7) Hash Related Blank Node
+  async hashRelatedBlankNode(related, quad, issuer, position) {
+    // 1) Set the identifier to use for related, preferring first the canonical
+    // identifier for related if issued, second the identifier issued by issuer
+    // if issued, and last, if necessary, the result of the Hash First Degree
+    // Quads algorithm, passing related.
+    let id;
+    if(this.canonicalIssuer.hasId(related)) {
+      id = this.canonicalIssuer.getId(related);
+    } else if(issuer.hasId(related)) {
+      id = issuer.getId(related);
+    } else {
+      id = this.blankNodeInfo.get(related).hash;
+    }
+
+    // 2) Initialize a string input to the value of position.
+    // Note: We use a hash object instead.
+    const md = this.createMessageDigest();
+    md.update(position);
+
+    // 3) If position is not g, append <, the value of the predicate in quad,
+    // and > to input.
+    if(position !== 'g') {
+      md.update(this.getRelatedPredicate(quad));
+    }
+
+    // 4) Append identifier to input.
+    md.update(id);
+
+    // 5) Return the hash that results from passing input through the hash
+    // algorithm.
+    return md.digest();
+  }
+
+  // 4.8) Hash N-Degree Quads
+  async hashNDegreeQuads(id, issuer) {
+    const deepIterations = this.deepIterations.get(id) || 0;
+    if(deepIterations > this.maxDeepIterations) {
+      throw new Error(
+        `Maximum deep iterations (${this.maxDeepIterations}) exceeded.`);
+    }
+    this.deepIterations.set(id, deepIterations + 1);
+
+    // 1) Create a hash to related blank nodes map for storing hashes that
+    // identify related blank nodes.
+    // Note: 2) and 3) handled within `createHashToRelated`
+    const md = this.createMessageDigest();
+    const hashToRelated = await this.createHashToRelated(id, issuer);
+
+    // 4) Create an empty string, data to hash.
+    // Note: We created a hash object `md` above instead.
+
+    // 5) For each related hash to blank node list mapping in hash to related
+    // blank nodes map, sorted lexicographically by related hash:
+    const hashes = [...hashToRelated.keys()].sort();
+    for(const hash of hashes) {
+      // 5.1) Append the related hash to the data to hash.
+      md.update(hash);
+
+      // 5.2) Create a string chosen path.
+      let chosenPath = '';
+
+      // 5.3) Create an unset chosen issuer variable.
+      let chosenIssuer;
+
+      // 5.4) For each permutation of blank node list:
+      const permuter = new Permuter(hashToRelated.get(hash));
+      let i = 0;
+      while(permuter.hasNext()) {
+        const permutation = permuter.next();
+        // Note: batch permutations 3 at a time
+        if(++i % 3 === 0) {
+          await this._yield();
+        }
+
+        // 5.4.1) Create a copy of issuer, issuer copy.
+        let issuerCopy = issuer.clone();
+
+        // 5.4.2) Create a string path.
+        let path = '';
+
+        // 5.4.3) Create a recursion list, to store blank node identifiers
+        // that must be recursively processed by this algorithm.
+        const recursionList = [];
+
+        // 5.4.4) For each related in permutation:
+        let nextPermutation = false;
+        for(const related of permutation) {
+          // 5.4.4.1) If a canonical identifier has been issued for
+          // related, append it to path.
+          if(this.canonicalIssuer.hasId(related)) {
+            path += this.canonicalIssuer.getId(related);
+          } else {
+            // 5.4.4.2) Otherwise:
+            // 5.4.4.2.1) If issuer copy has not issued an identifier for
+            // related, append related to recursion list.
+            if(!issuerCopy.hasId(related)) {
+              recursionList.push(related);
+            }
+            // 5.4.4.2.2) Use the Issue Identifier algorithm, passing
+            // issuer copy and related and append the result to path.
+            path += issuerCopy.getId(related);
+          }
+
+          // 5.4.4.3) If chosen path is not empty and the length of path
+          // is greater than or equal to the length of chosen path and
+          // path is lexicographically greater than chosen path, then
+          // skip to the next permutation.
+          // Note: Comparing path length to chosen path length can be optimized
+          // away; only compare lexicographically.
+          if(chosenPath.length !== 0 && path > chosenPath) {
+            nextPermutation = true;
+            break;
+          }
+        }
+
+        if(nextPermutation) {
+          continue;
+        }
+
+        // 5.4.5) For each related in recursion list:
+        for(const related of recursionList) {
+          // 5.4.5.1) Set result to the result of recursively executing
+          // the Hash N-Degree Quads algorithm, passing related for
+          // identifier and issuer copy for path identifier issuer.
+          const result = await this.hashNDegreeQuads(related, issuerCopy);
+
+          // 5.4.5.2) Use the Issue Identifier algorithm, passing issuer
+          // copy and related and append the result to path.
+          path += issuerCopy.getId(related);
+
+          // 5.4.5.3) Append <, the hash in result, and > to path.
+          path += `<${result.hash}>`;
+
+          // 5.4.5.4) Set issuer copy to the identifier issuer in
+          // result.
+          issuerCopy = result.issuer;
+
+          // 5.4.5.5) If chosen path is not empty and the length of path
+          // is greater than or equal to the length of chosen path and
+          // path is lexicographically greater than chosen path, then
+          // skip to the next permutation.
+          // Note: Comparing path length to chosen path length can be optimized
+          // away; only compare lexicographically.
+          if(chosenPath.length !== 0 && path > chosenPath) {
+            nextPermutation = true;
+            break;
+          }
+        }
+
+        if(nextPermutation) {
+          continue;
+        }
+
+        // 5.4.6) If chosen path is empty or path is lexicographically
+        // less than chosen path, set chosen path to path and chosen
+        // issuer to issuer copy.
+        if(chosenPath.length === 0 || path < chosenPath) {
+          chosenPath = path;
+          chosenIssuer = issuerCopy;
+        }
+      }
+
+      // 5.5) Append chosen path to data to hash.
+      md.update(chosenPath);
+
+      // 5.6) Replace issuer, by reference, with chosen issuer.
+      issuer = chosenIssuer;
+    }
+
+    // 6) Return issuer and the hash that results from passing data to hash
+    // through the hash algorithm.
+    return {hash: await md.digest(), issuer};
+  }
+
+  // helper for modifying component during Hash First Degree Quads
+  modifyFirstDegreeComponent(id, component) {
+    if(component.termType !== 'BlankNode') {
+      return component;
+    }
+    /* Note: A mistake in the URDNA2015 spec that made its way into
+    implementations (and therefore must stay to avoid interop breakage)
+    resulted in an assigned canonical ID, if available for
+    `component.value`, not being used in place of `_:a`/`_:z`, so
+    we don't use it here. */
+    return {
+      termType: 'BlankNode',
+      value: component.value === id ? '_:a' : '_:z'
+    };
+  }
+
+  // helper for getting a related predicate
+  getRelatedPredicate(quad) {
+    return `<${quad.predicate.value}>`;
+  }
+
+  // helper for creating hash to related blank nodes map
+  async createHashToRelated(id, issuer) {
+    // 1) Create a hash to related blank nodes map for storing hashes that
+    // identify related blank nodes.
+    const hashToRelated = new Map();
+
+    // 2) Get a reference, quads, to the list of quads in the blank node to
+    // quads map for the key identifier.
+    const quads = this.blankNodeInfo.get(id).quads;
+
+    // 3) For each quad in quads:
+    let i = 0;
+    for(const quad of quads) {
+      // Note: batch hashing related blank node quads 100 at a time
+      if(++i % 100 === 0) {
+        await this._yield();
+      }
+      // 3.1) For each component in quad, if component is the subject, object,
+      // and graph name and it is a blank node that is not identified by
+      // identifier:
+      // steps 3.1.1 and 3.1.2 occur in helpers:
+      await Promise.all([
+        this._addRelatedBlankNodeHash({
+          quad, component: quad.subject, position: 's',
+          id, issuer, hashToRelated
+        }),
+        this._addRelatedBlankNodeHash({
+          quad, component: quad.object, position: 'o',
+          id, issuer, hashToRelated
+        }),
+        this._addRelatedBlankNodeHash({
+          quad, component: quad.graph, position: 'g',
+          id, issuer, hashToRelated
+        })
+      ]);
+    }
+
+    return hashToRelated;
+  }
+
+  async _hashAndTrackBlankNode({id, hashToBlankNodes}) {
+    // 5.3.1) Create a hash, hash, according to the Hash First Degree
+    // Quads algorithm.
+    const hash = await this.hashFirstDegreeQuads(id);
+
+    // 5.3.2) Add hash and identifier to hash to blank nodes map,
+    // creating a new entry if necessary.
+    const idList = hashToBlankNodes.get(hash);
+    if(!idList) {
+      hashToBlankNodes.set(hash, [id]);
+    } else {
+      idList.push(id);
+    }
+  }
+
+  _addBlankNodeQuadInfo({quad, component}) {
+    if(component.termType !== 'BlankNode') {
+      return;
+    }
+    const id = component.value;
+    const info = this.blankNodeInfo.get(id);
+    if(info) {
+      info.quads.add(quad);
+    } else {
+      this.blankNodeInfo.set(id, {quads: new Set([quad]), hash: null});
+    }
+  }
+
+  async _addRelatedBlankNodeHash(
+    {quad, component, position, id, issuer, hashToRelated}) {
+    if(!(component.termType === 'BlankNode' && component.value !== id)) {
+      return;
+    }
+    // 3.1.1) Set hash to the result of the Hash Related Blank Node
+    // algorithm, passing the blank node identifier for component as
+    // related, quad, path identifier issuer as issuer, and position as
+    // either s, o, or g based on whether component is a subject, object,
+    // graph name, respectively.
+    const related = component.value;
+    const hash = await this.hashRelatedBlankNode(
+      related, quad, issuer, position);
+
+    // 3.1.2) Add a mapping of hash to the blank node identifier for
+    // component to hash to related blank nodes map, adding an entry as
+    // necessary.
+    const entries = hashToRelated.get(hash);
+    if(entries) {
+      entries.push(related);
+    } else {
+      hashToRelated.set(hash, [related]);
+    }
+  }
+
+  // canonical ids for 7.1
+  _componentWithCanonicalId(component) {
+    if(component.termType === 'BlankNode' &&
+      !component.value.startsWith(this.canonicalIssuer.prefix)) {
+      // create new BlankNode
+      return {
+        termType: 'BlankNode',
+        value: this.canonicalIssuer.getId(component.value)
+      };
+    }
+    return component;
+  }
+
+  async _yield() {
+    return new Promise(resolve => setImmediate(resolve));
+  }
+};
+
+function _stringHashCompare(a, b) {
+  return a.hash < b.hash ? -1 : a.hash > b.hash ? 1 : 0;
+}
+
+}).call(this)}).call(this,require("timers").setImmediate)
+},{"./IdentifierIssuer":189,"./MessageDigest":190,"./NQuads":191,"./Permuter":192,"timers":199}],194:[function(require,module,exports){
+/*!
+ * Copyright (c) 2016-2022 Digital Bazaar, Inc. All rights reserved.
+ */
+'use strict';
+
+const IdentifierIssuer = require('./IdentifierIssuer');
+// FIXME: do not import; convert to requiring a
+// hash factory
+const MessageDigest = require('./MessageDigest');
+const Permuter = require('./Permuter');
+const NQuads = require('./NQuads');
+
+module.exports = class URDNA2015Sync {
+  constructor({
+    createMessageDigest = () => new MessageDigest('sha256'),
+    maxDeepIterations = Infinity
+  } = {}) {
+    this.name = 'URDNA2015';
+    this.blankNodeInfo = new Map();
+    this.canonicalIssuer = new IdentifierIssuer('_:c14n');
+    this.createMessageDigest = createMessageDigest;
+    this.maxDeepIterations = maxDeepIterations;
+    this.quads = null;
+    this.deepIterations = null;
+  }
+
+  // 4.4) Normalization Algorithm
+  main(dataset) {
+    this.deepIterations = new Map();
+    this.quads = dataset;
+
+    // 1) Create the normalization state.
+    // 2) For every quad in input dataset:
+    for(const quad of dataset) {
+      // 2.1) For each blank node that occurs in the quad, add a reference
+      // to the quad using the blank node identifier in the blank node to
+      // quads map, creating a new entry if necessary.
+      this._addBlankNodeQuadInfo({quad, component: quad.subject});
+      this._addBlankNodeQuadInfo({quad, component: quad.object});
+      this._addBlankNodeQuadInfo({quad, component: quad.graph});
+    }
+
+    // 3) Create a list of non-normalized blank node identifiers
+    // non-normalized identifiers and populate it using the keys from the
+    // blank node to quads map.
+    // Note: We use a map here and it was generated during step 2.
+
+    // 4) `simple` flag is skipped -- loop is optimized away. This optimization
+    // is permitted because there was a typo in the hash first degree quads
+    // algorithm in the URDNA2015 spec that was implemented widely making it
+    // such that it could not be fixed; the result was that the loop only
+    // needs to be run once and the first degree quad hashes will never change.
+    // 5.1-5.2 are skipped; first degree quad hashes are generated just once
+    // for all non-normalized blank nodes.
+
+    // 5.3) For each blank node identifier identifier in non-normalized
+    // identifiers:
+    const hashToBlankNodes = new Map();
+    const nonNormalized = [...this.blankNodeInfo.keys()];
+    for(const id of nonNormalized) {
+      // steps 5.3.1 and 5.3.2:
+      this._hashAndTrackBlankNode({id, hashToBlankNodes});
+    }
+
+    // 5.4) For each hash to identifier list mapping in hash to blank
+    // nodes map, lexicographically-sorted by hash:
+    const hashes = [...hashToBlankNodes.keys()].sort();
+    // optimize away second sort, gather non-unique hashes in order as we go
+    const nonUnique = [];
+    for(const hash of hashes) {
+      // 5.4.1) If the length of identifier list is greater than 1,
+      // continue to the next mapping.
+      const idList = hashToBlankNodes.get(hash);
+      if(idList.length > 1) {
+        nonUnique.push(idList);
+        continue;
+      }
+
+      // 5.4.2) Use the Issue Identifier algorithm, passing canonical
+      // issuer and the single blank node identifier in identifier
+      // list, identifier, to issue a canonical replacement identifier
+      // for identifier.
+      const id = idList[0];
+      this.canonicalIssuer.getId(id);
+
+      // Note: These steps are skipped, optimized away since the loop
+      // only needs to be run once.
+      // 5.4.3) Remove identifier from non-normalized identifiers.
+      // 5.4.4) Remove hash from the hash to blank nodes map.
+      // 5.4.5) Set simple to true.
+    }
+
+    // 6) For each hash to identifier list mapping in hash to blank nodes map,
+    // lexicographically-sorted by hash:
+    // Note: sort optimized away, use `nonUnique`.
+    for(const idList of nonUnique) {
+      // 6.1) Create hash path list where each item will be a result of
+      // running the Hash N-Degree Quads algorithm.
+      const hashPathList = [];
+
+      // 6.2) For each blank node identifier identifier in identifier list:
+      for(const id of idList) {
+        // 6.2.1) If a canonical identifier has already been issued for
+        // identifier, continue to the next identifier.
+        if(this.canonicalIssuer.hasId(id)) {
+          continue;
+        }
+
+        // 6.2.2) Create temporary issuer, an identifier issuer
+        // initialized with the prefix _:b.
+        const issuer = new IdentifierIssuer('_:b');
+
+        // 6.2.3) Use the Issue Identifier algorithm, passing temporary
+        // issuer and identifier, to issue a new temporary blank node
+        // identifier for identifier.
+        issuer.getId(id);
+
+        // 6.2.4) Run the Hash N-Degree Quads algorithm, passing
+        // temporary issuer, and append the result to the hash path list.
+        const result = this.hashNDegreeQuads(id, issuer);
+        hashPathList.push(result);
+      }
+
+      // 6.3) For each result in the hash path list,
+      // lexicographically-sorted by the hash in result:
+      hashPathList.sort(_stringHashCompare);
+      for(const result of hashPathList) {
+        // 6.3.1) For each blank node identifier, existing identifier,
+        // that was issued a temporary identifier by identifier issuer
+        // in result, issue a canonical identifier, in the same order,
+        // using the Issue Identifier algorithm, passing canonical
+        // issuer and existing identifier.
+        const oldIds = result.issuer.getOldIds();
+        for(const id of oldIds) {
+          this.canonicalIssuer.getId(id);
+        }
+      }
+    }
+
+    /* Note: At this point all blank nodes in the set of RDF quads have been
+    assigned canonical identifiers, which have been stored in the canonical
+    issuer. Here each quad is updated by assigning each of its blank nodes
+    its new identifier. */
+
+    // 7) For each quad, quad, in input dataset:
+    const normalized = [];
+    for(const quad of this.quads) {
+      // 7.1) Create a copy, quad copy, of quad and replace any existing
+      // blank node identifiers using the canonical identifiers
+      // previously issued by canonical issuer.
+      // Note: We optimize away the copy here.
+      const nQuad = NQuads.serializeQuadComponents(
+        this._componentWithCanonicalId({component: quad.subject}),
+        quad.predicate,
+        this._componentWithCanonicalId({component: quad.object}),
+        this._componentWithCanonicalId({component: quad.graph})
+      );
+      // 7.2) Add quad copy to the normalized dataset.
+      normalized.push(nQuad);
+    }
+
+    // sort normalized output
+    normalized.sort();
+
+    // 8) Return the normalized dataset.
+    return normalized.join('');
+  }
+
+  // 4.6) Hash First Degree Quads
+  hashFirstDegreeQuads(id) {
+    // 1) Initialize nquads to an empty list. It will be used to store quads in
+    // N-Quads format.
+    const nquads = [];
+
+    // 2) Get the list of quads `quads` associated with the reference blank node
+    // identifier in the blank node to quads map.
+    const info = this.blankNodeInfo.get(id);
+    const quads = info.quads;
+
+    // 3) For each quad `quad` in `quads`:
+    for(const quad of quads) {
+      // 3.1) Serialize the quad in N-Quads format with the following special
+      // rule:
+
+      // 3.1.1) If any component in quad is an blank node, then serialize it
+      // using a special identifier as follows:
+      const copy = {
+        subject: null, predicate: quad.predicate, object: null, graph: null
+      };
+      // 3.1.2) If the blank node's existing blank node identifier matches
+      // the reference blank node identifier then use the blank node
+      // identifier _:a, otherwise, use the blank node identifier _:z.
+      copy.subject = this.modifyFirstDegreeComponent(
+        id, quad.subject, 'subject');
+      copy.object = this.modifyFirstDegreeComponent(
+        id, quad.object, 'object');
+      copy.graph = this.modifyFirstDegreeComponent(
+        id, quad.graph, 'graph');
+      nquads.push(NQuads.serializeQuad(copy));
+    }
+
+    // 4) Sort nquads in lexicographical order.
+    nquads.sort();
+
+    // 5) Return the hash that results from passing the sorted, joined nquads
+    // through the hash algorithm.
+    const md = this.createMessageDigest();
+    for(const nquad of nquads) {
+      md.update(nquad);
+    }
+    info.hash = md.digest();
+    return info.hash;
+  }
+
+  // 4.7) Hash Related Blank Node
+  hashRelatedBlankNode(related, quad, issuer, position) {
+    // 1) Set the identifier to use for related, preferring first the canonical
+    // identifier for related if issued, second the identifier issued by issuer
+    // if issued, and last, if necessary, the result of the Hash First Degree
+    // Quads algorithm, passing related.
+    let id;
+    if(this.canonicalIssuer.hasId(related)) {
+      id = this.canonicalIssuer.getId(related);
+    } else if(issuer.hasId(related)) {
+      id = issuer.getId(related);
+    } else {
+      id = this.blankNodeInfo.get(related).hash;
+    }
+
+    // 2) Initialize a string input to the value of position.
+    // Note: We use a hash object instead.
+    const md = this.createMessageDigest();
+    md.update(position);
+
+    // 3) If position is not g, append <, the value of the predicate in quad,
+    // and > to input.
+    if(position !== 'g') {
+      md.update(this.getRelatedPredicate(quad));
+    }
+
+    // 4) Append identifier to input.
+    md.update(id);
+
+    // 5) Return the hash that results from passing input through the hash
+    // algorithm.
+    return md.digest();
+  }
+
+  // 4.8) Hash N-Degree Quads
+  hashNDegreeQuads(id, issuer) {
+    const deepIterations = this.deepIterations.get(id) || 0;
+    if(deepIterations > this.maxDeepIterations) {
+      throw new Error(
+        `Maximum deep iterations (${this.maxDeepIterations}) exceeded.`);
+    }
+    this.deepIterations.set(id, deepIterations + 1);
+
+    // 1) Create a hash to related blank nodes map for storing hashes that
+    // identify related blank nodes.
+    // Note: 2) and 3) handled within `createHashToRelated`
+    const md = this.createMessageDigest();
+    const hashToRelated = this.createHashToRelated(id, issuer);
+
+    // 4) Create an empty string, data to hash.
+    // Note: We created a hash object `md` above instead.
+
+    // 5) For each related hash to blank node list mapping in hash to related
+    // blank nodes map, sorted lexicographically by related hash:
+    const hashes = [...hashToRelated.keys()].sort();
+    for(const hash of hashes) {
+      // 5.1) Append the related hash to the data to hash.
+      md.update(hash);
+
+      // 5.2) Create a string chosen path.
+      let chosenPath = '';
+
+      // 5.3) Create an unset chosen issuer variable.
+      let chosenIssuer;
+
+      // 5.4) For each permutation of blank node list:
+      const permuter = new Permuter(hashToRelated.get(hash));
+      while(permuter.hasNext()) {
+        const permutation = permuter.next();
+
+        // 5.4.1) Create a copy of issuer, issuer copy.
+        let issuerCopy = issuer.clone();
+
+        // 5.4.2) Create a string path.
+        let path = '';
+
+        // 5.4.3) Create a recursion list, to store blank node identifiers
+        // that must be recursively processed by this algorithm.
+        const recursionList = [];
+
+        // 5.4.4) For each related in permutation:
+        let nextPermutation = false;
+        for(const related of permutation) {
+          // 5.4.4.1) If a canonical identifier has been issued for
+          // related, append it to path.
+          if(this.canonicalIssuer.hasId(related)) {
+            path += this.canonicalIssuer.getId(related);
+          } else {
+            // 5.4.4.2) Otherwise:
+            // 5.4.4.2.1) If issuer copy has not issued an identifier for
+            // related, append related to recursion list.
+            if(!issuerCopy.hasId(related)) {
+              recursionList.push(related);
+            }
+            // 5.4.4.2.2) Use the Issue Identifier algorithm, passing
+            // issuer copy and related and append the result to path.
+            path += issuerCopy.getId(related);
+          }
+
+          // 5.4.4.3) If chosen path is not empty and the length of path
+          // is greater than or equal to the length of chosen path and
+          // path is lexicographically greater than chosen path, then
+          // skip to the next permutation.
+          // Note: Comparing path length to chosen path length can be optimized
+          // away; only compare lexicographically.
+          if(chosenPath.length !== 0 && path > chosenPath) {
+            nextPermutation = true;
+            break;
+          }
+        }
+
+        if(nextPermutation) {
+          continue;
+        }
+
+        // 5.4.5) For each related in recursion list:
+        for(const related of recursionList) {
+          // 5.4.5.1) Set result to the result of recursively executing
+          // the Hash N-Degree Quads algorithm, passing related for
+          // identifier and issuer copy for path identifier issuer.
+          const result = this.hashNDegreeQuads(related, issuerCopy);
+
+          // 5.4.5.2) Use the Issue Identifier algorithm, passing issuer
+          // copy and related and append the result to path.
+          path += issuerCopy.getId(related);
+
+          // 5.4.5.3) Append <, the hash in result, and > to path.
+          path += `<${result.hash}>`;
+
+          // 5.4.5.4) Set issuer copy to the identifier issuer in
+          // result.
+          issuerCopy = result.issuer;
+
+          // 5.4.5.5) If chosen path is not empty and the length of path
+          // is greater than or equal to the length of chosen path and
+          // path is lexicographically greater than chosen path, then
+          // skip to the next permutation.
+          // Note: Comparing path length to chosen path length can be optimized
+          // away; only compare lexicographically.
+          if(chosenPath.length !== 0 && path > chosenPath) {
+            nextPermutation = true;
+            break;
+          }
+        }
+
+        if(nextPermutation) {
+          continue;
+        }
+
+        // 5.4.6) If chosen path is empty or path is lexicographically
+        // less than chosen path, set chosen path to path and chosen
+        // issuer to issuer copy.
+        if(chosenPath.length === 0 || path < chosenPath) {
+          chosenPath = path;
+          chosenIssuer = issuerCopy;
+        }
+      }
+
+      // 5.5) Append chosen path to data to hash.
+      md.update(chosenPath);
+
+      // 5.6) Replace issuer, by reference, with chosen issuer.
+      issuer = chosenIssuer;
+    }
+
+    // 6) Return issuer and the hash that results from passing data to hash
+    // through the hash algorithm.
+    return {hash: md.digest(), issuer};
+  }
+
+  // helper for modifying component during Hash First Degree Quads
+  modifyFirstDegreeComponent(id, component) {
+    if(component.termType !== 'BlankNode') {
+      return component;
+    }
+    /* Note: A mistake in the URDNA2015 spec that made its way into
+    implementations (and therefore must stay to avoid interop breakage)
+    resulted in an assigned canonical ID, if available for
+    `component.value`, not being used in place of `_:a`/`_:z`, so
+    we don't use it here. */
+    return {
+      termType: 'BlankNode',
+      value: component.value === id ? '_:a' : '_:z'
+    };
+  }
+
+  // helper for getting a related predicate
+  getRelatedPredicate(quad) {
+    return `<${quad.predicate.value}>`;
+  }
+
+  // helper for creating hash to related blank nodes map
+  createHashToRelated(id, issuer) {
+    // 1) Create a hash to related blank nodes map for storing hashes that
+    // identify related blank nodes.
+    const hashToRelated = new Map();
+
+    // 2) Get a reference, quads, to the list of quads in the blank node to
+    // quads map for the key identifier.
+    const quads = this.blankNodeInfo.get(id).quads;
+
+    // 3) For each quad in quads:
+    for(const quad of quads) {
+      // 3.1) For each component in quad, if component is the subject, object,
+      // or graph name and it is a blank node that is not identified by
+      // identifier:
+      // steps 3.1.1 and 3.1.2 occur in helpers:
+      this._addRelatedBlankNodeHash({
+        quad, component: quad.subject, position: 's',
+        id, issuer, hashToRelated
+      });
+      this._addRelatedBlankNodeHash({
+        quad, component: quad.object, position: 'o',
+        id, issuer, hashToRelated
+      });
+      this._addRelatedBlankNodeHash({
+        quad, component: quad.graph, position: 'g',
+        id, issuer, hashToRelated
+      });
+    }
+
+    return hashToRelated;
+  }
+
+  _hashAndTrackBlankNode({id, hashToBlankNodes}) {
+    // 5.3.1) Create a hash, hash, according to the Hash First Degree
+    // Quads algorithm.
+    const hash = this.hashFirstDegreeQuads(id);
+
+    // 5.3.2) Add hash and identifier to hash to blank nodes map,
+    // creating a new entry if necessary.
+    const idList = hashToBlankNodes.get(hash);
+    if(!idList) {
+      hashToBlankNodes.set(hash, [id]);
+    } else {
+      idList.push(id);
+    }
+  }
+
+  _addBlankNodeQuadInfo({quad, component}) {
+    if(component.termType !== 'BlankNode') {
+      return;
+    }
+    const id = component.value;
+    const info = this.blankNodeInfo.get(id);
+    if(info) {
+      info.quads.add(quad);
+    } else {
+      this.blankNodeInfo.set(id, {quads: new Set([quad]), hash: null});
+    }
+  }
+
+  _addRelatedBlankNodeHash(
+    {quad, component, position, id, issuer, hashToRelated}) {
+    if(!(component.termType === 'BlankNode' && component.value !== id)) {
+      return;
+    }
+    // 3.1.1) Set hash to the result of the Hash Related Blank Node
+    // algorithm, passing the blank node identifier for component as
+    // related, quad, path identifier issuer as issuer, and position as
+    // either s, o, or g based on whether component is a subject, object,
+    // graph name, respectively.
+    const related = component.value;
+    const hash = this.hashRelatedBlankNode(related, quad, issuer, position);
+
+    // 3.1.2) Add a mapping of hash to the blank node identifier for
+    // component to hash to related blank nodes map, adding an entry as
+    // necessary.
+    const entries = hashToRelated.get(hash);
+    if(entries) {
+      entries.push(related);
+    } else {
+      hashToRelated.set(hash, [related]);
+    }
+  }
+
+  // canonical ids for 7.1
+  _componentWithCanonicalId({component}) {
+    if(component.termType === 'BlankNode' &&
+      !component.value.startsWith(this.canonicalIssuer.prefix)) {
+      // create new BlankNode
+      return {
+        termType: 'BlankNode',
+        value: this.canonicalIssuer.getId(component.value)
+      };
+    }
+    return component;
+  }
+};
+
+function _stringHashCompare(a, b) {
+  return a.hash < b.hash ? -1 : a.hash > b.hash ? 1 : 0;
+}
+
+},{"./IdentifierIssuer":189,"./MessageDigest":190,"./NQuads":191,"./Permuter":192}],195:[function(require,module,exports){
+/*!
+ * Copyright (c) 2016-2022 Digital Bazaar, Inc. All rights reserved.
+ */
+'use strict';
+
+const MessageDigest = require('./MessageDigest');
+const URDNA2015 = require('./URDNA2015');
+
+module.exports = class URDNA2012 extends URDNA2015 {
+  constructor() {
+    super();
+    this.name = 'URGNA2012';
+    this.createMessageDigest = () => new MessageDigest('sha1');
+  }
+
+  // helper for modifying component during Hash First Degree Quads
+  modifyFirstDegreeComponent(id, component, key) {
+    if(component.termType !== 'BlankNode') {
+      return component;
+    }
+    if(key === 'graph') {
+      return {
+        termType: 'BlankNode',
+        value: '_:g'
+      };
+    }
+    return {
+      termType: 'BlankNode',
+      value: (component.value === id ? '_:a' : '_:z')
+    };
+  }
+
+  // helper for getting a related predicate
+  getRelatedPredicate(quad) {
+    return quad.predicate.value;
+  }
+
+  // helper for creating hash to related blank nodes map
+  async createHashToRelated(id, issuer) {
+    // 1) Create a hash to related blank nodes map for storing hashes that
+    // identify related blank nodes.
+    const hashToRelated = new Map();
+
+    // 2) Get a reference, quads, to the list of quads in the blank node to
+    // quads map for the key identifier.
+    const quads = this.blankNodeInfo.get(id).quads;
+
+    // 3) For each quad in quads:
+    let i = 0;
+    for(const quad of quads) {
+      // 3.1) If the quad's subject is a blank node that does not match
+      // identifier, set hash to the result of the Hash Related Blank Node
+      // algorithm, passing the blank node identifier for subject as related,
+      // quad, path identifier issuer as issuer, and p as position.
+      let position;
+      let related;
+      if(quad.subject.termType === 'BlankNode' && quad.subject.value !== id) {
+        related = quad.subject.value;
+        position = 'p';
+      } else if(
+        quad.object.termType === 'BlankNode' && quad.object.value !== id) {
+        // 3.2) Otherwise, if quad's object is a blank node that does not match
+        // identifier, to the result of the Hash Related Blank Node algorithm,
+        // passing the blank node identifier for object as related, quad, path
+        // identifier issuer as issuer, and r as position.
+        related = quad.object.value;
+        position = 'r';
+      } else {
+        // 3.3) Otherwise, continue to the next quad.
+        continue;
+      }
+      // Note: batch hashing related blank nodes 100 at a time
+      if(++i % 100 === 0) {
+        await this._yield();
+      }
+      // 3.4) Add a mapping of hash to the blank node identifier for the
+      // component that matched (subject or object) to hash to related blank
+      // nodes map, adding an entry as necessary.
+      const hash = await this.hashRelatedBlankNode(
+        related, quad, issuer, position);
+      const entries = hashToRelated.get(hash);
+      if(entries) {
+        entries.push(related);
+      } else {
+        hashToRelated.set(hash, [related]);
+      }
+    }
+
+    return hashToRelated;
+  }
+};
+
+},{"./MessageDigest":190,"./URDNA2015":193}],196:[function(require,module,exports){
+/*!
+ * Copyright (c) 2016-2021 Digital Bazaar, Inc. All rights reserved.
+ */
+'use strict';
+
+const MessageDigest = require('./MessageDigest');
+const URDNA2015Sync = require('./URDNA2015Sync');
+
+module.exports = class URDNA2012Sync extends URDNA2015Sync {
+  constructor() {
+    super();
+    this.name = 'URGNA2012';
+    this.createMessageDigest = () => new MessageDigest('sha1');
+  }
+
+  // helper for modifying component during Hash First Degree Quads
+  modifyFirstDegreeComponent(id, component, key) {
+    if(component.termType !== 'BlankNode') {
+      return component;
+    }
+    if(key === 'graph') {
+      return {
+        termType: 'BlankNode',
+        value: '_:g'
+      };
+    }
+    return {
+      termType: 'BlankNode',
+      value: (component.value === id ? '_:a' : '_:z')
+    };
+  }
+
+  // helper for getting a related predicate
+  getRelatedPredicate(quad) {
+    return quad.predicate.value;
+  }
+
+  // helper for creating hash to related blank nodes map
+  createHashToRelated(id, issuer) {
+    // 1) Create a hash to related blank nodes map for storing hashes that
+    // identify related blank nodes.
+    const hashToRelated = new Map();
+
+    // 2) Get a reference, quads, to the list of quads in the blank node to
+    // quads map for the key identifier.
+    const quads = this.blankNodeInfo.get(id).quads;
+
+    // 3) For each quad in quads:
+    for(const quad of quads) {
+      // 3.1) If the quad's subject is a blank node that does not match
+      // identifier, set hash to the result of the Hash Related Blank Node
+      // algorithm, passing the blank node identifier for subject as related,
+      // quad, path identifier issuer as issuer, and p as position.
+      let position;
+      let related;
+      if(quad.subject.termType === 'BlankNode' && quad.subject.value !== id) {
+        related = quad.subject.value;
+        position = 'p';
+      } else if(
+        quad.object.termType === 'BlankNode' && quad.object.value !== id) {
+        // 3.2) Otherwise, if quad's object is a blank node that does not match
+        // identifier, to the result of the Hash Related Blank Node algorithm,
+        // passing the blank node identifier for object as related, quad, path
+        // identifier issuer as issuer, and r as position.
+        related = quad.object.value;
+        position = 'r';
+      } else {
+        // 3.3) Otherwise, continue to the next quad.
+        continue;
+      }
+      // 3.4) Add a mapping of hash to the blank node identifier for the
+      // component that matched (subject or object) to hash to related blank
+      // nodes map, adding an entry as necessary.
+      const hash = this.hashRelatedBlankNode(related, quad, issuer, position);
+      const entries = hashToRelated.get(hash);
+      if(entries) {
+        entries.push(related);
+      } else {
+        hashToRelated.set(hash, [related]);
+      }
+    }
+
+    return hashToRelated;
+  }
+};
+
+},{"./MessageDigest":190,"./URDNA2015Sync":194}],197:[function(require,module,exports){
+/**
+ * An implementation of the RDF Dataset Normalization specification.
+ * This library works in the browser and node.js.
+ *
+ * BSD 3-Clause License
+ * Copyright (c) 2016-2022 Digital Bazaar, Inc.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ * Redistributions of source code must retain the above copyright notice,
+ * this list of conditions and the following disclaimer.
+ *
+ * Redistributions in binary form must reproduce the above copyright
+ * notice, this list of conditions and the following disclaimer in the
+ * documentation and/or other materials provided with the distribution.
+ *
+ * Neither the name of the Digital Bazaar, Inc. nor the names of its
+ * contributors may be used to endorse or promote products derived from
+ * this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
+ * IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
+ * TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
+ * PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+ * TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+ * PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+ * LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+ * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+ * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+'use strict';
+
+const URDNA2015 = require('./URDNA2015');
+const URGNA2012 = require('./URGNA2012');
+const URDNA2015Sync = require('./URDNA2015Sync');
+const URGNA2012Sync = require('./URGNA2012Sync');
+
+// optional native support
+let rdfCanonizeNative;
+try {
+  rdfCanonizeNative = require('rdf-canonize-native');
+} catch(e) {}
+
+// expose helpers
+exports.NQuads = require('./NQuads');
+exports.IdentifierIssuer = require('./IdentifierIssuer');
+
+/**
+ * Get or set native API.
+ *
+ * @param api the native API.
+ *
+ * @return the currently set native API.
+ */
+exports._rdfCanonizeNative = function(api) {
+  if(api) {
+    rdfCanonizeNative = api;
+  }
+  return rdfCanonizeNative;
+};
+
+/**
+ * Asynchronously canonizes an RDF dataset.
+ *
+ * @param {Array} dataset - The dataset to canonize.
+ * @param {object} options - The options to use:
+ *   {string} algorithm - The canonicalization algorithm to use, `URDNA2015` or
+ *     `URGNA2012`.
+ *   {Function} [createMessageDigest] - A factory function for creating a
+ *     `MessageDigest` interface that overrides the built-in message digest
+ *     implementation used by the canonize algorithm; note that using a hash
+ *     algorithm (or HMAC algorithm) that differs from the one specified by
+ *     the canonize algorithm will result in different output.
+ *   {boolean} [useNative=false] - Use native implementation.
+ *   {number} [maxDeepIterations=Infinity] - The maximum number of times to run
+ *     deep comparison algorithms (such as the N-Degree Hash Quads algorithm
+ *     used in URDNA2015) before bailing out and throwing an error; this is a
+ *     useful setting for preventing wasted CPU cycles or DoS when canonizing
+ *     meaningless or potentially malicious datasets, a recommended value is
+ *     `1`.
+ *
+ * @return a Promise that resolves to the canonicalized RDF Dataset.
+ */
+exports.canonize = async function(dataset, options) {
+  // back-compat with legacy dataset
+  if(!Array.isArray(dataset)) {
+    dataset = exports.NQuads.legacyDatasetToQuads(dataset);
+  }
+
+  if(options.useNative) {
+    if(!rdfCanonizeNative) {
+      throw new Error('rdf-canonize-native not available');
+    }
+    if(options.createMessageDigest) {
+      throw new Error(
+        '"createMessageDigest" cannot be used with "useNative".');
+    }
+    return new Promise((resolve, reject) =>
+      rdfCanonizeNative.canonize(dataset, options, (err, canonical) =>
+        err ? reject(err) : resolve(canonical)));
+  }
+
+  if(options.algorithm === 'URDNA2015') {
+    return new URDNA2015(options).main(dataset);
+  }
+  if(options.algorithm === 'URGNA2012') {
+    if(options.createMessageDigest) {
+      throw new Error(
+        '"createMessageDigest" cannot be used with "URGNA2012".');
+    }
+    return new URGNA2012(options).main(dataset);
+  }
+  if(!('algorithm' in options)) {
+    throw new Error('No RDF Dataset Canonicalization algorithm specified.');
+  }
+  throw new Error(
+    'Invalid RDF Dataset Canonicalization algorithm: ' + options.algorithm);
+};
+
+/**
+ * This method is no longer available in the public API, it is for testing
+ * only. It synchronously canonizes an RDF dataset and does not work in the
+ * browser.
+ *
+ * @param {Array} dataset - The dataset to canonize.
+ * @param {object} options - The options to use:
+ *   {string} algorithm - The canonicalization algorithm to use, `URDNA2015` or
+ *     `URGNA2012`.
+ *   {Function} [createMessageDigest] - A factory function for creating a
+ *     `MessageDigest` interface that overrides the built-in message digest
+ *     implementation used by the canonize algorithm; note that using a hash
+ *     algorithm (or HMAC algorithm) that differs from the one specified by
+ *     the canonize algorithm will result in different output.
+ *   {boolean} [useNative=false] - Use native implementation.
+ *   {number} [maxDeepIterations=Infinity] - The maximum number of times to run
+ *     deep comparison algorithms (such as the N-Degree Hash Quads algorithm
+ *     used in URDNA2015) before bailing out and throwing an error; this is a
+ *     useful setting for preventing wasted CPU cycles or DoS when canonizing
+ *     meaningless or potentially malicious datasets, a recommended value is
+ *     `1`.
+ *
+ * @return the RDF dataset in canonical form.
+ */
+exports._canonizeSync = function(dataset, options) {
+  // back-compat with legacy dataset
+  if(!Array.isArray(dataset)) {
+    dataset = exports.NQuads.legacyDatasetToQuads(dataset);
+  }
+
+  if(options.useNative) {
+    if(!rdfCanonizeNative) {
+      throw new Error('rdf-canonize-native not available');
+    }
+    if(options.createMessageDigest) {
+      throw new Error(
+        '"createMessageDigest" cannot be used with "useNative".');
+    }
+    return rdfCanonizeNative.canonizeSync(dataset, options);
+  }
+  if(options.algorithm === 'URDNA2015') {
+    return new URDNA2015Sync(options).main(dataset);
+  }
+  if(options.algorithm === 'URGNA2012') {
+    if(options.createMessageDigest) {
+      throw new Error(
+        '"createMessageDigest" cannot be used with "URGNA2012".');
+    }
+    return new URGNA2012Sync(options).main(dataset);
+  }
+  if(!('algorithm' in options)) {
+    throw new Error('No RDF Dataset Canonicalization algorithm specified.');
+  }
+  throw new Error(
+    'Invalid RDF Dataset Canonicalization algorithm: ' + options.algorithm);
+};
+
+},{"./IdentifierIssuer":189,"./NQuads":191,"./URDNA2015":193,"./URDNA2015Sync":194,"./URGNA2012":195,"./URGNA2012Sync":196,"rdf-canonize-native":44}],198:[function(require,module,exports){
+(function (process,global){(function (){
+(function (global, undefined) {
+    "use strict";
+
+    if (global.setImmediate) {
+        return;
+    }
+
+    var nextHandle = 1; // Spec says greater than zero
+    var tasksByHandle = {};
+    var currentlyRunningATask = false;
+    var doc = global.document;
+    var registerImmediate;
+
+    function setImmediate(callback) {
+      // Callback can either be a function or a string
+      if (typeof callback !== "function") {
+        callback = new Function("" + callback);
+      }
+      // Copy function arguments
+      var args = new Array(arguments.length - 1);
+      for (var i = 0; i < args.length; i++) {
+          args[i] = arguments[i + 1];
+      }
+      // Store and register the task
+      var task = { callback: callback, args: args };
+      tasksByHandle[nextHandle] = task;
+      registerImmediate(nextHandle);
+      return nextHandle++;
+    }
+
+    function clearImmediate(handle) {
+        delete tasksByHandle[handle];
+    }
+
+    function run(task) {
+        var callback = task.callback;
+        var args = task.args;
+        switch (args.length) {
+        case 0:
+            callback();
+            break;
+        case 1:
+            callback(args[0]);
+            break;
+        case 2:
+            callback(args[0], args[1]);
+            break;
+        case 3:
+            callback(args[0], args[1], args[2]);
+            break;
+        default:
+            callback.apply(undefined, args);
+            break;
+        }
+    }
+
+    function runIfPresent(handle) {
+        // From the spec: "Wait until any invocations of this algorithm started before this one have completed."
+        // So if we're currently running a task, we'll need to delay this invocation.
+        if (currentlyRunningATask) {
+            // Delay by doing a setTimeout. setImmediate was tried instead, but in Firefox 7 it generated a
+            // "too much recursion" error.
+            setTimeout(runIfPresent, 0, handle);
+        } else {
+            var task = tasksByHandle[handle];
+            if (task) {
+                currentlyRunningATask = true;
+                try {
+                    run(task);
+                } finally {
+                    clearImmediate(handle);
+                    currentlyRunningATask = false;
+                }
+            }
+        }
+    }
+
+    function installNextTickImplementation() {
+        registerImmediate = function(handle) {
+            process.nextTick(function () { runIfPresent(handle); });
+        };
+    }
+
+    function canUsePostMessage() {
+        // The test against `importScripts` prevents this implementation from being installed inside a web worker,
+        // where `global.postMessage` means something completely different and can't be used for this purpose.
+        if (global.postMessage && !global.importScripts) {
+            var postMessageIsAsynchronous = true;
+            var oldOnMessage = global.onmessage;
+            global.onmessage = function() {
+                postMessageIsAsynchronous = false;
+            };
+            global.postMessage("", "*");
+            global.onmessage = oldOnMessage;
+            return postMessageIsAsynchronous;
+        }
+    }
+
+    function installPostMessageImplementation() {
+        // Installs an event handler on `global` for the `message` event: see
+        // * https://developer.mozilla.org/en/DOM/window.postMessage
+        // * http://www.whatwg.org/specs/web-apps/current-work/multipage/comms.html#crossDocumentMessages
+
+        var messagePrefix = "setImmediate$" + Math.random() + "$";
+        var onGlobalMessage = function(event) {
+            if (event.source === global &&
+                typeof event.data === "string" &&
+                event.data.indexOf(messagePrefix) === 0) {
+                runIfPresent(+event.data.slice(messagePrefix.length));
+            }
+        };
+
+        if (global.addEventListener) {
+            global.addEventListener("message", onGlobalMessage, false);
+        } else {
+            global.attachEvent("onmessage", onGlobalMessage);
+        }
+
+        registerImmediate = function(handle) {
+            global.postMessage(messagePrefix + handle, "*");
+        };
+    }
+
+    function installMessageChannelImplementation() {
+        var channel = new MessageChannel();
+        channel.port1.onmessage = function(event) {
+            var handle = event.data;
+            runIfPresent(handle);
+        };
+
+        registerImmediate = function(handle) {
+            channel.port2.postMessage(handle);
+        };
+    }
+
+    function installReadyStateChangeImplementation() {
+        var html = doc.documentElement;
+        registerImmediate = function(handle) {
+            // Create a <script> element; its readystatechange event will be fired asynchronously once it is inserted
+            // into the document. Do so, thus queuing up the task. Remember to clean up once it's been called.
+            var script = doc.createElement("script");
+            script.onreadystatechange = function () {
+                runIfPresent(handle);
+                script.onreadystatechange = null;
+                html.removeChild(script);
+                script = null;
+            };
+            html.appendChild(script);
+        };
+    }
+
+    function installSetTimeoutImplementation() {
+        registerImmediate = function(handle) {
+            setTimeout(runIfPresent, 0, handle);
+        };
+    }
+
+    // If supported, we should attach to the prototype of global, since that is where setTimeout et al. live.
+    var attachTo = Object.getPrototypeOf && Object.getPrototypeOf(global);
+    attachTo = attachTo && attachTo.setTimeout ? attachTo : global;
+
+    // Don't get fooled by e.g. browserify environments.
+    if ({}.toString.call(global.process) === "[object process]") {
+        // For Node.js before 0.9
+        installNextTickImplementation();
+
+    } else if (canUsePostMessage()) {
+        // For non-IE10 modern browsers
+        installPostMessageImplementation();
+
+    } else if (global.MessageChannel) {
+        // For web workers, where supported
+        installMessageChannelImplementation();
+
+    } else if (doc && "onreadystatechange" in doc.createElement("script")) {
+        // For IE 6–8
+        installReadyStateChangeImplementation();
+
+    } else {
+        // For older browsers
+        installSetTimeoutImplementation();
+    }
+
+    attachTo.setImmediate = setImmediate;
+    attachTo.clearImmediate = clearImmediate;
+}(typeof self === "undefined" ? typeof global === "undefined" ? this : global : self));
+
+}).call(this)}).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
+},{"_process":187}],199:[function(require,module,exports){
+(function (setImmediate,clearImmediate){(function (){
+var nextTick = require('process/browser.js').nextTick;
+var apply = Function.prototype.apply;
+var slice = Array.prototype.slice;
+var immediateIds = {};
+var nextImmediateId = 0;
+
+// DOM APIs, for completeness
+
+exports.setTimeout = function() {
+  return new Timeout(apply.call(setTimeout, window, arguments), clearTimeout);
+};
+exports.setInterval = function() {
+  return new Timeout(apply.call(setInterval, window, arguments), clearInterval);
+};
+exports.clearTimeout =
+exports.clearInterval = function(timeout) { timeout.close(); };
+
+function Timeout(id, clearFn) {
+  this._id = id;
+  this._clearFn = clearFn;
+}
+Timeout.prototype.unref = Timeout.prototype.ref = function() {};
+Timeout.prototype.close = function() {
+  this._clearFn.call(window, this._id);
+};
+
+// Does not start the time, just sets up the members needed.
+exports.enroll = function(item, msecs) {
+  clearTimeout(item._idleTimeoutId);
+  item._idleTimeout = msecs;
+};
+
+exports.unenroll = function(item) {
+  clearTimeout(item._idleTimeoutId);
+  item._idleTimeout = -1;
+};
+
+exports._unrefActive = exports.active = function(item) {
+  clearTimeout(item._idleTimeoutId);
+
+  var msecs = item._idleTimeout;
+  if (msecs >= 0) {
+    item._idleTimeoutId = setTimeout(function onTimeout() {
+      if (item._onTimeout)
+        item._onTimeout();
+    }, msecs);
+  }
+};
+
+// That's not how node.js implements it but the exposed api is the same.
+exports.setImmediate = typeof setImmediate === "function" ? setImmediate : function(fn) {
+  var id = nextImmediateId++;
+  var args = arguments.length < 2 ? false : slice.call(arguments, 1);
+
+  immediateIds[id] = true;
+
+  nextTick(function onNextTick() {
+    if (immediateIds[id]) {
+      // fn.call() is faster so we optimize for the common use-case
+      // @see http://jsperf.com/call-apply-segu
+      if (args) {
+        fn.apply(null, args);
+      } else {
+        fn.call(null);
+      }
+      // Prevent ids from leaking
+      exports.clearImmediate(id);
+    }
+  });
+
+  return id;
+};
+
+exports.clearImmediate = typeof clearImmediate === "function" ? clearImmediate : function(id) {
+  delete immediateIds[id];
+};
+}).call(this)}).call(this,require("timers").setImmediate,require("timers").clearImmediate)
+},{"process/browser.js":187,"timers":199}],200:[function(require,module,exports){
 'use strict'
 module.exports = function (Yallist) {
   Yallist.prototype[Symbol.iterator] = function* () {
@@ -15267,7 +17594,7 @@ module.exports = function (Yallist) {
   }
 }
 
-},{}],188:[function(require,module,exports){
+},{}],201:[function(require,module,exports){
 'use strict'
 module.exports = Yallist
 
@@ -15590,7 +17917,7 @@ Yallist.prototype.sliceReverse = function (from, to) {
   return ret
 }
 
-Yallist.prototype.splice = function (start, deleteCount /*, ...nodes */) {
+Yallist.prototype.splice = function (start, deleteCount, ...nodes) {
   if (start > this.length) {
     start = this.length - 1
   }
@@ -15615,8 +17942,8 @@ Yallist.prototype.splice = function (start, deleteCount /*, ...nodes */) {
     walker = walker.prev
   }
 
-  for (var i = 2; i < arguments.length; i++) {
-    walker = insert(this, walker, arguments[i])
+  for (var i = 0; i < nodes.length; i++) {
+    walker = insert(this, walker, nodes[i])
   }
   return ret;
 }
@@ -15695,2404 +18022,5 @@ try {
   require('./iterator.js')(Yallist)
 } catch (er) {}
 
-},{"./iterator.js":187}],189:[function(require,module,exports){
-// shim for using process in browser
-var process = module.exports = {};
-
-// cached from whatever global is present so that test runners that stub it
-// don't break things.  But we need to wrap it in a try catch in case it is
-// wrapped in strict mode code which doesn't define any globals.  It's inside a
-// function because try/catches deoptimize in certain engines.
-
-var cachedSetTimeout;
-var cachedClearTimeout;
-
-function defaultSetTimout() {
-    throw new Error('setTimeout has not been defined');
-}
-function defaultClearTimeout () {
-    throw new Error('clearTimeout has not been defined');
-}
-(function () {
-    try {
-        if (typeof setTimeout === 'function') {
-            cachedSetTimeout = setTimeout;
-        } else {
-            cachedSetTimeout = defaultSetTimout;
-        }
-    } catch (e) {
-        cachedSetTimeout = defaultSetTimout;
-    }
-    try {
-        if (typeof clearTimeout === 'function') {
-            cachedClearTimeout = clearTimeout;
-        } else {
-            cachedClearTimeout = defaultClearTimeout;
-        }
-    } catch (e) {
-        cachedClearTimeout = defaultClearTimeout;
-    }
-} ())
-function runTimeout(fun) {
-    if (cachedSetTimeout === setTimeout) {
-        //normal enviroments in sane situations
-        return setTimeout(fun, 0);
-    }
-    // if setTimeout wasn't available but was latter defined
-    if ((cachedSetTimeout === defaultSetTimout || !cachedSetTimeout) && setTimeout) {
-        cachedSetTimeout = setTimeout;
-        return setTimeout(fun, 0);
-    }
-    try {
-        // when when somebody has screwed with setTimeout but no I.E. maddness
-        return cachedSetTimeout(fun, 0);
-    } catch(e){
-        try {
-            // When we are in I.E. but the script has been evaled so I.E. doesn't trust the global object when called normally
-            return cachedSetTimeout.call(null, fun, 0);
-        } catch(e){
-            // same as above but when it's a version of I.E. that must have the global object for 'this', hopfully our context correct otherwise it will throw a global error
-            return cachedSetTimeout.call(this, fun, 0);
-        }
-    }
-
-
-}
-function runClearTimeout(marker) {
-    if (cachedClearTimeout === clearTimeout) {
-        //normal enviroments in sane situations
-        return clearTimeout(marker);
-    }
-    // if clearTimeout wasn't available but was latter defined
-    if ((cachedClearTimeout === defaultClearTimeout || !cachedClearTimeout) && clearTimeout) {
-        cachedClearTimeout = clearTimeout;
-        return clearTimeout(marker);
-    }
-    try {
-        // when when somebody has screwed with setTimeout but no I.E. maddness
-        return cachedClearTimeout(marker);
-    } catch (e){
-        try {
-            // When we are in I.E. but the script has been evaled so I.E. doesn't  trust the global object when called normally
-            return cachedClearTimeout.call(null, marker);
-        } catch (e){
-            // same as above but when it's a version of I.E. that must have the global object for 'this', hopfully our context correct otherwise it will throw a global error.
-            // Some versions of I.E. have different rules for clearTimeout vs setTimeout
-            return cachedClearTimeout.call(this, marker);
-        }
-    }
-
-
-
-}
-var queue = [];
-var draining = false;
-var currentQueue;
-var queueIndex = -1;
-
-function cleanUpNextTick() {
-    if (!draining || !currentQueue) {
-        return;
-    }
-    draining = false;
-    if (currentQueue.length) {
-        queue = currentQueue.concat(queue);
-    } else {
-        queueIndex = -1;
-    }
-    if (queue.length) {
-        drainQueue();
-    }
-}
-
-function drainQueue() {
-    if (draining) {
-        return;
-    }
-    var timeout = runTimeout(cleanUpNextTick);
-    draining = true;
-
-    var len = queue.length;
-    while(len) {
-        currentQueue = queue;
-        queue = [];
-        while (++queueIndex < len) {
-            if (currentQueue) {
-                currentQueue[queueIndex].run();
-            }
-        }
-        queueIndex = -1;
-        len = queue.length;
-    }
-    currentQueue = null;
-    draining = false;
-    runClearTimeout(timeout);
-}
-
-process.nextTick = function (fun) {
-    var args = new Array(arguments.length - 1);
-    if (arguments.length > 1) {
-        for (var i = 1; i < arguments.length; i++) {
-            args[i - 1] = arguments[i];
-        }
-    }
-    queue.push(new Item(fun, args));
-    if (queue.length === 1 && !draining) {
-        runTimeout(drainQueue);
-    }
-};
-
-// v8 likes predictible objects
-function Item(fun, array) {
-    this.fun = fun;
-    this.array = array;
-}
-Item.prototype.run = function () {
-    this.fun.apply(null, this.array);
-};
-process.title = 'browser';
-process.browser = true;
-process.env = {};
-process.argv = [];
-process.version = ''; // empty string to avoid regexp issues
-process.versions = {};
-
-function noop() {}
-
-process.on = noop;
-process.addListener = noop;
-process.once = noop;
-process.off = noop;
-process.removeListener = noop;
-process.removeAllListeners = noop;
-process.emit = noop;
-process.prependListener = noop;
-process.prependOnceListener = noop;
-
-process.listeners = function (name) { return [] }
-
-process.binding = function (name) {
-    throw new Error('process.binding is not supported');
-};
-
-process.cwd = function () { return '/' };
-process.chdir = function (dir) {
-    throw new Error('process.chdir is not supported');
-};
-process.umask = function() { return 0; };
-
-},{}],190:[function(require,module,exports){
-/*
- * Copyright (c) 2016-2020 Digital Bazaar, Inc. All rights reserved.
- */
-'use strict';
-
-module.exports = class IdentifierIssuer {
-  /**
-   * Creates a new IdentifierIssuer. A IdentifierIssuer issues unique
-   * identifiers, keeping track of any previously issued identifiers.
-   *
-   * @param prefix the prefix to use ('<prefix><counter>').
-   * @param existing an existing Map to use.
-   * @param counter the counter to use.
-   */
-  constructor(prefix, existing = new Map(), counter = 0) {
-    this.prefix = prefix;
-    this._existing = existing;
-    this.counter = counter;
-  }
-
-  /**
-   * Copies this IdentifierIssuer.
-   *
-   * @return a copy of this IdentifierIssuer.
-   */
-  clone() {
-    const {prefix, _existing, counter} = this;
-    return new IdentifierIssuer(prefix, new Map(_existing), counter);
-  }
-
-  /**
-   * Gets the new identifier for the given old identifier, where if no old
-   * identifier is given a new identifier will be generated.
-   *
-   * @param [old] the old identifier to get the new identifier for.
-   *
-   * @return the new identifier.
-   */
-  getId(old) {
-    // return existing old identifier
-    const existing = old && this._existing.get(old);
-    if(existing) {
-      return existing;
-    }
-
-    // get next identifier
-    const identifier = this.prefix + this.counter;
-    this.counter++;
-
-    // save mapping
-    if(old) {
-      this._existing.set(old, identifier);
-    }
-
-    return identifier;
-  }
-
-  /**
-   * Returns true if the given old identifer has already been assigned a new
-   * identifier.
-   *
-   * @param old the old identifier to check.
-   *
-   * @return true if the old identifier has been assigned a new identifier,
-   *   false if not.
-   */
-  hasId(old) {
-    return this._existing.has(old);
-  }
-
-  /**
-   * Returns all of the IDs that have been issued new IDs in the order in
-   * which they were issued new IDs.
-   *
-   * @return the list of old IDs that has been issued new IDs in order.
-   */
-  getOldIds() {
-    return [...this._existing.keys()];
-  }
-};
-
-},{}],191:[function(require,module,exports){
-/*
- * Copyright (c) 2016-2020 Digital Bazaar, Inc. All rights reserved.
- */
-'use strict';
-
-require('setimmediate');
-
-const crypto = self.crypto || self.msCrypto;
-
-// TODO: synchronous version no longer supported in browser
-
-module.exports = class MessageDigest {
-  /**
-   * Creates a new MessageDigest.
-   *
-   * @param algorithm the algorithm to use.
-   */
-  constructor(algorithm) {
-    // check if crypto.subtle is available
-    // check is here rather than top-level to only fail if class is used
-    if(!(crypto && crypto.subtle)) {
-      throw new Error('crypto.subtle not found.');
-    }
-    if(algorithm === 'sha256') {
-      this.algorithm = {name: 'SHA-256'};
-    } else if(algorithm === 'sha1') {
-      this.algorithm = {name: 'SHA-1'};
-    } else {
-      throw new Error(`Unsupport algorithm "${algorithm}".`);
-    }
-    this._content = '';
-  }
-
-  update(msg) {
-    this._content += msg;
-  }
-
-  async digest() {
-    const data = new TextEncoder().encode(this._content);
-    const buffer = new Uint8Array(
-      await crypto.subtle.digest(this.algorithm, data));
-    // return digest in hex
-    let hex = '';
-    for(let i = 0; i < buffer.length; ++i) {
-      hex += buffer[i].toString(16).padStart(2, '0');
-    }
-    return hex;
-  }
-};
-
-},{"setimmediate":199}],192:[function(require,module,exports){
-/*
- * Copyright (c) 2016-2020 Digital Bazaar, Inc. All rights reserved.
- */
-'use strict';
-
-// eslint-disable-next-line no-unused-vars
-const TERMS = ['subject', 'predicate', 'object', 'graph'];
-const RDF = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#';
-const RDF_LANGSTRING = RDF + 'langString';
-const XSD_STRING = 'http://www.w3.org/2001/XMLSchema#string';
-
-const TYPE_NAMED_NODE = 'NamedNode';
-const TYPE_BLANK_NODE = 'BlankNode';
-const TYPE_LITERAL = 'Literal';
-const TYPE_DEFAULT_GRAPH = 'DefaultGraph';
-
-// build regexes
-const REGEX = {};
-(() => {
-  const iri = '(?:<([^:]+:[^>]*)>)';
-  // https://www.w3.org/TR/turtle/#grammar-production-BLANK_NODE_LABEL
-  const PN_CHARS_BASE =
-    'A-Z' + 'a-z' +
-    '\u00C0-\u00D6' +
-    '\u00D8-\u00F6' +
-    '\u00F8-\u02FF' +
-    '\u0370-\u037D' +
-    '\u037F-\u1FFF' +
-    '\u200C-\u200D' +
-    '\u2070-\u218F' +
-    '\u2C00-\u2FEF' +
-    '\u3001-\uD7FF' +
-    '\uF900-\uFDCF' +
-    '\uFDF0-\uFFFD';
-    // TODO:
-    //'\u10000-\uEFFFF';
-  const PN_CHARS_U =
-    PN_CHARS_BASE +
-    '_';
-  const PN_CHARS =
-    PN_CHARS_U +
-    '0-9' +
-    '-' +
-    '\u00B7' +
-    '\u0300-\u036F' +
-    '\u203F-\u2040';
-  const BLANK_NODE_LABEL =
-    '(_:' +
-      '(?:[' + PN_CHARS_U + '0-9])' +
-      '(?:(?:[' + PN_CHARS + '.])*(?:[' + PN_CHARS + ']))?' +
-    ')';
-  const bnode = BLANK_NODE_LABEL;
-  const plain = '"([^"\\\\]*(?:\\\\.[^"\\\\]*)*)"';
-  const datatype = '(?:\\^\\^' + iri + ')';
-  const language = '(?:@([a-zA-Z]+(?:-[a-zA-Z0-9]+)*))';
-  const literal = '(?:' + plain + '(?:' + datatype + '|' + language + ')?)';
-  const ws = '[ \\t]+';
-  const wso = '[ \\t]*';
-
-  // define quad part regexes
-  const subject = '(?:' + iri + '|' + bnode + ')' + ws;
-  const property = iri + ws;
-  const object = '(?:' + iri + '|' + bnode + '|' + literal + ')' + wso;
-  const graphName = '(?:\\.|(?:(?:' + iri + '|' + bnode + ')' + wso + '\\.))';
-
-  // end of line and empty regexes
-  REGEX.eoln = /(?:\r\n)|(?:\n)|(?:\r)/g;
-  REGEX.empty = new RegExp('^' + wso + '$');
-
-  // full quad regex
-  REGEX.quad = new RegExp(
-    '^' + wso + subject + property + object + graphName + wso + '$');
-})();
-
-module.exports = class NQuads {
-  /**
-   * Parses RDF in the form of N-Quads.
-   *
-   * @param input the N-Quads input to parse.
-   *
-   * @return an RDF dataset (an array of quads per http://rdf.js.org/).
-   */
-  static parse(input) {
-    // build RDF dataset
-    const dataset = [];
-
-    const graphs = {};
-
-    // split N-Quad input into lines
-    const lines = input.split(REGEX.eoln);
-    let lineNumber = 0;
-    for(const line of lines) {
-      lineNumber++;
-
-      // skip empty lines
-      if(REGEX.empty.test(line)) {
-        continue;
-      }
-
-      // parse quad
-      const match = line.match(REGEX.quad);
-      if(match === null) {
-        throw new Error('N-Quads parse error on line ' + lineNumber + '.');
-      }
-
-      // create RDF quad
-      const quad = {subject: null, predicate: null, object: null, graph: null};
-
-      // get subject
-      if(match[1] !== undefined) {
-        quad.subject = {termType: TYPE_NAMED_NODE, value: match[1]};
-      } else {
-        quad.subject = {termType: TYPE_BLANK_NODE, value: match[2]};
-      }
-
-      // get predicate
-      quad.predicate = {termType: TYPE_NAMED_NODE, value: match[3]};
-
-      // get object
-      if(match[4] !== undefined) {
-        quad.object = {termType: TYPE_NAMED_NODE, value: match[4]};
-      } else if(match[5] !== undefined) {
-        quad.object = {termType: TYPE_BLANK_NODE, value: match[5]};
-      } else {
-        quad.object = {
-          termType: TYPE_LITERAL,
-          value: undefined,
-          datatype: {
-            termType: TYPE_NAMED_NODE
-          }
-        };
-        if(match[7] !== undefined) {
-          quad.object.datatype.value = match[7];
-        } else if(match[8] !== undefined) {
-          quad.object.datatype.value = RDF_LANGSTRING;
-          quad.object.language = match[8];
-        } else {
-          quad.object.datatype.value = XSD_STRING;
-        }
-        quad.object.value = _unescape(match[6]);
-      }
-
-      // get graph
-      if(match[9] !== undefined) {
-        quad.graph = {
-          termType: TYPE_NAMED_NODE,
-          value: match[9]
-        };
-      } else if(match[10] !== undefined) {
-        quad.graph = {
-          termType: TYPE_BLANK_NODE,
-          value: match[10]
-        };
-      } else {
-        quad.graph = {
-          termType: TYPE_DEFAULT_GRAPH,
-          value: ''
-        };
-      }
-
-      // only add quad if it is unique in its graph
-      if(!(quad.graph.value in graphs)) {
-        graphs[quad.graph.value] = [quad];
-        dataset.push(quad);
-      } else {
-        let unique = true;
-        const quads = graphs[quad.graph.value];
-        for(const q of quads) {
-          if(_compareTriples(q, quad)) {
-            unique = false;
-            break;
-          }
-        }
-        if(unique) {
-          quads.push(quad);
-          dataset.push(quad);
-        }
-      }
-    }
-
-    return dataset;
-  }
-
-  /**
-   * Converts an RDF dataset to N-Quads.
-   *
-   * @param dataset (array of quads) the RDF dataset to convert.
-   *
-   * @return the N-Quads string.
-   */
-  static serialize(dataset) {
-    if(!Array.isArray(dataset)) {
-      dataset = NQuads.legacyDatasetToQuads(dataset);
-    }
-    const quads = [];
-    for(const quad of dataset) {
-      quads.push(NQuads.serializeQuad(quad));
-    }
-    return quads.sort().join('');
-  }
-
-  /**
-   * Converts an RDF quad to an N-Quad string (a single quad).
-   *
-   * @param quad the RDF quad convert.
-   *
-   * @return the N-Quad string.
-   */
-  static serializeQuad(quad) {
-    const s = quad.subject;
-    const p = quad.predicate;
-    const o = quad.object;
-    const g = quad.graph;
-
-    let nquad = '';
-
-    // subject can only be NamedNode or BlankNode
-    if(s.termType === TYPE_NAMED_NODE) {
-      nquad += `<${s.value}>`;
-    } else {
-      nquad += `${s.value}`;
-    }
-
-    // predicate can only be NamedNode
-    nquad += ` <${p.value}> `;
-
-    // object is NamedNode, BlankNode, or Literal
-    if(o.termType === TYPE_NAMED_NODE) {
-      nquad += `<${o.value}>`;
-    } else if(o.termType === TYPE_BLANK_NODE) {
-      nquad += o.value;
-    } else {
-      nquad += `"${_escape(o.value)}"`;
-      if(o.datatype.value === RDF_LANGSTRING) {
-        if(o.language) {
-          nquad += `@${o.language}`;
-        }
-      } else if(o.datatype.value !== XSD_STRING) {
-        nquad += `^^<${o.datatype.value}>`;
-      }
-    }
-
-    // graph can only be NamedNode or BlankNode (or DefaultGraph, but that
-    // does not add to `nquad`)
-    if(g.termType === TYPE_NAMED_NODE) {
-      nquad += ` <${g.value}>`;
-    } else if(g.termType === TYPE_BLANK_NODE) {
-      nquad += ` ${g.value}`;
-    }
-
-    nquad += ' .\n';
-    return nquad;
-  }
-
-  /**
-   * Converts a legacy-formatted dataset to an array of quads dataset per
-   * http://rdf.js.org/.
-   *
-   * @param dataset the legacy dataset to convert.
-   *
-   * @return the array of quads dataset.
-   */
-  static legacyDatasetToQuads(dataset) {
-    const quads = [];
-
-    const termTypeMap = {
-      'blank node': TYPE_BLANK_NODE,
-      IRI: TYPE_NAMED_NODE,
-      literal: TYPE_LITERAL
-    };
-
-    for(const graphName in dataset) {
-      const triples = dataset[graphName];
-      triples.forEach(triple => {
-        const quad = {};
-        for(const componentName in triple) {
-          const oldComponent = triple[componentName];
-          const newComponent = {
-            termType: termTypeMap[oldComponent.type],
-            value: oldComponent.value
-          };
-          if(newComponent.termType === TYPE_LITERAL) {
-            newComponent.datatype = {
-              termType: TYPE_NAMED_NODE
-            };
-            if('datatype' in oldComponent) {
-              newComponent.datatype.value = oldComponent.datatype;
-            }
-            if('language' in oldComponent) {
-              if(!('datatype' in oldComponent)) {
-                newComponent.datatype.value = RDF_LANGSTRING;
-              }
-              newComponent.language = oldComponent.language;
-            } else if(!('datatype' in oldComponent)) {
-              newComponent.datatype.value = XSD_STRING;
-            }
-          }
-          quad[componentName] = newComponent;
-        }
-        if(graphName === '@default') {
-          quad.graph = {
-            termType: TYPE_DEFAULT_GRAPH,
-            value: ''
-          };
-        } else {
-          quad.graph = {
-            termType: graphName.startsWith('_:') ?
-              TYPE_BLANK_NODE : TYPE_NAMED_NODE,
-            value: graphName
-          };
-        }
-        quads.push(quad);
-      });
-    }
-
-    return quads;
-  }
-};
-
-/**
- * Compares two RDF triples for equality.
- *
- * @param t1 the first triple.
- * @param t2 the second triple.
- *
- * @return true if the triples are the same, false if not.
- */
-function _compareTriples(t1, t2) {
-  // compare subject and object types first as it is the quickest check
-  if(!(t1.subject.termType === t2.subject.termType &&
-    t1.object.termType === t2.object.termType)) {
-    return false;
-  }
-  // compare values
-  if(!(t1.subject.value === t2.subject.value &&
-    t1.predicate.value === t2.predicate.value &&
-    t1.object.value === t2.object.value)) {
-    return false;
-  }
-  if(t1.object.termType !== TYPE_LITERAL) {
-    // no `datatype` or `language` to check
-    return true;
-  }
-  return (
-    (t1.object.datatype.termType === t2.object.datatype.termType) &&
-    (t1.object.language === t2.object.language) &&
-    (t1.object.datatype.value === t2.object.datatype.value)
-  );
-}
-
-const _escapeRegex = /["\\\n\r]/g;
-/**
- * Escape string to N-Quads literal
- */
-function _escape(s) {
-  return s.replace(_escapeRegex, function(match) {
-    switch(match) {
-      case '"': return '\\"';
-      case '\\': return '\\\\';
-      case '\n': return '\\n';
-      case '\r': return '\\r';
-    }
-  });
-}
-
-const _unescapeRegex =
-  /(?:\\([tbnrf"'\\]))|(?:\\u([0-9A-Fa-f]{4}))|(?:\\U([0-9A-Fa-f]{8}))/g;
-/**
- * Unescape N-Quads literal to string
- */
-function _unescape(s) {
-  return s.replace(_unescapeRegex, function(match, code, u, U) {
-    if(code) {
-      switch(code) {
-        case 't': return '\t';
-        case 'b': return '\b';
-        case 'n': return '\n';
-        case 'r': return '\r';
-        case 'f': return '\f';
-        case '"': return '"';
-        case '\'': return '\'';
-        case '\\': return '\\';
-      }
-    }
-    if(u) {
-      return String.fromCharCode(parseInt(u, 16));
-    }
-    if(U) {
-      // FIXME: support larger values
-      throw new Error('Unsupported U escape');
-    }
-  });
-}
-
-},{}],193:[function(require,module,exports){
-/*
- * Copyright (c) 2016-2020 Digital Bazaar, Inc. All rights reserved.
- */
-'use strict';
-
-// TODO: convert to ES6 iterable?
-
-module.exports = class Permuter {
-  /**
-   * A Permuter iterates over all possible permutations of the given array
-   * of elements.
-   *
-   * @param list the array of elements to iterate over.
-   */
-  constructor(list) {
-    // original array
-    this.current = list.sort();
-    // indicates whether there are more permutations
-    this.done = false;
-    // directional info for permutation algorithm
-    this.dir = new Map();
-    for(let i = 0; i < list.length; ++i) {
-      this.dir.set(list[i], true);
-    }
-  }
-
-  /**
-   * Returns true if there is another permutation.
-   *
-   * @return true if there is another permutation, false if not.
-   */
-  hasNext() {
-    return !this.done;
-  }
-
-  /**
-   * Gets the next permutation. Call hasNext() to ensure there is another one
-   * first.
-   *
-   * @return the next permutation.
-   */
-  next() {
-    // copy current permutation to return it
-    const {current, dir} = this;
-    const rval = current.slice();
-
-    /* Calculate the next permutation using the Steinhaus-Johnson-Trotter
-     permutation algorithm. */
-
-    // get largest mobile element k
-    // (mobile: element is greater than the one it is looking at)
-    let k = null;
-    let pos = 0;
-    const length = current.length;
-    for(let i = 0; i < length; ++i) {
-      const element = current[i];
-      const left = dir.get(element);
-      if((k === null || element > k) &&
-        ((left && i > 0 && element > current[i - 1]) ||
-        (!left && i < (length - 1) && element > current[i + 1]))) {
-        k = element;
-        pos = i;
-      }
-    }
-
-    // no more permutations
-    if(k === null) {
-      this.done = true;
-    } else {
-      // swap k and the element it is looking at
-      const swap = dir.get(k) ? pos - 1 : pos + 1;
-      current[pos] = current[swap];
-      current[swap] = k;
-
-      // reverse the direction of all elements larger than k
-      for(const element of current) {
-        if(element > k) {
-          dir.set(element, !dir.get(element));
-        }
-      }
-    }
-
-    return rval;
-  }
-};
-
-},{}],194:[function(require,module,exports){
-(function (setImmediate){(function (){
-/*
- * Copyright (c) 2016-2020 Digital Bazaar, Inc. All rights reserved.
- */
-'use strict';
-
-const IdentifierIssuer = require('./IdentifierIssuer');
-const MessageDigest = require('./MessageDigest');
-const Permuter = require('./Permuter');
-const NQuads = require('./NQuads');
-
-module.exports = class URDNA2015 {
-  constructor() {
-    this.name = 'URDNA2015';
-    this.blankNodeInfo = new Map();
-    this.canonicalIssuer = new IdentifierIssuer('_:c14n');
-    this.hashAlgorithm = 'sha256';
-    this.quads = null;
-  }
-
-  // 4.4) Normalization Algorithm
-  async main(dataset) {
-    this.quads = dataset;
-
-    // 1) Create the normalization state.
-    // 2) For every quad in input dataset:
-    for(const quad of dataset) {
-      // 2.1) For each blank node that occurs in the quad, add a reference
-      // to the quad using the blank node identifier in the blank node to
-      // quads map, creating a new entry if necessary.
-      this._addBlankNodeQuadInfo({quad, component: quad.subject});
-      this._addBlankNodeQuadInfo({quad, component: quad.object});
-      this._addBlankNodeQuadInfo({quad, component: quad.graph});
-    }
-
-    // 3) Create a list of non-normalized blank node identifiers
-    // non-normalized identifiers and populate it using the keys from the
-    // blank node to quads map.
-    // Note: We use a map here and it was generated during step 2.
-
-    // 4) `simple` flag is skipped -- loop is optimized away. This optimization
-    // is permitted because there was a typo in the hash first degree quads
-    // algorithm in the URDNA2015 spec that was implemented widely making it
-    // such that it could not be fixed; the result was that the loop only
-    // needs to be run once and the first degree quad hashes will never change.
-    // 5.1-5.2 are skipped; first degree quad hashes are generated just once
-    // for all non-normalized blank nodes.
-
-    // 5.3) For each blank node identifier identifier in non-normalized
-    // identifiers:
-    const hashToBlankNodes = new Map();
-    const nonNormalized = [...this.blankNodeInfo.keys()];
-    let i = 0;
-    for(const id of nonNormalized) {
-      // Note: batch hashing first degree quads 100 at a time
-      if(++i % 100 === 0) {
-        await this._yield();
-      }
-      // steps 5.3.1 and 5.3.2:
-      await this._hashAndTrackBlankNode({id, hashToBlankNodes});
-    }
-
-    // 5.4) For each hash to identifier list mapping in hash to blank
-    // nodes map, lexicographically-sorted by hash:
-    const hashes = [...hashToBlankNodes.keys()].sort();
-    // optimize away second sort, gather non-unique hashes in order as we go
-    const nonUnique = [];
-    for(const hash of hashes) {
-      // 5.4.1) If the length of identifier list is greater than 1,
-      // continue to the next mapping.
-      const idList = hashToBlankNodes.get(hash);
-      if(idList.length > 1) {
-        nonUnique.push(idList);
-        continue;
-      }
-
-      // 5.4.2) Use the Issue Identifier algorithm, passing canonical
-      // issuer and the single blank node identifier in identifier
-      // list, identifier, to issue a canonical replacement identifier
-      // for identifier.
-      const id = idList[0];
-      this.canonicalIssuer.getId(id);
-
-      // Note: These steps are skipped, optimized away since the loop
-      // only needs to be run once.
-      // 5.4.3) Remove identifier from non-normalized identifiers.
-      // 5.4.4) Remove hash from the hash to blank nodes map.
-      // 5.4.5) Set simple to true.
-    }
-
-    // 6) For each hash to identifier list mapping in hash to blank nodes map,
-    // lexicographically-sorted by hash:
-    // Note: sort optimized away, use `nonUnique`.
-    for(const idList of nonUnique) {
-      // 6.1) Create hash path list where each item will be a result of
-      // running the Hash N-Degree Quads algorithm.
-      const hashPathList = [];
-
-      // 6.2) For each blank node identifier identifier in identifier list:
-      for(const id of idList) {
-        // 6.2.1) If a canonical identifier has already been issued for
-        // identifier, continue to the next identifier.
-        if(this.canonicalIssuer.hasId(id)) {
-          continue;
-        }
-
-        // 6.2.2) Create temporary issuer, an identifier issuer
-        // initialized with the prefix _:b.
-        const issuer = new IdentifierIssuer('_:b');
-
-        // 6.2.3) Use the Issue Identifier algorithm, passing temporary
-        // issuer and identifier, to issue a new temporary blank node
-        // identifier for identifier.
-        issuer.getId(id);
-
-        // 6.2.4) Run the Hash N-Degree Quads algorithm, passing
-        // temporary issuer, and append the result to the hash path list.
-        const result = await this.hashNDegreeQuads(id, issuer);
-        hashPathList.push(result);
-      }
-
-      // 6.3) For each result in the hash path list,
-      // lexicographically-sorted by the hash in result:
-      hashPathList.sort(_stringHashCompare);
-      for(const result of hashPathList) {
-        // 6.3.1) For each blank node identifier, existing identifier,
-        // that was issued a temporary identifier by identifier issuer
-        // in result, issue a canonical identifier, in the same order,
-        // using the Issue Identifier algorithm, passing canonical
-        // issuer and existing identifier.
-        const oldIds = result.issuer.getOldIds();
-        for(const id of oldIds) {
-          this.canonicalIssuer.getId(id);
-        }
-      }
-    }
-
-    /* Note: At this point all blank nodes in the set of RDF quads have been
-    assigned canonical identifiers, which have been stored in the canonical
-    issuer. Here each quad is updated by assigning each of its blank nodes
-    its new identifier. */
-
-    // 7) For each quad, quad, in input dataset:
-    const normalized = [];
-    for(const quad of this.quads) {
-      // 7.1) Create a copy, quad copy, of quad and replace any existing
-      // blank node identifiers using the canonical identifiers
-      // previously issued by canonical issuer.
-      // Note: We optimize with shallow copies here.
-      const q = {...quad};
-      q.subject = this._useCanonicalId({component: q.subject});
-      q.object = this._useCanonicalId({component: q.object});
-      q.graph = this._useCanonicalId({component: q.graph});
-      // 7.2) Add quad copy to the normalized dataset.
-      normalized.push(NQuads.serializeQuad(q));
-    }
-
-    // sort normalized output
-    normalized.sort();
-
-    // 8) Return the normalized dataset.
-    return normalized.join('');
-  }
-
-  // 4.6) Hash First Degree Quads
-  async hashFirstDegreeQuads(id) {
-    // 1) Initialize nquads to an empty list. It will be used to store quads in
-    // N-Quads format.
-    const nquads = [];
-
-    // 2) Get the list of quads `quads` associated with the reference blank node
-    // identifier in the blank node to quads map.
-    const info = this.blankNodeInfo.get(id);
-    const quads = info.quads;
-
-    // 3) For each quad `quad` in `quads`:
-    for(const quad of quads) {
-      // 3.1) Serialize the quad in N-Quads format with the following special
-      // rule:
-
-      // 3.1.1) If any component in quad is an blank node, then serialize it
-      // using a special identifier as follows:
-      const copy = {
-        subject: null, predicate: quad.predicate, object: null, graph: null
-      };
-      // 3.1.2) If the blank node's existing blank node identifier matches
-      // the reference blank node identifier then use the blank node
-      // identifier _:a, otherwise, use the blank node identifier _:z.
-      copy.subject = this.modifyFirstDegreeComponent(
-        id, quad.subject, 'subject');
-      copy.object = this.modifyFirstDegreeComponent(
-        id, quad.object, 'object');
-      copy.graph = this.modifyFirstDegreeComponent(
-        id, quad.graph, 'graph');
-      nquads.push(NQuads.serializeQuad(copy));
-    }
-
-    // 4) Sort nquads in lexicographical order.
-    nquads.sort();
-
-    // 5) Return the hash that results from passing the sorted, joined nquads
-    // through the hash algorithm.
-    const md = new MessageDigest(this.hashAlgorithm);
-    for(const nquad of nquads) {
-      md.update(nquad);
-    }
-    info.hash = await md.digest();
-    return info.hash;
-  }
-
-  // 4.7) Hash Related Blank Node
-  async hashRelatedBlankNode(related, quad, issuer, position) {
-    // 1) Set the identifier to use for related, preferring first the canonical
-    // identifier for related if issued, second the identifier issued by issuer
-    // if issued, and last, if necessary, the result of the Hash First Degree
-    // Quads algorithm, passing related.
-    let id;
-    if(this.canonicalIssuer.hasId(related)) {
-      id = this.canonicalIssuer.getId(related);
-    } else if(issuer.hasId(related)) {
-      id = issuer.getId(related);
-    } else {
-      id = this.blankNodeInfo.get(related).hash;
-    }
-
-    // 2) Initialize a string input to the value of position.
-    // Note: We use a hash object instead.
-    const md = new MessageDigest(this.hashAlgorithm);
-    md.update(position);
-
-    // 3) If position is not g, append <, the value of the predicate in quad,
-    // and > to input.
-    if(position !== 'g') {
-      md.update(this.getRelatedPredicate(quad));
-    }
-
-    // 4) Append identifier to input.
-    md.update(id);
-
-    // 5) Return the hash that results from passing input through the hash
-    // algorithm.
-    return md.digest();
-  }
-
-  // 4.8) Hash N-Degree Quads
-  async hashNDegreeQuads(id, issuer) {
-    // 1) Create a hash to related blank nodes map for storing hashes that
-    // identify related blank nodes.
-    // Note: 2) and 3) handled within `createHashToRelated`
-    const md = new MessageDigest(this.hashAlgorithm);
-    const hashToRelated = await this.createHashToRelated(id, issuer);
-
-    // 4) Create an empty string, data to hash.
-    // Note: We created a hash object `md` above instead.
-
-    // 5) For each related hash to blank node list mapping in hash to related
-    // blank nodes map, sorted lexicographically by related hash:
-    const hashes = [...hashToRelated.keys()].sort();
-    for(const hash of hashes) {
-      // 5.1) Append the related hash to the data to hash.
-      md.update(hash);
-
-      // 5.2) Create a string chosen path.
-      let chosenPath = '';
-
-      // 5.3) Create an unset chosen issuer variable.
-      let chosenIssuer;
-
-      // 5.4) For each permutation of blank node list:
-      const permuter = new Permuter(hashToRelated.get(hash));
-      let i = 0;
-      while(permuter.hasNext()) {
-        const permutation = permuter.next();
-        // Note: batch permutations 3 at a time
-        if(++i % 3 === 0) {
-          await this._yield();
-        }
-
-        // 5.4.1) Create a copy of issuer, issuer copy.
-        let issuerCopy = issuer.clone();
-
-        // 5.4.2) Create a string path.
-        let path = '';
-
-        // 5.4.3) Create a recursion list, to store blank node identifiers
-        // that must be recursively processed by this algorithm.
-        const recursionList = [];
-
-        // 5.4.4) For each related in permutation:
-        let nextPermutation = false;
-        for(const related of permutation) {
-          // 5.4.4.1) If a canonical identifier has been issued for
-          // related, append it to path.
-          if(this.canonicalIssuer.hasId(related)) {
-            path += this.canonicalIssuer.getId(related);
-          } else {
-            // 5.4.4.2) Otherwise:
-            // 5.4.4.2.1) If issuer copy has not issued an identifier for
-            // related, append related to recursion list.
-            if(!issuerCopy.hasId(related)) {
-              recursionList.push(related);
-            }
-            // 5.4.4.2.2) Use the Issue Identifier algorithm, passing
-            // issuer copy and related and append the result to path.
-            path += issuerCopy.getId(related);
-          }
-
-          // 5.4.4.3) If chosen path is not empty and the length of path
-          // is greater than or equal to the length of chosen path and
-          // path is lexicographically greater than chosen path, then
-          // skip to the next permutation.
-          // Note: Comparing path length to chosen path length can be optimized
-          // away; only compare lexicographically.
-          if(chosenPath.length !== 0 && path > chosenPath) {
-            nextPermutation = true;
-            break;
-          }
-        }
-
-        if(nextPermutation) {
-          continue;
-        }
-
-        // 5.4.5) For each related in recursion list:
-        for(const related of recursionList) {
-          // 5.4.5.1) Set result to the result of recursively executing
-          // the Hash N-Degree Quads algorithm, passing related for
-          // identifier and issuer copy for path identifier issuer.
-          const result = await this.hashNDegreeQuads(related, issuerCopy);
-
-          // 5.4.5.2) Use the Issue Identifier algorithm, passing issuer
-          // copy and related and append the result to path.
-          path += issuerCopy.getId(related);
-
-          // 5.4.5.3) Append <, the hash in result, and > to path.
-          path += `<${result.hash}>`;
-
-          // 5.4.5.4) Set issuer copy to the identifier issuer in
-          // result.
-          issuerCopy = result.issuer;
-
-          // 5.4.5.5) If chosen path is not empty and the length of path
-          // is greater than or equal to the length of chosen path and
-          // path is lexicographically greater than chosen path, then
-          // skip to the next permutation.
-          // Note: Comparing path length to chosen path length can be optimized
-          // away; only compare lexicographically.
-          if(chosenPath.length !== 0 && path > chosenPath) {
-            nextPermutation = true;
-            break;
-          }
-        }
-
-        if(nextPermutation) {
-          continue;
-        }
-
-        // 5.4.6) If chosen path is empty or path is lexicographically
-        // less than chosen path, set chosen path to path and chosen
-        // issuer to issuer copy.
-        if(chosenPath.length === 0 || path < chosenPath) {
-          chosenPath = path;
-          chosenIssuer = issuerCopy;
-        }
-      }
-
-      // 5.5) Append chosen path to data to hash.
-      md.update(chosenPath);
-
-      // 5.6) Replace issuer, by reference, with chosen issuer.
-      issuer = chosenIssuer;
-    }
-
-    // 6) Return issuer and the hash that results from passing data to hash
-    // through the hash algorithm.
-    return {hash: await md.digest(), issuer};
-  }
-
-  // helper for modifying component during Hash First Degree Quads
-  modifyFirstDegreeComponent(id, component) {
-    if(component.termType !== 'BlankNode') {
-      return component;
-    }
-    /* Note: A mistake in the URDNA2015 spec that made its way into
-    implementations (and therefore must stay to avoid interop breakage)
-    resulted in an assigned canonical ID, if available for
-    `component.value`, not being used in place of `_:a`/`_:z`, so
-    we don't use it here. */
-    return {
-      termType: 'BlankNode',
-      value: component.value === id ? '_:a' : '_:z'
-    };
-  }
-
-  // helper for getting a related predicate
-  getRelatedPredicate(quad) {
-    return `<${quad.predicate.value}>`;
-  }
-
-  // helper for creating hash to related blank nodes map
-  async createHashToRelated(id, issuer) {
-    // 1) Create a hash to related blank nodes map for storing hashes that
-    // identify related blank nodes.
-    const hashToRelated = new Map();
-
-    // 2) Get a reference, quads, to the list of quads in the blank node to
-    // quads map for the key identifier.
-    const quads = this.blankNodeInfo.get(id).quads;
-
-    // 3) For each quad in quads:
-    let i = 0;
-    for(const quad of quads) {
-      // Note: batch hashing related blank node quads 100 at a time
-      if(++i % 100 === 0) {
-        await this._yield();
-      }
-      // 3.1) For each component in quad, if component is the subject, object,
-      // and graph name and it is a blank node that is not identified by
-      // identifier:
-      // steps 3.1.1 and 3.1.2 occur in helpers:
-      await Promise.all([
-        this._addRelatedBlankNodeHash({
-          quad, component: quad.subject, position: 's',
-          id, issuer, hashToRelated
-        }),
-        this._addRelatedBlankNodeHash({
-          quad, component: quad.object, position: 'o',
-          id, issuer, hashToRelated
-        }),
-        this._addRelatedBlankNodeHash({
-          quad, component: quad.graph, position: 'g',
-          id, issuer, hashToRelated
-        })
-      ]);
-    }
-
-    return hashToRelated;
-  }
-
-  async _hashAndTrackBlankNode({id, hashToBlankNodes}) {
-    // 5.3.1) Create a hash, hash, according to the Hash First Degree
-    // Quads algorithm.
-    const hash = await this.hashFirstDegreeQuads(id);
-
-    // 5.3.2) Add hash and identifier to hash to blank nodes map,
-    // creating a new entry if necessary.
-    const idList = hashToBlankNodes.get(hash);
-    if(!idList) {
-      hashToBlankNodes.set(hash, [id]);
-    } else {
-      idList.push(id);
-    }
-  }
-
-  _addBlankNodeQuadInfo({quad, component}) {
-    if(component.termType !== 'BlankNode') {
-      return;
-    }
-    const id = component.value;
-    const info = this.blankNodeInfo.get(id);
-    if(info) {
-      info.quads.add(quad);
-    } else {
-      this.blankNodeInfo.set(id, {quads: new Set([quad]), hash: null});
-    }
-  }
-
-  async _addRelatedBlankNodeHash(
-    {quad, component, position, id, issuer, hashToRelated}) {
-    if(!(component.termType === 'BlankNode' && component.value !== id)) {
-      return;
-    }
-    // 3.1.1) Set hash to the result of the Hash Related Blank Node
-    // algorithm, passing the blank node identifier for component as
-    // related, quad, path identifier issuer as issuer, and position as
-    // either s, o, or g based on whether component is a subject, object,
-    // graph name, respectively.
-    const related = component.value;
-    const hash = await this.hashRelatedBlankNode(
-      related, quad, issuer, position);
-
-    // 3.1.2) Add a mapping of hash to the blank node identifier for
-    // component to hash to related blank nodes map, adding an entry as
-    // necessary.
-    const entries = hashToRelated.get(hash);
-    if(entries) {
-      entries.push(related);
-    } else {
-      hashToRelated.set(hash, [related]);
-    }
-  }
-
-  _useCanonicalId({component}) {
-    if(component.termType === 'BlankNode' &&
-      !component.value.startsWith(this.canonicalIssuer.prefix)) {
-      return {
-        termType: 'BlankNode',
-        value: this.canonicalIssuer.getId(component.value)
-      };
-    }
-    return component;
-  }
-
-  async _yield() {
-    return new Promise(resolve => setImmediate(resolve));
-  }
-};
-
-function _stringHashCompare(a, b) {
-  return a.hash < b.hash ? -1 : a.hash > b.hash ? 1 : 0;
-}
-
-}).call(this)}).call(this,require("timers").setImmediate)
-},{"./IdentifierIssuer":190,"./MessageDigest":191,"./NQuads":192,"./Permuter":193,"timers":200}],195:[function(require,module,exports){
-/*
- * Copyright (c) 2016-2020 Digital Bazaar, Inc. All rights reserved.
- */
-'use strict';
-
-const IdentifierIssuer = require('./IdentifierIssuer');
-const MessageDigest = require('./MessageDigest');
-const Permuter = require('./Permuter');
-const NQuads = require('./NQuads');
-
-module.exports = class URDNA2015Sync {
-  constructor() {
-    this.name = 'URDNA2015';
-    this.blankNodeInfo = new Map();
-    this.canonicalIssuer = new IdentifierIssuer('_:c14n');
-    this.hashAlgorithm = 'sha256';
-    this.quads = null;
-  }
-
-  // 4.4) Normalization Algorithm
-  main(dataset) {
-    this.quads = dataset;
-
-    // 1) Create the normalization state.
-    // 2) For every quad in input dataset:
-    for(const quad of dataset) {
-      // 2.1) For each blank node that occurs in the quad, add a reference
-      // to the quad using the blank node identifier in the blank node to
-      // quads map, creating a new entry if necessary.
-      this._addBlankNodeQuadInfo({quad, component: quad.subject});
-      this._addBlankNodeQuadInfo({quad, component: quad.object});
-      this._addBlankNodeQuadInfo({quad, component: quad.graph});
-    }
-
-    // 3) Create a list of non-normalized blank node identifiers
-    // non-normalized identifiers and populate it using the keys from the
-    // blank node to quads map.
-    // Note: We use a map here and it was generated during step 2.
-
-    // 4) `simple` flag is skipped -- loop is optimized away. This optimization
-    // is permitted because there was a typo in the hash first degree quads
-    // algorithm in the URDNA2015 spec that was implemented widely making it
-    // such that it could not be fixed; the result was that the loop only
-    // needs to be run once and the first degree quad hashes will never change.
-    // 5.1-5.2 are skipped; first degree quad hashes are generated just once
-    // for all non-normalized blank nodes.
-
-    // 5.3) For each blank node identifier identifier in non-normalized
-    // identifiers:
-    const hashToBlankNodes = new Map();
-    const nonNormalized = [...this.blankNodeInfo.keys()];
-    for(const id of nonNormalized) {
-      // steps 5.3.1 and 5.3.2:
-      this._hashAndTrackBlankNode({id, hashToBlankNodes});
-    }
-
-    // 5.4) For each hash to identifier list mapping in hash to blank
-    // nodes map, lexicographically-sorted by hash:
-    const hashes = [...hashToBlankNodes.keys()].sort();
-    // optimize away second sort, gather non-unique hashes in order as we go
-    const nonUnique = [];
-    for(const hash of hashes) {
-      // 5.4.1) If the length of identifier list is greater than 1,
-      // continue to the next mapping.
-      const idList = hashToBlankNodes.get(hash);
-      if(idList.length > 1) {
-        nonUnique.push(idList);
-        continue;
-      }
-
-      // 5.4.2) Use the Issue Identifier algorithm, passing canonical
-      // issuer and the single blank node identifier in identifier
-      // list, identifier, to issue a canonical replacement identifier
-      // for identifier.
-      const id = idList[0];
-      this.canonicalIssuer.getId(id);
-
-      // Note: These steps are skipped, optimized away since the loop
-      // only needs to be run once.
-      // 5.4.3) Remove identifier from non-normalized identifiers.
-      // 5.4.4) Remove hash from the hash to blank nodes map.
-      // 5.4.5) Set simple to true.
-    }
-
-    // 6) For each hash to identifier list mapping in hash to blank nodes map,
-    // lexicographically-sorted by hash:
-    // Note: sort optimized away, use `nonUnique`.
-    for(const idList of nonUnique) {
-      // 6.1) Create hash path list where each item will be a result of
-      // running the Hash N-Degree Quads algorithm.
-      const hashPathList = [];
-
-      // 6.2) For each blank node identifier identifier in identifier list:
-      for(const id of idList) {
-        // 6.2.1) If a canonical identifier has already been issued for
-        // identifier, continue to the next identifier.
-        if(this.canonicalIssuer.hasId(id)) {
-          continue;
-        }
-
-        // 6.2.2) Create temporary issuer, an identifier issuer
-        // initialized with the prefix _:b.
-        const issuer = new IdentifierIssuer('_:b');
-
-        // 6.2.3) Use the Issue Identifier algorithm, passing temporary
-        // issuer and identifier, to issue a new temporary blank node
-        // identifier for identifier.
-        issuer.getId(id);
-
-        // 6.2.4) Run the Hash N-Degree Quads algorithm, passing
-        // temporary issuer, and append the result to the hash path list.
-        const result = this.hashNDegreeQuads(id, issuer);
-        hashPathList.push(result);
-      }
-
-      // 6.3) For each result in the hash path list,
-      // lexicographically-sorted by the hash in result:
-      hashPathList.sort(_stringHashCompare);
-      for(const result of hashPathList) {
-        // 6.3.1) For each blank node identifier, existing identifier,
-        // that was issued a temporary identifier by identifier issuer
-        // in result, issue a canonical identifier, in the same order,
-        // using the Issue Identifier algorithm, passing canonical
-        // issuer and existing identifier.
-        const oldIds = result.issuer.getOldIds();
-        for(const id of oldIds) {
-          this.canonicalIssuer.getId(id);
-        }
-      }
-    }
-
-    /* Note: At this point all blank nodes in the set of RDF quads have been
-    assigned canonical identifiers, which have been stored in the canonical
-    issuer. Here each quad is updated by assigning each of its blank nodes
-    its new identifier. */
-
-    // 7) For each quad, quad, in input dataset:
-    const normalized = [];
-    for(const quad of this.quads) {
-      // 7.1) Create a copy, quad copy, of quad and replace any existing
-      // blank node identifiers using the canonical identifiers
-      // previously issued by canonical issuer.
-      // Note: We optimize with shallow copies here.
-      const q = {...quad};
-      q.subject = this._useCanonicalId({component: q.subject});
-      q.object = this._useCanonicalId({component: q.object});
-      q.graph = this._useCanonicalId({component: q.graph});
-      // 7.2) Add quad copy to the normalized dataset.
-      normalized.push(NQuads.serializeQuad(q));
-    }
-
-    // sort normalized output
-    normalized.sort();
-
-    // 8) Return the normalized dataset.
-    return normalized.join('');
-  }
-
-  // 4.6) Hash First Degree Quads
-  hashFirstDegreeQuads(id) {
-    // 1) Initialize nquads to an empty list. It will be used to store quads in
-    // N-Quads format.
-    const nquads = [];
-
-    // 2) Get the list of quads `quads` associated with the reference blank node
-    // identifier in the blank node to quads map.
-    const info = this.blankNodeInfo.get(id);
-    const quads = info.quads;
-
-    // 3) For each quad `quad` in `quads`:
-    for(const quad of quads) {
-      // 3.1) Serialize the quad in N-Quads format with the following special
-      // rule:
-
-      // 3.1.1) If any component in quad is an blank node, then serialize it
-      // using a special identifier as follows:
-      const copy = {
-        subject: null, predicate: quad.predicate, object: null, graph: null
-      };
-      // 3.1.2) If the blank node's existing blank node identifier matches
-      // the reference blank node identifier then use the blank node
-      // identifier _:a, otherwise, use the blank node identifier _:z.
-      copy.subject = this.modifyFirstDegreeComponent(
-        id, quad.subject, 'subject');
-      copy.object = this.modifyFirstDegreeComponent(
-        id, quad.object, 'object');
-      copy.graph = this.modifyFirstDegreeComponent(
-        id, quad.graph, 'graph');
-      nquads.push(NQuads.serializeQuad(copy));
-    }
-
-    // 4) Sort nquads in lexicographical order.
-    nquads.sort();
-
-    // 5) Return the hash that results from passing the sorted, joined nquads
-    // through the hash algorithm.
-    const md = new MessageDigest(this.hashAlgorithm);
-    for(const nquad of nquads) {
-      md.update(nquad);
-    }
-    info.hash = md.digest();
-    return info.hash;
-  }
-
-  // 4.7) Hash Related Blank Node
-  hashRelatedBlankNode(related, quad, issuer, position) {
-    // 1) Set the identifier to use for related, preferring first the canonical
-    // identifier for related if issued, second the identifier issued by issuer
-    // if issued, and last, if necessary, the result of the Hash First Degree
-    // Quads algorithm, passing related.
-    let id;
-    if(this.canonicalIssuer.hasId(related)) {
-      id = this.canonicalIssuer.getId(related);
-    } else if(issuer.hasId(related)) {
-      id = issuer.getId(related);
-    } else {
-      id = this.blankNodeInfo.get(related).hash;
-    }
-
-    // 2) Initialize a string input to the value of position.
-    // Note: We use a hash object instead.
-    const md = new MessageDigest(this.hashAlgorithm);
-    md.update(position);
-
-    // 3) If position is not g, append <, the value of the predicate in quad,
-    // and > to input.
-    if(position !== 'g') {
-      md.update(this.getRelatedPredicate(quad));
-    }
-
-    // 4) Append identifier to input.
-    md.update(id);
-
-    // 5) Return the hash that results from passing input through the hash
-    // algorithm.
-    return md.digest();
-  }
-
-  // 4.8) Hash N-Degree Quads
-  hashNDegreeQuads(id, issuer) {
-    // 1) Create a hash to related blank nodes map for storing hashes that
-    // identify related blank nodes.
-    // Note: 2) and 3) handled within `createHashToRelated`
-    const md = new MessageDigest(this.hashAlgorithm);
-    const hashToRelated = this.createHashToRelated(id, issuer);
-
-    // 4) Create an empty string, data to hash.
-    // Note: We created a hash object `md` above instead.
-
-    // 5) For each related hash to blank node list mapping in hash to related
-    // blank nodes map, sorted lexicographically by related hash:
-    const hashes = [...hashToRelated.keys()].sort();
-    for(const hash of hashes) {
-      // 5.1) Append the related hash to the data to hash.
-      md.update(hash);
-
-      // 5.2) Create a string chosen path.
-      let chosenPath = '';
-
-      // 5.3) Create an unset chosen issuer variable.
-      let chosenIssuer;
-
-      // 5.4) For each permutation of blank node list:
-      const permuter = new Permuter(hashToRelated.get(hash));
-      while(permuter.hasNext()) {
-        const permutation = permuter.next();
-
-        // 5.4.1) Create a copy of issuer, issuer copy.
-        let issuerCopy = issuer.clone();
-
-        // 5.4.2) Create a string path.
-        let path = '';
-
-        // 5.4.3) Create a recursion list, to store blank node identifiers
-        // that must be recursively processed by this algorithm.
-        const recursionList = [];
-
-        // 5.4.4) For each related in permutation:
-        let nextPermutation = false;
-        for(const related of permutation) {
-          // 5.4.4.1) If a canonical identifier has been issued for
-          // related, append it to path.
-          if(this.canonicalIssuer.hasId(related)) {
-            path += this.canonicalIssuer.getId(related);
-          } else {
-            // 5.4.4.2) Otherwise:
-            // 5.4.4.2.1) If issuer copy has not issued an identifier for
-            // related, append related to recursion list.
-            if(!issuerCopy.hasId(related)) {
-              recursionList.push(related);
-            }
-            // 5.4.4.2.2) Use the Issue Identifier algorithm, passing
-            // issuer copy and related and append the result to path.
-            path += issuerCopy.getId(related);
-          }
-
-          // 5.4.4.3) If chosen path is not empty and the length of path
-          // is greater than or equal to the length of chosen path and
-          // path is lexicographically greater than chosen path, then
-          // skip to the next permutation.
-          // Note: Comparing path length to chosen path length can be optimized
-          // away; only compare lexicographically.
-          if(chosenPath.length !== 0 && path > chosenPath) {
-            nextPermutation = true;
-            break;
-          }
-        }
-
-        if(nextPermutation) {
-          continue;
-        }
-
-        // 5.4.5) For each related in recursion list:
-        for(const related of recursionList) {
-          // 5.4.5.1) Set result to the result of recursively executing
-          // the Hash N-Degree Quads algorithm, passing related for
-          // identifier and issuer copy for path identifier issuer.
-          const result = this.hashNDegreeQuads(related, issuerCopy);
-
-          // 5.4.5.2) Use the Issue Identifier algorithm, passing issuer
-          // copy and related and append the result to path.
-          path += issuerCopy.getId(related);
-
-          // 5.4.5.3) Append <, the hash in result, and > to path.
-          path += `<${result.hash}>`;
-
-          // 5.4.5.4) Set issuer copy to the identifier issuer in
-          // result.
-          issuerCopy = result.issuer;
-
-          // 5.4.5.5) If chosen path is not empty and the length of path
-          // is greater than or equal to the length of chosen path and
-          // path is lexicographically greater than chosen path, then
-          // skip to the next permutation.
-          // Note: Comparing path length to chosen path length can be optimized
-          // away; only compare lexicographically.
-          if(chosenPath.length !== 0 && path > chosenPath) {
-            nextPermutation = true;
-            break;
-          }
-        }
-
-        if(nextPermutation) {
-          continue;
-        }
-
-        // 5.4.6) If chosen path is empty or path is lexicographically
-        // less than chosen path, set chosen path to path and chosen
-        // issuer to issuer copy.
-        if(chosenPath.length === 0 || path < chosenPath) {
-          chosenPath = path;
-          chosenIssuer = issuerCopy;
-        }
-      }
-
-      // 5.5) Append chosen path to data to hash.
-      md.update(chosenPath);
-
-      // 5.6) Replace issuer, by reference, with chosen issuer.
-      issuer = chosenIssuer;
-    }
-
-    // 6) Return issuer and the hash that results from passing data to hash
-    // through the hash algorithm.
-    return {hash: md.digest(), issuer};
-  }
-
-  // helper for modifying component during Hash First Degree Quads
-  modifyFirstDegreeComponent(id, component) {
-    if(component.termType !== 'BlankNode') {
-      return component;
-    }
-    /* Note: A mistake in the URDNA2015 spec that made its way into
-    implementations (and therefore must stay to avoid interop breakage)
-    resulted in an assigned canonical ID, if available for
-    `component.value`, not being used in place of `_:a`/`_:z`, so
-    we don't use it here. */
-    return {
-      termType: 'BlankNode',
-      value: component.value === id ? '_:a' : '_:z'
-    };
-  }
-
-  // helper for getting a related predicate
-  getRelatedPredicate(quad) {
-    return `<${quad.predicate.value}>`;
-  }
-
-  // helper for creating hash to related blank nodes map
-  createHashToRelated(id, issuer) {
-    // 1) Create a hash to related blank nodes map for storing hashes that
-    // identify related blank nodes.
-    const hashToRelated = new Map();
-
-    // 2) Get a reference, quads, to the list of quads in the blank node to
-    // quads map for the key identifier.
-    const quads = this.blankNodeInfo.get(id).quads;
-
-    // 3) For each quad in quads:
-    for(const quad of quads) {
-      // 3.1) For each component in quad, if component is the subject, object,
-      // or graph name and it is a blank node that is not identified by
-      // identifier:
-      // steps 3.1.1 and 3.1.2 occur in helpers:
-      this._addRelatedBlankNodeHash({
-        quad, component: quad.subject, position: 's',
-        id, issuer, hashToRelated
-      });
-      this._addRelatedBlankNodeHash({
-        quad, component: quad.object, position: 'o',
-        id, issuer, hashToRelated
-      });
-      this._addRelatedBlankNodeHash({
-        quad, component: quad.graph, position: 'g',
-        id, issuer, hashToRelated
-      });
-    }
-
-    return hashToRelated;
-  }
-
-  _hashAndTrackBlankNode({id, hashToBlankNodes}) {
-    // 5.3.1) Create a hash, hash, according to the Hash First Degree
-    // Quads algorithm.
-    const hash = this.hashFirstDegreeQuads(id);
-
-    // 5.3.2) Add hash and identifier to hash to blank nodes map,
-    // creating a new entry if necessary.
-    const idList = hashToBlankNodes.get(hash);
-    if(!idList) {
-      hashToBlankNodes.set(hash, [id]);
-    } else {
-      idList.push(id);
-    }
-  }
-
-  _addBlankNodeQuadInfo({quad, component}) {
-    if(component.termType !== 'BlankNode') {
-      return;
-    }
-    const id = component.value;
-    const info = this.blankNodeInfo.get(id);
-    if(info) {
-      info.quads.add(quad);
-    } else {
-      this.blankNodeInfo.set(id, {quads: new Set([quad]), hash: null});
-    }
-  }
-
-  _addRelatedBlankNodeHash(
-    {quad, component, position, id, issuer, hashToRelated}) {
-    if(!(component.termType === 'BlankNode' && component.value !== id)) {
-      return;
-    }
-    // 3.1.1) Set hash to the result of the Hash Related Blank Node
-    // algorithm, passing the blank node identifier for component as
-    // related, quad, path identifier issuer as issuer, and position as
-    // either s, o, or g based on whether component is a subject, object,
-    // graph name, respectively.
-    const related = component.value;
-    const hash = this.hashRelatedBlankNode(related, quad, issuer, position);
-
-    // 3.1.2) Add a mapping of hash to the blank node identifier for
-    // component to hash to related blank nodes map, adding an entry as
-    // necessary.
-    const entries = hashToRelated.get(hash);
-    if(entries) {
-      entries.push(related);
-    } else {
-      hashToRelated.set(hash, [related]);
-    }
-  }
-
-  _useCanonicalId({component}) {
-    if(component.termType === 'BlankNode' &&
-      !component.value.startsWith(this.canonicalIssuer.prefix)) {
-      return {
-        termType: 'BlankNode',
-        value: this.canonicalIssuer.getId(component.value)
-      };
-    }
-    return component;
-  }
-};
-
-function _stringHashCompare(a, b) {
-  return a.hash < b.hash ? -1 : a.hash > b.hash ? 1 : 0;
-}
-
-},{"./IdentifierIssuer":190,"./MessageDigest":191,"./NQuads":192,"./Permuter":193}],196:[function(require,module,exports){
-/*
- * Copyright (c) 2016-2020 Digital Bazaar, Inc. All rights reserved.
- */
-'use strict';
-
-const URDNA2015 = require('./URDNA2015');
-
-module.exports = class URDNA2012 extends URDNA2015 {
-  constructor() {
-    super();
-    this.name = 'URGNA2012';
-    this.hashAlgorithm = 'sha1';
-  }
-
-  // helper for modifying component during Hash First Degree Quads
-  modifyFirstDegreeComponent(id, component, key) {
-    if(component.termType !== 'BlankNode') {
-      return component;
-    }
-    if(key === 'graph') {
-      return {
-        termType: 'BlankNode',
-        value: '_:g'
-      };
-    }
-    return {
-      termType: 'BlankNode',
-      value: (component.value === id ? '_:a' : '_:z')
-    };
-  }
-
-  // helper for getting a related predicate
-  getRelatedPredicate(quad) {
-    return quad.predicate.value;
-  }
-
-  // helper for creating hash to related blank nodes map
-  async createHashToRelated(id, issuer) {
-    // 1) Create a hash to related blank nodes map for storing hashes that
-    // identify related blank nodes.
-    const hashToRelated = new Map();
-
-    // 2) Get a reference, quads, to the list of quads in the blank node to
-    // quads map for the key identifier.
-    const quads = this.blankNodeInfo.get(id).quads;
-
-    // 3) For each quad in quads:
-    let i = 0;
-    for(const quad of quads) {
-      // 3.1) If the quad's subject is a blank node that does not match
-      // identifier, set hash to the result of the Hash Related Blank Node
-      // algorithm, passing the blank node identifier for subject as related,
-      // quad, path identifier issuer as issuer, and p as position.
-      let position;
-      let related;
-      if(quad.subject.termType === 'BlankNode' && quad.subject.value !== id) {
-        related = quad.subject.value;
-        position = 'p';
-      } else if(
-        quad.object.termType === 'BlankNode' && quad.object.value !== id) {
-        // 3.2) Otherwise, if quad's object is a blank node that does not match
-        // identifier, to the result of the Hash Related Blank Node algorithm,
-        // passing the blank node identifier for object as related, quad, path
-        // identifier issuer as issuer, and r as position.
-        related = quad.object.value;
-        position = 'r';
-      } else {
-        // 3.3) Otherwise, continue to the next quad.
-        continue;
-      }
-      // Note: batch hashing related blank nodes 100 at a time
-      if(++i % 100 === 0) {
-        await this._yield();
-      }
-      // 3.4) Add a mapping of hash to the blank node identifier for the
-      // component that matched (subject or object) to hash to related blank
-      // nodes map, adding an entry as necessary.
-      const hash = await this.hashRelatedBlankNode(
-        related, quad, issuer, position);
-      const entries = hashToRelated.get(hash);
-      if(entries) {
-        entries.push(related);
-      } else {
-        hashToRelated.set(hash, [related]);
-      }
-    }
-
-    return hashToRelated;
-  }
-};
-
-},{"./URDNA2015":194}],197:[function(require,module,exports){
-/*
- * Copyright (c) 2016-2020 Digital Bazaar, Inc. All rights reserved.
- */
-'use strict';
-
-const URDNA2015Sync = require('./URDNA2015Sync');
-
-module.exports = class URDNA2012Sync extends URDNA2015Sync {
-  constructor() {
-    super();
-    this.name = 'URGNA2012';
-    this.hashAlgorithm = 'sha1';
-  }
-
-  // helper for modifying component during Hash First Degree Quads
-  modifyFirstDegreeComponent(id, component, key) {
-    if(component.termType !== 'BlankNode') {
-      return component;
-    }
-    if(key === 'graph') {
-      return {
-        termType: 'BlankNode',
-        value: '_:g'
-      };
-    }
-    return {
-      termType: 'BlankNode',
-      value: (component.value === id ? '_:a' : '_:z')
-    };
-  }
-
-  // helper for getting a related predicate
-  getRelatedPredicate(quad) {
-    return quad.predicate.value;
-  }
-
-  // helper for creating hash to related blank nodes map
-  createHashToRelated(id, issuer) {
-    // 1) Create a hash to related blank nodes map for storing hashes that
-    // identify related blank nodes.
-    const hashToRelated = new Map();
-
-    // 2) Get a reference, quads, to the list of quads in the blank node to
-    // quads map for the key identifier.
-    const quads = this.blankNodeInfo.get(id).quads;
-
-    // 3) For each quad in quads:
-    for(const quad of quads) {
-      // 3.1) If the quad's subject is a blank node that does not match
-      // identifier, set hash to the result of the Hash Related Blank Node
-      // algorithm, passing the blank node identifier for subject as related,
-      // quad, path identifier issuer as issuer, and p as position.
-      let position;
-      let related;
-      if(quad.subject.termType === 'BlankNode' && quad.subject.value !== id) {
-        related = quad.subject.value;
-        position = 'p';
-      } else if(
-        quad.object.termType === 'BlankNode' && quad.object.value !== id) {
-        // 3.2) Otherwise, if quad's object is a blank node that does not match
-        // identifier, to the result of the Hash Related Blank Node algorithm,
-        // passing the blank node identifier for object as related, quad, path
-        // identifier issuer as issuer, and r as position.
-        related = quad.object.value;
-        position = 'r';
-      } else {
-        // 3.3) Otherwise, continue to the next quad.
-        continue;
-      }
-      // 3.4) Add a mapping of hash to the blank node identifier for the
-      // component that matched (subject or object) to hash to related blank
-      // nodes map, adding an entry as necessary.
-      const hash = this.hashRelatedBlankNode(related, quad, issuer, position);
-      const entries = hashToRelated.get(hash);
-      if(entries) {
-        entries.push(related);
-      } else {
-        hashToRelated.set(hash, [related]);
-      }
-    }
-
-    return hashToRelated;
-  }
-};
-
-},{"./URDNA2015Sync":195}],198:[function(require,module,exports){
-/**
- * An implementation of the RDF Dataset Normalization specification.
- * This library works in the browser and node.js.
- *
- * BSD 3-Clause License
- * Copyright (c) 2016-2020 Digital Bazaar, Inc.
- * All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * Redistributions of source code must retain the above copyright notice,
- * this list of conditions and the following disclaimer.
- *
- * Redistributions in binary form must reproduce the above copyright
- * notice, this list of conditions and the following disclaimer in the
- * documentation and/or other materials provided with the distribution.
- *
- * Neither the name of the Digital Bazaar, Inc. nor the names of its
- * contributors may be used to endorse or promote products derived from
- * this software without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
- * IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
- * TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
- * PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- * HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
- * TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
- * PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
- * LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
- * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
- * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */
-'use strict';
-
-const URDNA2015 = require('./URDNA2015');
-const URGNA2012 = require('./URGNA2012');
-const URDNA2015Sync = require('./URDNA2015Sync');
-const URGNA2012Sync = require('./URGNA2012Sync');
-
-// optional native support
-let rdfCanonizeNative;
-try {
-  rdfCanonizeNative = require('rdf-canonize-native');
-} catch(e) {}
-
-const api = {};
-module.exports = api;
-
-// expose helpers
-api.NQuads = require('./NQuads');
-api.IdentifierIssuer = require('./IdentifierIssuer');
-
-/**
- * Get or set native API.
- *
- * @param api the native API.
- *
- * @return the currently set native API.
- */
-api._rdfCanonizeNative = function(api) {
-  if(api) {
-    rdfCanonizeNative = api;
-  }
-  return rdfCanonizeNative;
-};
-
-/**
- * Asynchronously canonizes an RDF dataset.
- *
- * @param dataset the dataset to canonize.
- * @param options the options to use:
- *          algorithm the canonicalization algorithm to use, `URDNA2015` or
- *            `URGNA2012`.
- *          [useNative] use native implementation (default: false).
- *
- * @return a Promise that resolves to the canonicalized RDF Dataset.
- */
-api.canonize = async function(dataset, options) {
-  // back-compat with legacy dataset
-  if(!Array.isArray(dataset)) {
-    dataset = api.NQuads.legacyDatasetToQuads(dataset);
-  }
-
-  if(options.useNative) {
-    if(!rdfCanonizeNative) {
-      throw new Error('rdf-canonize-native not available');
-    }
-    // TODO: convert native algorithm to Promise-based async
-    return new Promise((resolve, reject) =>
-      rdfCanonizeNative.canonize(dataset, options, (err, canonical) =>
-        err ? reject(err) : resolve(canonical)));
-  }
-
-  if(options.algorithm === 'URDNA2015') {
-    return new URDNA2015(options).main(dataset);
-  }
-  if(options.algorithm === 'URGNA2012') {
-    return new URGNA2012(options).main(dataset);
-  }
-  if(!('algorithm' in options)) {
-    throw new Error('No RDF Dataset Canonicalization algorithm specified.');
-  }
-  throw new Error(
-    'Invalid RDF Dataset Canonicalization algorithm: ' + options.algorithm);
-};
-
-/**
- * This method is no longer available in the public API, it is for testing
- * only. It synchronously canonizes an RDF dataset and does not work in the
- * browser.
- *
- * @param dataset the dataset to canonize.
- * @param options the options to use:
- *          algorithm the canonicalization algorithm to use, `URDNA2015` or
- *            `URGNA2012`.
- *          [useNative] use native implementation (default: false).
- *
- * @return the RDF dataset in canonical form.
- */
-api._canonizeSync = function(dataset, options) {
-  // back-compat with legacy dataset
-  if(!Array.isArray(dataset)) {
-    dataset = api.NQuads.legacyDatasetToQuads(dataset);
-  }
-
-  if(options.useNative) {
-    if(rdfCanonizeNative) {
-      return rdfCanonizeNative.canonizeSync(dataset, options);
-    }
-    throw new Error('rdf-canonize-native not available');
-  }
-  if(options.algorithm === 'URDNA2015') {
-    return new URDNA2015Sync(options).main(dataset);
-  }
-  if(options.algorithm === 'URGNA2012') {
-    return new URGNA2012Sync(options).main(dataset);
-  }
-  if(!('algorithm' in options)) {
-    throw new Error('No RDF Dataset Canonicalization algorithm specified.');
-  }
-  throw new Error(
-    'Invalid RDF Dataset Canonicalization algorithm: ' + options.algorithm);
-};
-
-},{"./IdentifierIssuer":190,"./NQuads":192,"./URDNA2015":194,"./URDNA2015Sync":195,"./URGNA2012":196,"./URGNA2012Sync":197,"rdf-canonize-native":44}],199:[function(require,module,exports){
-(function (process,global){(function (){
-(function (global, undefined) {
-    "use strict";
-
-    if (global.setImmediate) {
-        return;
-    }
-
-    var nextHandle = 1; // Spec says greater than zero
-    var tasksByHandle = {};
-    var currentlyRunningATask = false;
-    var doc = global.document;
-    var registerImmediate;
-
-    function setImmediate(callback) {
-      // Callback can either be a function or a string
-      if (typeof callback !== "function") {
-        callback = new Function("" + callback);
-      }
-      // Copy function arguments
-      var args = new Array(arguments.length - 1);
-      for (var i = 0; i < args.length; i++) {
-          args[i] = arguments[i + 1];
-      }
-      // Store and register the task
-      var task = { callback: callback, args: args };
-      tasksByHandle[nextHandle] = task;
-      registerImmediate(nextHandle);
-      return nextHandle++;
-    }
-
-    function clearImmediate(handle) {
-        delete tasksByHandle[handle];
-    }
-
-    function run(task) {
-        var callback = task.callback;
-        var args = task.args;
-        switch (args.length) {
-        case 0:
-            callback();
-            break;
-        case 1:
-            callback(args[0]);
-            break;
-        case 2:
-            callback(args[0], args[1]);
-            break;
-        case 3:
-            callback(args[0], args[1], args[2]);
-            break;
-        default:
-            callback.apply(undefined, args);
-            break;
-        }
-    }
-
-    function runIfPresent(handle) {
-        // From the spec: "Wait until any invocations of this algorithm started before this one have completed."
-        // So if we're currently running a task, we'll need to delay this invocation.
-        if (currentlyRunningATask) {
-            // Delay by doing a setTimeout. setImmediate was tried instead, but in Firefox 7 it generated a
-            // "too much recursion" error.
-            setTimeout(runIfPresent, 0, handle);
-        } else {
-            var task = tasksByHandle[handle];
-            if (task) {
-                currentlyRunningATask = true;
-                try {
-                    run(task);
-                } finally {
-                    clearImmediate(handle);
-                    currentlyRunningATask = false;
-                }
-            }
-        }
-    }
-
-    function installNextTickImplementation() {
-        registerImmediate = function(handle) {
-            process.nextTick(function () { runIfPresent(handle); });
-        };
-    }
-
-    function canUsePostMessage() {
-        // The test against `importScripts` prevents this implementation from being installed inside a web worker,
-        // where `global.postMessage` means something completely different and can't be used for this purpose.
-        if (global.postMessage && !global.importScripts) {
-            var postMessageIsAsynchronous = true;
-            var oldOnMessage = global.onmessage;
-            global.onmessage = function() {
-                postMessageIsAsynchronous = false;
-            };
-            global.postMessage("", "*");
-            global.onmessage = oldOnMessage;
-            return postMessageIsAsynchronous;
-        }
-    }
-
-    function installPostMessageImplementation() {
-        // Installs an event handler on `global` for the `message` event: see
-        // * https://developer.mozilla.org/en/DOM/window.postMessage
-        // * http://www.whatwg.org/specs/web-apps/current-work/multipage/comms.html#crossDocumentMessages
-
-        var messagePrefix = "setImmediate$" + Math.random() + "$";
-        var onGlobalMessage = function(event) {
-            if (event.source === global &&
-                typeof event.data === "string" &&
-                event.data.indexOf(messagePrefix) === 0) {
-                runIfPresent(+event.data.slice(messagePrefix.length));
-            }
-        };
-
-        if (global.addEventListener) {
-            global.addEventListener("message", onGlobalMessage, false);
-        } else {
-            global.attachEvent("onmessage", onGlobalMessage);
-        }
-
-        registerImmediate = function(handle) {
-            global.postMessage(messagePrefix + handle, "*");
-        };
-    }
-
-    function installMessageChannelImplementation() {
-        var channel = new MessageChannel();
-        channel.port1.onmessage = function(event) {
-            var handle = event.data;
-            runIfPresent(handle);
-        };
-
-        registerImmediate = function(handle) {
-            channel.port2.postMessage(handle);
-        };
-    }
-
-    function installReadyStateChangeImplementation() {
-        var html = doc.documentElement;
-        registerImmediate = function(handle) {
-            // Create a <script> element; its readystatechange event will be fired asynchronously once it is inserted
-            // into the document. Do so, thus queuing up the task. Remember to clean up once it's been called.
-            var script = doc.createElement("script");
-            script.onreadystatechange = function () {
-                runIfPresent(handle);
-                script.onreadystatechange = null;
-                html.removeChild(script);
-                script = null;
-            };
-            html.appendChild(script);
-        };
-    }
-
-    function installSetTimeoutImplementation() {
-        registerImmediate = function(handle) {
-            setTimeout(runIfPresent, 0, handle);
-        };
-    }
-
-    // If supported, we should attach to the prototype of global, since that is where setTimeout et al. live.
-    var attachTo = Object.getPrototypeOf && Object.getPrototypeOf(global);
-    attachTo = attachTo && attachTo.setTimeout ? attachTo : global;
-
-    // Don't get fooled by e.g. browserify environments.
-    if ({}.toString.call(global.process) === "[object process]") {
-        // For Node.js before 0.9
-        installNextTickImplementation();
-
-    } else if (canUsePostMessage()) {
-        // For non-IE10 modern browsers
-        installPostMessageImplementation();
-
-    } else if (global.MessageChannel) {
-        // For web workers, where supported
-        installMessageChannelImplementation();
-
-    } else if (doc && "onreadystatechange" in doc.createElement("script")) {
-        // For IE 6–8
-        installReadyStateChangeImplementation();
-
-    } else {
-        // For older browsers
-        installSetTimeoutImplementation();
-    }
-
-    attachTo.setImmediate = setImmediate;
-    attachTo.clearImmediate = clearImmediate;
-}(typeof self === "undefined" ? typeof global === "undefined" ? this : global : self));
-
-}).call(this)}).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"_process":189}],200:[function(require,module,exports){
-(function (setImmediate,clearImmediate){(function (){
-var nextTick = require('process/browser.js').nextTick;
-var apply = Function.prototype.apply;
-var slice = Array.prototype.slice;
-var immediateIds = {};
-var nextImmediateId = 0;
-
-// DOM APIs, for completeness
-
-exports.setTimeout = function() {
-  return new Timeout(apply.call(setTimeout, window, arguments), clearTimeout);
-};
-exports.setInterval = function() {
-  return new Timeout(apply.call(setInterval, window, arguments), clearInterval);
-};
-exports.clearTimeout =
-exports.clearInterval = function(timeout) { timeout.close(); };
-
-function Timeout(id, clearFn) {
-  this._id = id;
-  this._clearFn = clearFn;
-}
-Timeout.prototype.unref = Timeout.prototype.ref = function() {};
-Timeout.prototype.close = function() {
-  this._clearFn.call(window, this._id);
-};
-
-// Does not start the time, just sets up the members needed.
-exports.enroll = function(item, msecs) {
-  clearTimeout(item._idleTimeoutId);
-  item._idleTimeout = msecs;
-};
-
-exports.unenroll = function(item) {
-  clearTimeout(item._idleTimeoutId);
-  item._idleTimeout = -1;
-};
-
-exports._unrefActive = exports.active = function(item) {
-  clearTimeout(item._idleTimeoutId);
-
-  var msecs = item._idleTimeout;
-  if (msecs >= 0) {
-    item._idleTimeoutId = setTimeout(function onTimeout() {
-      if (item._onTimeout)
-        item._onTimeout();
-    }, msecs);
-  }
-};
-
-// That's not how node.js implements it but the exposed api is the same.
-exports.setImmediate = typeof setImmediate === "function" ? setImmediate : function(fn) {
-  var id = nextImmediateId++;
-  var args = arguments.length < 2 ? false : slice.call(arguments, 1);
-
-  immediateIds[id] = true;
-
-  nextTick(function onNextTick() {
-    if (immediateIds[id]) {
-      // fn.call() is faster so we optimize for the common use-case
-      // @see http://jsperf.com/call-apply-segu
-      if (args) {
-        fn.apply(null, args);
-      } else {
-        fn.call(null);
-      }
-      // Prevent ids from leaking
-      exports.clearImmediate(id);
-    }
-  });
-
-  return id;
-};
-
-exports.clearImmediate = typeof clearImmediate === "function" ? clearImmediate : function(id) {
-  delete immediateIds[id];
-};
-}).call(this)}).call(this,require("timers").setImmediate,require("timers").clearImmediate)
-},{"process/browser.js":189,"timers":200}]},{},[10])(10)
+},{"./iterator.js":200}]},{},[10])(10)
 });

@@ -1,3 +1,7 @@
+5.4.1 / 2023-03-07
+==================
+* Set dependency version of JSONLD to 5.2.0 (the only version that works in frontend - including webpack, backend, and JEST tests)
+
 5.4.0 / 2023-03-06
 ==================
 * Cover edge-cases for addition of multiple vocabularies
