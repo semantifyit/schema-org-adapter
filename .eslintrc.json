@@ -27,7 +27,7 @@
   },
   "rules": {
     // respect the prettier style guide
-    "prettier/prettier": "error",
+    "prettier/prettier": "warn",
     "spaced-comment": [
       "warn",
       "always",

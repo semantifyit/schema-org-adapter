@@ -366,16 +366,24 @@ export async function fetchSchemaVersions(
   if (
     schemaVersions.schemaversion &&
     (await checkURL(
-      await constructURLSchemaVocabulary(schemaVersions.schemaversion)
+      await constructURLSchemaVocabulary(
+        schemaVersions.schemaversion,
+        true,
+        commit
+      )
     ))
   ) {
     latestVersion = schemaVersions.schemaversion;
   } else {
-    // If the version stated as latest by schema.org doesnt exist, then try the other versions given in the release log until we find a valid one
+    // If the version stated as latest by schema.org doesn't exist, then try the other versions given in the release log until we find a valid one
     const sortedArray = sortReleaseEntriesByDate(schemaVersions.releaseLog);
     // Sort release entries by the date. latest is first in array
     for (const currVersion of sortedArray) {
-      if (await checkURL(await constructURLSchemaVocabulary(currVersion[0]))) {
+      if (
+        await checkURL(
+          await constructURLSchemaVocabulary(currVersion[0], true, commit)
+        )
+      ) {
         latestVersion = currVersion[0];
         break;
       }
