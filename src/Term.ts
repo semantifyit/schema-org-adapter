@@ -2,12 +2,10 @@ import { Graph } from "./Graph";
 import { isNil, isString, toAbsoluteIRI } from "./utilities";
 import { ToJsonTerm, VocabularyNode } from "./types";
 import {
-  _DC,
-  _RDFS,
-  _SCHEMA,
+  NS,
   TermTypeIRIValue,
   TermTypeLabelValue,
-} from "./namespaces";
+} from "./data/namespaces";
 
 // the functions for a term Object
 /**
@@ -149,8 +147,8 @@ export abstract class Term {
    */
   getVocabulary(): string | null {
     const termObj = this.getTermObj();
-    if (!isNil(termObj[_SCHEMA.isPartOf])) {
-      return termObj[_SCHEMA.isPartOf];
+    if (!isNil(termObj[NS.schema.isPartOf])) {
+      return termObj[NS.schema.isPartOf];
     }
     return null;
   }
@@ -170,10 +168,10 @@ export abstract class Term {
    */
   getSource(): string | string[] | null {
     const termObj = this.getTermObj();
-    if (!isNil(termObj[_DC.source])) {
-      return termObj[_DC.source];
-    } else if (!isNil(termObj[_SCHEMA.source])) {
-      return termObj[_SCHEMA.source];
+    if (!isNil(termObj[NS.dcterms.source])) {
+      return termObj[NS.dcterms.source];
+    } else if (!isNil(termObj[NS.schema.source])) {
+      return termObj[NS.schema.source];
     }
     return null;
   }
@@ -193,8 +191,8 @@ export abstract class Term {
    */
   isSupersededBy(): string | null {
     const termObj = this.getTermObj();
-    if (isString(termObj[_SCHEMA.supersededBy])) {
-      return termObj[_SCHEMA.supersededBy];
+    if (isString(termObj[NS.schema.supersededBy])) {
+      return termObj[NS.schema.supersededBy];
     }
     return null;
   }
@@ -214,7 +212,7 @@ export abstract class Term {
    * @returns  The name of this Term
    */
   getName(language = "en"): string | null {
-    const termObj = this.getTermObj()[_RDFS.label];
+    const termObj = this.getTermObj()[NS.rdfs.label];
     if (isNil(termObj) || isNil(termObj[language])) {
       return null;
     }
@@ -236,7 +234,7 @@ export abstract class Term {
    * @returns The description of this Term
    */
   getDescription(language = "en"): string | null {
-    const termObj = this.getTermObj()[_RDFS.comment];
+    const termObj = this.getTermObj()[NS.rdfs.comment];
     if (isNil(termObj) || isNil(termObj[language])) {
       return null;
     }

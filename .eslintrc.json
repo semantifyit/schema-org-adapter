@@ -26,8 +26,6 @@
     "sourceType": "module"
   },
   "rules": {
-    // respect the prettier style guide
-    "prettier/prettier": "warn",
     "spaced-comment": [
       "warn",
       "always",

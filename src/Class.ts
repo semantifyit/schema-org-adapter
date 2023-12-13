@@ -10,13 +10,12 @@ import {
   inferSuperClasses,
 } from "./reasoning";
 import {
-  _RDFS,
-  _SOA,
+  NS,
   TermTypeIRI,
   TermTypeIRIValue,
   TermTypeLabel,
-  TermTypeLabelValue,
-} from "./namespaces";
+  TermTypeLabelValue
+} from "./data/namespaces";
 
 /**
  * A **Class** represents a class term, also known as [type in schema.org](https://schema.org/Class). A Class is identified by its IRI (e.g. [schema:Thing](https://schema.org/Thing)), where, by convention, the class name itself starts with an uppercase letter. A Class instance is created with {@link SDOAdapter.getClass | SDOAdapter.getClass()} and offers the methods described below.
@@ -73,12 +72,12 @@ export class Class extends Term {
   getProperties(implicit = true, filter?: FilterObject): string[] {
     const classObj = this.getTermObj();
     const result = [];
-    result.push(...classObj[_SOA.hasProperty]);
+    result.push(...classObj[NS.soa.hasProperty]);
     if (implicit) {
       // add properties from super-classes
       result.push(
         ...inferPropertiesFromSuperClasses(
-          classObj[_RDFS.subClassOf],
+          classObj[NS.rdfs.subClassOf],
           this.graph
         )
       );
@@ -108,7 +107,7 @@ export class Class extends Term {
     if (implicit) {
       result.push(...inferSuperClasses(this.IRI, this.graph));
     } else {
-      result.push(...classObj[_RDFS.subClassOf]);
+      result.push(...classObj[NS.rdfs.subClassOf]);
     }
     return applyFilter({ data: result, filter, graph: this.graph });
   }
@@ -134,7 +133,7 @@ export class Class extends Term {
     if (implicit) {
       result.push(...inferSubClasses(this.IRI, this.graph));
     } else {
-      result.push(...classObj[_SOA.superClassOf]);
+      result.push(...classObj[NS.soa.superClassOf]);
     }
     return applyFilter({ data: result, filter, graph: this.graph });
   }
@@ -164,7 +163,7 @@ export class Class extends Term {
     if (implicit) {
       result.push(...inferRangeOf(this.IRI, this.graph));
     } else {
-      result.push(...this.getTermObj()[_SOA.isRangeOf]);
+      result.push(...this.getTermObj()[NS.soa.isRangeOf]);
     }
     return applyFilter({ data: result, filter, graph: this.graph });
   }

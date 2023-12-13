@@ -184,7 +184,9 @@ export function getFileNameForSchemaOrgVersion(
     case "2.1":
     case "2.2":
     case "3.0":
-      throw new Error("There is no jsonld file for that schema.org version.");
+      throw new Error(
+        "There is no jsonld file for the wanted schema.org version " + version
+      );
     case "3.1":
     case "3.2":
     case "3.3":
@@ -378,6 +380,7 @@ export async function fetchSchemaVersions(
     // If the version stated as latest by schema.org doesn't exist, then try the other versions given in the release log until we find a valid one
     const sortedArray = sortReleaseEntriesByDate(schemaVersions.releaseLog);
     // Sort release entries by the date. latest is first in array
+    console.log("sortedArray",sortedArray)
     for (const currVersion of sortedArray) {
       if (
         await checkURL(

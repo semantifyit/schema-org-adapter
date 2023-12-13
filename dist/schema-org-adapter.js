@@ -4,7 +4,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.Class = void 0;
 const Term_1 = require("./Term");
 const reasoning_1 = require("./reasoning");
-const namespaces_1 = require("./namespaces");
+const namespaces_1 = require("./data/namespaces");
 class Class extends Term_1.Term {
     constructor(IRI, graph) {
         super(IRI, graph);
@@ -69,13 +69,13 @@ class Class extends Term_1.Term {
 }
 exports.Class = Class;
 
-},{"./Term":9,"./namespaces":12,"./reasoning":13}],2:[function(require,module,exports){
+},{"./Term":9,"./data/namespaces":10,"./reasoning":13}],2:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.DataType = void 0;
 const Term_1 = require("./Term");
 const reasoning_1 = require("./reasoning");
-const namespaces_1 = require("./namespaces");
+const namespaces_1 = require("./data/namespaces");
 class DataType extends Term_1.Term {
     constructor(IRI, graph) {
         super(IRI, graph);
@@ -130,13 +130,13 @@ class DataType extends Term_1.Term {
 }
 exports.DataType = DataType;
 
-},{"./Term":9,"./namespaces":12,"./reasoning":13}],3:[function(require,module,exports){
+},{"./Term":9,"./data/namespaces":10,"./reasoning":13}],3:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Enumeration = void 0;
 const Class_1 = require("./Class");
 const utilities_1 = require("./utilities");
-const namespaces_1 = require("./namespaces");
+const namespaces_1 = require("./data/namespaces");
 const reasoning_1 = require("./reasoning");
 class Enumeration extends Class_1.Class {
     constructor(IRI, graph) {
@@ -172,14 +172,14 @@ class Enumeration extends Class_1.Class {
 }
 exports.Enumeration = Enumeration;
 
-},{"./Class":1,"./namespaces":12,"./reasoning":13,"./utilities":14}],4:[function(require,module,exports){
+},{"./Class":1,"./data/namespaces":10,"./reasoning":13,"./utilities":14}],4:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.EnumerationMember = void 0;
 const Term_1 = require("./Term");
 const utilities_1 = require("./utilities");
 const reasoning_1 = require("./reasoning");
-const namespaces_1 = require("./namespaces");
+const namespaces_1 = require("./data/namespaces");
 class EnumerationMember extends Term_1.Term {
     constructor(IRI, graph) {
         super(IRI, graph);
@@ -217,7 +217,7 @@ class EnumerationMember extends Term_1.Term {
 }
 exports.EnumerationMember = EnumerationMember;
 
-},{"./Term":9,"./namespaces":12,"./reasoning":13,"./utilities":14}],5:[function(require,module,exports){
+},{"./Term":9,"./data/namespaces":10,"./reasoning":13,"./utilities":14}],5:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Graph = void 0;
@@ -227,7 +227,7 @@ const Enumeration_1 = require("./Enumeration");
 const EnumerationMember_1 = require("./EnumerationMember");
 const DataType_1 = require("./DataType");
 const utilities_1 = require("./utilities");
-const namespaces_1 = require("./namespaces");
+const namespaces_1 = require("./data/namespaces");
 const graphUtilities_1 = require("./graphUtilities");
 const reasoning_1 = require("./reasoning");
 class Graph {
@@ -646,13 +646,13 @@ class Graph {
 }
 exports.Graph = Graph;
 
-},{"./Class":1,"./DataType":2,"./Enumeration":3,"./EnumerationMember":4,"./Property":6,"./graphUtilities":11,"./namespaces":12,"./reasoning":13,"./utilities":14}],6:[function(require,module,exports){
+},{"./Class":1,"./DataType":2,"./Enumeration":3,"./EnumerationMember":4,"./Property":6,"./data/namespaces":10,"./graphUtilities":12,"./reasoning":13,"./utilities":14}],6:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Property = void 0;
 const Term_1 = require("./Term");
 const reasoning_1 = require("./reasoning");
-const namespaces_1 = require("./namespaces");
+const namespaces_1 = require("./data/namespaces");
 class Property extends Term_1.Term {
     constructor(IRI, graph) {
         super(IRI, graph);
@@ -730,7 +730,7 @@ class Property extends Term_1.Term {
 }
 exports.Property = Property;
 
-},{"./Term":9,"./namespaces":12,"./reasoning":13}],7:[function(require,module,exports){
+},{"./Term":9,"./data/namespaces":10,"./reasoning":13}],7:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.RetrievalMemory = void 0;
@@ -1037,7 +1037,7 @@ exports.SDOAdapter = SDOAdapter;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Term = void 0;
 const utilities_1 = require("./utilities");
-const namespaces_1 = require("./namespaces");
+const namespaces_1 = require("./data/namespaces");
 class Term {
     constructor(IRI, graph) {
         this.IRI = IRI;
@@ -1120,7 +1120,89 @@ class Term {
 }
 exports.Term = Term;
 
-},{"./namespaces":12,"./utilities":14}],10:[function(require,module,exports){
+},{"./data/namespaces":10,"./utilities":14}],10:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.TermTypeIRI = exports.TermTypeLabel = exports._XSD = exports._DC = exports._SCHEMA = exports._SOA = exports._RDFS = exports._RDF = exports.NsUrl = void 0;
+require("core-js/proposals/object-from-entries");
+exports.NsUrl = {
+    xsd: "http://www.w3.org/2001/XMLSchema#",
+    rdf: "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    rdfs: "http://www.w3.org/2000/01/rdf-schema#",
+    schema: "https://schema.org/",
+    dcterms: "http://purl.org/dc/terms/",
+    soa: "http://schema-org-adapter.at/vocabTerms/",
+    ds: "https://vocab.sti2.at/ds/",
+};
+const NsPre = {
+    xsd: "xsd",
+    rdf: "rdf",
+    rdfs: "rdfs",
+    schema: "schema",
+    dcterms: "dcterms",
+    soa: "soa",
+    ds: "ds",
+};
+function toCompactUri(prefix, properties) {
+    return Object.freeze(Object.fromEntries(properties.map((p) => [p, prefix + ":" + p])));
+}
+exports._RDF = toCompactUri(NsPre.rdf, ["Property"]);
+exports._RDFS = toCompactUri("rdfs", [
+    "Class",
+    "subClassOf",
+    "subPropertyOf",
+    "label",
+    "comment",
+]);
+exports._SOA = toCompactUri("soa", [
+    "EnumerationMember",
+    "superClassOf",
+    "superPropertyOf",
+    "hasProperty",
+    "isRangeOf",
+    "hasEnumerationMember",
+    "enumerationDomainIncludes",
+]);
+exports._SCHEMA = toCompactUri("schema", [
+    "DataType",
+    "Enumeration",
+    "isPartOf",
+    "domainIncludes",
+    "rangeIncludes",
+    "supersededBy",
+    "inverseOf",
+    "source",
+    "category",
+]);
+exports._DC = toCompactUri("dcterms", ["source"]);
+exports._XSD = toCompactUri("xsd", [
+    "string",
+    "decimal",
+    "integer",
+    "float",
+    "double",
+    "boolean",
+    "date",
+    "time",
+    "dateTime",
+    "anyURI",
+]);
+exports.TermTypeLabel = {
+    class: "Class",
+    property: "Property",
+    enumeration: "Enumeration",
+    enumerationMember: "EnumerationMember",
+    dataType: "DataType",
+};
+exports.TermTypeIRI = {
+    class: "rdfs:Class",
+    property: "rdf:Property",
+    enumeration: "schema:Enumeration",
+    enumerationMember: "soa:EnumerationMember",
+    dataType: "schema:DataType",
+};
+
+},{"core-js/proposals/object-from-entries":161}],11:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.constructURLSchemaVocabulary = exports.getLatestSchemaVersion = exports.fetchSchemaVersions = exports.create = void 0;
@@ -1142,14 +1224,14 @@ async function create(paramObj) {
 }
 exports.create = create;
 
-},{"./SDOAdapter":8,"./utilities":14}],11:[function(require,module,exports){
+},{"./SDOAdapter":8,"./utilities":14}],12:[function(require,module,exports){
 "use strict";
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.nodeMergeAddIds = exports.nodeMergeLanguageTerm = exports.nodeMergeOverwrite = exports.addEmptyArray = exports.addInheritanceTermsDataTypesAndProperties = exports.addInheritanceTermsClassAndEnum = exports.extractFromClassMemory = exports.getStandardContext = exports.checkIfNamespaceFromListIsUsed = exports.discoverEquateNamespaces = exports.discoverUsedSchemaOrgProtocol = exports.preProcessVocab = exports.generateContext = exports.curateVocabNode = void 0;
-const namespaces_1 = require("./namespaces");
+const namespaces_1 = require("./data/namespaces");
 const utilities_1 = require("./utilities");
 const jsonld_1 = __importDefault(require("jsonld"));
 require("core-js/actual/set");
@@ -1557,94 +1639,12 @@ function nodeMergeAddIds(oldNode, newNode, property) {
 }
 exports.nodeMergeAddIds = nodeMergeAddIds;
 
-},{"./namespaces":12,"./utilities":14,"core-js/actual/set":47,"jsonld":179}],12:[function(require,module,exports){
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.TermTypeIRI = exports.TermTypeLabel = exports._XSD = exports._DC = exports._SCHEMA = exports._SOA = exports._RDFS = exports._RDF = exports.NsUrl = void 0;
-require("core-js/proposals/object-from-entries");
-exports.NsUrl = {
-    xsd: "http://www.w3.org/2001/XMLSchema#",
-    rdf: "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
-    rdfs: "http://www.w3.org/2000/01/rdf-schema#",
-    schema: "https://schema.org/",
-    dcterms: "http://purl.org/dc/terms/",
-    soa: "http://schema-org-adapter.at/vocabTerms/",
-    ds: "https://vocab.sti2.at/ds/",
-};
-const NsPre = {
-    xsd: "xsd",
-    rdf: "rdf",
-    rdfs: "rdfs",
-    schema: "schema",
-    dcterms: "dcterms",
-    soa: "soa",
-    ds: "ds",
-};
-function toCompactUri(prefix, properties) {
-    return Object.freeze(Object.fromEntries(properties.map((p) => [p, prefix + ":" + p])));
-}
-exports._RDF = toCompactUri(NsPre.rdf, ["Property"]);
-exports._RDFS = toCompactUri("rdfs", [
-    "Class",
-    "subClassOf",
-    "subPropertyOf",
-    "label",
-    "comment",
-]);
-exports._SOA = toCompactUri("soa", [
-    "EnumerationMember",
-    "superClassOf",
-    "superPropertyOf",
-    "hasProperty",
-    "isRangeOf",
-    "hasEnumerationMember",
-    "enumerationDomainIncludes",
-]);
-exports._SCHEMA = toCompactUri("schema", [
-    "DataType",
-    "Enumeration",
-    "isPartOf",
-    "domainIncludes",
-    "rangeIncludes",
-    "supersededBy",
-    "inverseOf",
-    "source",
-    "category",
-]);
-exports._DC = toCompactUri("dcterms", ["source"]);
-exports._XSD = toCompactUri("xsd", [
-    "string",
-    "decimal",
-    "integer",
-    "float",
-    "double",
-    "boolean",
-    "date",
-    "time",
-    "dateTime",
-    "anyURI",
-]);
-exports.TermTypeLabel = {
-    class: "Class",
-    property: "Property",
-    enumeration: "Enumeration",
-    enumerationMember: "EnumerationMember",
-    dataType: "DataType",
-};
-exports.TermTypeIRI = {
-    class: "rdfs:Class",
-    property: "rdf:Property",
-    enumeration: "schema:Enumeration",
-    enumerationMember: "soa:EnumerationMember",
-    dataType: "schema:DataType",
-};
-
-},{"core-js/proposals/object-from-entries":161}],13:[function(require,module,exports){
+},{"./data/namespaces":10,"./utilities":14,"core-js/actual/set":47,"jsonld":179}],13:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.inferRangeOf = exports.inferSubProperties = exports.inferSuperProperties = exports.inferSubDataTypes = exports.inferSuperDataTypes = exports.inferSubClasses = exports.inferSuperClasses = exports.inferPropertiesFromSuperClasses = exports.applyFilter = void 0;
 const utilities_1 = require("./utilities");
-const namespaces_1 = require("./namespaces");
+const namespaces_1 = require("./data/namespaces");
 function applyFilter(paramObj) {
     const { data, filter, graph } = paramObj;
     if (!Array.isArray(data) ||
@@ -1891,7 +1891,7 @@ function inferRangeOf(rangeIRI, graph) {
 }
 exports.inferRangeOf = inferRangeOf;
 
-},{"./namespaces":12,"./utilities":14}],14:[function(require,module,exports){
+},{"./data/namespaces":10,"./utilities":14}],14:[function(require,module,exports){
 "use strict";
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
@@ -1984,7 +1984,7 @@ function getFileNameForSchemaOrgVersion(version, schemaHttps = true) {
         case "2.1":
         case "2.2":
         case "3.0":
-            throw new Error("There is no jsonld file for that schema.org version.");
+            throw new Error("There is no jsonld file for the wanted schema.org version " + version);
         case "3.1":
         case "3.2":
         case "3.3":
@@ -2090,13 +2090,14 @@ async function fetchSchemaVersions(cacheClear = false, commit) {
     myRetrievalMemory.setData("versionsFile", schemaVersions, commit);
     let latestVersion;
     if (schemaVersions.schemaversion &&
-        (await checkURL(await constructURLSchemaVocabulary(schemaVersions.schemaversion)))) {
+        (await checkURL(await constructURLSchemaVocabulary(schemaVersions.schemaversion, true, commit)))) {
         latestVersion = schemaVersions.schemaversion;
     }
     else {
         const sortedArray = sortReleaseEntriesByDate(schemaVersions.releaseLog);
+        console.log("sortedArray", sortedArray);
         for (const currVersion of sortedArray) {
-            if (await checkURL(await constructURLSchemaVocabulary(currVersion[0]))) {
+            if (await checkURL(await constructURLSchemaVocabulary(currVersion[0], true, commit))) {
                 latestVersion = currVersion[0];
                 break;
             }
@@ -18022,5 +18023,5 @@ try {
   require('./iterator.js')(Yallist)
 } catch (er) {}
 
-},{"./iterator.js":200}]},{},[10])(10)
+},{"./iterator.js":200}]},{},[11])(11)
 });

@@ -8,7 +8,7 @@ import {
   inferSubDataTypes,
   inferSuperDataTypes,
 } from "./reasoning";
-import { _RDFS, _SOA, TermTypeIRI, TermTypeLabel } from "./namespaces";
+import { NS, TermTypeIRI, TermTypeLabel } from "./data/namespaces";
 
 /**
  * A **DataType** represents a data-type term. These are a special kind of classes that [represents literal values in schema.org](https://schema.org/DataType). A DataType is identified by its IRI (e.g. [schema:Number](https://schema.org/Number)), where, by convention, the class name itself starts with an uppercase letter. A DataType instance is created with {@link SDOAdapter.getDataType | SDOAdapter.getDataType()} and offers the methods described below.
@@ -24,7 +24,7 @@ export class DataType extends Term {
   readonly termTypeIRI = TermTypeIRI.dataType;
 
   /** @ignore
-   * A DataType represents an schema:DataType. It is identified by its IRI
+   * A DataType represents a schema:DataType. It is identified by its IRI
    *
    * @param IRI - The compacted IRI of this DataType, e.g. "schema:Number"
    * @param  graph - The underlying data graph to enable the methods of this DataType
@@ -65,7 +65,7 @@ export class DataType extends Term {
     if (implicit) {
       result.push(...inferSuperDataTypes(this.IRI, this.graph));
     } else {
-      result.push(...dataTypeObj[_RDFS.subClassOf]);
+      result.push(...dataTypeObj[NS.rdfs.subClassOf]);
     }
     return applyFilter({ data: result, filter, graph: this.graph });
   }
@@ -94,7 +94,7 @@ export class DataType extends Term {
     if (implicit) {
       result.push(...inferSubDataTypes(this.IRI, this.graph));
     } else {
-      result.push(...dataTypeObj[_SOA.superClassOf]);
+      result.push(...dataTypeObj[NS.soa.superClassOf]);
     }
     return applyFilter({ data: result, filter, graph: this.graph });
   }
@@ -123,7 +123,7 @@ export class DataType extends Term {
     if (implicit) {
       result.push(...inferRangeOf(this.IRI, this.graph));
     } else {
-      result.push(...this.getTermObj()[_SOA.isRangeOf]);
+      result.push(...this.getTermObj()[NS.soa.isRangeOf]);
     }
     return applyFilter({ data: result, filter, graph: this.graph });
   }

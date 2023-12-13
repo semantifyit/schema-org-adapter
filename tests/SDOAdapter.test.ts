@@ -18,8 +18,7 @@ const VOC_URL_SDO10_0 =
 describe("SDO Adapter methods", () => {
   test("addVocabularies()", async () => {
     const mySA = new SDOAdapter({
-      commit: commit,
-      schemaHttps: true,
+      commit,
       onError: debugFuncErr,
     });
     await mySA.addVocabularies([VOC_OBJ_SDO3_7, VOC_OBJ_GWON]);
@@ -42,8 +41,7 @@ describe("SDO Adapter methods", () => {
 
   test("addVocabularies() add single vocabulary", async () => {
     const mySA = new SDOAdapter({
-      commit: commit,
-      schemaHttps: false,
+      commit,
       onError: debugFuncErr,
     });
     await mySA.addVocabularies(VOC_OBJ_SDO3_7);
@@ -53,7 +51,7 @@ describe("SDO Adapter methods", () => {
 
   test("addVocabularies() latest", async () => {
     const mySA = new SDOAdapter({
-      commit: commit,
+      commit,
       onError: debugFuncErr,
     });
     await mySA.addVocabularies([
@@ -66,7 +64,7 @@ describe("SDO Adapter methods", () => {
 
   test("getVocabularies()", async () => {
     const mySA = new SDOAdapter({
-      commit: commit,
+      commit,
       onError: debugFuncErr,
     });
     await mySA.addVocabularies([VOC_OBJ_SDO10_0, VOC_OBJ_ZOO]);
@@ -85,7 +83,7 @@ describe("SDO Adapter methods", () => {
     expect(allVocabs.ex).toBe("https://example-vocab.ex/");
     expect(Object.keys(allVocabs).includes("ds")).toBe(true); // the ds namespace should not be here
     const mySA2 = new SDOAdapter({
-      commit: commit,
+      commit,
       onError: debugFuncErr,
     });
     await mySA2.addVocabularies([VOC_OBJ_SDO10_0, VOC_OBJ_ZOO_DVS]);
@@ -95,7 +93,7 @@ describe("SDO Adapter methods", () => {
 
   test("getVocabularies() latest", async () => {
     const mySA = new SDOAdapter({
-      commit: commit,
+      commit,
       onError: debugFuncErr,
     });
     await mySA.addVocabularies([
@@ -161,7 +159,7 @@ describe("SDO Adapter methods", () => {
 
   test("getListOfTerms()", async () => {
     const mySA = new SDOAdapter({
-      commit: commit,
+      commit,
       onError: debugFuncErr,
     });
     await mySA.addVocabularies([VOC_OBJ_SDO10_0, VOC_OBJ_ZOO]);
@@ -177,7 +175,7 @@ describe("SDO Adapter methods", () => {
 
   test("getAllTerms()", async () => {
     const mySA = new SDOAdapter({
-      commit: commit,
+      commit,
       onError: debugFuncErr,
     });
     await mySA.addVocabularies([VOC_OBJ_SDO10_0, VOC_OBJ_ZOO]);
@@ -218,7 +216,7 @@ describe("SDO Adapter methods", () => {
 
   test("getAllTerms() latest", async () => {
     const mySA = new SDOAdapter({
-      commit: commit,
+      commit,
       onError: debugFuncErr,
     });
     await mySA.addVocabularies([
@@ -262,7 +260,7 @@ describe("SDO Adapter methods", () => {
 
   test("getClass()", async () => {
     const mySA = new SDOAdapter({
-      commit: commit,
+      commit,
       onError: debugFuncErr,
     });
     await mySA.addVocabularies([VOC_OBJ_SDO10_0, VOC_URL_ZOO]);
@@ -272,7 +270,7 @@ describe("SDO Adapter methods", () => {
 
   test("getClass() latest", async () => {
     const mySA = new SDOAdapter({
-      commit: commit,
+      commit,
       onError: debugFuncErr,
     });
     await mySA.addVocabularies([
@@ -285,7 +283,7 @@ describe("SDO Adapter methods", () => {
 
   test("getListOfClasses()", async () => {
     const mySA = new SDOAdapter({
-      commit: commit,
+      commit,
       onError: debugFuncErr,
     });
     await mySA.addVocabularies([VOC_OBJ_SDO10_0, VOC_OBJ_ZOO]);
@@ -296,7 +294,7 @@ describe("SDO Adapter methods", () => {
 
   test("getAllClasses()", async () => {
     const mySA = new SDOAdapter({
-      commit: commit,
+      commit,
       onError: debugFuncErr,
     });
     await mySA.addVocabularies([VOC_OBJ_SDO10_0, VOC_OBJ_ZOO]);
@@ -313,7 +311,7 @@ describe("SDO Adapter methods", () => {
 
   test("getAllClasses() latest", async () => {
     const mySA = new SDOAdapter({
-      commit: commit,
+      commit,
       onError: debugFuncErr,
     });
     await mySA.addVocabularies([
@@ -333,7 +331,7 @@ describe("SDO Adapter methods", () => {
 
   test("getProperty()", async () => {
     const mySA = new SDOAdapter({
-      commit: commit,
+      commit,
       onError: debugFuncErr,
     });
     await mySA.addVocabularies([VOC_OBJ_SDO10_0, VOC_OBJ_ZOO]);
@@ -343,7 +341,7 @@ describe("SDO Adapter methods", () => {
 
   test("getProperty() latest", async () => {
     const mySA = new SDOAdapter({
-      commit: commit,
+      commit,
       onError: debugFuncErr,
     });
     await mySA.addVocabularies([
@@ -356,7 +354,7 @@ describe("SDO Adapter methods", () => {
 
   test("getListOfProperties()", async () => {
     const mySA = new SDOAdapter({
-      commit: commit,
+      commit,
       onError: debugFuncErr,
     });
     await mySA.addVocabularies([VOC_OBJ_SDO3_7, VOC_OBJ_ZOO]);
@@ -366,7 +364,7 @@ describe("SDO Adapter methods", () => {
 
   test("getListOfProperties() latest", async () => {
     const mySA = new SDOAdapter({
-      commit: commit,
+      commit,
       onError: debugFuncErr,
     });
     await mySA.addVocabularies([
@@ -379,7 +377,7 @@ describe("SDO Adapter methods", () => {
 
   test("getAllProperties()", async () => {
     const mySA = new SDOAdapter({
-      commit: commit,
+      commit,
       onError: debugFuncErr,
     });
     await mySA.addVocabularies([VOC_OBJ_SDO10_0, VOC_OBJ_ZOO]);
@@ -398,7 +396,7 @@ describe("SDO Adapter methods", () => {
 
   test("getAllProperties() latest", async () => {
     const mySA = new SDOAdapter({
-      commit: commit,
+      commit,
       onError: debugFuncErr,
     });
     await mySA.addVocabularies([
@@ -420,7 +418,7 @@ describe("SDO Adapter methods", () => {
 
   test("getDataType()", async () => {
     const mySA = new SDOAdapter({
-      commit: commit,
+      commit,
       onError: debugFuncErr,
     });
     await mySA.addVocabularies([VOC_OBJ_SDO10_0, VOC_OBJ_ZOO]);
@@ -430,7 +428,7 @@ describe("SDO Adapter methods", () => {
 
   test("getDataType() latest", async () => {
     const mySA = new SDOAdapter({
-      commit: commit,
+      commit,
       onError: debugFuncErr,
     });
     await mySA.addVocabularies([
@@ -443,7 +441,7 @@ describe("SDO Adapter methods", () => {
 
   test("getListOfDataTypes()", async () => {
     const mySA = new SDOAdapter({
-      commit: commit,
+      commit,
       onError: debugFuncErr,
     });
     await mySA.addVocabularies([VOC_OBJ_SDO10_0, VOC_OBJ_ZOO]);
@@ -453,7 +451,7 @@ describe("SDO Adapter methods", () => {
 
   test("getListOfDataTypes() latest", async () => {
     const mySA = new SDOAdapter({
-      commit: commit,
+      commit,
       onError: debugFuncErr,
     });
     await mySA.addVocabularies([
@@ -466,7 +464,7 @@ describe("SDO Adapter methods", () => {
 
   test("getAllDataTypes()", async () => {
     const mySA = new SDOAdapter({
-      commit: commit,
+      commit,
       onError: debugFuncErr,
     });
     await mySA.addVocabularies([VOC_OBJ_SDO10_0, VOC_OBJ_ZOO]);
@@ -485,7 +483,7 @@ describe("SDO Adapter methods", () => {
 
   test("getAllDataTypes() latest", async () => {
     const mySA = new SDOAdapter({
-      commit: commit,
+      commit,
       onError: debugFuncErr,
     });
     await mySA.addVocabularies([
@@ -507,7 +505,7 @@ describe("SDO Adapter methods", () => {
 
   test("getEnumeration()", async () => {
     const mySA = new SDOAdapter({
-      commit: commit,
+      commit,
       onError: debugFuncErr,
     });
     await mySA.addVocabularies([VOC_OBJ_SDO10_0, VOC_OBJ_ZOO]);
@@ -517,7 +515,7 @@ describe("SDO Adapter methods", () => {
 
   test("getEnumeration() latest", async () => {
     const mySA = new SDOAdapter({
-      commit: commit,
+      commit,
       onError: debugFuncErr,
     });
     await mySA.addVocabularies([
@@ -530,7 +528,7 @@ describe("SDO Adapter methods", () => {
 
   test("getListOfEnumerations()", async () => {
     const mySA = new SDOAdapter({
-      commit: commit,
+      commit,
       onError: debugFuncErr,
     });
     await mySA.addVocabularies([VOC_OBJ_SDO10_0, VOC_OBJ_ZOO]);
@@ -540,7 +538,7 @@ describe("SDO Adapter methods", () => {
 
   test("getListOfEnumerations() latest", async () => {
     const mySA = new SDOAdapter({
-      commit: commit,
+      commit,
       onError: debugFuncErr,
     });
     await mySA.addVocabularies([
@@ -553,7 +551,7 @@ describe("SDO Adapter methods", () => {
 
   test("getAllEnumerations()", async () => {
     const mySA = new SDOAdapter({
-      commit: commit,
+      commit,
       onError: debugFuncErr,
     });
     await mySA.addVocabularies([VOC_OBJ_SDO10_0, VOC_OBJ_ZOO]);
@@ -566,7 +564,7 @@ describe("SDO Adapter methods", () => {
 
   test("getAllEnumerations() latest", async () => {
     const mySA = new SDOAdapter({
-      commit: commit,
+      commit,
       onError: debugFuncErr,
     });
     await mySA.addVocabularies([
@@ -582,7 +580,7 @@ describe("SDO Adapter methods", () => {
 
   test("getEnumerationMember()", async () => {
     const mySA = new SDOAdapter({
-      commit: commit,
+      commit,
       onError: debugFuncErr,
     });
     await mySA.addVocabularies([VOC_OBJ_SDO10_0, VOC_OBJ_ZOO]);
@@ -592,7 +590,7 @@ describe("SDO Adapter methods", () => {
 
   test("getEnumerationMember() latest", async () => {
     const mySA = new SDOAdapter({
-      commit: commit,
+      commit,
       onError: debugFuncErr,
     });
     await mySA.addVocabularies([
@@ -605,7 +603,7 @@ describe("SDO Adapter methods", () => {
 
   test("getListOfEnumerationMembers()", async () => {
     const mySA = new SDOAdapter({
-      commit: commit,
+      commit,
       onError: debugFuncErr,
     });
     await mySA.addVocabularies([VOC_OBJ_SDO10_0, VOC_OBJ_ZOO]);
@@ -615,7 +613,7 @@ describe("SDO Adapter methods", () => {
 
   test("getListOfEnumerationMembers() latest", async () => {
     const mySA = new SDOAdapter({
-      commit: commit,
+      commit,
       onError: debugFuncErr,
     });
     await mySA.addVocabularies([
@@ -628,7 +626,7 @@ describe("SDO Adapter methods", () => {
 
   test("getAllEnumerationMembers()", async () => {
     const mySA = new SDOAdapter({
-      commit: commit,
+      commit,
       onError: debugFuncErr,
     });
     await mySA.addVocabularies([VOC_OBJ_SDO10_0, VOC_OBJ_ZOO]);
@@ -643,7 +641,7 @@ describe("SDO Adapter methods", () => {
 
   test("getAllEnumerationMembers() latest", async () => {
     const mySA = new SDOAdapter({
-      commit: commit,
+      commit,
       onError: debugFuncErr,
     });
     await mySA.addVocabularies([
@@ -661,7 +659,7 @@ describe("SDO Adapter methods", () => {
 
   test("fetch vocab by URL - direct URL", async () => {
     const mySA = new SDOAdapter({
-      commit: commit,
+      commit,
       schemaHttps: true,
       onError: debugFuncErr,
     });
@@ -696,7 +694,7 @@ describe("SDO Adapter methods", () => {
 
   test("get lastest sdo version", async () => {
     const mySA = new SDOAdapter({
-      commit: commit,
+      commit,
       onError: debugFuncErr,
     });
     const latestVersion = await mySA.getLatestSchemaVersion();
@@ -707,7 +705,7 @@ describe("SDO Adapter methods", () => {
   test("onError function", async () => {
     // this test should trigger the onError function, outputting invalid nodes in the schema.org vocabulary version 3.2
     let mySA = new SDOAdapter({
-      commit: commit,
+      commit,
       onError: function (text) {
         debugFunc(text);
       },
@@ -715,7 +713,7 @@ describe("SDO Adapter methods", () => {
     const versionUrl = await mySA.constructURLSchemaVocabulary("3.2");
     await mySA.addVocabularies([versionUrl]);
     // test without onError function
-    mySA = new SDOAdapter({ commit: commit });
+    mySA = new SDOAdapter({ commit });
     await mySA.addVocabularies([versionUrl]);
     // generic test
     expect(mySA.getListOfProperties().length > 300).toBe(true);
@@ -723,7 +721,7 @@ describe("SDO Adapter methods", () => {
 
   test("equateVocabularyProtocols - schemaHttps 1", async () => {
     const mySA = new SDOAdapter({
-      commit: commit,
+      commit,
       schemaHttps: true,
       onError: debugFuncErr,
     });
@@ -745,7 +743,7 @@ describe("SDO Adapter methods", () => {
 
   test("equateVocabularyProtocols - schemaHttps 2", async () => {
     const mySA = new SDOAdapter({
-      commit: commit,
+      commit,
       schemaHttps: false,
       onError: debugFuncErr,
     });
@@ -767,7 +765,7 @@ describe("SDO Adapter methods", () => {
 
   test("equateVocabularyProtocols - schemaHttps with incompatible version", async () => {
     const mySA = new SDOAdapter({
-      commit: commit,
+      commit,
       schemaHttps: true,
       onError: debugFuncErr,
     });
@@ -789,7 +787,7 @@ describe("SDO Adapter methods", () => {
 
   test("equateVocabularyProtocols - https not equated", async () => {
     const mySA = new SDOAdapter({
-      commit: commit,
+      commit,
       equateVocabularyProtocols: false,
       schemaHttps: true,
       onError: debugFuncErr,
@@ -827,7 +825,7 @@ describe("SDO Adapter methods", () => {
 
   test("equateVocabularyProtocols - https equated", async () => {
     const mySA = new SDOAdapter({
-      commit: commit,
+      commit,
       equateVocabularyProtocols: true,
       schemaHttps: true,
       onError: debugFuncErr,
@@ -865,7 +863,7 @@ describe("SDO Adapter methods", () => {
 
   test("equateVocabularyProtocols - http equated multiple vocabs", async () => {
     const mySA = new SDOAdapter({
-      commit: commit,
+      commit,
       equateVocabularyProtocols: true,
       schemaHttps: false,
       onError: debugFuncErr,
@@ -885,7 +883,7 @@ describe("SDO Adapter methods", () => {
 
   test("equateVocabularyProtocols - http not equated multiple vocabs", async () => {
     const mySA = new SDOAdapter({
-      commit: commit,
+      commit,
       equateVocabularyProtocols: false,
       schemaHttps: false,
       onError: debugFuncErr,
@@ -905,7 +903,7 @@ describe("SDO Adapter methods", () => {
 
   test("equateVocabularyProtocols - http equated multiple vocabs 2", async () => {
     const mySA = new SDOAdapter({
-      commit: commit,
+      commit,
       equateVocabularyProtocols: true,
       schemaHttps: false,
       onError: debugFuncErr,
@@ -925,7 +923,7 @@ describe("SDO Adapter methods", () => {
 
   test("equateVocabularyProtocols - http not equated multiple vocabs 2", async () => {
     const mySA = new SDOAdapter({
-      commit: commit,
+      commit,
       equateVocabularyProtocols: false,
       schemaHttps: false,
       onError: debugFuncErr,
@@ -942,7 +940,7 @@ describe("SDO Adapter methods", () => {
 
   test("equateVocabularyProtocols - http equated multiple vocabs 3", async () => {
     const mySA = new SDOAdapter({
-      commit: commit,
+      commit,
       equateVocabularyProtocols: true,
       schemaHttps: false,
       onError: debugFuncErr,
@@ -962,7 +960,7 @@ describe("SDO Adapter methods", () => {
 
   test("equateVocabularyProtocols - http not equated multiple vocabs 3", async () => {
     const mySA = new SDOAdapter({
-      commit: commit,
+      commit,
       equateVocabularyProtocols: false,
       schemaHttps: false,
       onError: debugFuncErr,

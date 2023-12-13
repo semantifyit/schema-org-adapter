@@ -6,14 +6,10 @@ import {
   VocabularyNode,
 } from "./types";
 import {
-  _DC,
-  NsUrl,
-  _RDFS,
-  _SCHEMA,
-  _SOA,
   TermTypeIRI,
   TermTypeIRIValue,
-} from "./namespaces";
+  NS,
+} from "./data/namespaces";
 import {
   cloneJson,
   isArray,
@@ -115,34 +111,34 @@ export function curateVocabNode(
   vocabNode: VocabularyNode,
   vocabularies: Record<string, string>
 ): VocabularyNode {
-  curateLanguageTerm(vocabNode, _RDFS.comment);
-  curateLanguageTerm(vocabNode, _RDFS.label);
+  curateLanguageTerm(vocabNode, NS.rdfs.comment);
+  curateLanguageTerm(vocabNode, NS.rdfs.label);
   // terms with an array as default
-  curateRelationshipTermArray(vocabNode, _RDFS.subClassOf, TermTypeIRI.class);
+  curateRelationshipTermArray(vocabNode, NS.rdfs.subClassOf, TermTypeIRI.class);
   curateRelationshipTermArray(
     vocabNode,
-    _RDFS.subPropertyOf,
+    NS.rdfs.subPropertyOf,
     TermTypeIRI.property
   );
   curateRelationshipTermArray(
     vocabNode,
-    _SCHEMA.domainIncludes,
+    NS.schema.domainIncludes,
     TermTypeIRI.property
   );
   curateRelationshipTermArray(
     vocabNode,
-    _SCHEMA.rangeIncludes,
+    NS.schema.rangeIncludes,
     TermTypeIRI.property
   );
   // terms with a string | null as default
   if (
-    vocabNode[_SCHEMA.inverseOf] === undefined &&
+    vocabNode[NS.schema.inverseOf] === undefined &&
     vocabNode["@type"] === TermTypeIRI.property
   ) {
-    vocabNode[_SCHEMA.inverseOf] = null;
+    vocabNode[NS.schema.inverseOf] = null;
   }
   // if no schema:isPartOf property is stated yet (e.g. "https://pending.schema.org"), we detect the vocabulary used from the context, and put the corresponding (curated) IRI as value for this property (e.g. "https://schema.org")
-  if (!isString(vocabNode[_SCHEMA.isPartOf])) {
+  if (!isString(vocabNode[NS.schema.isPartOf])) {
     const vocabKeys = Object.keys(vocabularies);
     // e.g. schema
     let vocab = vocabKeys.find(
@@ -161,7 +157,7 @@ export function curateVocabNode(
         }
       } while (newChange);
       // e.g. https://schema.org
-      vocabNode[_SCHEMA.isPartOf] = vocab;
+      vocabNode[NS.schema.isPartOf] = vocab;
     }
   }
   return vocabNode;
@@ -374,7 +370,7 @@ export function discoverEquateNamespaces(
       );
       // super class
       checkIfNamespaceFromListIsUsed(
-        vocabNode[_RDFS.subClassOf],
+        vocabNode[NS.rdfs.subClassOf],
         protocolSwitchedNamespaces,
         result
       );
@@ -385,7 +381,7 @@ export function discoverEquateNamespaces(
       );
       // domain class
       checkIfNamespaceFromListIsUsed(
-        vocabNode[_SCHEMA.domainIncludes],
+        vocabNode[NS.schema.domainIncludes],
         protocolSwitchedNamespaces,
         result
       );
@@ -401,7 +397,7 @@ export function discoverEquateNamespaces(
       );
       // range class
       checkIfNamespaceFromListIsUsed(
-        vocabNode[_SCHEMA.rangeIncludes],
+        vocabNode[NS.schema.rangeIncludes],
         protocolSwitchedNamespaces,
         result
       );
@@ -417,7 +413,7 @@ export function discoverEquateNamespaces(
       );
       // super property
       checkIfNamespaceFromListIsUsed(
-        vocabNode[_RDFS.subPropertyOf],
+        vocabNode[NS.rdfs.subPropertyOf],
         protocolSwitchedNamespaces,
         result
       );
@@ -428,7 +424,7 @@ export function discoverEquateNamespaces(
       );
       // inverse property
       checkIfNamespaceFromListIsUsed(
-        vocabNode[_SCHEMA.inverseOf],
+        vocabNode[NS.schema.inverseOf],
         protocolSwitchedNamespaces,
         result
       );
@@ -490,32 +486,32 @@ export function getStandardContext(): Context {
   // soa:isRangeOf is an inverse of schema:rangeIncludes
   // soa:hasEnumerationMember is used for enumerations to list all its enumeration members (their @type includes the @id of the enumeration)
   // soa:enumerationDomainIncludes is an inverse of soa:hasEnumerationMember
-  // soa:EnumerationMember is introduced as meta type for the members of an schema:Enumeration
+  // soa:EnumerationMember is introduced as meta type for the members of a schema:Enumeration
   const standardContext: Context = {
-    rdf: NsUrl.rdf,
-    rdfs: NsUrl.rdfs,
-    xsd: NsUrl.xsd,
-    dcterms: NsUrl.dcterms,
+    rdf: NS.rdf._url,
+    rdfs: NS.rdfs._url,
+    xsd: NS.xsd._url,
+    dcterms: NS.dcterms._url,
     // schema: 'http://schema.org/', this entry will be generated the first time a vocabulary is added to the graph
-    soa: NsUrl.soa,
-    ds: NsUrl.ds,
+    soa: NS.soa._url,
+    ds: NS.ds._url,
   };
   const idEntries = [
-    _SOA.superClassOf,
-    _SOA.superPropertyOf,
-    _SOA.hasProperty,
-    _SOA.isRangeOf,
-    _SOA.hasEnumerationMember,
-    _SOA.enumerationDomainIncludes,
-    _RDFS.subClassOf,
-    _RDFS.subPropertyOf,
-    _SCHEMA.isPartOf,
-    _SCHEMA.domainIncludes,
-    _SCHEMA.rangeIncludes,
-    _SCHEMA.supersededBy,
-    _SCHEMA.inverseOf,
-    _SCHEMA.source,
-    _DC.source,
+    NS.soa.superClassOf,
+    NS.soa.superPropertyOf,
+    NS.soa.hasProperty,
+    NS.soa.isRangeOf,
+    NS.soa.hasEnumerationMember,
+    NS.soa.enumerationDomainIncludes,
+    NS.rdfs.subClassOf,
+    NS.rdfs.subPropertyOf,
+    NS.schema.isPartOf,
+    NS.schema.domainIncludes,
+    NS.schema.rangeIncludes,
+    NS.schema.supersededBy,
+    NS.schema.inverseOf,
+    NS.schema.source,
+    NS.dcterms.source,
   ];
   idEntries.map((el) => {
     standardContext[el] = {
@@ -555,8 +551,8 @@ export function extractFromClassMemory(
         // merge
         addGraphNodeFn(otherMemory, classMemory[actClassKey], vocabURL);
         delete classMemory[actClassKey];
-      } else if (classMemory[actClassKey][_RDFS.subClassOf] !== undefined) {
-        const subClassArray = classMemory[actClassKey][_RDFS.subClassOf];
+      } else if (classMemory[actClassKey][NS.rdfs.subClassOf] !== undefined) {
+        const subClassArray = classMemory[actClassKey][NS.rdfs.subClassOf];
         for (const actSubClass of subClassArray) {
           if (
             actSubClass === TermTypeIRI.enumeration ||

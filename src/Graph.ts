@@ -19,7 +19,7 @@ import {
   switchIRIProtocol,
   toCompactIRI,
 } from "./utilities";
-import { _DC, _RDFS, _SCHEMA, _SOA, TermTypeIRI } from "./namespaces";
+import { NS, TermTypeIRI } from "./data/namespaces";
 import {
   addEmptyArray,
   addInheritanceTermsClassAndEnum,
@@ -201,28 +201,28 @@ export class Graph {
       addInheritanceTermsClassAndEnum(
         this.classes,
         this.enumerations,
-        _RDFS.subClassOf,
-        _SOA.superClassOf
+        NS.rdfs.subClassOf,
+        NS.soa.superClassOf
       );
       addInheritanceTermsClassAndEnum(
         this.enumerations,
         this.enumerations,
-        _RDFS.subClassOf,
-        _SOA.superClassOf
+        NS.rdfs.subClassOf,
+        NS.soa.superClassOf
       );
       // D.2) Add subClasses for DataTypes
       // For each entry in the dataTypes memory the superClasses are checked (if they are in dataTypes memory) and those super types add the actual entry in their subClasses.
       addInheritanceTermsDataTypesAndProperties(
         this.dataTypes,
-        _RDFS.subClassOf,
-        _SOA.superClassOf
+        NS.rdfs.subClassOf,
+        NS.soa.superClassOf
       );
       // D.3) Add subProperties for Properties
       // For each entry in the properties memory the superProperties are checked (if they are in properties memory) and those super properties add the actual entry in their subProperties. (soa:superPropertyOf)
       addInheritanceTermsDataTypesAndProperties(
         this.properties,
-        _RDFS.subPropertyOf,
-        _SOA.superPropertyOf
+        NS.rdfs.subPropertyOf,
+        NS.soa.superPropertyOf
       );
       // E) Relationships
       /*  In this step additional fields are added to certain data entries to add links to other data entries, which should make it easier to use the generated data set.#
@@ -232,19 +232,19 @@ export class Graph {
                         soa:enumerationDomainIncludes is an inverse of soa:hasEnumerationMember */
       // E.0) add empty arrays for the relationships
       Object.values(this.classes).forEach((el) => {
-        addEmptyArray(el, _SOA.hasProperty);
-        addEmptyArray(el, _SOA.isRangeOf);
+        addEmptyArray(el, NS.soa.hasProperty);
+        addEmptyArray(el, NS.soa.isRangeOf);
       });
       Object.values(this.enumerations).forEach((el) => {
-        addEmptyArray(el, _SOA.hasEnumerationMember);
-        addEmptyArray(el, _SOA.isRangeOf);
-        addEmptyArray(el, _SOA.hasProperty);
+        addEmptyArray(el, NS.soa.hasEnumerationMember);
+        addEmptyArray(el, NS.soa.isRangeOf);
+        addEmptyArray(el, NS.soa.hasProperty);
       });
       Object.values(this.dataTypes).forEach((el) => {
-        addEmptyArray(el, _SOA.isRangeOf);
+        addEmptyArray(el, NS.soa.isRangeOf);
       });
       Object.values(this.enumerationMembers).forEach((el) => {
-        addEmptyArray(el, _SOA.enumerationDomainIncludes);
+        addEmptyArray(el, NS.soa.enumerationDomainIncludes);
       });
       /* E.1) Add explicit hasProperty and isRangeOf to classes, enumerations, and data types
                         For each entry in the classes/enumeration/dataType memory, the soa:hasProperty field is added.
@@ -253,7 +253,7 @@ export class Graph {
       const propertyKeys = Object.keys(this.properties);
       for (const actPropKey of propertyKeys) {
         const domainIncludesArray: string[] =
-          this.properties[actPropKey][_SCHEMA.domainIncludes];
+          this.properties[actPropKey][NS.schema.domainIncludes];
         if (isArray(domainIncludesArray)) {
           for (const actDomain of domainIncludesArray) {
             let target = this.classes[actDomain];
@@ -262,15 +262,15 @@ export class Graph {
             }
             if (
               target &&
-              isArray(target[_SOA.hasProperty]) &&
-              !target[_SOA.hasProperty].includes(actPropKey)
+              isArray(target[NS.soa.hasProperty]) &&
+              !target[NS.soa.hasProperty].includes(actPropKey)
             ) {
-              target[_SOA.hasProperty].push(actPropKey);
+              target[NS.soa.hasProperty].push(actPropKey);
             }
           }
         }
         const rangeIncludesArray: string[] =
-          this.properties[actPropKey][_SCHEMA.rangeIncludes];
+          this.properties[actPropKey][NS.schema.rangeIncludes];
         if (isArray(rangeIncludesArray)) {
           for (const actRange of rangeIncludesArray) {
             const target =
@@ -279,10 +279,10 @@ export class Graph {
               this.dataTypes[actRange];
             if (
               target &&
-              isArray(target[_SOA.isRangeOf]) &&
-              !target[_SOA.isRangeOf].includes(actPropKey)
+              isArray(target[NS.soa.isRangeOf]) &&
+              !target[NS.soa.isRangeOf].includes(actPropKey)
             ) {
-              target[_SOA.isRangeOf].push(actPropKey);
+              target[NS.soa.isRangeOf].push(actPropKey);
             }
           }
         }
@@ -302,14 +302,14 @@ export class Graph {
           const target = this.enumerations[actEnumMemType];
           if (
             target &&
-            isArray(target[_SOA.hasEnumerationMember]) &&
-            !target[_SOA.hasEnumerationMember].includes(actEnumMemKey)
+            isArray(target[NS.soa.hasEnumerationMember]) &&
+            !target[NS.soa.hasEnumerationMember].includes(actEnumMemKey)
           ) {
-            target[_SOA.hasEnumerationMember].push(actEnumMemKey);
-            if (isArray(enumMem[_SOA.enumerationDomainIncludes])) {
-              enumMem[_SOA.enumerationDomainIncludes].push(actEnumMemType);
+            target[NS.soa.hasEnumerationMember].push(actEnumMemKey);
+            if (isArray(enumMem[NS.soa.enumerationDomainIncludes])) {
+              enumMem[NS.soa.enumerationDomainIncludes].push(actEnumMemType);
             } else {
-              enumMem[_SOA.enumerationDomainIncludes] = [actEnumMemType];
+              enumMem[NS.soa.enumerationDomainIncludes] = [actEnumMemType];
             }
           }
         }
@@ -346,38 +346,38 @@ export class Graph {
         // @id stays the same
         // @type should stay the same (we already defined the memory to save it)
         // schema:isPartOf -> overwrite
-        nodeMergeOverwrite(oldNode, newNode, _SCHEMA.isPartOf);
+        nodeMergeOverwrite(oldNode, newNode, NS.schema.isPartOf);
         // dcterms:source/schema:source -> overwrite
-        nodeMergeOverwrite(oldNode, newNode, _DC.source);
-        nodeMergeOverwrite(oldNode, newNode, _SCHEMA.source);
+        nodeMergeOverwrite(oldNode, newNode, NS.dcterms.source);
+        nodeMergeOverwrite(oldNode, newNode, NS.schema.source);
         // schema:category -> overwrite
-        nodeMergeOverwrite(oldNode, newNode, _SCHEMA.category);
+        nodeMergeOverwrite(oldNode, newNode, NS.schema.category);
         // schema:supersededBy -> overwrite
-        nodeMergeOverwrite(oldNode, newNode, _SCHEMA.supersededBy);
+        nodeMergeOverwrite(oldNode, newNode, NS.schema.supersededBy);
         // rdfs:label -> add new languages, overwrite old ones if needed
-        nodeMergeLanguageTerm(oldNode, newNode, _RDFS.label);
+        nodeMergeLanguageTerm(oldNode, newNode, NS.rdfs.label);
         // rdfs:comment -> add new languages, overwrite old ones if needed
-        nodeMergeLanguageTerm(oldNode, newNode, _RDFS.comment);
+        nodeMergeLanguageTerm(oldNode, newNode, NS.rdfs.comment);
         // rdfs:subClassOf -> add new ids
-        nodeMergeAddIds(oldNode, newNode, _RDFS.subClassOf);
+        nodeMergeAddIds(oldNode, newNode, NS.rdfs.subClassOf);
         // soa:superClassOf -> add new ids
-        nodeMergeAddIds(oldNode, newNode, _SOA.superClassOf);
+        nodeMergeAddIds(oldNode, newNode, NS.soa.superClassOf);
         // soa:hasProperty -> add new ids
-        nodeMergeAddIds(oldNode, newNode, _SOA.hasProperty);
+        nodeMergeAddIds(oldNode, newNode, NS.soa.hasProperty);
         // soa:isRangeOf -> add new ids
-        nodeMergeAddIds(oldNode, newNode, _SOA.isRangeOf);
+        nodeMergeAddIds(oldNode, newNode, NS.soa.isRangeOf);
         // soa:enumerationDomainIncludes -> add new ids
-        nodeMergeAddIds(oldNode, newNode, _SOA.enumerationDomainIncludes);
+        nodeMergeAddIds(oldNode, newNode, NS.soa.enumerationDomainIncludes);
         // soa:hasEnumerationMember -> add new ids
-        nodeMergeAddIds(oldNode, newNode, _SOA.hasEnumerationMember);
+        nodeMergeAddIds(oldNode, newNode, NS.soa.hasEnumerationMember);
         // rdfs:subPropertyOf -> add new ids
-        nodeMergeAddIds(oldNode, newNode, _RDFS.subPropertyOf);
+        nodeMergeAddIds(oldNode, newNode, NS.rdfs.subPropertyOf);
         // schema:domainIncludes -> add new ids
-        nodeMergeAddIds(oldNode, newNode, _SCHEMA.domainIncludes);
+        nodeMergeAddIds(oldNode, newNode, NS.schema.domainIncludes);
         // schema:rangeIncludes -> add new ids
-        nodeMergeAddIds(oldNode, newNode, _SCHEMA.rangeIncludes);
+        nodeMergeAddIds(oldNode, newNode, NS.schema.rangeIncludes);
         // soa:superPropertyOf -> add new ids
-        nodeMergeAddIds(oldNode, newNode, _SOA.superPropertyOf);
+        nodeMergeAddIds(oldNode, newNode, NS.soa.superPropertyOf);
         if (vocabURL) {
           if (oldNode["vocabURLs"]) {
             if (!oldNode["vocabURLs"].includes(vocabURL)) {
@@ -683,10 +683,10 @@ export class Graph {
    * @returns returns true, if the termObj uses the given label (in any language)
    */
   containsLabel(termObj: VocabularyNode, label: string) {
-    if (termObj && isObject(termObj[_RDFS.label])) {
-      const langKeys = Object.keys(termObj[_RDFS.label]);
+    if (termObj && isObject(termObj[NS.rdfs.label])) {
+      const langKeys = Object.keys(termObj[NS.rdfs.label]);
       for (const actLangKey of langKeys) {
-        if (termObj[_RDFS.label][actLangKey] === label) {
+        if (termObj[NS.rdfs.label][actLangKey] === label) {
           return true;
         }
       }

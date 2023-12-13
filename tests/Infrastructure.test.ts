@@ -20,6 +20,9 @@ describe("Infrastructure testing", () => {
     expect(isObject(schemaVersions)).toBe(true);
     expect(isObject(schemaVersions?.releaseLog)).toBe(true);
     expect(isString(schemaVersions?.schemaversion)).toBe(true);
+    expect(
+      isString(schemaVersions?.releaseLog?.[schemaVersions?.schemaversion])
+    ).toBe(true);
     expect(isString(await SOA.getLatestSchemaVersion(commit))).toBe(true);
   });
 
