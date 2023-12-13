@@ -155,7 +155,7 @@ Class-Terms **MUST** have an `@id` that start with a capital letter (e.g. `ex:An
 
 ##### rdfs:subClassOf (required)
 
-Link to the super-classes of this Class. The value **MUST** be an `IRI` or an `Array of IRIs`. The most general Class in schema.org is `schema:Thing`.
+Link to the superclasses of this Class. The value **MUST** be an `IRI` or an `Array of IRIs`. The most general Class in schema.org is `schema:Thing`.
 
 _Example term definition for a Class:_
 ```JSON
@@ -209,13 +209,13 @@ _Example term definition for a Property:_
 <a name="Enumeration"></a>
 ### Enumeration
 
-Enumeration-Terms **MUST** have the `@type` `rdfs:Class` and **MUST** have `schema:Enumeration` as implicit or explicit super-class. 
+Enumeration-Terms **MUST** have the `@type` `rdfs:Class` and **MUST** have `schema:Enumeration` as implicit or explicit superclass. 
 
 Enumeration-Terms **MUST** have an `@id` that start with a capital letter (e.g. `ex:AnimalLivingEnvironment`)
 
 ##### rdfs:subClassOf (required)
 
-Link to the super-classes of this Enumeration. The value **MUST** be an `IRI` or an `Array of IRIs`. In order to be counted as an Enumeration a term **MUST** have `schema:Enumeration` as implicit or explicit super-class. 
+Link to the superclasses of this Enumeration. The value **MUST** be an `IRI` or an `Array of IRIs`. In order to be counted as an Enumeration a term **MUST** have `schema:Enumeration` as implicit or explicit superclass. 
 
 _Example term definition for a Enumeration:_
 ```JSON
@@ -251,7 +251,7 @@ _Example term definition for a EnumerationMember:_
 In practise there should be no need to define new data types. It is recommended to use the <a href="https://schema.org/DataType" target="_blank">ones defined in schema.org</a>.
 
 
-DataType-Terms **MUST** have as `@type` an Array with the IRIs `rdfs:Class` and `schema:DataType`. It is also possible to only have `rdfs:Class` but have a **valid DataType** as implicit or explicit super-class.  
+DataType-Terms **MUST** have as `@type` an Array with the IRIs `rdfs:Class` and `schema:DataType`. It is also possible to only have `rdfs:Class` but have a **valid DataType** as implicit or explicit superclass.  
 
 DataType-Terms **MUST** have an `@id` that start with a capital letter (e.g. `schema:Number`)
 

@@ -1,10 +1,10 @@
 import { SDOAdapter } from "./SDOAdapter";
-import { ParamObjCreateSdoAdapter } from "./types";
 import {
   fetchSchemaVersions,
   getLatestSchemaVersion,
   constructURLSchemaVocabulary,
-} from "./utilities";
+} from "./Infrastructure";
+import { ParamObjCreateSdoAdapter } from "./types/ParamObjCreateSdoAdapter.type";
 
 /**
  * Creates a new {@link SDOAdapter | SDO Adapter} instance. The optional {@link ParamObjCreateSdoAdapter | parameter object} can help you to pass settings to the SDO Adapter. Have a look to understand the possible settings and default values. The minimal setting you would like to pass is the schema.org vocabulary version you want to use.

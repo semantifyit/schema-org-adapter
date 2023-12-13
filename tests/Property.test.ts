@@ -1,5 +1,5 @@
 import { SDOAdapter } from "../src/SDOAdapter";
-import { isObject } from "../src/utilities";
+import { isObject } from "../src/utilities/isObject";
 import { commit, debugFunc, debugFuncErr } from "./testUtility";
 import VOC_OBJ_Zoo from "./data/vocabulary-animal.json";
 

@@ -6,19 +6,10 @@ import { DataType } from "./DataType";
 import { SDOAdapter } from "./SDOAdapter";
 import {
   Context,
-  FilterObject,
   TermMemory,
   Vocabulary,
   VocabularyNode,
-} from "./types";
-import {
-  cloneJson,
-  isArray,
-  isObject,
-  isString,
-  switchIRIProtocol,
-  toCompactIRI,
-} from "./utilities";
+} from "./types/types";
 import { NS, TermTypeIRI } from "./data/namespaces";
 import {
   addEmptyArray,
@@ -36,6 +27,13 @@ import {
   preProcessVocab,
 } from "./graphUtilities";
 import { applyFilter } from "./reasoning";
+import { cloneJson } from "./utilities/cloneJson";
+import { isArray } from "./utilities/isArray";
+import { isString } from "./utilities/isString";
+import { FilterObject } from "./types/FilterObject.type";
+import { isObject } from "./utilities/isObject";
+import { toCompactIRI } from "./utilities/toCompactIRI";
+import { switchIRIProtocol } from "./utilities/switchIRIProtocol";
 
 /** @ignore */
 export class Graph {
@@ -123,7 +121,7 @@ export class Graph {
        classes ("@type" = "rdfs:Class")
        properties ("@type" = "rdf:Property")
        dataTypes ("@type" = "rdfs:Class" + "schema:DataType")
-       enumerations ("@type" = "rdfs:Class", has "schema:Enumeration" as implicit super-class)
+       enumerations ("@type" = "rdfs:Class", has "schema:Enumeration" as implicit superclass)
        enumerationMembers ("@type" = @id(s) of enumeration(s))
        */
       for (let i = 0; i < vocab["@graph"].length; i++) {

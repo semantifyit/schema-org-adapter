@@ -1,40 +1,29 @@
-import { SDOAdapter } from "../src/SDOAdapter";
 import VOC_OBJ_ZOO from "./data/vocabulary-animal.json";
-import { isObject } from "../src/utilities";
+import { isObject } from "../src/utilities/isObject";
+import { debugFunc, testSdoAdapter } from "./testUtility";
 
-import { commit, debugFunc, debugFuncErr } from "./testUtility";
-
-/**
- *  @returns {SDOAdapter} - the initialized SDO-Adapter ready for testing.
- */
-async function initAdapter() {
-  const mySA = new SDOAdapter({
-    commit: commit,
-    onError: debugFuncErr,
-  });
-  const mySDOUrl = await mySA.constructURLSchemaVocabulary("latest");
-  await mySA.addVocabularies([mySDOUrl, VOC_OBJ_ZOO]);
-  return mySA;
-}
+const defaultSdoParams = {
+  vocabularies: [VOC_OBJ_ZOO]
+};
 
 /**
  *  Tests regarding the JS-Class for "Class"
  */
 describe("Class methods", () => {
   test("getTermTypeLabel()", async () => {
-    const mySA = await initAdapter();
+    const mySA = await testSdoAdapter(defaultSdoParams);
     const hotel = mySA.getClass("schema:Hotel");
     expect(hotel.getTermTypeLabel()).toBe("Class");
   });
 
   test("getTermTypeIRI()", async () => {
-    const mySA = await initAdapter();
+    const mySA = await testSdoAdapter(defaultSdoParams);
     const hotel = mySA.getClass("schema:Hotel");
     expect(hotel.getTermTypeIRI()).toBe("rdfs:Class");
   });
 
   test("getSource()", async () => {
-    const mySA = await initAdapter();
+    const mySA = await testSdoAdapter(defaultSdoParams);
     const hotel = mySA.getClass("schema:Hotel");
     expect(
       typeof hotel.getSource() === "string" || hotel.getSource() === null
@@ -44,7 +33,7 @@ describe("Class methods", () => {
   });
 
   test("getVocabulary()", async () => {
-    const mySA = await initAdapter();
+    const mySA = await testSdoAdapter(defaultSdoParams);
     const Hotel = mySA.getClass("schema:Hotel");
     expect(Hotel.getVocabulary()).toBe("https://schema.org");
     const Class = mySA.getClass("schema:Class");
@@ -54,7 +43,7 @@ describe("Class methods", () => {
   });
 
   test("getIRI()", async () => {
-    const mySA = await initAdapter();
+    const mySA = await testSdoAdapter(defaultSdoParams);
     const hospital = mySA.getClass("schema:Hospital");
     expect(hospital.getIRI()).toBe("https://schema.org/Hospital");
     expect(hospital.getIRI(true)).toBe("schema:Hospital");
@@ -64,7 +53,7 @@ describe("Class methods", () => {
   });
 
   test("getName()", async () => {
-    const mySA = await initAdapter();
+    const mySA = await testSdoAdapter(defaultSdoParams);
     const hotel = mySA.getClass("schema:Hotel");
     expect(hotel.getName()).toBe("Hotel");
     expect(hotel.getName("en")).toBe(hotel.getName());
@@ -72,13 +61,13 @@ describe("Class methods", () => {
   });
 
   test("getDescription()", async () => {
-    const mySA = await initAdapter();
+    const mySA = await testSdoAdapter(defaultSdoParams);
     const hotel = mySA.getClass("schema:Hotel");
     expect((hotel.getDescription() as string).includes("A hotel")).toBe(true);
   });
 
   test("isSupersededBy()", async () => {
-    const mySA = await initAdapter();
+    const mySA = await testSdoAdapter(defaultSdoParams);
     const UserPlays = mySA.getClass("schema:UserPlays");
     expect(UserPlays.isSupersededBy()).toBe("schema:InteractionCounter");
     const Hotel = mySA.getClass("schema:Hotel");
@@ -86,7 +75,7 @@ describe("Class methods", () => {
   });
 
   test("getProperties()", async () => {
-    const mySA = await initAdapter();
+    const mySA = await testSdoAdapter(defaultSdoParams);
     const person = mySA.getClass("schema:Person");
     expect(person.getProperties()).toContain("schema:givenName");
     expect(person.getProperties(true)).toContain("schema:givenName");
@@ -107,7 +96,7 @@ describe("Class methods", () => {
   });
 
   test("getSuperClasses()", async () => {
-    const mySA = await initAdapter();
+    const mySA = await testSdoAdapter(defaultSdoParams);
     const person = mySA.getClass("schema:Person");
     expect(person.getSuperClasses()).toContain("schema:Thing");
     expect(person.getSuperClasses()).not.toContain("schema:Event");
@@ -117,7 +106,7 @@ describe("Class methods", () => {
   });
 
   test("getSubClasses()", async () => {
-    const mySA = await initAdapter();
+    const mySA = await testSdoAdapter(defaultSdoParams);
     const thing = mySA.getClass("schema:Thing");
     expect(thing.getSubClasses()).toContain("schema:Hospital");
     expect(thing.getSubClasses(false)).not.toContain("schema:Hospital");
@@ -127,7 +116,7 @@ describe("Class methods", () => {
   });
 
   test("isRangeOf()", async () => {
-    const mySA = await initAdapter();
+    const mySA = await testSdoAdapter(defaultSdoParams);
     const thing = mySA.getClass("schema:Thing");
     expect(thing.isRangeOf()).toContain("schema:about");
     expect(thing.isRangeOf(false)).toContain("schema:about");
@@ -144,7 +133,7 @@ describe("Class methods", () => {
   });
 
   test("toString()", async () => {
-    const mySA = await initAdapter();
+    const mySA = await testSdoAdapter(defaultSdoParams);
     const thing = mySA.getClass("schema:Thing");
     debugFunc(thing.toString());
     expect(isObject(JSON.parse(thing.toString()))).toBe(true);

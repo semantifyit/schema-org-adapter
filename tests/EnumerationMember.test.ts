@@ -1,44 +1,30 @@
-import { SDOAdapter } from "../src/SDOAdapter";
-import { isObject } from "../src/utilities";
-import { commit, debugFunc, debugFuncErr } from "./testUtility";
-
-/**
- *  @returns {SDOAdapter} - the initialized SDO-Adapter ready for testing.
- */
-async function initAdapter() {
-  const mySA = new SDOAdapter({
-    commit: commit,
-    onError: debugFuncErr,
-  });
-  const mySDOUrl = await mySA.constructURLSchemaVocabulary("latest");
-  await mySA.addVocabularies([mySDOUrl]);
-  return mySA;
-}
+import { isObject } from "../src/utilities/isObject";
+import { debugFunc, testSdoAdapter } from "./testUtility";
 
 /**
  *  Tests regarding the JS-Class for "EnumerationMember"
  */
 describe("EnumerationMember methods", () => {
   test("getTermTypeLabel()", async () => {
-    const mySA = await initAdapter();
+    const mySA = await testSdoAdapter();
     const Friday = mySA.getEnumerationMember("schema:Friday");
     expect(Friday.getTermTypeLabel()).toBe("EnumerationMember");
   });
 
   test("getTermTypeIRI()", async () => {
-    const mySA = await initAdapter();
+    const mySA = await testSdoAdapter();
     const Friday = mySA.getEnumerationMember("schema:Friday");
     expect(Friday.getTermTypeIRI()).toBe("soa:EnumerationMember");
   });
 
   test("getSource()", async () => {
-    const mySA = await initAdapter();
+    const mySA = await testSdoAdapter();
     const Friday = mySA.getEnumerationMember("schema:Friday");
     expect(Friday.getSource()).toBe(null);
   });
 
   test("getVocabulary()", async () => {
-    const mySA = await initAdapter();
+    const mySA = await testSdoAdapter();
     const Friday = mySA.getEnumerationMember("schema:Friday");
     expect(Friday.getVocabulary()).toBe("https://schema.org");
     const DrivingSchoolVehicleUsage = mySA.getEnumerationMember(
@@ -50,7 +36,7 @@ describe("EnumerationMember methods", () => {
   });
 
   test("getIRI()", async () => {
-    const mySA = await initAdapter();
+    const mySA = await testSdoAdapter();
     const Friday = mySA.getEnumerationMember("schema:Friday");
     expect(Friday.getIRI()).toBe("https://schema.org/Friday");
     expect(Friday.getIRI(true)).toBe("schema:Friday");
@@ -58,7 +44,7 @@ describe("EnumerationMember methods", () => {
   });
 
   test("getName()", async () => {
-    const mySA = await initAdapter();
+    const mySA = await testSdoAdapter();
     const Friday = mySA.getEnumerationMember("schema:Friday");
     expect(Friday.getName()).toBe("Friday");
     expect(Friday.getName("en")).toBe(Friday.getName());
@@ -66,7 +52,7 @@ describe("EnumerationMember methods", () => {
   });
 
   test("getDescription()", async () => {
-    const mySA = await initAdapter();
+    const mySA = await testSdoAdapter();
     const Friday = mySA.getEnumerationMember("schema:Friday");
     expect(Friday.getDescription()).toBe(
       "The day of the week between Thursday and Saturday."
@@ -78,13 +64,13 @@ describe("EnumerationMember methods", () => {
   });
 
   test("isSupersededBy()", async () => {
-    const mySA = await initAdapter();
+    const mySA = await testSdoAdapter();
     const Friday = mySA.getEnumerationMember("schema:Friday");
     expect(Friday.isSupersededBy()).toBe(null);
   });
 
   test("getDomainEnumerations()", async () => {
-    const mySA = await initAdapter();
+    const mySA = await testSdoAdapter();
     const Friday = mySA.getEnumerationMember("schema:Friday");
     expect(Friday.getDomainEnumerations()).toContain("schema:DayOfWeek");
     expect(Friday.getDomainEnumerations()).not.toContain("schema:Thing");
@@ -106,7 +92,7 @@ describe("EnumerationMember methods", () => {
   });
 
   test("toString()", async () => {
-    const mySA = await initAdapter();
+    const mySA = await testSdoAdapter();
     const Friday = mySA.getEnumerationMember("schema:Friday");
     debugFunc(Friday.toString());
     expect(isObject(JSON.parse(Friday.toString()))).toBe(true);

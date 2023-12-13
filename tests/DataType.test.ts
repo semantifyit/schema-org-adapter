@@ -1,38 +1,24 @@
-import { SDOAdapter } from "../src/SDOAdapter";
-import { isObject } from "../src/utilities";
-import { commit, debugFunc, debugFuncErr } from "./testUtility";
-
-/**
- *  @returns {SDOAdapter} - the initialized SDO-Adapter ready for testing.
- */
-async function initAdapter() {
-  const mySA = new SDOAdapter({
-    commit: commit,
-    onError: debugFuncErr,
-  });
-  const mySDOUrl = await mySA.constructURLSchemaVocabulary("latest");
-  await mySA.addVocabularies([mySDOUrl]);
-  return mySA;
-}
+import { debugFunc,  testSdoAdapter } from "./testUtility";
+import { isObject } from "../src/utilities/isObject";
 
 /**
  *  Tests regarding the JS-Class for "DataType"
  */
 describe("DataType methods", () => {
   test("getTermTypeLabel()", async () => {
-    const mySA = await initAdapter();
+    const mySA = await testSdoAdapter();
     const number = mySA.getDataType("schema:Number");
     expect(number.getTermTypeLabel()).toBe("DataType");
   });
 
   test("getTermTypeIRI()", async () => {
-    const mySA = await initAdapter();
+    const mySA = await testSdoAdapter();
     const number = mySA.getDataType("schema:Number");
     expect(number.getTermTypeIRI()).toBe("schema:DataType");
   });
 
   test("getSource()", async () => {
-    const mySA = await initAdapter();
+    const mySA = await testSdoAdapter();
     const CssSelectorType = mySA.getDataType("schema:CssSelectorType");
     expect(CssSelectorType.getSource()).toBe(
       "https://github.com/schemaorg/schemaorg/issues/1672"
@@ -42,13 +28,13 @@ describe("DataType methods", () => {
   });
 
   test("getVocabulary()", async () => {
-    const mySA = await initAdapter();
+    const mySA = await testSdoAdapter();
     const number = mySA.getDataType("schema:Number");
     expect(number.getVocabulary()).toBe("https://schema.org");
   });
 
   test("getIRI()", async () => {
-    const mySA = await initAdapter();
+    const mySA = await testSdoAdapter();
     const CssSelectorType = mySA.getDataType("schema:CssSelectorType");
     expect(CssSelectorType.getIRI()).toBe("https://schema.org/CssSelectorType");
     expect(CssSelectorType.getIRI(true)).toBe("schema:CssSelectorType");
@@ -56,7 +42,7 @@ describe("DataType methods", () => {
   });
 
   test("getName()", async () => {
-    const mySA = await initAdapter();
+    const mySA = await testSdoAdapter();
     const number = mySA.getDataType("schema:Number");
     expect(number.getName()).toBe("Number");
     expect(number.getName("en")).toBe(number.getName());
@@ -64,7 +50,7 @@ describe("DataType methods", () => {
   });
 
   test("getDescription()", async () => {
-    const mySA = await initAdapter();
+    const mySA = await testSdoAdapter();
     const CssSelectorType = mySA.getDataType("schema:CssSelectorType");
     expect(CssSelectorType.getDescription()).toBe(
       "Text representing a CSS selector."
@@ -76,20 +62,20 @@ describe("DataType methods", () => {
   });
 
   test("isSupersededBy()", async () => {
-    const mySA = await initAdapter();
+    const mySA = await testSdoAdapter();
     const CssSelectorType = mySA.getDataType("schema:CssSelectorType");
     expect(CssSelectorType.isSupersededBy()).toBe(null);
   });
 
   test("getSuperDataTypes()", async () => {
-    const mySA = await initAdapter();
+    const mySA = await testSdoAdapter();
     const float = mySA.getDataType("schema:Float");
     expect(float.getSuperDataTypes()).toContain("schema:Number");
     expect(float.getSuperDataTypes()).not.toContain("schema:Date");
   });
 
   test("getSubDataTypes()", async () => {
-    const mySA = await initAdapter();
+    const mySA = await testSdoAdapter();
     const text = mySA.getDataType("schema:Text");
     expect(text.getSubDataTypes()).toContain("schema:XPathType");
     expect(text.getSubDataTypes()).toContain("schema:CssSelectorType");
@@ -98,7 +84,7 @@ describe("DataType methods", () => {
   });
 
   test("isRangeOf()", async () => {
-    const mySA = await initAdapter();
+    const mySA = await testSdoAdapter();
     const Integer = mySA.getDataType("schema:Integer");
     expect(Integer.isRangeOf()).toContain("schema:numberOfSeasons");
     expect(Integer.isRangeOf(false)).toContain("schema:numberOfSeasons");
@@ -107,7 +93,7 @@ describe("DataType methods", () => {
   });
 
   test("toString()", async () => {
-    const mySA = await initAdapter();
+    const mySA = await testSdoAdapter();
     const text = mySA.getDataType("schema:Text");
     debugFunc(text.toString());
     expect(isObject(JSON.parse(text.toString()))).toBe(true);

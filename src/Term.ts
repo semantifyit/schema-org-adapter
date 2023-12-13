@@ -1,11 +1,13 @@
 import { Graph } from "./Graph";
-import { isNil, isString, toAbsoluteIRI } from "./utilities";
-import { ToJsonTerm, VocabularyNode } from "./types";
+import { ToJsonTerm, VocabularyNode } from "./types/types";
 import {
   NS,
   TermTypeIRIValue,
   TermTypeLabelValue,
 } from "./data/namespaces";
+import { toAbsoluteIRI } from "./utilities/toAbsoluteIRI";
+import { isNil } from "./utilities/isNil";
+import { isString } from "./utilities/isString";
 
 // the functions for a term Object
 /**

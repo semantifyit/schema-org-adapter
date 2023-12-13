@@ -3,22 +3,22 @@ import axios from "axios";
 import {
   getLatestSchemaVersion,
   constructURLSchemaVocabulary,
-  isObject,
-  isString,
-  toArray,
-} from "./utilities";
+} from "./Infrastructure";
 import {
   ErrorFunction,
-  FilterObject,
   ParamObjSdoAdapter,
   Vocabulary,
-} from "./types";
+} from "./types/types";
 import { applyFilter } from "./reasoning";
 import { Class } from "./Class";
 import { Enumeration } from "./Enumeration";
 import { EnumerationMember } from "./EnumerationMember";
 import { Property } from "./Property";
 import { DataType } from "./DataType";
+import { isString } from "./utilities/isString";
+import { isObject } from "./utilities/isObject";
+import { FilterObject } from "./types/FilterObject.type";
+import { toArray } from "./utilities/toArray";
 
 /**
  * An **SDOAdapter** is an instance of the library itself that holds its own settings and vocabularies (specified by the user). Based on these internal settings and vocabularies the SDOAdapter provides corresponding data through the methods described below (an SDOAdapter can only provide data about a vocabulary, if that vocabulary has been added to the instance). An SDOAdapter instance is created with {@link create | .create()}, have a look at the different settings.

@@ -1,3 +1,5 @@
+import { SOA, ParamObjCreateSdoAdapter } from "../src";
+
 const CONSOLE_OUTPUT = false; // Change to "true" if you want to see console.log and console.error outputs for the tests
 
 /**
@@ -24,3 +26,17 @@ export function debugFuncErr(out: unknown) {
 
 // https://github.com/schemaorg/schemaorg/commits/main
 export const commit = process.env.COMMIT;
+
+
+/**
+ *  returns the initialized SDO-Adapter ready for testing
+ */
+export async function testSdoAdapter(params: Partial<ParamObjCreateSdoAdapter> = {}) {
+  return SOA.create({
+    commit,
+    onError: debugFuncErr,
+    schemaVersion: "latest",
+    vocabularies: [],
+    ...params
+  })
+}

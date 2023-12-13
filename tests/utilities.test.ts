@@ -1,8 +1,4 @@
-import {
-  getFileNameForSchemaOrgVersion,
-  toAbsoluteIRI,
-  toCompactIRI,
-} from "../src/utilities";
+
 import { SOA } from "../src/index";
 import VOC_OBJ_ZOO from "./data/vocabulary-animal.json";
 import VOC_OBJ_SDO_3_7 from "./data/schema-3.7.json";
@@ -14,11 +10,14 @@ import {
   discoverUsedSchemaOrgProtocol,
   generateContext,
 } from "../src/graphUtilities";
-import { FilterObject } from "../lib/types";
+import { FilterObject } from "../src";
+import { toCompactIRI } from "../src/utilities/toCompactIRI";
+import { toAbsoluteIRI } from "../src/utilities/toAbsoluteIRI";
+import { getFileNameForSchemaOrgVersion } from "../src/utilities/getFileNameForSchemaOrgVersion";
 
 async function initAdapter() {
   return await SOA.create({
-    commit: commit,
+    commit,
     onError: debugFuncErr,
     schemaVersion: "latest",
     vocabularies: [VOC_OBJ_ZOO],
@@ -85,8 +84,8 @@ describe("utilities testing", () => {
     const MedicalWebPage = mySA.getClass("schema:MedicalWebPage");
     const filter1 = undefined;
     const filter2 = {};
-    const filter3 = { termType: "Class" } as FilterObject;
-    const filter4 = { termType: "Property" } as FilterObject;
+    const filter3: FilterObject = { termType: "Class" };
+    const filter4: FilterObject = { termType: "Property" };
     const filter5 = { isSuperseded: false } as FilterObject;
     const filter6 = { isSuperseded: true } as FilterObject;
     const filter7 = { termType: ["Property", "Class"] } as FilterObject;
@@ -107,7 +106,6 @@ describe("utilities testing", () => {
       termType: ["Property"],
       fromVocabulary: ["schema", "ex"],
     } as FilterObject;
-    const filter12 = { termType: ["SomeThingFalse"] };
     const filter13 = { termType: ["DataType"] } as FilterObject;
     expect(MedicalWebPage.getProperties(true, filter1)).toContain(
       "schema:aspect"
@@ -159,8 +157,11 @@ describe("utilities testing", () => {
       "ex:animalLivingEnvironment"
     );
     expect(mySA.getListOfProperties(filter11)).toContain("schema:aspect");
-    // @ts-ignore - we want to test an invalid filter
-    expect(() => mySA.getListOfProperties(filter12)).toThrow();
+    expect(() =>
+      mySA.getListOfProperties({
+        termType: ["SomeThingFalse"],
+      } as unknown as FilterObject)
+    ).toThrow();
     expect(mySA.getListOfDataTypes(filter13)).toContain("schema:Text");
   });
   test("discoverUsedSchemaOrgProtocol()", async () => {

@@ -1,7 +1,9 @@
 import { Graph } from "./Graph";
-import { cloneJson, toArray, uniquifyArray } from "./utilities";
 import { NS, TermTypeLabel, TermTypeLabelValue } from "./data/namespaces";
-import { FilterParamObj } from "./types";
+import { FilterParamObj } from "./types/types";
+import { cloneJson } from "./utilities/cloneJson";
+import { uniquifyArray } from "./utilities/uniquifyArray";
+import { toArray } from "./utilities/toArray";
 
 // This file offers reasoning-related functions that can be used by the other js-classes of this library
 

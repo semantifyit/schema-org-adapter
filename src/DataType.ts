@@ -1,6 +1,6 @@
 // the functions for a data type Object
 import { Term } from "./Term";
-import { FilterObject, ToJsonDataType, VocabularyNode } from "./types";
+import { ToJsonDataType, VocabularyNode } from "./types/types";
 import { Graph } from "./Graph";
 import {
   applyFilter,
@@ -9,6 +9,7 @@ import {
   inferSuperDataTypes,
 } from "./reasoning";
 import { NS, TermTypeIRI, TermTypeLabel } from "./data/namespaces";
+import { FilterObject } from "./types/FilterObject.type";
 
 /**
  * A **DataType** represents a data-type term. These are a special kind of classes that [represents literal values in schema.org](https://schema.org/DataType). A DataType is identified by its IRI (e.g. [schema:Number](https://schema.org/Number)), where, by convention, the class name itself starts with an uppercase letter. A DataType instance is created with {@link SDOAdapter.getDataType | SDOAdapter.getDataType()} and offers the methods described below.

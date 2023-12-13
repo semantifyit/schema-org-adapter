@@ -23,7 +23,7 @@
 
 &#8633; **Supports schema.org versions and external vocabularies:** The **Schema.org Adapter** is lightweight because it does NOT include the vocabulary data, instead it allows the user to input his needed local/remote vocabularies (JSON-LD or URL to JSON-LD). This gives users the possibility to specify the <a href="https://schema.org/docs/developers.html" target="_blank">version of Schema.org</a> (including http/https variations) they need, also to use <a href="https://github.com/semantifyit/schema-org-adapter/blob/master/docu/vocabulary.md" target="_blank">external vocabularies</a>.
 
-&#9883; **Built-in reasoning:** The simple-to-use [API of this library](https://semantifyit.github.io/schema-org-adapter/)  offers functions and parameters that enable built-in reasoning on the used vocabulary-terms (e.g. resolution of properties, sub-classes, ranges, etc.)
+&#9883; **Built-in reasoning:** The simple-to-use [API of this library](https://semantifyit.github.io/schema-org-adapter/)  offers functions and parameters that enable built-in reasoning on the used vocabulary-terms (e.g. resolution of properties, subclasses, ranges, etc.)
 
 
 ## Install and load

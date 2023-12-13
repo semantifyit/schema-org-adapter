@@ -1,21 +1,13 @@
-import { SDOAdapter } from "../src/SDOAdapter";
 import { Graph } from "../src/Graph";
 import VOC_OBJ_ZOO from "./data/vocabulary-animal.json";
-import { commit, debugFuncErr } from "./testUtility";
-import { Vocabulary } from "../src/types";
+import { testSdoAdapter } from "./testUtility";
+import { Vocabulary } from "../src";
 
-let VOC_URL_LATEST: string;
 let VOC_OBJ_LATEST: Vocabulary;
 
-/**
- *  @returns {SDOAdapter} - the initialized SDO-Adapter ready for testing.
- */
 async function initGraph() {
-  const mySA = new SDOAdapter({
-    commit: commit,
-    onError: debugFuncErr,
-  });
-  VOC_URL_LATEST = await mySA.constructURLSchemaVocabulary("latest");
+  const mySA = await testSdoAdapter();
+  const VOC_URL_LATEST = await mySA.constructURLSchemaVocabulary("latest");
   VOC_OBJ_LATEST = (await mySA.fetchVocabularyFromURL(
     VOC_URL_LATEST
   )) as Vocabulary;
@@ -131,16 +123,16 @@ describe("Graph methods", () => {
       "@id": "ex:SnowTrail",
       "@type": "rdfs:Class",
       "rdfs:comment": {
-        en: "A path, track or unpaved lane or road for sport activities or walking IN THE SNOW.",
+        en: "A path, track or unpaved lane or road for sport activities or walking IN THE SNOW."
       },
       "rdfs:label": { en: "SnowTrail" },
-      "rdfs:subClassOf": ["schema:Place"],
+      "rdfs:subClassOf": ["schema:Place"]
     };
     const snowTrailObjDe = {
       "@id": "ex:SnowTrail",
       "@type": "rdfs:Class",
       "rdfs:label": { de: "Schneeroute" },
-      "rdfs:subClassOf": ["schema:Place", "schema:Action"],
+      "rdfs:subClassOf": ["schema:Place", "schema:Action"]
     };
     const myGraph = await initGraph();
     await myGraph.addVocabulary(VOC_OBJ_LATEST);

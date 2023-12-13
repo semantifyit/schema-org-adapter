@@ -35,7 +35,7 @@ Classify every graph-node based on its `@type`. The node is stored in a correspo
 - **classes** (`@type` = `"rdfs:Class"`)
 - **properties** (`@type` = `"rdf:Property"`)
 - **dataTypes** (`@type` = `["rdfs:Class" , "http://schema.org/DataType"]`)
-- **enumerations** (`@type` = `"rdfs:Class"` and has `"http://schema.org/Enumeration"` as implicit or explicit super-class)
+- **enumerations** (`@type` = `"rdfs:Class"` and has `"http://schema.org/Enumeration"` as implicit or explicit superclass)
 - **enumerationMembers** (`@type` = `@id` of an enumeration)
 
 Example graph-node for an Enumeration Instance (enumerationMember):
@@ -144,4 +144,3 @@ In this step additional fields are added to certain data entries to add links to
 
  For each entry in the enumeration memory the `soa:hasEnumerationMember` field is added, this data field holds all enumeration members which belong to this enumeration.
  For each entry in the enumerationMembers memory the `soa:enumerationDomainIncludes` field is added, this data field holds all enumerations that are a domain for this enumerationMember
-  

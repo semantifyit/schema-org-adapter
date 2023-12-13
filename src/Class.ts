@@ -1,7 +1,7 @@
 // the functions for a class Object
 import { Term } from "./Term";
 import { Graph } from "./Graph";
-import { FilterObject, ToJsonClass, VocabularyNode } from "./types";
+import { ToJsonClass, VocabularyNode } from "./types/types";
 import {
   applyFilter,
   inferPropertiesFromSuperClasses,
@@ -16,6 +16,7 @@ import {
   TermTypeLabel,
   TermTypeLabelValue
 } from "./data/namespaces";
+import { FilterObject } from "./types/FilterObject.type";
 
 /**
  * A **Class** represents a class term, also known as [type in schema.org](https://schema.org/Class). A Class is identified by its IRI (e.g. [schema:Thing](https://schema.org/Thing)), where, by convention, the class name itself starts with an uppercase letter. A Class instance is created with {@link SDOAdapter.getClass | SDOAdapter.getClass()} and offers the methods described below.
@@ -65,7 +66,7 @@ export class Class extends Term {
    * ]
    * ```
    *
-   * @param implicit - If true, retrieve also implicit properties (inheritance from super-classes)
+   * @param implicit - If true, retrieve also implicit properties (inheritance from superclasses)
    * @param filter - The filter to be applied on the result
    * @returns The properties of this Class
    */
@@ -74,7 +75,7 @@ export class Class extends Term {
     const result = [];
     result.push(...classObj[NS.soa.hasProperty]);
     if (implicit) {
-      // add properties from super-classes
+      // add properties from superclasses
       result.push(
         ...inferPropertiesFromSuperClasses(
           classObj[NS.rdfs.subClassOf],
@@ -86,20 +87,20 @@ export class Class extends Term {
   }
 
   /**
-   * Retrieves the super-classes of this Class
+   * Retrieves the superclasses of this Class
    *
    * @example
    * ```JS
    * personClass.getSuperClasses();
-   * // returns all super-classes of the class "schema:Person"
+   * // returns all superclasses of the class "schema:Person"
    * [
    *    "schema:Thing"
    * ]
    * ```
    *
-   * @param implicit - If true, retrieve also implicit super-classes (recursive from super-classes)
+   * @param implicit - If true, retrieve also implicit superclasses (recursive from superclasses)
    * @param filter - The filter to be applied on the result
-   * @returns The super-classes of this Class
+   * @returns The superclasses of this Class
    */
   getSuperClasses(implicit = true, filter?: FilterObject): string[] {
     const classObj = this.getTermObj();
@@ -113,19 +114,19 @@ export class Class extends Term {
   }
 
   /**
-   * Retrieves the sub-classes of this Class
+   * Retrieves the subclasses of this Class
    * @example
    * ```JS
    * personClass.getSubClasses();
-   * // returns all sub-classes of the class "schema:Person"
+   * // returns all subclasses of the class "schema:Person"
    * [
    *    "schema:Patient"
    * ]
    * ```
    *
-   * @param implicit - If true, retrieve also implicit sub-classes (recursive from sub-classes)
+   * @param implicit - If true, retrieve also implicit subclasses (recursive from subclasses)
    * @param filter - The filter to be applied on the result
-   * @returns The sub-classes of this Class
+   * @returns The subclasses of this Class
    */
   getSubClasses(implicit = true, filter?: FilterObject): string[] {
     const classObj = this.getTermObj();
@@ -154,7 +155,7 @@ export class Class extends Term {
    * ]
    * ```
    *
-   * @param implicit - If true, retrieve also implicit properties (where a super-class of this class is a range)
+   * @param implicit - If true, retrieve also implicit properties (where a superclass of this class is a range)
    * @param filter - The filter to be applied on the result
    * @returns The properties that have this Class as a range
    */
@@ -178,7 +179,7 @@ export class Class extends Term {
    * personClass.toString();
    * ```
    *
-   * @param implicit - If true, includes also implicit data (e.g. sub-Classes, super-Classes, properties, etc.)
+   * @param implicit - If true, includes also implicit data (e.g. subclasses, superclasses, properties, etc.)
    * @param filter - The filter to be applied on the result
    * @returns The JSON representation of this Class as string
    */
@@ -221,15 +222,15 @@ export class Class extends Term {
    *}
    * ```
    *
-   * @param implicit - If true, includes also implicit data (e.g. sub-Classes, super-Classes, properties, etc.)
+   * @param implicit - If true, includes also implicit data (e.g. subclasses, superclasses, properties, etc.)
    * @param filter - The filter to be applied on the result
    * @returns The JSON representation of this Class as JavaScript Object
    */
   toJSON(implicit = true, filter?: FilterObject): ToJsonClass {
     // (implicit === true) ->
     // properties of all parent classes
-    // sub-classes and their subclasses
-    // super-classes and their superclasses
+    // subclasses and their subclasses
+    // superclasses and their superclasses
     const result = super.toJSON() as ToJsonClass;
     result.superClasses = this.getSuperClasses(implicit, filter);
     result.subClasses = this.getSubClasses(implicit, filter);

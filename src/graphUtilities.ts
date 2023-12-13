@@ -4,23 +4,16 @@ import {
   TermMemory,
   Vocabulary,
   VocabularyNode,
-} from "./types";
-import {
-  TermTypeIRI,
-  TermTypeIRIValue,
-  NS,
-} from "./data/namespaces";
-import {
-  cloneJson,
-  isArray,
-  isLanguageObjectVocab,
-  isNil,
-  isObject,
-  isString,
-  switchIRIProtocol,
-} from "./utilities";
+} from "./types/types";
+import { TermTypeIRI, TermTypeIRIValue, NS } from "./data/namespaces";
 import jsonld from "jsonld";
-import "core-js/actual/set";
+import { cloneJson } from "./utilities/cloneJson";
+import { isObject } from "./utilities/isObject";
+import { isString } from "./utilities/isString";
+import { isNil } from "./utilities/isNil";
+import { isLanguageObjectVocab } from "./utilities/isLanguageObjectVocab";
+import { isArray } from "./utilities/isArray";
+import { switchIRIProtocol } from "./utilities/switchIRIProtocol";
 
 /**
  * curates the language-tagged value for a given term in a given vocabulary node
@@ -176,7 +169,7 @@ export function generateContext(
 ): Context {
   const keysCurrentContext = Object.keys(currentContext);
   const keysNewContext = Object.keys(newContext);
-  // add all of the old context
+  // add all the definitions of the old context
   let resultContext = cloneJson(currentContext);
   // add vocabs of new context that are not already used (value is URI)
   for (const keyNC of keysNewContext) {
@@ -577,7 +570,7 @@ export function extractFromClassMemory(
 
 /** @ignore
  * Part D.1) of the addVocabulary-algorithm
- * Add link to sub-class for classes and enumerations
+ * Add link to subclass for classes and enumerations
  */
 export function addInheritanceTermsClassAndEnum(
   memory: TermMemory,
@@ -612,7 +605,7 @@ export function addInheritanceTermsClassAndEnum(
 
 /** @ignore
  * Part D.2) and D.3) of the addVocabulary-algorithm
- * Add link to sub-class for classes and enumerations
+ * Add link to subclass for classes and enumerations
  */
 export function addInheritanceTermsDataTypesAndProperties(
   memory: TermMemory,
@@ -648,7 +641,7 @@ export function addInheritanceTermsDataTypesAndProperties(
 
 /**
  * @ignore
- * Adds an empty array for the given attribute, if it doesnt exist yet
+ * Adds an empty array for the given attribute, if it doesn't exist yet
  */
 export function addEmptyArray(termObject: VocabularyNode, property: string) {
   if (!termObject[property]) {

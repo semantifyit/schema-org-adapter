@@ -1,0 +1,1 @@
+{"version":3,"file":"isString.js","sourceRoot":"./","sources":["utilities/isString.ts"],"names":[],"mappings":";;;AAAA,mCAAgC;AAQhC,SAAgB,QAAQ,CAAC,KAAc;IACrC,IAAI,IAAA,aAAK,EAAC,KAAK,CAAC,EAAE;QAChB,OAAO,KAAK,CAAC;KACd;IACD,OAAO,OAAO,KAAK,KAAK,QAAQ,IAAI,KAAK,YAAY,MAAM,CAAC;AAC9D,CAAC;AALD,4BAKC"}

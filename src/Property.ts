@@ -1,6 +1,6 @@
 // the functions for a property Object
 import { Term } from "./Term";
-import { FilterObject, ToJsonProperty, VocabularyNode } from "./types";
+import { ToJsonProperty, VocabularyNode } from "./types/types";
 import { Graph } from "./Graph";
 import {
   applyFilter,
@@ -10,6 +10,7 @@ import {
   inferSuperProperties,
 } from "./reasoning";
 import { NS, TermTypeIRI, TermTypeLabel } from "./data/namespaces";
+import { FilterObject } from "./types/FilterObject.type";
 
 /**
  * A **Property** represents a property term, which is used to describe a relationship between subject resources (their domains) and object resources (their ranges). A Property is identified by its IRI (e.g. [schema:name](https://schema.org/name)), where, by convention, the property name itself starts with a lowercase letter. A Property instance is created with {@link SDOAdapter.getProperty | SDOAdapter.getProperty()} and offers the methods described below.
@@ -60,7 +61,7 @@ export class Property extends Term {
    * ]
    * ```
    *
-   * @param implicit - If true, retrieve also implicit ranges (inheritance from sub-classes of the ranges)
+   * @param implicit - If true, retrieve also implicit ranges (inheritance from subclasses of the ranges)
    * @param filter - The filter to be applied on the result
    * @returns The ranges of this Property
    */
@@ -69,7 +70,7 @@ export class Property extends Term {
     const result = [];
     result.push(...propertyObj[NS.schema.rangeIncludes]);
     if (implicit) {
-      // add sub-classes and sub-data-types from ranges
+      // add subclasses and sub-data-types from ranges
       for (const actRes of result) {
         result.push(...inferSubDataTypes(actRes, this.graph));
       }
@@ -96,7 +97,7 @@ export class Property extends Term {
    * ]
    * ```
    *
-   * @param implicit - If true, retrieve also implicit domains (inheritance from sub-classes of the domains)
+   * @param implicit - If true, retrieve also implicit domains (inheritance from subclasses of the domains)
    * @param filter - The filter to be applied on the result
    * @returns The domains of this Property
    */
@@ -105,7 +106,7 @@ export class Property extends Term {
     const result = [];
     result.push(...propertyObj[NS.schema.domainIncludes]);
     if (implicit) {
-      // add sub-classes from ranges
+      // add subclasses from ranges
       const inferredSubClasses = [];
       for (const actRes of result) {
         inferredSubClasses.push(...inferSubClasses(actRes, this.graph));

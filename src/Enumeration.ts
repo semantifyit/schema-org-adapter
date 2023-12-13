@@ -1,13 +1,14 @@
-// the functions for a enumeration Object
+// the functions for an enumeration Object
 import { Class } from "./Class";
 import { Graph } from "./Graph";
-import { isNil } from "./utilities";
-import { FilterObject, ToJsonEnumeration, VocabularyNode } from "./types";
+import { ToJsonEnumeration, VocabularyNode } from "./types/types";
 import { NS, TermTypeIRI, TermTypeLabel } from "./data/namespaces";
 import { applyFilter } from "./reasoning";
+import { isNil } from "./utilities/isNil";
+import { FilterObject } from "./types/FilterObject.type";
 
 /**
- * An **Enumeration** represents an enumeration term, which is a special kind of Class. For SDO-Adapter, a Class is understood as Enumeration when it is a sub-class of the [schema.org Enumeration Class](https://schema.org/Enumeration). Usually, Enumerations (e.g. [schema:DayOfWeek](https://schema.org/DayOfWeek)) have predefined instances (e.g. [schema:Monday](https://schema.org/Monday)) that are also part of the Vocabulary. Instead of creating new instances for this Class/Enumeration, it is usual to just link to a predefined instance (In SDO-Adapter these predefined instances are called {@link EnumerationMember | Enumeration Members}). But, since an Enumeration is also a Class, every enumeration can also be understood as a Class for which a new instance can be created, therefore the API also provides all Class methods for Enumerations. An Enumeration is created with {@link SDOAdapter.getEnumeration | SDOAdapter.getEnumeration()} and offers the methods described below.
+ * An **Enumeration** represents an enumeration term, which is a special kind of Class. For SDO-Adapter, a Class is understood as Enumeration when it is a subclass of the [schema.org Enumeration Class](https://schema.org/Enumeration). Usually, Enumerations (e.g. [schema:DayOfWeek](https://schema.org/DayOfWeek)) have predefined instances (e.g. [schema:Monday](https://schema.org/Monday)) that are also part of the Vocabulary. Instead of creating new instances for this Class/Enumeration, it is usual to just link to a predefined instance (In SDO-Adapter these predefined instances are called {@link EnumerationMember | Enumeration Members}). But, since an Enumeration is also a Class, every enumeration can also be understood as a Class for which a new instance can be created, therefore the API also provides all Class methods for Enumerations. An Enumeration is created with {@link SDOAdapter.getEnumeration | SDOAdapter.getEnumeration()} and offers the methods described below.
  * ```JS
  * // following Enumeration instance is used in the code examples below
  * const dayEnum = mySdoAdapter.getEnumeration("schema:DayOfWeek");

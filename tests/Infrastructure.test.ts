@@ -1,13 +1,11 @@
 import { SOA } from "../src/index";
-import {
-  isObject,
-  isString,
-  getFileNameForSchemaOrgVersion,
-  sortReleaseEntriesByDate,
-  checkURL,
-} from "../src/utilities";
 import axios from "axios";
 import { debugFunc, commit } from "./testUtility";
+import { isString } from "../src/utilities/isString";
+import { isObject } from "../src/utilities/isObject";
+import { getFileNameForSchemaOrgVersion } from "../src/utilities/getFileNameForSchemaOrgVersion";
+import { checkIfUrlExists } from "../src/utilities/checkIfUrlExists";
+import { sortReleaseEntriesByDate } from "../src/utilities/sortReleaseEntriesByDate";
 
 /**
  *  These tests check the retrieving of data from schema.org to ensure the correct functionality of vocabulary version determination and usage
@@ -75,7 +73,7 @@ describe("Infrastructure testing", () => {
         commit
       );
       debugFunc(currentFileURL);
-      expect(await checkURL(currentFileURL)).toBe(true);
+      expect(await checkIfUrlExists(currentFileURL)).toBe(true);
     }
   });
 });

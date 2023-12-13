@@ -1,0 +1,1 @@
+{"version":3,"file":"getGitHubBaseURL.js","sourceRoot":"./","sources":["utilities/getGitHubBaseURL.ts"],"names":[],"mappings":";;;AAIA,SAAgB,gBAAgB,CAAC,MAAe;IAC9C,IAAI,MAAM,EAAE;QACV,OAAO,wDAAwD,GAAG,MAAM,CAAC;KAC1E;SAAM;QACL,OAAO,8DAA8D,CAAC;KACvE;AACH,CAAC;AAND,4CAMC"}

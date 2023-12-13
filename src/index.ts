@@ -1,13 +1,15 @@
 // reexport as named-object for Node
 export * as SOA from "./dist";
 // reexport all types and interfaces that could be used by the user
-export * from "./types";
+export * from "./types/types";
+export type { FilterObject } from "./types/FilterObject.type";
+export type { ParamObjCreateSdoAdapter } from "./types/ParamObjCreateSdoAdapter.type";
 export {
   TermTypeLabel,
   TermTypeIRI,
   TermType,
   TermTypeIRIValue,
-  TermTypeLabelValue,
+  TermTypeLabelValue
 } from "./data/namespaces";
 // export types for the classes provided for this library
 export type { Class } from "./Class";

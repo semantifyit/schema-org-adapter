@@ -7,10 +7,11 @@ main();
  * example usage of the SDOAdapter in node.js
  */
 async function main() {
+  console.log(await SOA.fetchSchemaVersions())
   // create an instance of the SDOAdapter with the latest schema.org vocabulary and the example vocabulary
-  const mySA = await SOA.create({schemaVersion: "latest", vocabularies:[VOC_EXAMPLE]});
+  const mySA = await SOA.create({schemaVersion: "latest", vocabularies:[VOC_EXAMPLE], equateVocabularyProtocols: true});
   let AnimalClass = mySA.getClass("ex:Animal"); // get a JS-Class for the Class-Term https://example-vocab.ex/Animal , note that the compacted version of the IRI is also a valid parameter for the function
-  console.log(JSON.stringify(AnimalClass.toJSON(true, null), null, 2)); // AnimalClass.toJSON() prints a JSON version of the Class, note that here we pass 'true' as parameter for the reasoning (the result will contain attributes resolved though reasoning, e.g. properties of super-classes)
+  console.log(JSON.stringify(AnimalClass.toJSON(true, null), null, 2)); // AnimalClass.toJSON() prints a JSON version of the Class, note that here we pass 'true' as parameter for the reasoning (the result will contain attributes resolved though reasoning, e.g. properties of superclasses)
   /*
   {
     "id": "ex:Animal",

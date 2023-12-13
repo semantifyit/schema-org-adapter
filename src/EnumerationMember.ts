@@ -1,10 +1,11 @@
-// the functions for a enumeration member Object
+// the functions for an enumeration member Object
 import { Term } from "./Term";
 import { Graph } from "./Graph";
-import { cloneJson } from "./utilities";
-import { FilterObject, ToJsonEnumerationMember, VocabularyNode } from "./types";
+import {  ToJsonEnumerationMember, VocabularyNode } from "./types/types";
 import { applyFilter, inferSuperClasses } from "./reasoning";
 import { NS, TermTypeIRI, TermTypeLabel } from "./data/namespaces";
+import { cloneJson } from "./utilities/cloneJson";
+import { FilterObject } from "./types/FilterObject.type";
 
 /**
  * An **EnumerationMember** represents an enumeration instance term. The understanding of SDO-Adapter for Classes, Enumerations and Enumeration Members is described in the {@link Enumeration | Enumeration page}. An EnumerationMember is created with {@link SDOAdapter.getEnumerationMember | SDOAdapter.getEnumerationMember()} and offers the methods described below.

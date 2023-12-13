@@ -17,9 +17,9 @@ class Class extends Term_1.Term {
     getProperties(implicit = true, filter) {
         const classObj = this.getTermObj();
         const result = [];
-        result.push(...classObj[namespaces_1._SOA.hasProperty]);
+        result.push(...classObj[namespaces_1.NS.soa.hasProperty]);
         if (implicit) {
-            result.push(...(0, reasoning_1.inferPropertiesFromSuperClasses)(classObj[namespaces_1._RDFS.subClassOf], this.graph));
+            result.push(...(0, reasoning_1.inferPropertiesFromSuperClasses)(classObj[namespaces_1.NS.rdfs.subClassOf], this.graph));
         }
         return (0, reasoning_1.applyFilter)({ data: result, filter, graph: this.graph });
     }
@@ -30,7 +30,7 @@ class Class extends Term_1.Term {
             result.push(...(0, reasoning_1.inferSuperClasses)(this.IRI, this.graph));
         }
         else {
-            result.push(...classObj[namespaces_1._RDFS.subClassOf]);
+            result.push(...classObj[namespaces_1.NS.rdfs.subClassOf]);
         }
         return (0, reasoning_1.applyFilter)({ data: result, filter, graph: this.graph });
     }
@@ -41,7 +41,7 @@ class Class extends Term_1.Term {
             result.push(...(0, reasoning_1.inferSubClasses)(this.IRI, this.graph));
         }
         else {
-            result.push(...classObj[namespaces_1._SOA.superClassOf]);
+            result.push(...classObj[namespaces_1.NS.soa.superClassOf]);
         }
         return (0, reasoning_1.applyFilter)({ data: result, filter, graph: this.graph });
     }
@@ -51,7 +51,7 @@ class Class extends Term_1.Term {
             result.push(...(0, reasoning_1.inferRangeOf)(this.IRI, this.graph));
         }
         else {
-            result.push(...this.getTermObj()[namespaces_1._SOA.isRangeOf]);
+            result.push(...this.getTermObj()[namespaces_1.NS.soa.isRangeOf]);
         }
         return (0, reasoning_1.applyFilter)({ data: result, filter, graph: this.graph });
     }
@@ -69,7 +69,7 @@ class Class extends Term_1.Term {
 }
 exports.Class = Class;
 
-},{"./Term":9,"./data/namespaces":10,"./reasoning":13}],2:[function(require,module,exports){
+},{"./Term":10,"./data/namespaces":11,"./reasoning":14}],2:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.DataType = void 0;
@@ -92,7 +92,7 @@ class DataType extends Term_1.Term {
             result.push(...(0, reasoning_1.inferSuperDataTypes)(this.IRI, this.graph));
         }
         else {
-            result.push(...dataTypeObj[namespaces_1._RDFS.subClassOf]);
+            result.push(...dataTypeObj[namespaces_1.NS.rdfs.subClassOf]);
         }
         return (0, reasoning_1.applyFilter)({ data: result, filter, graph: this.graph });
     }
@@ -103,7 +103,7 @@ class DataType extends Term_1.Term {
             result.push(...(0, reasoning_1.inferSubDataTypes)(this.IRI, this.graph));
         }
         else {
-            result.push(...dataTypeObj[namespaces_1._SOA.superClassOf]);
+            result.push(...dataTypeObj[namespaces_1.NS.soa.superClassOf]);
         }
         return (0, reasoning_1.applyFilter)({ data: result, filter, graph: this.graph });
     }
@@ -113,7 +113,7 @@ class DataType extends Term_1.Term {
             result.push(...(0, reasoning_1.inferRangeOf)(this.IRI, this.graph));
         }
         else {
-            result.push(...this.getTermObj()[namespaces_1._SOA.isRangeOf]);
+            result.push(...this.getTermObj()[namespaces_1.NS.soa.isRangeOf]);
         }
         return (0, reasoning_1.applyFilter)({ data: result, filter, graph: this.graph });
     }
@@ -130,14 +130,14 @@ class DataType extends Term_1.Term {
 }
 exports.DataType = DataType;
 
-},{"./Term":9,"./data/namespaces":10,"./reasoning":13}],3:[function(require,module,exports){
+},{"./Term":10,"./data/namespaces":11,"./reasoning":14}],3:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Enumeration = void 0;
 const Class_1 = require("./Class");
-const utilities_1 = require("./utilities");
 const namespaces_1 = require("./data/namespaces");
 const reasoning_1 = require("./reasoning");
+const isNil_1 = require("./utilities/isNil");
 class Enumeration extends Class_1.Class {
     constructor(IRI, graph) {
         super(IRI, graph);
@@ -149,13 +149,13 @@ class Enumeration extends Class_1.Class {
     }
     getEnumerationMembers(implicit = true, filter) {
         const result = [];
-        result.push(...this.getTermObj()[namespaces_1._SOA.hasEnumerationMember]);
+        result.push(...this.getTermObj()[namespaces_1.NS.soa.hasEnumerationMember]);
         if (implicit) {
             const subClasses = this.getSubClasses(true);
             for (const actSubClass of subClasses) {
                 const actualEnumeration = this.graph.enumerations[actSubClass];
-                if (!(0, utilities_1.isNil)(actualEnumeration)) {
-                    result.push(...actualEnumeration[namespaces_1._SOA.hasEnumerationMember]);
+                if (!(0, isNil_1.isNil)(actualEnumeration)) {
+                    result.push(...actualEnumeration[namespaces_1.NS.soa.hasEnumerationMember]);
                 }
             }
         }
@@ -172,14 +172,14 @@ class Enumeration extends Class_1.Class {
 }
 exports.Enumeration = Enumeration;
 
-},{"./Class":1,"./data/namespaces":10,"./reasoning":13,"./utilities":14}],4:[function(require,module,exports){
+},{"./Class":1,"./data/namespaces":11,"./reasoning":14,"./utilities/isNil":21}],4:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.EnumerationMember = void 0;
 const Term_1 = require("./Term");
-const utilities_1 = require("./utilities");
 const reasoning_1 = require("./reasoning");
 const namespaces_1 = require("./data/namespaces");
+const cloneJson_1 = require("./utilities/cloneJson");
 class EnumerationMember extends Term_1.Term {
     constructor(IRI, graph) {
         super(IRI, graph);
@@ -192,9 +192,9 @@ class EnumerationMember extends Term_1.Term {
     getDomainEnumerations(implicit = true, filter) {
         const enumObj = this.getTermObj();
         let result = [];
-        result.push(...enumObj[namespaces_1._SOA.enumerationDomainIncludes]);
+        result.push(...enumObj[namespaces_1.NS.soa.enumerationDomainIncludes]);
         if (implicit) {
-            const domainEnumerationsToCheck = (0, utilities_1.cloneJson)(result);
+            const domainEnumerationsToCheck = (0, cloneJson_1.cloneJson)(result);
             for (const actDE of domainEnumerationsToCheck) {
                 result.push(...(0, reasoning_1.inferSuperClasses)(actDE, this.graph));
             }
@@ -217,7 +217,7 @@ class EnumerationMember extends Term_1.Term {
 }
 exports.EnumerationMember = EnumerationMember;
 
-},{"./Term":9,"./data/namespaces":10,"./reasoning":13,"./utilities":14}],5:[function(require,module,exports){
+},{"./Term":10,"./data/namespaces":11,"./reasoning":14,"./utilities/cloneJson":16}],5:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Graph = void 0;
@@ -226,10 +226,15 @@ const Property_1 = require("./Property");
 const Enumeration_1 = require("./Enumeration");
 const EnumerationMember_1 = require("./EnumerationMember");
 const DataType_1 = require("./DataType");
-const utilities_1 = require("./utilities");
 const namespaces_1 = require("./data/namespaces");
 const graphUtilities_1 = require("./graphUtilities");
 const reasoning_1 = require("./reasoning");
+const cloneJson_1 = require("./utilities/cloneJson");
+const isArray_1 = require("./utilities/isArray");
+const isString_1 = require("./utilities/isString");
+const isObject_1 = require("./utilities/isObject");
+const toCompactIRI_1 = require("./utilities/toCompactIRI");
+const switchIRIProtocol_1 = require("./utilities/switchIRIProtocol");
 class Graph {
     constructor(sdoAdapter) {
         this.sdoAdapter = sdoAdapter;
@@ -249,18 +254,18 @@ class Graph {
             if (this.sdoAdapter.equateVocabularyProtocols) {
                 const equateNamespaces = (0, graphUtilities_1.discoverEquateNamespaces)(this.context, vocab);
                 if (equateNamespaces.length > 0) {
-                    const adaptedContext = (0, utilities_1.cloneJson)(vocab["@context"]);
+                    const adaptedContext = (0, cloneJson_1.cloneJson)(vocab["@context"]);
                     equateNamespaces.forEach((ens) => {
                         const usedKeyToDelete = Object.keys(adaptedContext).find((el) => adaptedContext[el] === ens);
                         if (usedKeyToDelete) {
                             delete adaptedContext[usedKeyToDelete];
                         }
-                        const keyToUse = Object.keys(this.context).find((el) => this.context[el] === (0, utilities_1.switchIRIProtocol)(ens));
+                        const keyToUse = Object.keys(this.context).find((el) => this.context[el] === (0, switchIRIProtocol_1.switchIRIProtocol)(ens));
                         adaptedContext[keyToUse] = ens;
                     });
                     vocab = (await (0, graphUtilities_1.preProcessVocab)(vocab, adaptedContext));
                     equateNamespaces.forEach((ens) => {
-                        const keyToUse = Object.keys(this.context).find((el) => this.context[el] === (0, utilities_1.switchIRIProtocol)(ens));
+                        const keyToUse = Object.keys(this.context).find((el) => this.context[el] === (0, switchIRIProtocol_1.switchIRIProtocol)(ens));
                         vocab["@context"][keyToUse] =
                             this.context[keyToUse];
                     });
@@ -273,8 +278,8 @@ class Graph {
                 vocabNode = (0, graphUtilities_1.curateVocabNode)(vocabNode, vocabularies);
             }
             for (let i = 0; i < vocab["@graph"].length; i++) {
-                const curNode = (0, utilities_1.cloneJson)(vocab["@graph"][i]);
-                if ((0, utilities_1.isString)(curNode["@type"])) {
+                const curNode = (0, cloneJson_1.cloneJson)(vocab["@graph"][i]);
+                if ((0, isString_1.isString)(curNode["@type"])) {
                     switch (curNode["@type"]) {
                         case namespaces_1.TermTypeIRI.class:
                             this.addGraphNode(this.classes, curNode, vocabURL);
@@ -287,7 +292,7 @@ class Graph {
                             break;
                     }
                 }
-                else if ((0, utilities_1.isArray)(curNode["@type"])) {
+                else if ((0, isArray_1.isArray)(curNode["@type"])) {
                     if (curNode["@type"].includes(namespaces_1.TermTypeIRI.class) &&
                         curNode["@type"].includes(namespaces_1.TermTypeIRI.dataType)) {
                         this.addGraphNode(this.dataTypes, curNode, vocabURL);
@@ -304,51 +309,51 @@ class Graph {
             (0, graphUtilities_1.extractFromClassMemory)(this.classes, this.enumerations, this.addGraphNode, vocabURL);
             (0, graphUtilities_1.extractFromClassMemory)(this.classes, this.dataTypes, this.addGraphNode, vocabURL);
             Object.values(this.dataTypes).forEach((el) => (el["@type"] = namespaces_1.TermTypeIRI.dataType));
-            (0, graphUtilities_1.addInheritanceTermsClassAndEnum)(this.classes, this.enumerations, namespaces_1._RDFS.subClassOf, namespaces_1._SOA.superClassOf);
-            (0, graphUtilities_1.addInheritanceTermsClassAndEnum)(this.enumerations, this.enumerations, namespaces_1._RDFS.subClassOf, namespaces_1._SOA.superClassOf);
-            (0, graphUtilities_1.addInheritanceTermsDataTypesAndProperties)(this.dataTypes, namespaces_1._RDFS.subClassOf, namespaces_1._SOA.superClassOf);
-            (0, graphUtilities_1.addInheritanceTermsDataTypesAndProperties)(this.properties, namespaces_1._RDFS.subPropertyOf, namespaces_1._SOA.superPropertyOf);
+            (0, graphUtilities_1.addInheritanceTermsClassAndEnum)(this.classes, this.enumerations, namespaces_1.NS.rdfs.subClassOf, namespaces_1.NS.soa.superClassOf);
+            (0, graphUtilities_1.addInheritanceTermsClassAndEnum)(this.enumerations, this.enumerations, namespaces_1.NS.rdfs.subClassOf, namespaces_1.NS.soa.superClassOf);
+            (0, graphUtilities_1.addInheritanceTermsDataTypesAndProperties)(this.dataTypes, namespaces_1.NS.rdfs.subClassOf, namespaces_1.NS.soa.superClassOf);
+            (0, graphUtilities_1.addInheritanceTermsDataTypesAndProperties)(this.properties, namespaces_1.NS.rdfs.subPropertyOf, namespaces_1.NS.soa.superPropertyOf);
             Object.values(this.classes).forEach((el) => {
-                (0, graphUtilities_1.addEmptyArray)(el, namespaces_1._SOA.hasProperty);
-                (0, graphUtilities_1.addEmptyArray)(el, namespaces_1._SOA.isRangeOf);
+                (0, graphUtilities_1.addEmptyArray)(el, namespaces_1.NS.soa.hasProperty);
+                (0, graphUtilities_1.addEmptyArray)(el, namespaces_1.NS.soa.isRangeOf);
             });
             Object.values(this.enumerations).forEach((el) => {
-                (0, graphUtilities_1.addEmptyArray)(el, namespaces_1._SOA.hasEnumerationMember);
-                (0, graphUtilities_1.addEmptyArray)(el, namespaces_1._SOA.isRangeOf);
-                (0, graphUtilities_1.addEmptyArray)(el, namespaces_1._SOA.hasProperty);
+                (0, graphUtilities_1.addEmptyArray)(el, namespaces_1.NS.soa.hasEnumerationMember);
+                (0, graphUtilities_1.addEmptyArray)(el, namespaces_1.NS.soa.isRangeOf);
+                (0, graphUtilities_1.addEmptyArray)(el, namespaces_1.NS.soa.hasProperty);
             });
             Object.values(this.dataTypes).forEach((el) => {
-                (0, graphUtilities_1.addEmptyArray)(el, namespaces_1._SOA.isRangeOf);
+                (0, graphUtilities_1.addEmptyArray)(el, namespaces_1.NS.soa.isRangeOf);
             });
             Object.values(this.enumerationMembers).forEach((el) => {
-                (0, graphUtilities_1.addEmptyArray)(el, namespaces_1._SOA.enumerationDomainIncludes);
+                (0, graphUtilities_1.addEmptyArray)(el, namespaces_1.NS.soa.enumerationDomainIncludes);
             });
             const propertyKeys = Object.keys(this.properties);
             for (const actPropKey of propertyKeys) {
-                const domainIncludesArray = this.properties[actPropKey][namespaces_1._SCHEMA.domainIncludes];
-                if ((0, utilities_1.isArray)(domainIncludesArray)) {
+                const domainIncludesArray = this.properties[actPropKey][namespaces_1.NS.schema.domainIncludes];
+                if ((0, isArray_1.isArray)(domainIncludesArray)) {
                     for (const actDomain of domainIncludesArray) {
                         let target = this.classes[actDomain];
                         if (!target) {
                             target = this.enumerations[actDomain];
                         }
                         if (target &&
-                            (0, utilities_1.isArray)(target[namespaces_1._SOA.hasProperty]) &&
-                            !target[namespaces_1._SOA.hasProperty].includes(actPropKey)) {
-                            target[namespaces_1._SOA.hasProperty].push(actPropKey);
+                            (0, isArray_1.isArray)(target[namespaces_1.NS.soa.hasProperty]) &&
+                            !target[namespaces_1.NS.soa.hasProperty].includes(actPropKey)) {
+                            target[namespaces_1.NS.soa.hasProperty].push(actPropKey);
                         }
                     }
                 }
-                const rangeIncludesArray = this.properties[actPropKey][namespaces_1._SCHEMA.rangeIncludes];
-                if ((0, utilities_1.isArray)(rangeIncludesArray)) {
+                const rangeIncludesArray = this.properties[actPropKey][namespaces_1.NS.schema.rangeIncludes];
+                if ((0, isArray_1.isArray)(rangeIncludesArray)) {
                     for (const actRange of rangeIncludesArray) {
                         const target = this.classes[actRange] ||
                             this.enumerations[actRange] ||
                             this.dataTypes[actRange];
                         if (target &&
-                            (0, utilities_1.isArray)(target[namespaces_1._SOA.isRangeOf]) &&
-                            !target[namespaces_1._SOA.isRangeOf].includes(actPropKey)) {
-                            target[namespaces_1._SOA.isRangeOf].push(actPropKey);
+                            (0, isArray_1.isArray)(target[namespaces_1.NS.soa.isRangeOf]) &&
+                            !target[namespaces_1.NS.soa.isRangeOf].includes(actPropKey)) {
+                            target[namespaces_1.NS.soa.isRangeOf].push(actPropKey);
                         }
                     }
                 }
@@ -357,20 +362,20 @@ class Graph {
             for (const actEnumMemKey of enumMemKeys) {
                 const enumMem = this.enumerationMembers[actEnumMemKey];
                 let enumMemTypeArray = enumMem["@type"];
-                if (!(0, utilities_1.isArray)(enumMemTypeArray)) {
+                if (!(0, isArray_1.isArray)(enumMemTypeArray)) {
                     enumMemTypeArray = [enumMemTypeArray];
                 }
                 for (const actEnumMemType of enumMemTypeArray) {
                     const target = this.enumerations[actEnumMemType];
                     if (target &&
-                        (0, utilities_1.isArray)(target[namespaces_1._SOA.hasEnumerationMember]) &&
-                        !target[namespaces_1._SOA.hasEnumerationMember].includes(actEnumMemKey)) {
-                        target[namespaces_1._SOA.hasEnumerationMember].push(actEnumMemKey);
-                        if ((0, utilities_1.isArray)(enumMem[namespaces_1._SOA.enumerationDomainIncludes])) {
-                            enumMem[namespaces_1._SOA.enumerationDomainIncludes].push(actEnumMemType);
+                        (0, isArray_1.isArray)(target[namespaces_1.NS.soa.hasEnumerationMember]) &&
+                        !target[namespaces_1.NS.soa.hasEnumerationMember].includes(actEnumMemKey)) {
+                        target[namespaces_1.NS.soa.hasEnumerationMember].push(actEnumMemKey);
+                        if ((0, isArray_1.isArray)(enumMem[namespaces_1.NS.soa.enumerationDomainIncludes])) {
+                            enumMem[namespaces_1.NS.soa.enumerationDomainIncludes].push(actEnumMemType);
                         }
                         else {
-                            enumMem[namespaces_1._SOA.enumerationDomainIncludes] = [actEnumMemType];
+                            enumMem[namespaces_1.NS.soa.enumerationDomainIncludes] = [actEnumMemType];
                         }
                     }
                 }
@@ -392,23 +397,23 @@ class Graph {
             }
             else {
                 const oldNode = memory[newNode["@id"]];
-                (0, graphUtilities_1.nodeMergeOverwrite)(oldNode, newNode, namespaces_1._SCHEMA.isPartOf);
-                (0, graphUtilities_1.nodeMergeOverwrite)(oldNode, newNode, namespaces_1._DC.source);
-                (0, graphUtilities_1.nodeMergeOverwrite)(oldNode, newNode, namespaces_1._SCHEMA.source);
-                (0, graphUtilities_1.nodeMergeOverwrite)(oldNode, newNode, namespaces_1._SCHEMA.category);
-                (0, graphUtilities_1.nodeMergeOverwrite)(oldNode, newNode, namespaces_1._SCHEMA.supersededBy);
-                (0, graphUtilities_1.nodeMergeLanguageTerm)(oldNode, newNode, namespaces_1._RDFS.label);
-                (0, graphUtilities_1.nodeMergeLanguageTerm)(oldNode, newNode, namespaces_1._RDFS.comment);
-                (0, graphUtilities_1.nodeMergeAddIds)(oldNode, newNode, namespaces_1._RDFS.subClassOf);
-                (0, graphUtilities_1.nodeMergeAddIds)(oldNode, newNode, namespaces_1._SOA.superClassOf);
-                (0, graphUtilities_1.nodeMergeAddIds)(oldNode, newNode, namespaces_1._SOA.hasProperty);
-                (0, graphUtilities_1.nodeMergeAddIds)(oldNode, newNode, namespaces_1._SOA.isRangeOf);
-                (0, graphUtilities_1.nodeMergeAddIds)(oldNode, newNode, namespaces_1._SOA.enumerationDomainIncludes);
-                (0, graphUtilities_1.nodeMergeAddIds)(oldNode, newNode, namespaces_1._SOA.hasEnumerationMember);
-                (0, graphUtilities_1.nodeMergeAddIds)(oldNode, newNode, namespaces_1._RDFS.subPropertyOf);
-                (0, graphUtilities_1.nodeMergeAddIds)(oldNode, newNode, namespaces_1._SCHEMA.domainIncludes);
-                (0, graphUtilities_1.nodeMergeAddIds)(oldNode, newNode, namespaces_1._SCHEMA.rangeIncludes);
-                (0, graphUtilities_1.nodeMergeAddIds)(oldNode, newNode, namespaces_1._SOA.superPropertyOf);
+                (0, graphUtilities_1.nodeMergeOverwrite)(oldNode, newNode, namespaces_1.NS.schema.isPartOf);
+                (0, graphUtilities_1.nodeMergeOverwrite)(oldNode, newNode, namespaces_1.NS.dcterms.source);
+                (0, graphUtilities_1.nodeMergeOverwrite)(oldNode, newNode, namespaces_1.NS.schema.source);
+                (0, graphUtilities_1.nodeMergeOverwrite)(oldNode, newNode, namespaces_1.NS.schema.category);
+                (0, graphUtilities_1.nodeMergeOverwrite)(oldNode, newNode, namespaces_1.NS.schema.supersededBy);
+                (0, graphUtilities_1.nodeMergeLanguageTerm)(oldNode, newNode, namespaces_1.NS.rdfs.label);
+                (0, graphUtilities_1.nodeMergeLanguageTerm)(oldNode, newNode, namespaces_1.NS.rdfs.comment);
+                (0, graphUtilities_1.nodeMergeAddIds)(oldNode, newNode, namespaces_1.NS.rdfs.subClassOf);
+                (0, graphUtilities_1.nodeMergeAddIds)(oldNode, newNode, namespaces_1.NS.soa.superClassOf);
+                (0, graphUtilities_1.nodeMergeAddIds)(oldNode, newNode, namespaces_1.NS.soa.hasProperty);
+                (0, graphUtilities_1.nodeMergeAddIds)(oldNode, newNode, namespaces_1.NS.soa.isRangeOf);
+                (0, graphUtilities_1.nodeMergeAddIds)(oldNode, newNode, namespaces_1.NS.soa.enumerationDomainIncludes);
+                (0, graphUtilities_1.nodeMergeAddIds)(oldNode, newNode, namespaces_1.NS.soa.hasEnumerationMember);
+                (0, graphUtilities_1.nodeMergeAddIds)(oldNode, newNode, namespaces_1.NS.rdfs.subPropertyOf);
+                (0, graphUtilities_1.nodeMergeAddIds)(oldNode, newNode, namespaces_1.NS.schema.domainIncludes);
+                (0, graphUtilities_1.nodeMergeAddIds)(oldNode, newNode, namespaces_1.NS.schema.rangeIncludes);
+                (0, graphUtilities_1.nodeMergeAddIds)(oldNode, newNode, namespaces_1.NS.soa.superPropertyOf);
                 if (vocabURL) {
                     if (oldNode["vocabURLs"]) {
                         if (!oldNode["vocabURLs"].includes(vocabURL)) {
@@ -581,15 +586,15 @@ class Graph {
             const terms = Object.keys(this.context);
             for (const actTerm of terms) {
                 const absoluteIRI = this.context[actTerm];
-                if ((0, utilities_1.isString)(absoluteIRI)) {
+                if ((0, isString_1.isString)(absoluteIRI)) {
                     if (input.startsWith(actTerm)) {
                         return input;
                     }
                     else if (input.startsWith(absoluteIRI) ||
                         (this.sdoAdapter.equateVocabularyProtocols &&
-                            input.startsWith((0, utilities_1.switchIRIProtocol)(absoluteIRI)))) {
+                            input.startsWith((0, switchIRIProtocol_1.switchIRIProtocol)(absoluteIRI)))) {
                         try {
-                            return (0, utilities_1.toCompactIRI)(input, this.context, this.sdoAdapter.equateVocabularyProtocols);
+                            return (0, toCompactIRI_1.toCompactIRI)(input, this.context, this.sdoAdapter.equateVocabularyProtocols);
                         }
                         catch (e) {
                             return null;
@@ -633,10 +638,10 @@ class Graph {
         return null;
     }
     containsLabel(termObj, label) {
-        if (termObj && (0, utilities_1.isObject)(termObj[namespaces_1._RDFS.label])) {
-            const langKeys = Object.keys(termObj[namespaces_1._RDFS.label]);
+        if (termObj && (0, isObject_1.isObject)(termObj[namespaces_1.NS.rdfs.label])) {
+            const langKeys = Object.keys(termObj[namespaces_1.NS.rdfs.label]);
             for (const actLangKey of langKeys) {
-                if (termObj[namespaces_1._RDFS.label][actLangKey] === label) {
+                if (termObj[namespaces_1.NS.rdfs.label][actLangKey] === label) {
                     return true;
                 }
             }
@@ -646,7 +651,91 @@ class Graph {
 }
 exports.Graph = Graph;
 
-},{"./Class":1,"./DataType":2,"./Enumeration":3,"./EnumerationMember":4,"./Property":6,"./data/namespaces":10,"./graphUtilities":12,"./reasoning":13,"./utilities":14}],6:[function(require,module,exports){
+},{"./Class":1,"./DataType":2,"./Enumeration":3,"./EnumerationMember":4,"./Property":7,"./data/namespaces":11,"./graphUtilities":13,"./reasoning":14,"./utilities/cloneJson":16,"./utilities/isArray":19,"./utilities/isObject":22,"./utilities/isString":23,"./utilities/switchIRIProtocol":25,"./utilities/toCompactIRI":28}],6:[function(require,module,exports){
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.getLatestSchemaVersion = exports.fetchSchemaVersions = exports.constructURLSchemaVocabulary = void 0;
+const RetrievalMemory_1 = require("./RetrievalMemory");
+const getFileNameForSchemaOrgVersion_1 = require("./utilities/getFileNameForSchemaOrgVersion");
+const checkIfUrlExists_1 = require("./utilities/checkIfUrlExists");
+const axios_1 = __importDefault(require("axios"));
+const sortReleaseEntriesByDate_1 = require("./utilities/sortReleaseEntriesByDate");
+const getGitHubBaseURL_1 = require("./utilities/getGitHubBaseURL");
+const myRetrievalMemory = RetrievalMemory_1.RetrievalMemory.getInstance();
+async function constructURLSchemaVocabulary(version = "latest", schemaHttps = true, commit) {
+    if (version === "latest") {
+        version = await getLatestSchemaVersion(commit);
+    }
+    const fileName = (0, getFileNameForSchemaOrgVersion_1.getFileNameForSchemaOrgVersion)(version, schemaHttps);
+    return (0, getGitHubBaseURL_1.getGitHubBaseURL)(commit) + "/data/releases/" + version + "/" + fileName;
+}
+exports.constructURLSchemaVocabulary = constructURLSchemaVocabulary;
+async function fetchSchemaVersions(cacheClear = false, commit) {
+    let versionFile;
+    if (cacheClear) {
+        myRetrievalMemory.deleteCache();
+    }
+    else {
+        const cachedData = myRetrievalMemory.getData("versionsFile", commit);
+        if (cachedData) {
+            return cachedData;
+        }
+    }
+    const urlSchemaVersions = (0, getGitHubBaseURL_1.getGitHubBaseURL)(commit) + "/versions.json";
+    try {
+        versionFile = await axios_1.default.get(urlSchemaVersions);
+    }
+    catch (e) {
+        throw new Error("Unable to retrieve the schema.org versions file at " + urlSchemaVersions);
+    }
+    if (!versionFile || !versionFile.data || !versionFile.data.releaseLog) {
+        throw new Error("The schema.org versions file at " +
+            urlSchemaVersions +
+            " returned an unexpected result.");
+    }
+    const schemaVersions = versionFile.data;
+    myRetrievalMemory.setData("versionsFile", schemaVersions, commit);
+    let latestVersion;
+    if (schemaVersions.schemaversion &&
+        (await (0, checkIfUrlExists_1.checkIfUrlExists)(await constructURLSchemaVocabulary(schemaVersions.schemaversion, true, commit)))) {
+        latestVersion = schemaVersions.schemaversion;
+    }
+    else {
+        const sortedArray = (0, sortReleaseEntriesByDate_1.sortReleaseEntriesByDate)(schemaVersions.releaseLog);
+        console.log("sortedArray", sortedArray);
+        for (const currVersion of sortedArray) {
+            if (await (0, checkIfUrlExists_1.checkIfUrlExists)(await constructURLSchemaVocabulary(currVersion[0], true, commit))) {
+                latestVersion = currVersion[0];
+                break;
+            }
+        }
+    }
+    if (!latestVersion) {
+        throw new Error("Could not find any valid vocabulary file in the schema.org versions to be declared as \"latest\".");
+    }
+    myRetrievalMemory.setData("latest", latestVersion, commit);
+    return schemaVersions;
+}
+exports.fetchSchemaVersions = fetchSchemaVersions;
+async function getLatestSchemaVersion(commit) {
+    let latestVersion = myRetrievalMemory.getData("latest", commit);
+    if (!latestVersion) {
+        await fetchSchemaVersions(false, commit);
+    }
+    latestVersion = myRetrievalMemory.getData("latest", commit);
+    if (latestVersion) {
+        return latestVersion;
+    }
+    else {
+        throw new Error("Could not identify the latest version of the schema.org vocabulary");
+    }
+}
+exports.getLatestSchemaVersion = getLatestSchemaVersion;
+
+},{"./RetrievalMemory":8,"./utilities/checkIfUrlExists":15,"./utilities/getFileNameForSchemaOrgVersion":17,"./utilities/getGitHubBaseURL":18,"./utilities/sortReleaseEntriesByDate":24,"axios":30}],7:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Property = void 0;
@@ -665,7 +754,7 @@ class Property extends Term_1.Term {
     getRanges(implicit = true, filter) {
         const propertyObj = this.getTermObj();
         const result = [];
-        result.push(...propertyObj[namespaces_1._SCHEMA.rangeIncludes]);
+        result.push(...propertyObj[namespaces_1.NS.schema.rangeIncludes]);
         if (implicit) {
             for (const actRes of result) {
                 result.push(...(0, reasoning_1.inferSubDataTypes)(actRes, this.graph));
@@ -679,7 +768,7 @@ class Property extends Term_1.Term {
     getDomains(implicit = true, filter) {
         const propertyObj = this.getTermObj();
         const result = [];
-        result.push(...propertyObj[namespaces_1._SCHEMA.domainIncludes]);
+        result.push(...propertyObj[namespaces_1.NS.schema.domainIncludes]);
         if (implicit) {
             const inferredSubClasses = [];
             for (const actRes of result) {
@@ -696,7 +785,7 @@ class Property extends Term_1.Term {
             result.push(...(0, reasoning_1.inferSuperProperties)(this.IRI, this.graph));
         }
         else {
-            result.push(...propertyObj[namespaces_1._RDFS.subPropertyOf]);
+            result.push(...propertyObj[namespaces_1.NS.rdfs.subPropertyOf]);
         }
         return (0, reasoning_1.applyFilter)({ data: result, filter, graph: this.graph });
     }
@@ -707,13 +796,13 @@ class Property extends Term_1.Term {
             result.push(...(0, reasoning_1.inferSubProperties)(this.IRI, this.graph));
         }
         else {
-            result.push(...propertyObj[namespaces_1._SOA.superPropertyOf]);
+            result.push(...propertyObj[namespaces_1.NS.soa.superPropertyOf]);
         }
         return (0, reasoning_1.applyFilter)({ data: result, filter, graph: this.graph });
     }
     getInverseOf() {
         const propertyObj = this.getTermObj();
-        return propertyObj[namespaces_1._SCHEMA.inverseOf];
+        return propertyObj[namespaces_1.NS.schema.inverseOf];
     }
     toString(implicit = true, filter) {
         return JSON.stringify(this.toJSON(implicit, filter), null, 2);
@@ -730,12 +819,11 @@ class Property extends Term_1.Term {
 }
 exports.Property = Property;
 
-},{"./Term":9,"./data/namespaces":10,"./reasoning":13}],7:[function(require,module,exports){
+},{"./Term":10,"./data/namespaces":11,"./reasoning":14}],8:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.RetrievalMemory = void 0;
-const utilities_1 = require("./utilities");
-require("core-js/actual/map");
+const cloneJson_1 = require("./utilities/cloneJson");
 class RetrievalMemory {
     constructor() {
         this.cache = new Map();
@@ -752,12 +840,12 @@ class RetrievalMemory {
             entry = {};
             this.cache.set(commit, entry);
         }
-        entry[dataId] = (0, utilities_1.cloneJson)(data);
+        entry[dataId] = (0, cloneJson_1.cloneJson)(data);
     }
     getData(dataId, commit = "standard") {
         const entry = this.cache.get(commit);
         if (entry) {
-            return (0, utilities_1.cloneJson)(entry[dataId]);
+            return (0, cloneJson_1.cloneJson)(entry[dataId]);
         }
         return undefined;
     }
@@ -767,7 +855,7 @@ class RetrievalMemory {
 }
 exports.RetrievalMemory = RetrievalMemory;
 
-},{"./utilities":14,"core-js/actual/map":46}],8:[function(require,module,exports){
+},{"./utilities/cloneJson":16}],9:[function(require,module,exports){
 "use strict";
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
@@ -776,8 +864,11 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.SDOAdapter = void 0;
 const Graph_1 = require("./Graph");
 const axios_1 = __importDefault(require("axios"));
-const utilities_1 = require("./utilities");
+const Infrastructure_1 = require("./Infrastructure");
 const reasoning_1 = require("./reasoning");
+const isString_1 = require("./utilities/isString");
+const isObject_1 = require("./utilities/isObject");
+const toArray_1 = require("./utilities/toArray");
 class SDOAdapter {
     constructor(paramObj) {
         if (paramObj === null || paramObj === void 0 ? void 0 : paramObj.commit) {
@@ -805,14 +896,14 @@ class SDOAdapter {
         this.graph = new Graph_1.Graph(this);
     }
     async addVocabularies(vocabArray) {
-        vocabArray = (0, utilities_1.toArray)(vocabArray);
+        vocabArray = (0, toArray_1.toArray)(vocabArray);
         for (const vocab of vocabArray) {
-            if ((0, utilities_1.isString)(vocab)) {
+            if ((0, isString_1.isString)(vocab)) {
                 if (vocab.startsWith("www") ||
                     vocab.startsWith("http")) {
                     try {
                         let fetchedVocab = await this.fetchVocabularyFromURL(vocab);
-                        if ((0, utilities_1.isString)(fetchedVocab)) {
+                        if ((0, isString_1.isString)(fetchedVocab)) {
                             fetchedVocab = JSON.parse(fetchedVocab);
                         }
                         await this.graph.addVocabulary(fetchedVocab, vocab);
@@ -832,7 +923,7 @@ class SDOAdapter {
                     }
                 }
             }
-            else if ((0, utilities_1.isObject)(vocab)) {
+            else if ((0, isObject_1.isObject)(vocab)) {
                 await this.graph.addVocabulary(vocab);
             }
             else {
@@ -1016,7 +1107,7 @@ class SDOAdapter {
             "ds",
         ];
         vocabKeys.forEach((el) => {
-            if ((0, utilities_1.isString)(this.graph.context[el]) &&
+            if ((0, isString_1.isString)(this.graph.context[el]) &&
                 (!omitStandardVocabs || !blacklist.includes(el))) {
                 result[el] = this.graph.context[el];
             }
@@ -1024,20 +1115,22 @@ class SDOAdapter {
         return result;
     }
     async getLatestSchemaVersion() {
-        return await (0, utilities_1.getLatestSchemaVersion)(this.commit);
+        return await (0, Infrastructure_1.getLatestSchemaVersion)(this.commit);
     }
     async constructURLSchemaVocabulary(version = "latest") {
-        return await (0, utilities_1.constructURLSchemaVocabulary)(version, this.schemaHttps, this.commit);
+        return await (0, Infrastructure_1.constructURLSchemaVocabulary)(version, this.schemaHttps, this.commit);
     }
 }
 exports.SDOAdapter = SDOAdapter;
 
-},{"./Graph":5,"./reasoning":13,"./utilities":14,"axios":15}],9:[function(require,module,exports){
+},{"./Graph":5,"./Infrastructure":6,"./reasoning":14,"./utilities/isObject":22,"./utilities/isString":23,"./utilities/toArray":27,"axios":30}],10:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Term = void 0;
-const utilities_1 = require("./utilities");
 const namespaces_1 = require("./data/namespaces");
+const toAbsoluteIRI_1 = require("./utilities/toAbsoluteIRI");
+const isNil_1 = require("./utilities/isNil");
+const isString_1 = require("./utilities/isString");
 class Term {
     constructor(IRI, graph) {
         this.IRI = IRI;
@@ -1047,7 +1140,7 @@ class Term {
         if (compactForm) {
             return this.IRI;
         }
-        return (0, utilities_1.toAbsoluteIRI)(this.IRI, this.graph.context);
+        return (0, toAbsoluteIRI_1.toAbsoluteIRI)(this.IRI, this.graph.context);
     }
     getTermTypeLabel() {
         return this.termTypeLabel;
@@ -1057,45 +1150,45 @@ class Term {
     }
     getVocabURLs() {
         const termObj = this.getTermObj();
-        if (!(0, utilities_1.isNil)(termObj["vocabURLs"])) {
+        if (!(0, isNil_1.isNil)(termObj["vocabURLs"])) {
             return termObj["vocabURLs"];
         }
         return null;
     }
     getVocabulary() {
         const termObj = this.getTermObj();
-        if (!(0, utilities_1.isNil)(termObj[namespaces_1._SCHEMA.isPartOf])) {
-            return termObj[namespaces_1._SCHEMA.isPartOf];
+        if (!(0, isNil_1.isNil)(termObj[namespaces_1.NS.schema.isPartOf])) {
+            return termObj[namespaces_1.NS.schema.isPartOf];
         }
         return null;
     }
     getSource() {
         const termObj = this.getTermObj();
-        if (!(0, utilities_1.isNil)(termObj[namespaces_1._DC.source])) {
-            return termObj[namespaces_1._DC.source];
+        if (!(0, isNil_1.isNil)(termObj[namespaces_1.NS.dcterms.source])) {
+            return termObj[namespaces_1.NS.dcterms.source];
         }
-        else if (!(0, utilities_1.isNil)(termObj[namespaces_1._SCHEMA.source])) {
-            return termObj[namespaces_1._SCHEMA.source];
+        else if (!(0, isNil_1.isNil)(termObj[namespaces_1.NS.schema.source])) {
+            return termObj[namespaces_1.NS.schema.source];
         }
         return null;
     }
     isSupersededBy() {
         const termObj = this.getTermObj();
-        if ((0, utilities_1.isString)(termObj[namespaces_1._SCHEMA.supersededBy])) {
-            return termObj[namespaces_1._SCHEMA.supersededBy];
+        if ((0, isString_1.isString)(termObj[namespaces_1.NS.schema.supersededBy])) {
+            return termObj[namespaces_1.NS.schema.supersededBy];
         }
         return null;
     }
     getName(language = "en") {
-        const termObj = this.getTermObj()[namespaces_1._RDFS.label];
-        if ((0, utilities_1.isNil)(termObj) || (0, utilities_1.isNil)(termObj[language])) {
+        const termObj = this.getTermObj()[namespaces_1.NS.rdfs.label];
+        if ((0, isNil_1.isNil)(termObj) || (0, isNil_1.isNil)(termObj[language])) {
             return null;
         }
         return termObj[language];
     }
     getDescription(language = "en") {
-        const termObj = this.getTermObj()[namespaces_1._RDFS.comment];
-        if ((0, utilities_1.isNil)(termObj) || (0, utilities_1.isNil)(termObj[language])) {
+        const termObj = this.getTermObj()[namespaces_1.NS.rdfs.comment];
+        if ((0, isNil_1.isNil)(termObj) || (0, isNil_1.isNil)(termObj[language])) {
             return null;
         }
         return termObj[language];
@@ -1120,73 +1213,66 @@ class Term {
 }
 exports.Term = Term;
 
-},{"./data/namespaces":10,"./utilities":14}],10:[function(require,module,exports){
+},{"./data/namespaces":11,"./utilities/isNil":21,"./utilities/isString":23,"./utilities/toAbsoluteIRI":26}],11:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.TermTypeIRI = exports.TermTypeLabel = exports._XSD = exports._DC = exports._SCHEMA = exports._SOA = exports._RDFS = exports._RDF = exports.NsUrl = void 0;
-require("core-js/proposals/object-from-entries");
-exports.NsUrl = {
-    xsd: "http://www.w3.org/2001/XMLSchema#",
-    rdf: "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
-    rdfs: "http://www.w3.org/2000/01/rdf-schema#",
-    schema: "https://schema.org/",
-    dcterms: "http://purl.org/dc/terms/",
-    soa: "http://schema-org-adapter.at/vocabTerms/",
-    ds: "https://vocab.sti2.at/ds/",
+exports.TermTypeIRI = exports.TermTypeLabel = exports.NS = void 0;
+exports.NS = {
+    xsd: {
+        _url: "http://www.w3.org/2001/XMLSchema#",
+        string: "xsd:string",
+        decimal: "xsd:decimal",
+        integer: "xsd:integer",
+        float: "xsd:float",
+        double: "xsd:double",
+        boolean: "xsd:boolean",
+        date: "xsd:date",
+        time: "xsd:time",
+        dateTime: "xsd:dateTime",
+        anyURI: "xsd:anyURI",
+    },
+    rdf: {
+        _url: "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+        property: "rdf:Property",
+    },
+    rdfs: {
+        _url: "http://www.w3.org/2000/01/rdf-schema#",
+        class: "rdfs:Class",
+        subClassOf: "rdfs:subClassOf",
+        subPropertyOf: "rdfs:subPropertyOf",
+        label: "rdfs:label",
+        comment: "rdfs:comment",
+    },
+    schema: {
+        _url: "https://schema.org/",
+        dataType: "schema:DataType",
+        enumeration: "schema:Enumeration",
+        isPartOf: "schema:isPartOf",
+        domainIncludes: "schema:domainIncludes",
+        rangeIncludes: "schema:rangeIncludes",
+        supersededBy: "schema:supersededBy",
+        inverseOf: "schema:inverseOf",
+        source: "schema:source",
+        category: "schema:category",
+    },
+    dcterms: {
+        _url: "http://purl.org/dc/terms/",
+        source: "dcterms:source",
+    },
+    soa: {
+        _url: "http://schema-org-adapter.at/vocabTerms/",
+        enumerationMember: "soa:EnumerationMember",
+        superClassOf: "soa:superClassOf",
+        superPropertyOf: "soa:superPropertyOf",
+        hasProperty: "soa:hasProperty",
+        isRangeOf: "soa:isRangeOf",
+        hasEnumerationMember: "soa:hasEnumerationMember",
+        enumerationDomainIncludes: "soa:enumerationDomainIncludes",
+    },
+    ds: {
+        _url: "https://vocab.sti2.at/ds/",
+    },
 };
-const NsPre = {
-    xsd: "xsd",
-    rdf: "rdf",
-    rdfs: "rdfs",
-    schema: "schema",
-    dcterms: "dcterms",
-    soa: "soa",
-    ds: "ds",
-};
-function toCompactUri(prefix, properties) {
-    return Object.freeze(Object.fromEntries(properties.map((p) => [p, prefix + ":" + p])));
-}
-exports._RDF = toCompactUri(NsPre.rdf, ["Property"]);
-exports._RDFS = toCompactUri("rdfs", [
-    "Class",
-    "subClassOf",
-    "subPropertyOf",
-    "label",
-    "comment",
-]);
-exports._SOA = toCompactUri("soa", [
-    "EnumerationMember",
-    "superClassOf",
-    "superPropertyOf",
-    "hasProperty",
-    "isRangeOf",
-    "hasEnumerationMember",
-    "enumerationDomainIncludes",
-]);
-exports._SCHEMA = toCompactUri("schema", [
-    "DataType",
-    "Enumeration",
-    "isPartOf",
-    "domainIncludes",
-    "rangeIncludes",
-    "supersededBy",
-    "inverseOf",
-    "source",
-    "category",
-]);
-exports._DC = toCompactUri("dcterms", ["source"]);
-exports._XSD = toCompactUri("xsd", [
-    "string",
-    "decimal",
-    "integer",
-    "float",
-    "double",
-    "boolean",
-    "date",
-    "time",
-    "dateTime",
-    "anyURI",
-]);
 exports.TermTypeLabel = {
     class: "Class",
     property: "Property",
@@ -1195,26 +1281,26 @@ exports.TermTypeLabel = {
     dataType: "DataType",
 };
 exports.TermTypeIRI = {
-    class: "rdfs:Class",
-    property: "rdf:Property",
-    enumeration: "schema:Enumeration",
-    enumerationMember: "soa:EnumerationMember",
-    dataType: "schema:DataType",
+    class: exports.NS.rdfs.class,
+    property: exports.NS.rdf.property,
+    enumeration: exports.NS.schema.enumeration,
+    enumerationMember: exports.NS.soa.enumerationMember,
+    dataType: exports.NS.schema.dataType,
 };
 
-},{"core-js/proposals/object-from-entries":161}],11:[function(require,module,exports){
+},{}],12:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.constructURLSchemaVocabulary = exports.getLatestSchemaVersion = exports.fetchSchemaVersions = exports.create = void 0;
 const SDOAdapter_1 = require("./SDOAdapter");
-const utilities_1 = require("./utilities");
-Object.defineProperty(exports, "fetchSchemaVersions", { enumerable: true, get: function () { return utilities_1.fetchSchemaVersions; } });
-Object.defineProperty(exports, "getLatestSchemaVersion", { enumerable: true, get: function () { return utilities_1.getLatestSchemaVersion; } });
-Object.defineProperty(exports, "constructURLSchemaVocabulary", { enumerable: true, get: function () { return utilities_1.constructURLSchemaVocabulary; } });
+const Infrastructure_1 = require("./Infrastructure");
+Object.defineProperty(exports, "fetchSchemaVersions", { enumerable: true, get: function () { return Infrastructure_1.fetchSchemaVersions; } });
+Object.defineProperty(exports, "getLatestSchemaVersion", { enumerable: true, get: function () { return Infrastructure_1.getLatestSchemaVersion; } });
+Object.defineProperty(exports, "constructURLSchemaVocabulary", { enumerable: true, get: function () { return Infrastructure_1.constructURLSchemaVocabulary; } });
 async function create(paramObj) {
     const newInstance = new SDOAdapter_1.SDOAdapter(paramObj);
     if (paramObj && paramObj.schemaVersion) {
-        const schemaUrl = await (0, utilities_1.constructURLSchemaVocabulary)(paramObj.schemaVersion, paramObj.schemaHttps, paramObj.commit);
+        const schemaUrl = await (0, Infrastructure_1.constructURLSchemaVocabulary)(paramObj.schemaVersion, paramObj.schemaHttps, paramObj.commit);
         await newInstance.addVocabularies(schemaUrl);
     }
     if (paramObj && paramObj.vocabularies) {
@@ -1224,7 +1310,7 @@ async function create(paramObj) {
 }
 exports.create = create;
 
-},{"./SDOAdapter":8,"./utilities":14}],12:[function(require,module,exports){
+},{"./Infrastructure":6,"./SDOAdapter":9}],13:[function(require,module,exports){
 "use strict";
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
@@ -1232,25 +1318,30 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.nodeMergeAddIds = exports.nodeMergeLanguageTerm = exports.nodeMergeOverwrite = exports.addEmptyArray = exports.addInheritanceTermsDataTypesAndProperties = exports.addInheritanceTermsClassAndEnum = exports.extractFromClassMemory = exports.getStandardContext = exports.checkIfNamespaceFromListIsUsed = exports.discoverEquateNamespaces = exports.discoverUsedSchemaOrgProtocol = exports.preProcessVocab = exports.generateContext = exports.curateVocabNode = void 0;
 const namespaces_1 = require("./data/namespaces");
-const utilities_1 = require("./utilities");
 const jsonld_1 = __importDefault(require("jsonld"));
-require("core-js/actual/set");
+const cloneJson_1 = require("./utilities/cloneJson");
+const isObject_1 = require("./utilities/isObject");
+const isString_1 = require("./utilities/isString");
+const isNil_1 = require("./utilities/isNil");
+const isLanguageObjectVocab_1 = require("./utilities/isLanguageObjectVocab");
+const isArray_1 = require("./utilities/isArray");
+const switchIRIProtocol_1 = require("./utilities/switchIRIProtocol");
 function curateLanguageTerm(vocabNode, term) {
     if (vocabNode[term] !== undefined) {
-        if ((0, utilities_1.isString)(vocabNode[term])) {
+        if ((0, isString_1.isString)(vocabNode[term])) {
             vocabNode[term] = {
                 en: vocabNode[term],
             };
         }
-        else if ((0, utilities_1.isLanguageObjectVocab)(vocabNode[term])) {
+        else if ((0, isLanguageObjectVocab_1.isLanguageObjectVocab)(vocabNode[term])) {
             vocabNode[term] = {
                 [vocabNode[term]["@language"]]: vocabNode[term]["@value"],
             };
         }
-        else if ((0, utilities_1.isArray)(vocabNode[term])) {
+        else if ((0, isArray_1.isArray)(vocabNode[term])) {
             const newVal = {};
             vocabNode[term].map((el) => {
-                if ((0, utilities_1.isLanguageObjectVocab)(el)) {
+                if ((0, isLanguageObjectVocab_1.isLanguageObjectVocab)(el)) {
                     newVal[el["@language"]] = el["@value"];
                 }
             });
@@ -1262,7 +1353,7 @@ function curateLanguageTerm(vocabNode, term) {
     }
 }
 function curateRelationshipTermArray(vocabNode, term, initDefaultIf) {
-    if ((0, utilities_1.isString)(vocabNode[term])) {
+    if ((0, isString_1.isString)(vocabNode[term])) {
         vocabNode[term] = [vocabNode[term]];
     }
     else if (vocabNode[term] === undefined &&
@@ -1271,20 +1362,20 @@ function curateRelationshipTermArray(vocabNode, term, initDefaultIf) {
     }
 }
 function curateVocabNode(vocabNode, vocabularies) {
-    curateLanguageTerm(vocabNode, namespaces_1._RDFS.comment);
-    curateLanguageTerm(vocabNode, namespaces_1._RDFS.label);
-    curateRelationshipTermArray(vocabNode, namespaces_1._RDFS.subClassOf, namespaces_1.TermTypeIRI.class);
-    curateRelationshipTermArray(vocabNode, namespaces_1._RDFS.subPropertyOf, namespaces_1.TermTypeIRI.property);
-    curateRelationshipTermArray(vocabNode, namespaces_1._SCHEMA.domainIncludes, namespaces_1.TermTypeIRI.property);
-    curateRelationshipTermArray(vocabNode, namespaces_1._SCHEMA.rangeIncludes, namespaces_1.TermTypeIRI.property);
-    if (vocabNode[namespaces_1._SCHEMA.inverseOf] === undefined &&
+    curateLanguageTerm(vocabNode, namespaces_1.NS.rdfs.comment);
+    curateLanguageTerm(vocabNode, namespaces_1.NS.rdfs.label);
+    curateRelationshipTermArray(vocabNode, namespaces_1.NS.rdfs.subClassOf, namespaces_1.TermTypeIRI.class);
+    curateRelationshipTermArray(vocabNode, namespaces_1.NS.rdfs.subPropertyOf, namespaces_1.TermTypeIRI.property);
+    curateRelationshipTermArray(vocabNode, namespaces_1.NS.schema.domainIncludes, namespaces_1.TermTypeIRI.property);
+    curateRelationshipTermArray(vocabNode, namespaces_1.NS.schema.rangeIncludes, namespaces_1.TermTypeIRI.property);
+    if (vocabNode[namespaces_1.NS.schema.inverseOf] === undefined &&
         vocabNode["@type"] === namespaces_1.TermTypeIRI.property) {
-        vocabNode[namespaces_1._SCHEMA.inverseOf] = null;
+        vocabNode[namespaces_1.NS.schema.inverseOf] = null;
     }
-    if (!(0, utilities_1.isString)(vocabNode[namespaces_1._SCHEMA.isPartOf])) {
+    if (!(0, isString_1.isString)(vocabNode[namespaces_1.NS.schema.isPartOf])) {
         const vocabKeys = Object.keys(vocabularies);
         let vocab = vocabKeys.find((el) => vocabNode["@id"].substring(0, vocabNode["@id"].indexOf(":")) === el);
-        if ((0, utilities_1.isString)(vocab)) {
+        if ((0, isString_1.isString)(vocab)) {
             vocab = vocabularies[vocab];
             let newChange;
             do {
@@ -1294,7 +1385,7 @@ function curateVocabNode(vocabNode, vocabularies) {
                     newChange = true;
                 }
             } while (newChange);
-            vocabNode[namespaces_1._SCHEMA.isPartOf] = vocab;
+            vocabNode[namespaces_1.NS.schema.isPartOf] = vocab;
         }
     }
     return vocabNode;
@@ -1303,12 +1394,12 @@ exports.curateVocabNode = curateVocabNode;
 function generateContext(currentContext, newContext) {
     const keysCurrentContext = Object.keys(currentContext);
     const keysNewContext = Object.keys(newContext);
-    let resultContext = (0, utilities_1.cloneJson)(currentContext);
+    let resultContext = (0, cloneJson_1.cloneJson)(currentContext);
     for (const keyNC of keysNewContext) {
-        if ((0, utilities_1.isString)(newContext[keyNC])) {
+        if ((0, isString_1.isString)(newContext[keyNC])) {
             let foundMatch = false;
             for (const keyCC of keysCurrentContext) {
-                if ((0, utilities_1.isString)(resultContext[keyCC])) {
+                if ((0, isString_1.isString)(resultContext[keyCC])) {
                     if (resultContext[keyCC] === newContext[keyNC]) {
                         foundMatch = true;
                         break;
@@ -1346,12 +1437,12 @@ function generateContext(currentContext, newContext) {
     const keysResultContext = Object.keys(resultContext);
     const orderedResultContext = {};
     for (const keyRC of keysResultContext) {
-        if ((0, utilities_1.isString)(resultContext[keyRC])) {
+        if ((0, isString_1.isString)(resultContext[keyRC])) {
             orderedResultContext[keyRC] = resultContext[keyRC];
         }
     }
     for (const keyRC of keysResultContext) {
-        if ((0, utilities_1.isObject)(resultContext[keyRC])) {
+        if ((0, isObject_1.isObject)(resultContext[keyRC])) {
             orderedResultContext[keyRC] = resultContext[keyRC];
         }
     }
@@ -1365,14 +1456,14 @@ async function preProcessVocab(vocab, newContext) {
         foundInnerGraph = false;
         for (let i = 0; i < vocab["@graph"].length; i++) {
             if (vocab["@graph"][i]["@graph"] !== undefined) {
-                newGraph.push(...(0, utilities_1.cloneJson)(vocab["@graph"][i]["@graph"]));
+                newGraph.push(...(0, cloneJson_1.cloneJson)(vocab["@graph"][i]["@graph"]));
                 foundInnerGraph = true;
             }
             else {
-                newGraph.push((0, utilities_1.cloneJson)(vocab["@graph"][i]));
+                newGraph.push((0, cloneJson_1.cloneJson)(vocab["@graph"][i]));
             }
         }
-        vocab["@graph"] = (0, utilities_1.cloneJson)(newGraph);
+        vocab["@graph"] = (0, cloneJson_1.cloneJson)(newGraph);
     } while (foundInnerGraph);
     const compactedVocab = await jsonld_1.default.compact(vocab, newContext);
     if (compactedVocab["@graph"] === undefined) {
@@ -1392,7 +1483,7 @@ function discoverUsedSchemaOrgProtocol(vocabulary) {
     const httpIRI = "http://schema.org/";
     if (vocabulary["@context"]) {
         for (const contextEntry of Object.values(vocabulary["@context"])) {
-            if ((0, utilities_1.isObject)(contextEntry) && contextEntry["@vocab"]) {
+            if ((0, isObject_1.isObject)(contextEntry) && contextEntry["@vocab"]) {
                 if (contextEntry["@vocab"] === httpsIRI) {
                     return "https";
                 }
@@ -1400,7 +1491,7 @@ function discoverUsedSchemaOrgProtocol(vocabulary) {
                     return "http";
                 }
             }
-            else if ((0, utilities_1.isString)(contextEntry)) {
+            else if ((0, isString_1.isString)(contextEntry)) {
                 if (contextEntry === httpsIRI) {
                     return "https";
                 }
@@ -1428,13 +1519,13 @@ function discoverEquateNamespaces(currentContext, vocabulary) {
     const result = new Set();
     const protocolSwitchedNamespaces = [];
     Object.values(currentContext).forEach(function (el) {
-        if ((0, utilities_1.isString)(el)) {
-            protocolSwitchedNamespaces.push((0, utilities_1.switchIRIProtocol)(el));
+        if ((0, isString_1.isString)(el)) {
+            protocolSwitchedNamespaces.push((0, switchIRIProtocol_1.switchIRIProtocol)(el));
         }
     });
     if (vocabulary["@context"]) {
         Object.values(vocabulary["@context"]).forEach(function (el) {
-            if ((0, utilities_1.isString)(el) && protocolSwitchedNamespaces.includes(el)) {
+            if ((0, isString_1.isString)(el) && protocolSwitchedNamespaces.includes(el)) {
                 result.add(el);
             }
         });
@@ -1443,17 +1534,17 @@ function discoverEquateNamespaces(currentContext, vocabulary) {
         vocabulary["@graph"].forEach(function (vocabNode) {
             checkIfNamespaceFromListIsUsed(vocabNode["@id"], protocolSwitchedNamespaces, result);
             checkIfNamespaceFromListIsUsed(vocabNode["@type"], protocolSwitchedNamespaces, result);
-            checkIfNamespaceFromListIsUsed(vocabNode[namespaces_1._RDFS.subClassOf], protocolSwitchedNamespaces, result);
+            checkIfNamespaceFromListIsUsed(vocabNode[namespaces_1.NS.rdfs.subClassOf], protocolSwitchedNamespaces, result);
             checkIfNamespaceFromListIsUsed(vocabNode["http://www.w3.org/2000/01/rdf-schema#subClassOf"], protocolSwitchedNamespaces, result);
-            checkIfNamespaceFromListIsUsed(vocabNode[namespaces_1._SCHEMA.domainIncludes], protocolSwitchedNamespaces, result);
+            checkIfNamespaceFromListIsUsed(vocabNode[namespaces_1.NS.schema.domainIncludes], protocolSwitchedNamespaces, result);
             checkIfNamespaceFromListIsUsed(vocabNode["http://schema.org/domainIncludes"], protocolSwitchedNamespaces, result);
             checkIfNamespaceFromListIsUsed(vocabNode["https://schema.org/domainIncludes"], protocolSwitchedNamespaces, result);
-            checkIfNamespaceFromListIsUsed(vocabNode[namespaces_1._SCHEMA.rangeIncludes], protocolSwitchedNamespaces, result);
+            checkIfNamespaceFromListIsUsed(vocabNode[namespaces_1.NS.schema.rangeIncludes], protocolSwitchedNamespaces, result);
             checkIfNamespaceFromListIsUsed(vocabNode["http://schema.org/rangeIncludes"], protocolSwitchedNamespaces, result);
             checkIfNamespaceFromListIsUsed(vocabNode["https://schema.org/rangeIncludes"], protocolSwitchedNamespaces, result);
-            checkIfNamespaceFromListIsUsed(vocabNode[namespaces_1._RDFS.subPropertyOf], protocolSwitchedNamespaces, result);
+            checkIfNamespaceFromListIsUsed(vocabNode[namespaces_1.NS.rdfs.subPropertyOf], protocolSwitchedNamespaces, result);
             checkIfNamespaceFromListIsUsed(vocabNode["http://www.w3.org/2000/01/rdf-schema#subPropertyOf"], protocolSwitchedNamespaces, result);
-            checkIfNamespaceFromListIsUsed(vocabNode[namespaces_1._SCHEMA.inverseOf], protocolSwitchedNamespaces, result);
+            checkIfNamespaceFromListIsUsed(vocabNode[namespaces_1.NS.schema.inverseOf], protocolSwitchedNamespaces, result);
             checkIfNamespaceFromListIsUsed(vocabNode["http://schema.org/inverseOf"], protocolSwitchedNamespaces, result);
             checkIfNamespaceFromListIsUsed(vocabNode["https://schema.org/inverseOf"], protocolSwitchedNamespaces, result);
         });
@@ -1469,13 +1560,13 @@ function checkIfNamespaceFromListIsUsed(value, namespaceArray, result) {
     }
     else {
         let toCheck;
-        if ((0, utilities_1.isObject)(value) && (0, utilities_1.isString)(value["@id"])) {
+        if ((0, isObject_1.isObject)(value) && (0, isString_1.isString)(value["@id"])) {
             toCheck = value["@id"];
         }
         else {
             toCheck = value;
         }
-        if ((0, utilities_1.isString)(toCheck) && toCheck.startsWith("http")) {
+        if ((0, isString_1.isString)(toCheck) && toCheck.startsWith("http")) {
             const match = namespaceArray.find((el) => toCheck.startsWith(el));
             if (match && !result.has(match)) {
                 result.add(match);
@@ -1486,29 +1577,29 @@ function checkIfNamespaceFromListIsUsed(value, namespaceArray, result) {
 exports.checkIfNamespaceFromListIsUsed = checkIfNamespaceFromListIsUsed;
 function getStandardContext() {
     const standardContext = {
-        rdf: namespaces_1.NsUrl.rdf,
-        rdfs: namespaces_1.NsUrl.rdfs,
-        xsd: namespaces_1.NsUrl.xsd,
-        dcterms: namespaces_1.NsUrl.dcterms,
-        soa: namespaces_1.NsUrl.soa,
-        ds: namespaces_1.NsUrl.ds,
+        rdf: namespaces_1.NS.rdf._url,
+        rdfs: namespaces_1.NS.rdfs._url,
+        xsd: namespaces_1.NS.xsd._url,
+        dcterms: namespaces_1.NS.dcterms._url,
+        soa: namespaces_1.NS.soa._url,
+        ds: namespaces_1.NS.ds._url,
     };
     const idEntries = [
-        namespaces_1._SOA.superClassOf,
-        namespaces_1._SOA.superPropertyOf,
-        namespaces_1._SOA.hasProperty,
-        namespaces_1._SOA.isRangeOf,
-        namespaces_1._SOA.hasEnumerationMember,
-        namespaces_1._SOA.enumerationDomainIncludes,
-        namespaces_1._RDFS.subClassOf,
-        namespaces_1._RDFS.subPropertyOf,
-        namespaces_1._SCHEMA.isPartOf,
-        namespaces_1._SCHEMA.domainIncludes,
-        namespaces_1._SCHEMA.rangeIncludes,
-        namespaces_1._SCHEMA.supersededBy,
-        namespaces_1._SCHEMA.inverseOf,
-        namespaces_1._SCHEMA.source,
-        namespaces_1._DC.source,
+        namespaces_1.NS.soa.superClassOf,
+        namespaces_1.NS.soa.superPropertyOf,
+        namespaces_1.NS.soa.hasProperty,
+        namespaces_1.NS.soa.isRangeOf,
+        namespaces_1.NS.soa.hasEnumerationMember,
+        namespaces_1.NS.soa.enumerationDomainIncludes,
+        namespaces_1.NS.rdfs.subClassOf,
+        namespaces_1.NS.rdfs.subPropertyOf,
+        namespaces_1.NS.schema.isPartOf,
+        namespaces_1.NS.schema.domainIncludes,
+        namespaces_1.NS.schema.rangeIncludes,
+        namespaces_1.NS.schema.supersededBy,
+        namespaces_1.NS.schema.inverseOf,
+        namespaces_1.NS.schema.source,
+        namespaces_1.NS.dcterms.source,
     ];
     idEntries.map((el) => {
         standardContext[el] = {
@@ -1531,14 +1622,14 @@ function extractFromClassMemory(classMemory, otherMemory, addGraphNodeFn, vocabU
                 addGraphNodeFn(otherMemory, classMemory[actClassKey], vocabURL);
                 delete classMemory[actClassKey];
             }
-            else if (classMemory[actClassKey][namespaces_1._RDFS.subClassOf] !== undefined) {
-                const subClassArray = classMemory[actClassKey][namespaces_1._RDFS.subClassOf];
+            else if (classMemory[actClassKey][namespaces_1.NS.rdfs.subClassOf] !== undefined) {
+                const subClassArray = classMemory[actClassKey][namespaces_1.NS.rdfs.subClassOf];
                 for (const actSubClass of subClassArray) {
                     if (actSubClass === namespaces_1.TermTypeIRI.enumeration ||
                         otherKeys.includes(actSubClass)) {
                         if (classMemory[actClassKey] && !otherMemory[actClassKey]) {
                             termSwitched = true;
-                            otherMemory[actClassKey] = (0, utilities_1.cloneJson)(classMemory[actClassKey]);
+                            otherMemory[actClassKey] = (0, cloneJson_1.cloneJson)(classMemory[actClassKey]);
                             delete classMemory[actClassKey];
                         }
                         else if (classMemory[actClassKey] && otherMemory[actClassKey]) {
@@ -1614,13 +1705,13 @@ function addEmptyArray(termObject, property) {
 }
 exports.addEmptyArray = addEmptyArray;
 function nodeMergeOverwrite(oldNode, newNode, property) {
-    if (!(0, utilities_1.isNil)(newNode[property])) {
+    if (!(0, isNil_1.isNil)(newNode[property])) {
         oldNode[property] = newNode[property];
     }
 }
 exports.nodeMergeOverwrite = nodeMergeOverwrite;
 function nodeMergeLanguageTerm(oldNode, newNode, property) {
-    if (!(0, utilities_1.isNil)(newNode[property])) {
+    if (!(0, isNil_1.isNil)(newNode[property])) {
         const langKeys = Object.keys(newNode[property]);
         for (const actLangKey of langKeys) {
             oldNode[property][actLangKey] = newNode[property][actLangKey];
@@ -1629,7 +1720,7 @@ function nodeMergeLanguageTerm(oldNode, newNode, property) {
 }
 exports.nodeMergeLanguageTerm = nodeMergeLanguageTerm;
 function nodeMergeAddIds(oldNode, newNode, property) {
-    if (!(0, utilities_1.isNil)(newNode[property])) {
+    if (!(0, isNil_1.isNil)(newNode[property])) {
         for (const arrayElement of newNode[property]) {
             if (!oldNode[property].includes(arrayElement)) {
                 oldNode[property].push(arrayElement);
@@ -1639,12 +1730,14 @@ function nodeMergeAddIds(oldNode, newNode, property) {
 }
 exports.nodeMergeAddIds = nodeMergeAddIds;
 
-},{"./data/namespaces":10,"./utilities":14,"core-js/actual/set":47,"jsonld":179}],13:[function(require,module,exports){
+},{"./data/namespaces":11,"./utilities/cloneJson":16,"./utilities/isArray":19,"./utilities/isLanguageObjectVocab":20,"./utilities/isNil":21,"./utilities/isObject":22,"./utilities/isString":23,"./utilities/switchIRIProtocol":25,"jsonld":76}],14:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.inferRangeOf = exports.inferSubProperties = exports.inferSuperProperties = exports.inferSubDataTypes = exports.inferSuperDataTypes = exports.inferSubClasses = exports.inferSuperClasses = exports.inferPropertiesFromSuperClasses = exports.applyFilter = void 0;
-const utilities_1 = require("./utilities");
 const namespaces_1 = require("./data/namespaces");
+const cloneJson_1 = require("./utilities/cloneJson");
+const uniquifyArray_1 = require("./utilities/uniquifyArray");
+const toArray_1 = require("./utilities/toArray");
 function applyFilter(paramObj) {
     const { data, filter, graph } = paramObj;
     if (!Array.isArray(data) ||
@@ -1653,12 +1746,12 @@ function applyFilter(paramObj) {
         Object.keys(filter).length === 0) {
         return data;
     }
-    const unifiedDataArray = (0, utilities_1.uniquifyArray)(data);
+    const unifiedDataArray = (0, uniquifyArray_1.uniquifyArray)(data);
     const result = [];
     const context = graph.context;
     let namespaces;
     if (filter.fromVocabulary) {
-        namespaces = (0, utilities_1.toArray)(filter.fromVocabulary);
+        namespaces = (0, toArray_1.toArray)(filter.fromVocabulary);
         for (let v = 0; v < namespaces.length; v++) {
             for (let vi = 0; vi < Object.keys(context).length; vi++) {
                 if (context[Object.keys(context)[vi]] === namespaces[v]) {
@@ -1694,7 +1787,7 @@ function applyFilter(paramObj) {
             }
         }
         if (filter.termType) {
-            const toCheck = (0, utilities_1.toArray)(filter.termType);
+            const toCheck = (0, toArray_1.toArray)(filter.termType);
             const invalidTermType = toCheck.find((el) => !Object.values(namespaces_1.TermTypeLabel).includes(el));
             if (invalidTermType) {
                 throw new Error("Invalid filter.termType " + invalidTermType);
@@ -1714,34 +1807,34 @@ function inferPropertiesFromSuperClasses(superClasses, graph) {
     for (const superClass of superClasses) {
         const superClassObj = graph.classes[superClass] || graph.enumerations[superClass];
         if (superClassObj) {
-            result.push(...superClassObj[namespaces_1._SOA.hasProperty]);
-            if (superClassObj[namespaces_1._RDFS.subClassOf].length !== 0) {
-                result.push(...inferPropertiesFromSuperClasses(superClassObj[namespaces_1._RDFS.subClassOf], graph));
+            result.push(...superClassObj[namespaces_1.NS.soa.hasProperty]);
+            if (superClassObj[namespaces_1.NS.rdfs.subClassOf].length !== 0) {
+                result.push(...inferPropertiesFromSuperClasses(superClassObj[namespaces_1.NS.rdfs.subClassOf], graph));
             }
         }
     }
-    return (0, utilities_1.uniquifyArray)(result);
+    return (0, uniquifyArray_1.uniquifyArray)(result);
 }
 exports.inferPropertiesFromSuperClasses = inferPropertiesFromSuperClasses;
 function inferSuperClasses(classIRI, graph) {
     let result = [];
     const classObj = graph.classes[classIRI] || graph.enumerations[classIRI];
     if (classObj) {
-        result.push(...classObj[namespaces_1._RDFS.subClassOf]);
-        let addition = (0, utilities_1.cloneJson)(result);
+        result.push(...classObj[namespaces_1.NS.rdfs.subClassOf]);
+        let addition = (0, cloneJson_1.cloneJson)(result);
         do {
             let newAddition = [];
             for (const curAdd of addition) {
                 const parentClassObj = graph.classes[curAdd] || graph.enumerations[curAdd];
                 if (parentClassObj) {
-                    newAddition.push(...parentClassObj[namespaces_1._RDFS.subClassOf]);
+                    newAddition.push(...parentClassObj[namespaces_1.NS.rdfs.subClassOf]);
                 }
             }
-            newAddition = (0, utilities_1.uniquifyArray)(newAddition);
-            addition = (0, utilities_1.cloneJson)(newAddition);
+            newAddition = (0, uniquifyArray_1.uniquifyArray)(newAddition);
+            addition = (0, cloneJson_1.cloneJson)(newAddition);
             result.push(...newAddition);
         } while (addition.length !== 0);
-        result = (0, utilities_1.uniquifyArray)(result);
+        result = (0, uniquifyArray_1.uniquifyArray)(result);
     }
     return result;
 }
@@ -1750,21 +1843,21 @@ function inferSubClasses(classIRI, graph) {
     let result = [];
     const classObj = graph.classes[classIRI] || graph.enumerations[classIRI];
     if (classObj) {
-        result.push(...classObj[namespaces_1._SOA.superClassOf]);
-        let addition = (0, utilities_1.cloneJson)(result);
+        result.push(...classObj[namespaces_1.NS.soa.superClassOf]);
+        let addition = (0, cloneJson_1.cloneJson)(result);
         do {
             let newAddition = [];
             for (const curAdd of addition) {
                 const parentClassObj = graph.classes[curAdd] || graph.enumerations[curAdd];
                 if (parentClassObj) {
-                    newAddition.push(...parentClassObj[namespaces_1._SOA.superClassOf]);
+                    newAddition.push(...parentClassObj[namespaces_1.NS.soa.superClassOf]);
                 }
             }
-            newAddition = (0, utilities_1.uniquifyArray)(newAddition);
-            addition = (0, utilities_1.cloneJson)(newAddition);
+            newAddition = (0, uniquifyArray_1.uniquifyArray)(newAddition);
+            addition = (0, cloneJson_1.cloneJson)(newAddition);
             result.push(...newAddition);
         } while (addition.length !== 0);
-        result = (0, utilities_1.uniquifyArray)(result);
+        result = (0, uniquifyArray_1.uniquifyArray)(result);
     }
     return result;
 }
@@ -1773,21 +1866,21 @@ function inferSuperDataTypes(dataTypeIRI, graph) {
     let result = [];
     const dataTypeObj = graph.dataTypes[dataTypeIRI];
     if (dataTypeObj) {
-        result.push(...dataTypeObj[namespaces_1._RDFS.subClassOf]);
-        let addition = (0, utilities_1.cloneJson)(result);
+        result.push(...dataTypeObj[namespaces_1.NS.rdfs.subClassOf]);
+        let addition = (0, cloneJson_1.cloneJson)(result);
         do {
             let newAddition = [];
             for (const curAdd of addition) {
                 const parentDataTypeObj = graph.dataTypes[curAdd];
                 if (parentDataTypeObj) {
-                    newAddition.push(...parentDataTypeObj[namespaces_1._RDFS.subClassOf]);
+                    newAddition.push(...parentDataTypeObj[namespaces_1.NS.rdfs.subClassOf]);
                 }
             }
-            newAddition = (0, utilities_1.uniquifyArray)(newAddition);
-            addition = (0, utilities_1.cloneJson)(newAddition);
+            newAddition = (0, uniquifyArray_1.uniquifyArray)(newAddition);
+            addition = (0, cloneJson_1.cloneJson)(newAddition);
             result.push(...newAddition);
         } while (addition.length !== 0);
-        result = (0, utilities_1.uniquifyArray)(result);
+        result = (0, uniquifyArray_1.uniquifyArray)(result);
     }
     return result;
 }
@@ -1796,21 +1889,21 @@ function inferSubDataTypes(dataTypeIRI, graph) {
     let result = [];
     const dataTypeObj = graph.dataTypes[dataTypeIRI];
     if (dataTypeObj) {
-        result.push(...dataTypeObj[namespaces_1._SOA.superClassOf]);
-        let addition = (0, utilities_1.cloneJson)(result);
+        result.push(...dataTypeObj[namespaces_1.NS.soa.superClassOf]);
+        let addition = (0, cloneJson_1.cloneJson)(result);
         do {
             let newAddition = [];
             for (const curAdd of addition) {
                 const childDataTypeObj = graph.dataTypes[curAdd];
                 if (childDataTypeObj) {
-                    newAddition.push(...childDataTypeObj[namespaces_1._SOA.superClassOf]);
+                    newAddition.push(...childDataTypeObj[namespaces_1.NS.soa.superClassOf]);
                 }
             }
-            newAddition = (0, utilities_1.uniquifyArray)(newAddition);
-            addition = (0, utilities_1.cloneJson)(newAddition);
+            newAddition = (0, uniquifyArray_1.uniquifyArray)(newAddition);
+            addition = (0, cloneJson_1.cloneJson)(newAddition);
             result.push(...newAddition);
         } while (addition.length !== 0);
-        result = (0, utilities_1.uniquifyArray)(result);
+        result = (0, uniquifyArray_1.uniquifyArray)(result);
     }
     return result;
 }
@@ -1819,21 +1912,21 @@ function inferSuperProperties(propertyIRI, graph) {
     let result = [];
     const propertyObj = graph.properties[propertyIRI];
     if (propertyObj) {
-        result.push(...propertyObj[namespaces_1._RDFS.subPropertyOf]);
-        let addition = (0, utilities_1.cloneJson)(result);
+        result.push(...propertyObj[namespaces_1.NS.rdfs.subPropertyOf]);
+        let addition = (0, cloneJson_1.cloneJson)(result);
         do {
             let newAddition = [];
             for (const curAdd of addition) {
                 const parentPropertyObj = graph.properties[curAdd];
                 if (parentPropertyObj) {
-                    newAddition.push(...parentPropertyObj[namespaces_1._RDFS.subPropertyOf]);
+                    newAddition.push(...parentPropertyObj[namespaces_1.NS.rdfs.subPropertyOf]);
                 }
             }
-            newAddition = (0, utilities_1.uniquifyArray)(newAddition);
-            addition = (0, utilities_1.cloneJson)(newAddition);
+            newAddition = (0, uniquifyArray_1.uniquifyArray)(newAddition);
+            addition = (0, cloneJson_1.cloneJson)(newAddition);
             result.push(...newAddition);
         } while (addition.length !== 0);
-        result = (0, utilities_1.uniquifyArray)(result);
+        result = (0, uniquifyArray_1.uniquifyArray)(result);
     }
     return result;
 }
@@ -1842,21 +1935,21 @@ function inferSubProperties(propertyIRI, graph) {
     let result = [];
     const propertyObj = graph.properties[propertyIRI];
     if (propertyObj) {
-        result.push(...propertyObj[namespaces_1._SOA.superPropertyOf]);
-        let addition = (0, utilities_1.cloneJson)(result);
+        result.push(...propertyObj[namespaces_1.NS.soa.superPropertyOf]);
+        let addition = (0, cloneJson_1.cloneJson)(result);
         do {
             let newAddition = [];
             for (const curAdd of addition) {
                 const parentPropertyObj = graph.properties[curAdd];
                 if (parentPropertyObj) {
-                    newAddition.push(...parentPropertyObj[namespaces_1._SOA.superPropertyOf]);
+                    newAddition.push(...parentPropertyObj[namespaces_1.NS.soa.superPropertyOf]);
                 }
             }
-            newAddition = (0, utilities_1.uniquifyArray)(newAddition);
-            addition = (0, utilities_1.cloneJson)(newAddition);
+            newAddition = (0, uniquifyArray_1.uniquifyArray)(newAddition);
+            addition = (0, cloneJson_1.cloneJson)(newAddition);
             result.push(...newAddition);
         } while (addition.length !== 0);
-        result = (0, utilities_1.uniquifyArray)(result);
+        result = (0, uniquifyArray_1.uniquifyArray)(result);
     }
     return result;
 }
@@ -1865,42 +1958,55 @@ function inferRangeOf(rangeIRI, graph) {
     const classObj = graph.classes[rangeIRI] || graph.enumerations[rangeIRI];
     const result = [];
     if (classObj) {
-        result.push(...classObj[namespaces_1._SOA.isRangeOf]);
+        result.push(...classObj[namespaces_1.NS.soa.isRangeOf]);
         const superClasses = inferSuperClasses(rangeIRI, graph);
         for (const superClass of superClasses) {
             const superClassObj = graph.classes[superClass] || graph.enumerations[superClass];
             if (superClassObj) {
-                result.push(...superClassObj[namespaces_1._SOA.isRangeOf]);
+                result.push(...superClassObj[namespaces_1.NS.soa.isRangeOf]);
             }
         }
     }
     else {
         const dataTypeObj = graph.dataTypes[rangeIRI];
         if (dataTypeObj) {
-            result.push(...dataTypeObj[namespaces_1._SOA.isRangeOf]);
+            result.push(...dataTypeObj[namespaces_1.NS.soa.isRangeOf]);
             const superDataTypes = inferSuperDataTypes(rangeIRI, graph);
             for (const superDataType of superDataTypes) {
                 const superDataTypeObj = graph.dataTypes[superDataType];
                 if (superDataTypeObj) {
-                    result.push(...superDataTypeObj[namespaces_1._SOA.isRangeOf]);
+                    result.push(...superDataTypeObj[namespaces_1.NS.soa.isRangeOf]);
                 }
             }
         }
     }
-    return (0, utilities_1.uniquifyArray)(result);
+    return (0, uniquifyArray_1.uniquifyArray)(result);
 }
 exports.inferRangeOf = inferRangeOf;
 
-},{"./data/namespaces":10,"./utilities":14}],14:[function(require,module,exports){
+},{"./data/namespaces":11,"./utilities/cloneJson":16,"./utilities/toArray":27,"./utilities/uniquifyArray":29}],15:[function(require,module,exports){
 "use strict";
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getLatestSchemaVersion = exports.checkURL = exports.fetchSchemaVersions = exports.constructURLSchemaVocabulary = exports.getURLSchemaVersions = exports.getURLBaseSchema = exports.toArray = exports.switchIRIProtocol = exports.getFileNameForSchemaOrgVersion = exports.sortReleaseEntriesByDate = exports.toAbsoluteIRI = exports.toCompactIRI = exports.uniquifyArray = exports.isArray = exports.isString = exports.isNil = exports.isLanguageObjectVocab = exports.isObject = exports.cloneJson = void 0;
+exports.checkIfUrlExists = void 0;
 const axios_1 = __importDefault(require("axios"));
-const RetrievalMemory_1 = require("./RetrievalMemory");
-const myRetrievalMemory = RetrievalMemory_1.RetrievalMemory.getInstance();
+async function checkIfUrlExists(url) {
+    try {
+        await axios_1.default.head(url);
+        return true;
+    }
+    catch (e) {
+        return false;
+    }
+}
+exports.checkIfUrlExists = checkIfUrlExists;
+
+},{"axios":30}],16:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.cloneJson = void 0;
 function cloneJson(input) {
     if (input === undefined) {
         return input;
@@ -1908,76 +2014,11 @@ function cloneJson(input) {
     return JSON.parse(JSON.stringify(input));
 }
 exports.cloneJson = cloneJson;
-function isObject(value) {
-    if (Array.isArray(value)) {
-        return false;
-    }
-    if (isNil(value)) {
-        return false;
-    }
-    return typeof value === "object";
-}
-exports.isObject = isObject;
-function isLanguageObjectVocab(value) {
-    if (isObject(value)) {
-        if (isString(value["@language"]) && isString(value["@value"])) {
-            return true;
-        }
-    }
-    return false;
-}
-exports.isLanguageObjectVocab = isLanguageObjectVocab;
-function isNil(value) {
-    return value === undefined || value === null;
-}
-exports.isNil = isNil;
-function isString(value) {
-    if (isNil(value)) {
-        return false;
-    }
-    return typeof value === "string" || value instanceof String;
-}
-exports.isString = isString;
-function isArray(value) {
-    return Array.isArray(value);
-}
-exports.isArray = isArray;
-function uniquifyArray(array) {
-    return [...new Set(array)];
-}
-exports.uniquifyArray = uniquifyArray;
-function toCompactIRI(absoluteIRI, context, equateVocabularyProtocols = false) {
-    for (const contextTerm of Object.keys(context)) {
-        const vocabIRI = context[contextTerm];
-        if (isString(vocabIRI) && absoluteIRI.startsWith(vocabIRI)) {
-            return (contextTerm + ":" + absoluteIRI.substring(vocabIRI.length));
-        }
-        if (equateVocabularyProtocols && isString(vocabIRI)) {
-            const protocolSwitchedIRI = switchIRIProtocol(vocabIRI);
-            if (absoluteIRI.startsWith(protocolSwitchedIRI)) {
-                return (contextTerm + ":" + absoluteIRI.substring(protocolSwitchedIRI.length));
-            }
-        }
-    }
-    throw new Error("Trying to get a compact IRI for a term with no entry in the Context");
-}
-exports.toCompactIRI = toCompactIRI;
-function toAbsoluteIRI(compactIRI, context) {
-    const terms = Object.keys(context);
-    for (let i = 0; i < terms.length; i++) {
-        const vocabIRI = context[terms[i]];
-        if (compactIRI.substring(0, compactIRI.indexOf(":")) === terms[i]) {
-            return vocabIRI.concat(compactIRI.substring(compactIRI.indexOf(":") + 1));
-        }
-    }
-    throw new Error("Trying to get an absolute IRI for a term with no entry in the Context");
-}
-exports.toAbsoluteIRI = toAbsoluteIRI;
-function sortReleaseEntriesByDate(releaseLog) {
-    const versionEntries = Object.entries(releaseLog);
-    return versionEntries.sort((a, b) => +new Date(b[1]) - +new Date(a[1]));
-}
-exports.sortReleaseEntriesByDate = sortReleaseEntriesByDate;
+
+},{}],17:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.getFileNameForSchemaOrgVersion = void 0;
 function getFileNameForSchemaOrgVersion(version, schemaHttps = true) {
     switch (version) {
         case "2.0":
@@ -2021,6 +2062,99 @@ function getFileNameForSchemaOrgVersion(version, schemaHttps = true) {
     }
 }
 exports.getFileNameForSchemaOrgVersion = getFileNameForSchemaOrgVersion;
+
+},{}],18:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.getGitHubBaseURL = void 0;
+function getGitHubBaseURL(commit) {
+    if (commit) {
+        return "https://raw.githubusercontent.com/schemaorg/schemaorg/" + commit;
+    }
+    else {
+        return "https://raw.githubusercontent.com/semantifyit/schemaorg/main";
+    }
+}
+exports.getGitHubBaseURL = getGitHubBaseURL;
+
+},{}],19:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.isArray = void 0;
+function isArray(value) {
+    return Array.isArray(value);
+}
+exports.isArray = isArray;
+
+},{}],20:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.isLanguageObjectVocab = void 0;
+const isString_1 = require("./isString");
+const isObject_1 = require("./isObject");
+function isLanguageObjectVocab(value) {
+    if ((0, isObject_1.isObject)(value)) {
+        if ((0, isString_1.isString)(value["@language"]) && (0, isString_1.isString)(value["@value"])) {
+            return true;
+        }
+    }
+    return false;
+}
+exports.isLanguageObjectVocab = isLanguageObjectVocab;
+
+},{"./isObject":22,"./isString":23}],21:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.isNil = void 0;
+function isNil(value) {
+    return value === undefined || value === null;
+}
+exports.isNil = isNil;
+
+},{}],22:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.isObject = void 0;
+const isNil_1 = require("./isNil");
+const isArray_1 = require("./isArray");
+function isObject(value) {
+    if ((0, isArray_1.isArray)(value)) {
+        return false;
+    }
+    if ((0, isNil_1.isNil)(value)) {
+        return false;
+    }
+    return typeof value === "object";
+}
+exports.isObject = isObject;
+
+},{"./isArray":19,"./isNil":21}],23:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.isString = void 0;
+const isNil_1 = require("./isNil");
+function isString(value) {
+    if ((0, isNil_1.isNil)(value)) {
+        return false;
+    }
+    return typeof value === "string" || value instanceof String;
+}
+exports.isString = isString;
+
+},{"./isNil":21}],24:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.sortReleaseEntriesByDate = void 0;
+function sortReleaseEntriesByDate(releaseLog) {
+    const versionEntries = Object.entries(releaseLog);
+    return versionEntries.sort((a, b) => +new Date(b[1]) - +new Date(a[1]));
+}
+exports.sortReleaseEntriesByDate = sortReleaseEntriesByDate;
+
+},{}],25:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.switchIRIProtocol = void 0;
 function switchIRIProtocol(IRI) {
     if (IRI.startsWith("https://")) {
         return "http" + IRI.substring(5);
@@ -2031,113 +2165,65 @@ function switchIRIProtocol(IRI) {
     return IRI;
 }
 exports.switchIRIProtocol = switchIRIProtocol;
-const toArray = (o) => (Array.isArray(o) ? o : [o]);
-exports.toArray = toArray;
-const URI_SEMANTIFY_GITHUB = "https://raw.githubusercontent.com/semantifyit/schemaorg/main";
-const URI_SCHEMA_ORG_GITHUB = "https://raw.githubusercontent.com/schemaorg/schemaorg/";
-function getURLBaseSchema(commitBase) {
-    const path = "/data/releases/";
-    if (commitBase) {
-        return URI_SCHEMA_ORG_GITHUB + commitBase + path;
-    }
-    else {
-        return URI_SEMANTIFY_GITHUB + path;
-    }
-}
-exports.getURLBaseSchema = getURLBaseSchema;
-function getURLSchemaVersions(commitBase) {
-    const path = "/versions.json";
-    if (commitBase) {
-        return URI_SCHEMA_ORG_GITHUB + commitBase + path;
-    }
-    else {
-        return URI_SEMANTIFY_GITHUB + path;
-    }
-}
-exports.getURLSchemaVersions = getURLSchemaVersions;
-async function constructURLSchemaVocabulary(version = "latest", schemaHttps = true, commit) {
-    if (version === "latest") {
-        version = await getLatestSchemaVersion(commit);
-    }
-    const fileName = getFileNameForSchemaOrgVersion(version, schemaHttps);
-    return getURLBaseSchema(commit) + version + "/" + fileName;
-}
-exports.constructURLSchemaVocabulary = constructURLSchemaVocabulary;
-async function fetchSchemaVersions(cacheClear = false, commit) {
-    let versionFile;
-    if (cacheClear) {
-        myRetrievalMemory.deleteCache();
-    }
-    else {
-        const cachedData = myRetrievalMemory.getData("versionsFile", commit);
-        if (cachedData) {
-            return cachedData;
+
+},{}],26:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.toAbsoluteIRI = void 0;
+function toAbsoluteIRI(compactIRI, context) {
+    const terms = Object.keys(context);
+    for (let i = 0; i < terms.length; i++) {
+        const vocabIRI = context[terms[i]];
+        if (compactIRI.substring(0, compactIRI.indexOf(":")) === terms[i]) {
+            return vocabIRI.concat(compactIRI.substring(compactIRI.indexOf(":") + 1));
         }
     }
-    const urlSchemaVersions = getURLSchemaVersions(commit);
-    try {
-        versionFile = await axios_1.default.get(urlSchemaVersions);
-    }
-    catch (e) {
-        throw new Error("Unable to retrieve the schema.org versions file at " + urlSchemaVersions);
-    }
-    if (!versionFile || !versionFile.data || !versionFile.data.releaseLog) {
-        throw new Error("The schema.org versions file at " +
-            urlSchemaVersions +
-            " returned an unexpected result.");
-    }
-    const schemaVersions = versionFile.data;
-    myRetrievalMemory.setData("versionsFile", schemaVersions, commit);
-    let latestVersion;
-    if (schemaVersions.schemaversion &&
-        (await checkURL(await constructURLSchemaVocabulary(schemaVersions.schemaversion, true, commit)))) {
-        latestVersion = schemaVersions.schemaversion;
-    }
-    else {
-        const sortedArray = sortReleaseEntriesByDate(schemaVersions.releaseLog);
-        console.log("sortedArray", sortedArray);
-        for (const currVersion of sortedArray) {
-            if (await checkURL(await constructURLSchemaVocabulary(currVersion[0], true, commit))) {
-                latestVersion = currVersion[0];
-                break;
+    throw new Error("Trying to get an absolute IRI for a term with no entry in the Context");
+}
+exports.toAbsoluteIRI = toAbsoluteIRI;
+
+},{}],27:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.toArray = void 0;
+const toArray = (o) => (Array.isArray(o) ? o : [o]);
+exports.toArray = toArray;
+
+},{}],28:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.toCompactIRI = void 0;
+const isString_1 = require("./isString");
+const switchIRIProtocol_1 = require("./switchIRIProtocol");
+function toCompactIRI(absoluteIRI, context, equateVocabularyProtocols = false) {
+    for (const contextTerm of Object.keys(context)) {
+        const vocabIRI = context[contextTerm];
+        if ((0, isString_1.isString)(vocabIRI) && absoluteIRI.startsWith(vocabIRI)) {
+            return (contextTerm + ":" + absoluteIRI.substring(vocabIRI.length));
+        }
+        if (equateVocabularyProtocols && (0, isString_1.isString)(vocabIRI)) {
+            const protocolSwitchedIRI = (0, switchIRIProtocol_1.switchIRIProtocol)(vocabIRI);
+            if (absoluteIRI.startsWith(protocolSwitchedIRI)) {
+                return (contextTerm + ":" + absoluteIRI.substring(protocolSwitchedIRI.length));
             }
         }
     }
-    if (!latestVersion) {
-        throw new Error('Could not find any valid vocabulary file in the schema.org versions to be declared as "latest".');
-    }
-    myRetrievalMemory.setData("latest", latestVersion, commit);
-    return schemaVersions;
+    throw new Error("Trying to get a compact IRI for a term with no entry in the Context");
 }
-exports.fetchSchemaVersions = fetchSchemaVersions;
-async function checkURL(url) {
-    try {
-        await axios_1.default.head(url);
-        return true;
-    }
-    catch (e) {
-        return false;
-    }
-}
-exports.checkURL = checkURL;
-async function getLatestSchemaVersion(commit) {
-    let latestVersion = myRetrievalMemory.getData("latest", commit);
-    if (!latestVersion) {
-        await fetchSchemaVersions(false, commit);
-    }
-    latestVersion = myRetrievalMemory.getData("latest", commit);
-    if (latestVersion) {
-        return latestVersion;
-    }
-    else {
-        throw new Error("Could not identify the latest version of the schema.org vocabulary");
-    }
-}
-exports.getLatestSchemaVersion = getLatestSchemaVersion;
+exports.toCompactIRI = toCompactIRI;
 
-},{"./RetrievalMemory":7,"axios":15}],15:[function(require,module,exports){
+},{"./isString":23,"./switchIRIProtocol":25}],29:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.uniquifyArray = void 0;
+function uniquifyArray(array) {
+    return [...new Set(array)];
+}
+exports.uniquifyArray = uniquifyArray;
+
+},{}],30:[function(require,module,exports){
 module.exports = require('./lib/axios');
-},{"./lib/axios":17}],16:[function(require,module,exports){
+},{"./lib/axios":32}],31:[function(require,module,exports){
 'use strict';
 
 var utils = require('./../utils');
@@ -2328,7 +2414,7 @@ module.exports = function xhrAdapter(config) {
   });
 };
 
-},{"../core/buildFullPath":23,"../core/createError":24,"./../core/settle":28,"./../helpers/buildURL":32,"./../helpers/cookies":34,"./../helpers/isURLSameOrigin":37,"./../helpers/parseHeaders":39,"./../utils":42}],17:[function(require,module,exports){
+},{"../core/buildFullPath":38,"../core/createError":39,"./../core/settle":43,"./../helpers/buildURL":47,"./../helpers/cookies":49,"./../helpers/isURLSameOrigin":52,"./../helpers/parseHeaders":54,"./../utils":57}],32:[function(require,module,exports){
 'use strict';
 
 var utils = require('./utils');
@@ -2386,7 +2472,7 @@ module.exports = axios;
 // Allow use of default import syntax in TypeScript
 module.exports.default = axios;
 
-},{"./cancel/Cancel":18,"./cancel/CancelToken":19,"./cancel/isCancel":20,"./core/Axios":21,"./core/mergeConfig":27,"./defaults":30,"./helpers/bind":31,"./helpers/isAxiosError":36,"./helpers/spread":40,"./utils":42}],18:[function(require,module,exports){
+},{"./cancel/Cancel":33,"./cancel/CancelToken":34,"./cancel/isCancel":35,"./core/Axios":36,"./core/mergeConfig":42,"./defaults":45,"./helpers/bind":46,"./helpers/isAxiosError":51,"./helpers/spread":55,"./utils":57}],33:[function(require,module,exports){
 'use strict';
 
 /**
@@ -2407,7 +2493,7 @@ Cancel.prototype.__CANCEL__ = true;
 
 module.exports = Cancel;
 
-},{}],19:[function(require,module,exports){
+},{}],34:[function(require,module,exports){
 'use strict';
 
 var Cancel = require('./Cancel');
@@ -2466,14 +2552,14 @@ CancelToken.source = function source() {
 
 module.exports = CancelToken;
 
-},{"./Cancel":18}],20:[function(require,module,exports){
+},{"./Cancel":33}],35:[function(require,module,exports){
 'use strict';
 
 module.exports = function isCancel(value) {
   return !!(value && value.__CANCEL__);
 };
 
-},{}],21:[function(require,module,exports){
+},{}],36:[function(require,module,exports){
 'use strict';
 
 var utils = require('./../utils');
@@ -2623,7 +2709,7 @@ utils.forEach(['post', 'put', 'patch'], function forEachMethodWithData(method) {
 
 module.exports = Axios;
 
-},{"../helpers/buildURL":32,"../helpers/validator":41,"./../utils":42,"./InterceptorManager":22,"./dispatchRequest":25,"./mergeConfig":27}],22:[function(require,module,exports){
+},{"../helpers/buildURL":47,"../helpers/validator":56,"./../utils":57,"./InterceptorManager":37,"./dispatchRequest":40,"./mergeConfig":42}],37:[function(require,module,exports){
 'use strict';
 
 var utils = require('./../utils');
@@ -2679,7 +2765,7 @@ InterceptorManager.prototype.forEach = function forEach(fn) {
 
 module.exports = InterceptorManager;
 
-},{"./../utils":42}],23:[function(require,module,exports){
+},{"./../utils":57}],38:[function(require,module,exports){
 'use strict';
 
 var isAbsoluteURL = require('../helpers/isAbsoluteURL');
@@ -2701,7 +2787,7 @@ module.exports = function buildFullPath(baseURL, requestedURL) {
   return requestedURL;
 };
 
-},{"../helpers/combineURLs":33,"../helpers/isAbsoluteURL":35}],24:[function(require,module,exports){
+},{"../helpers/combineURLs":48,"../helpers/isAbsoluteURL":50}],39:[function(require,module,exports){
 'use strict';
 
 var enhanceError = require('./enhanceError');
@@ -2721,7 +2807,7 @@ module.exports = function createError(message, config, code, request, response) 
   return enhanceError(error, config, code, request, response);
 };
 
-},{"./enhanceError":26}],25:[function(require,module,exports){
+},{"./enhanceError":41}],40:[function(require,module,exports){
 'use strict';
 
 var utils = require('./../utils');
@@ -2805,7 +2891,7 @@ module.exports = function dispatchRequest(config) {
   });
 };
 
-},{"../cancel/isCancel":20,"../defaults":30,"./../utils":42,"./transformData":29}],26:[function(require,module,exports){
+},{"../cancel/isCancel":35,"../defaults":45,"./../utils":57,"./transformData":44}],41:[function(require,module,exports){
 'use strict';
 
 /**
@@ -2849,7 +2935,7 @@ module.exports = function enhanceError(error, config, code, request, response) {
   return error;
 };
 
-},{}],27:[function(require,module,exports){
+},{}],42:[function(require,module,exports){
 'use strict';
 
 var utils = require('../utils');
@@ -2938,7 +3024,7 @@ module.exports = function mergeConfig(config1, config2) {
   return config;
 };
 
-},{"../utils":42}],28:[function(require,module,exports){
+},{"../utils":57}],43:[function(require,module,exports){
 'use strict';
 
 var createError = require('./createError');
@@ -2965,7 +3051,7 @@ module.exports = function settle(resolve, reject, response) {
   }
 };
 
-},{"./createError":24}],29:[function(require,module,exports){
+},{"./createError":39}],44:[function(require,module,exports){
 'use strict';
 
 var utils = require('./../utils');
@@ -2989,7 +3075,7 @@ module.exports = function transformData(data, headers, fns) {
   return data;
 };
 
-},{"./../defaults":30,"./../utils":42}],30:[function(require,module,exports){
+},{"./../defaults":45,"./../utils":57}],45:[function(require,module,exports){
 (function (process){(function (){
 'use strict';
 
@@ -3127,7 +3213,7 @@ utils.forEach(['post', 'put', 'patch'], function forEachMethodWithData(method) {
 module.exports = defaults;
 
 }).call(this)}).call(this,require('_process'))
-},{"./adapters/http":16,"./adapters/xhr":16,"./core/enhanceError":26,"./helpers/normalizeHeaderName":38,"./utils":42,"_process":187}],31:[function(require,module,exports){
+},{"./adapters/http":31,"./adapters/xhr":31,"./core/enhanceError":41,"./helpers/normalizeHeaderName":53,"./utils":57,"_process":84}],46:[function(require,module,exports){
 'use strict';
 
 module.exports = function bind(fn, thisArg) {
@@ -3140,7 +3226,7 @@ module.exports = function bind(fn, thisArg) {
   };
 };
 
-},{}],32:[function(require,module,exports){
+},{}],47:[function(require,module,exports){
 'use strict';
 
 var utils = require('./../utils');
@@ -3212,7 +3298,7 @@ module.exports = function buildURL(url, params, paramsSerializer) {
   return url;
 };
 
-},{"./../utils":42}],33:[function(require,module,exports){
+},{"./../utils":57}],48:[function(require,module,exports){
 'use strict';
 
 /**
@@ -3228,7 +3314,7 @@ module.exports = function combineURLs(baseURL, relativeURL) {
     : baseURL;
 };
 
-},{}],34:[function(require,module,exports){
+},{}],49:[function(require,module,exports){
 'use strict';
 
 var utils = require('./../utils');
@@ -3283,7 +3369,7 @@ module.exports = (
     })()
 );
 
-},{"./../utils":42}],35:[function(require,module,exports){
+},{"./../utils":57}],50:[function(require,module,exports){
 'use strict';
 
 /**
@@ -3299,7 +3385,7 @@ module.exports = function isAbsoluteURL(url) {
   return /^([a-z][a-z\d\+\-\.]*:)?\/\//i.test(url);
 };
 
-},{}],36:[function(require,module,exports){
+},{}],51:[function(require,module,exports){
 'use strict';
 
 /**
@@ -3312,7 +3398,7 @@ module.exports = function isAxiosError(payload) {
   return (typeof payload === 'object') && (payload.isAxiosError === true);
 };
 
-},{}],37:[function(require,module,exports){
+},{}],52:[function(require,module,exports){
 'use strict';
 
 var utils = require('./../utils');
@@ -3382,7 +3468,7 @@ module.exports = (
     })()
 );
 
-},{"./../utils":42}],38:[function(require,module,exports){
+},{"./../utils":57}],53:[function(require,module,exports){
 'use strict';
 
 var utils = require('../utils');
@@ -3396,7 +3482,7 @@ module.exports = function normalizeHeaderName(headers, normalizedName) {
   });
 };
 
-},{"../utils":42}],39:[function(require,module,exports){
+},{"../utils":57}],54:[function(require,module,exports){
 'use strict';
 
 var utils = require('./../utils');
@@ -3451,7 +3537,7 @@ module.exports = function parseHeaders(headers) {
   return parsed;
 };
 
-},{"./../utils":42}],40:[function(require,module,exports){
+},{"./../utils":57}],55:[function(require,module,exports){
 'use strict';
 
 /**
@@ -3480,7 +3566,7 @@ module.exports = function spread(callback) {
   };
 };
 
-},{}],41:[function(require,module,exports){
+},{}],56:[function(require,module,exports){
 'use strict';
 
 var pkg = require('./../../package.json');
@@ -3587,7 +3673,7 @@ module.exports = {
   validators: validators
 };
 
-},{"./../../package.json":43}],42:[function(require,module,exports){
+},{"./../../package.json":58}],57:[function(require,module,exports){
 'use strict';
 
 var bind = require('./helpers/bind');
@@ -3938,7 +4024,7 @@ module.exports = {
   stripBOM: stripBOM
 };
 
-},{"./helpers/bind":31}],43:[function(require,module,exports){
+},{"./helpers/bind":46}],58:[function(require,module,exports){
 module.exports={
   "name": "axios",
   "version": "0.21.4",
@@ -4024,9 +4110,9 @@ module.exports={
   ]
 }
 
-},{}],44:[function(require,module,exports){
+},{}],59:[function(require,module,exports){
 
-},{}],45:[function(require,module,exports){
+},{}],60:[function(require,module,exports){
 /* jshint esversion: 6 */
 /* jslint node: true */
 'use strict';
@@ -4054,2539 +4140,7 @@ module.exports = function serialize (object) {
   }, '') + '}';
 };
 
-},{}],46:[function(require,module,exports){
-var parent = require('../../stable/map');
-
-module.exports = parent;
-
-},{"../../stable/map":162}],47:[function(require,module,exports){
-var parent = require('../../stable/set');
-
-module.exports = parent;
-
-},{"../../stable/set":163}],48:[function(require,module,exports){
-require('../../modules/es.array.iterator');
-require('../../modules/es.map');
-require('../../modules/es.object.to-string');
-require('../../modules/es.string.iterator');
-var path = require('../../internals/path');
-
-module.exports = path.Map;
-
-},{"../../internals/path":129,"../../modules/es.array.iterator":154,"../../modules/es.map":155,"../../modules/es.object.to-string":157,"../../modules/es.string.iterator":159}],49:[function(require,module,exports){
-require('../../modules/es.array.iterator');
-require('../../modules/es.object.to-string');
-require('../../modules/es.set');
-require('../../modules/es.string.iterator');
-var path = require('../../internals/path');
-
-module.exports = path.Set;
-
-},{"../../internals/path":129,"../../modules/es.array.iterator":154,"../../modules/es.object.to-string":157,"../../modules/es.set":158,"../../modules/es.string.iterator":159}],50:[function(require,module,exports){
-var global = require('../internals/global');
-var isCallable = require('../internals/is-callable');
-var tryToString = require('../internals/try-to-string');
-
-var TypeError = global.TypeError;
-
-// `Assert: IsCallable(argument) is true`
-module.exports = function (argument) {
-  if (isCallable(argument)) return argument;
-  throw TypeError(tryToString(argument) + ' is not a function');
-};
-
-},{"../internals/global":89,"../internals/is-callable":100,"../internals/try-to-string":149}],51:[function(require,module,exports){
-var global = require('../internals/global');
-var isCallable = require('../internals/is-callable');
-
-var String = global.String;
-var TypeError = global.TypeError;
-
-module.exports = function (argument) {
-  if (typeof argument == 'object' || isCallable(argument)) return argument;
-  throw TypeError("Can't set " + String(argument) + ' as a prototype');
-};
-
-},{"../internals/global":89,"../internals/is-callable":100}],52:[function(require,module,exports){
-var wellKnownSymbol = require('../internals/well-known-symbol');
-var create = require('../internals/object-create');
-var definePropertyModule = require('../internals/object-define-property');
-
-var UNSCOPABLES = wellKnownSymbol('unscopables');
-var ArrayPrototype = Array.prototype;
-
-// Array.prototype[@@unscopables]
-// https://tc39.es/ecma262/#sec-array.prototype-@@unscopables
-if (ArrayPrototype[UNSCOPABLES] == undefined) {
-  definePropertyModule.f(ArrayPrototype, UNSCOPABLES, {
-    configurable: true,
-    value: create(null)
-  });
-}
-
-// add a key to Array.prototype[@@unscopables]
-module.exports = function (key) {
-  ArrayPrototype[UNSCOPABLES][key] = true;
-};
-
-},{"../internals/object-create":112,"../internals/object-define-property":114,"../internals/well-known-symbol":153}],53:[function(require,module,exports){
-var global = require('../internals/global');
-var isPrototypeOf = require('../internals/object-is-prototype-of');
-
-var TypeError = global.TypeError;
-
-module.exports = function (it, Prototype) {
-  if (isPrototypeOf(Prototype, it)) return it;
-  throw TypeError('Incorrect invocation');
-};
-
-},{"../internals/global":89,"../internals/object-is-prototype-of":121}],54:[function(require,module,exports){
-var global = require('../internals/global');
-var isObject = require('../internals/is-object');
-
-var String = global.String;
-var TypeError = global.TypeError;
-
-// `Assert: Type(argument) is Object`
-module.exports = function (argument) {
-  if (isObject(argument)) return argument;
-  throw TypeError(String(argument) + ' is not an object');
-};
-
-},{"../internals/global":89,"../internals/is-object":102}],55:[function(require,module,exports){
-// FF26- bug: ArrayBuffers are non-extensible, but Object.isExtensible does not report it
-var fails = require('../internals/fails');
-
-module.exports = fails(function () {
-  if (typeof ArrayBuffer == 'function') {
-    var buffer = new ArrayBuffer(8);
-    // eslint-disable-next-line es/no-object-isextensible, es/no-object-defineproperty -- safe
-    if (Object.isExtensible(buffer)) Object.defineProperty(buffer, 'a', { value: 8 });
-  }
-});
-
-},{"../internals/fails":78}],56:[function(require,module,exports){
-var toIndexedObject = require('../internals/to-indexed-object');
-var toAbsoluteIndex = require('../internals/to-absolute-index');
-var lengthOfArrayLike = require('../internals/length-of-array-like');
-
-// `Array.prototype.{ indexOf, includes }` methods implementation
-var createMethod = function (IS_INCLUDES) {
-  return function ($this, el, fromIndex) {
-    var O = toIndexedObject($this);
-    var length = lengthOfArrayLike(O);
-    var index = toAbsoluteIndex(fromIndex, length);
-    var value;
-    // Array#includes uses SameValueZero equality algorithm
-    // eslint-disable-next-line no-self-compare -- NaN check
-    if (IS_INCLUDES && el != el) while (length > index) {
-      value = O[index++];
-      // eslint-disable-next-line no-self-compare -- NaN check
-      if (value != value) return true;
-    // Array#indexOf ignores holes, Array#includes - not
-    } else for (;length > index; index++) {
-      if ((IS_INCLUDES || index in O) && O[index] === el) return IS_INCLUDES || index || 0;
-    } return !IS_INCLUDES && -1;
-  };
-};
-
-module.exports = {
-  // `Array.prototype.includes` method
-  // https://tc39.es/ecma262/#sec-array.prototype.includes
-  includes: createMethod(true),
-  // `Array.prototype.indexOf` method
-  // https://tc39.es/ecma262/#sec-array.prototype.indexof
-  indexOf: createMethod(false)
-};
-
-},{"../internals/length-of-array-like":109,"../internals/to-absolute-index":140,"../internals/to-indexed-object":141}],57:[function(require,module,exports){
-var global = require('../internals/global');
-var toAbsoluteIndex = require('../internals/to-absolute-index');
-var lengthOfArrayLike = require('../internals/length-of-array-like');
-var createProperty = require('../internals/create-property');
-
-var Array = global.Array;
-var max = Math.max;
-
-module.exports = function (O, start, end) {
-  var length = lengthOfArrayLike(O);
-  var k = toAbsoluteIndex(start, length);
-  var fin = toAbsoluteIndex(end === undefined ? length : end, length);
-  var result = Array(max(fin - k, 0));
-  for (var n = 0; k < fin; k++, n++) createProperty(result, n, O[k]);
-  result.length = n;
-  return result;
-};
-
-},{"../internals/create-property":68,"../internals/global":89,"../internals/length-of-array-like":109,"../internals/to-absolute-index":140}],58:[function(require,module,exports){
-var wellKnownSymbol = require('../internals/well-known-symbol');
-
-var ITERATOR = wellKnownSymbol('iterator');
-var SAFE_CLOSING = false;
-
-try {
-  var called = 0;
-  var iteratorWithReturn = {
-    next: function () {
-      return { done: !!called++ };
-    },
-    'return': function () {
-      SAFE_CLOSING = true;
-    }
-  };
-  iteratorWithReturn[ITERATOR] = function () {
-    return this;
-  };
-  // eslint-disable-next-line es/no-array-from, no-throw-literal -- required for testing
-  Array.from(iteratorWithReturn, function () { throw 2; });
-} catch (error) { /* empty */ }
-
-module.exports = function (exec, SKIP_CLOSING) {
-  if (!SKIP_CLOSING && !SAFE_CLOSING) return false;
-  var ITERATION_SUPPORT = false;
-  try {
-    var object = {};
-    object[ITERATOR] = function () {
-      return {
-        next: function () {
-          return { done: ITERATION_SUPPORT = true };
-        }
-      };
-    };
-    exec(object);
-  } catch (error) { /* empty */ }
-  return ITERATION_SUPPORT;
-};
-
-},{"../internals/well-known-symbol":153}],59:[function(require,module,exports){
-var uncurryThis = require('../internals/function-uncurry-this');
-
-var toString = uncurryThis({}.toString);
-var stringSlice = uncurryThis(''.slice);
-
-module.exports = function (it) {
-  return stringSlice(toString(it), 8, -1);
-};
-
-},{"../internals/function-uncurry-this":84}],60:[function(require,module,exports){
-var global = require('../internals/global');
-var TO_STRING_TAG_SUPPORT = require('../internals/to-string-tag-support');
-var isCallable = require('../internals/is-callable');
-var classofRaw = require('../internals/classof-raw');
-var wellKnownSymbol = require('../internals/well-known-symbol');
-
-var TO_STRING_TAG = wellKnownSymbol('toStringTag');
-var Object = global.Object;
-
-// ES3 wrong here
-var CORRECT_ARGUMENTS = classofRaw(function () { return arguments; }()) == 'Arguments';
-
-// fallback for IE11 Script Access Denied error
-var tryGet = function (it, key) {
-  try {
-    return it[key];
-  } catch (error) { /* empty */ }
-};
-
-// getting tag from ES6+ `Object.prototype.toString`
-module.exports = TO_STRING_TAG_SUPPORT ? classofRaw : function (it) {
-  var O, tag, result;
-  return it === undefined ? 'Undefined' : it === null ? 'Null'
-    // @@toStringTag case
-    : typeof (tag = tryGet(O = Object(it), TO_STRING_TAG)) == 'string' ? tag
-    // builtinTag case
-    : CORRECT_ARGUMENTS ? classofRaw(O)
-    // ES3 arguments fallback
-    : (result = classofRaw(O)) == 'Object' && isCallable(O.callee) ? 'Arguments' : result;
-};
-
-},{"../internals/classof-raw":59,"../internals/global":89,"../internals/is-callable":100,"../internals/to-string-tag-support":147,"../internals/well-known-symbol":153}],61:[function(require,module,exports){
-'use strict';
-var defineProperty = require('../internals/object-define-property').f;
-var create = require('../internals/object-create');
-var redefineAll = require('../internals/redefine-all');
-var bind = require('../internals/function-bind-context');
-var anInstance = require('../internals/an-instance');
-var iterate = require('../internals/iterate');
-var defineIterator = require('../internals/define-iterator');
-var setSpecies = require('../internals/set-species');
-var DESCRIPTORS = require('../internals/descriptors');
-var fastKey = require('../internals/internal-metadata').fastKey;
-var InternalStateModule = require('../internals/internal-state');
-
-var setInternalState = InternalStateModule.set;
-var internalStateGetterFor = InternalStateModule.getterFor;
-
-module.exports = {
-  getConstructor: function (wrapper, CONSTRUCTOR_NAME, IS_MAP, ADDER) {
-    var Constructor = wrapper(function (that, iterable) {
-      anInstance(that, Prototype);
-      setInternalState(that, {
-        type: CONSTRUCTOR_NAME,
-        index: create(null),
-        first: undefined,
-        last: undefined,
-        size: 0
-      });
-      if (!DESCRIPTORS) that.size = 0;
-      if (iterable != undefined) iterate(iterable, that[ADDER], { that: that, AS_ENTRIES: IS_MAP });
-    });
-
-    var Prototype = Constructor.prototype;
-
-    var getInternalState = internalStateGetterFor(CONSTRUCTOR_NAME);
-
-    var define = function (that, key, value) {
-      var state = getInternalState(that);
-      var entry = getEntry(that, key);
-      var previous, index;
-      // change existing entry
-      if (entry) {
-        entry.value = value;
-      // create new entry
-      } else {
-        state.last = entry = {
-          index: index = fastKey(key, true),
-          key: key,
-          value: value,
-          previous: previous = state.last,
-          next: undefined,
-          removed: false
-        };
-        if (!state.first) state.first = entry;
-        if (previous) previous.next = entry;
-        if (DESCRIPTORS) state.size++;
-        else that.size++;
-        // add to index
-        if (index !== 'F') state.index[index] = entry;
-      } return that;
-    };
-
-    var getEntry = function (that, key) {
-      var state = getInternalState(that);
-      // fast case
-      var index = fastKey(key);
-      var entry;
-      if (index !== 'F') return state.index[index];
-      // frozen object case
-      for (entry = state.first; entry; entry = entry.next) {
-        if (entry.key == key) return entry;
-      }
-    };
-
-    redefineAll(Prototype, {
-      // `{ Map, Set }.prototype.clear()` methods
-      // https://tc39.es/ecma262/#sec-map.prototype.clear
-      // https://tc39.es/ecma262/#sec-set.prototype.clear
-      clear: function clear() {
-        var that = this;
-        var state = getInternalState(that);
-        var data = state.index;
-        var entry = state.first;
-        while (entry) {
-          entry.removed = true;
-          if (entry.previous) entry.previous = entry.previous.next = undefined;
-          delete data[entry.index];
-          entry = entry.next;
-        }
-        state.first = state.last = undefined;
-        if (DESCRIPTORS) state.size = 0;
-        else that.size = 0;
-      },
-      // `{ Map, Set }.prototype.delete(key)` methods
-      // https://tc39.es/ecma262/#sec-map.prototype.delete
-      // https://tc39.es/ecma262/#sec-set.prototype.delete
-      'delete': function (key) {
-        var that = this;
-        var state = getInternalState(that);
-        var entry = getEntry(that, key);
-        if (entry) {
-          var next = entry.next;
-          var prev = entry.previous;
-          delete state.index[entry.index];
-          entry.removed = true;
-          if (prev) prev.next = next;
-          if (next) next.previous = prev;
-          if (state.first == entry) state.first = next;
-          if (state.last == entry) state.last = prev;
-          if (DESCRIPTORS) state.size--;
-          else that.size--;
-        } return !!entry;
-      },
-      // `{ Map, Set }.prototype.forEach(callbackfn, thisArg = undefined)` methods
-      // https://tc39.es/ecma262/#sec-map.prototype.foreach
-      // https://tc39.es/ecma262/#sec-set.prototype.foreach
-      forEach: function forEach(callbackfn /* , that = undefined */) {
-        var state = getInternalState(this);
-        var boundFunction = bind(callbackfn, arguments.length > 1 ? arguments[1] : undefined);
-        var entry;
-        while (entry = entry ? entry.next : state.first) {
-          boundFunction(entry.value, entry.key, this);
-          // revert to the last existing entry
-          while (entry && entry.removed) entry = entry.previous;
-        }
-      },
-      // `{ Map, Set}.prototype.has(key)` methods
-      // https://tc39.es/ecma262/#sec-map.prototype.has
-      // https://tc39.es/ecma262/#sec-set.prototype.has
-      has: function has(key) {
-        return !!getEntry(this, key);
-      }
-    });
-
-    redefineAll(Prototype, IS_MAP ? {
-      // `Map.prototype.get(key)` method
-      // https://tc39.es/ecma262/#sec-map.prototype.get
-      get: function get(key) {
-        var entry = getEntry(this, key);
-        return entry && entry.value;
-      },
-      // `Map.prototype.set(key, value)` method
-      // https://tc39.es/ecma262/#sec-map.prototype.set
-      set: function set(key, value) {
-        return define(this, key === 0 ? 0 : key, value);
-      }
-    } : {
-      // `Set.prototype.add(value)` method
-      // https://tc39.es/ecma262/#sec-set.prototype.add
-      add: function add(value) {
-        return define(this, value = value === 0 ? 0 : value, value);
-      }
-    });
-    if (DESCRIPTORS) defineProperty(Prototype, 'size', {
-      get: function () {
-        return getInternalState(this).size;
-      }
-    });
-    return Constructor;
-  },
-  setStrong: function (Constructor, CONSTRUCTOR_NAME, IS_MAP) {
-    var ITERATOR_NAME = CONSTRUCTOR_NAME + ' Iterator';
-    var getInternalCollectionState = internalStateGetterFor(CONSTRUCTOR_NAME);
-    var getInternalIteratorState = internalStateGetterFor(ITERATOR_NAME);
-    // `{ Map, Set }.prototype.{ keys, values, entries, @@iterator }()` methods
-    // https://tc39.es/ecma262/#sec-map.prototype.entries
-    // https://tc39.es/ecma262/#sec-map.prototype.keys
-    // https://tc39.es/ecma262/#sec-map.prototype.values
-    // https://tc39.es/ecma262/#sec-map.prototype-@@iterator
-    // https://tc39.es/ecma262/#sec-set.prototype.entries
-    // https://tc39.es/ecma262/#sec-set.prototype.keys
-    // https://tc39.es/ecma262/#sec-set.prototype.values
-    // https://tc39.es/ecma262/#sec-set.prototype-@@iterator
-    defineIterator(Constructor, CONSTRUCTOR_NAME, function (iterated, kind) {
-      setInternalState(this, {
-        type: ITERATOR_NAME,
-        target: iterated,
-        state: getInternalCollectionState(iterated),
-        kind: kind,
-        last: undefined
-      });
-    }, function () {
-      var state = getInternalIteratorState(this);
-      var kind = state.kind;
-      var entry = state.last;
-      // revert to the last existing entry
-      while (entry && entry.removed) entry = entry.previous;
-      // get next entry
-      if (!state.target || !(state.last = entry = entry ? entry.next : state.state.first)) {
-        // or finish the iteration
-        state.target = undefined;
-        return { value: undefined, done: true };
-      }
-      // return step by kind
-      if (kind == 'keys') return { value: entry.key, done: false };
-      if (kind == 'values') return { value: entry.value, done: false };
-      return { value: [entry.key, entry.value], done: false };
-    }, IS_MAP ? 'entries' : 'values', !IS_MAP, true);
-
-    // `{ Map, Set }.prototype[@@species]` accessors
-    // https://tc39.es/ecma262/#sec-get-map-@@species
-    // https://tc39.es/ecma262/#sec-get-set-@@species
-    setSpecies(CONSTRUCTOR_NAME);
-  }
-};
-
-},{"../internals/an-instance":53,"../internals/define-iterator":69,"../internals/descriptors":70,"../internals/function-bind-context":80,"../internals/internal-metadata":97,"../internals/internal-state":98,"../internals/iterate":105,"../internals/object-create":112,"../internals/object-define-property":114,"../internals/redefine-all":130,"../internals/set-species":134}],62:[function(require,module,exports){
-'use strict';
-var $ = require('../internals/export');
-var global = require('../internals/global');
-var uncurryThis = require('../internals/function-uncurry-this');
-var isForced = require('../internals/is-forced');
-var redefine = require('../internals/redefine');
-var InternalMetadataModule = require('../internals/internal-metadata');
-var iterate = require('../internals/iterate');
-var anInstance = require('../internals/an-instance');
-var isCallable = require('../internals/is-callable');
-var isObject = require('../internals/is-object');
-var fails = require('../internals/fails');
-var checkCorrectnessOfIteration = require('../internals/check-correctness-of-iteration');
-var setToStringTag = require('../internals/set-to-string-tag');
-var inheritIfRequired = require('../internals/inherit-if-required');
-
-module.exports = function (CONSTRUCTOR_NAME, wrapper, common) {
-  var IS_MAP = CONSTRUCTOR_NAME.indexOf('Map') !== -1;
-  var IS_WEAK = CONSTRUCTOR_NAME.indexOf('Weak') !== -1;
-  var ADDER = IS_MAP ? 'set' : 'add';
-  var NativeConstructor = global[CONSTRUCTOR_NAME];
-  var NativePrototype = NativeConstructor && NativeConstructor.prototype;
-  var Constructor = NativeConstructor;
-  var exported = {};
-
-  var fixMethod = function (KEY) {
-    var uncurriedNativeMethod = uncurryThis(NativePrototype[KEY]);
-    redefine(NativePrototype, KEY,
-      KEY == 'add' ? function add(value) {
-        uncurriedNativeMethod(this, value === 0 ? 0 : value);
-        return this;
-      } : KEY == 'delete' ? function (key) {
-        return IS_WEAK && !isObject(key) ? false : uncurriedNativeMethod(this, key === 0 ? 0 : key);
-      } : KEY == 'get' ? function get(key) {
-        return IS_WEAK && !isObject(key) ? undefined : uncurriedNativeMethod(this, key === 0 ? 0 : key);
-      } : KEY == 'has' ? function has(key) {
-        return IS_WEAK && !isObject(key) ? false : uncurriedNativeMethod(this, key === 0 ? 0 : key);
-      } : function set(key, value) {
-        uncurriedNativeMethod(this, key === 0 ? 0 : key, value);
-        return this;
-      }
-    );
-  };
-
-  var REPLACE = isForced(
-    CONSTRUCTOR_NAME,
-    !isCallable(NativeConstructor) || !(IS_WEAK || NativePrototype.forEach && !fails(function () {
-      new NativeConstructor().entries().next();
-    }))
-  );
-
-  if (REPLACE) {
-    // create collection constructor
-    Constructor = common.getConstructor(wrapper, CONSTRUCTOR_NAME, IS_MAP, ADDER);
-    InternalMetadataModule.enable();
-  } else if (isForced(CONSTRUCTOR_NAME, true)) {
-    var instance = new Constructor();
-    // early implementations not supports chaining
-    var HASNT_CHAINING = instance[ADDER](IS_WEAK ? {} : -0, 1) != instance;
-    // V8 ~ Chromium 40- weak-collections throws on primitives, but should return false
-    var THROWS_ON_PRIMITIVES = fails(function () { instance.has(1); });
-    // most early implementations doesn't supports iterables, most modern - not close it correctly
-    // eslint-disable-next-line no-new -- required for testing
-    var ACCEPT_ITERABLES = checkCorrectnessOfIteration(function (iterable) { new NativeConstructor(iterable); });
-    // for early implementations -0 and +0 not the same
-    var BUGGY_ZERO = !IS_WEAK && fails(function () {
-      // V8 ~ Chromium 42- fails only with 5+ elements
-      var $instance = new NativeConstructor();
-      var index = 5;
-      while (index--) $instance[ADDER](index, index);
-      return !$instance.has(-0);
-    });
-
-    if (!ACCEPT_ITERABLES) {
-      Constructor = wrapper(function (dummy, iterable) {
-        anInstance(dummy, NativePrototype);
-        var that = inheritIfRequired(new NativeConstructor(), dummy, Constructor);
-        if (iterable != undefined) iterate(iterable, that[ADDER], { that: that, AS_ENTRIES: IS_MAP });
-        return that;
-      });
-      Constructor.prototype = NativePrototype;
-      NativePrototype.constructor = Constructor;
-    }
-
-    if (THROWS_ON_PRIMITIVES || BUGGY_ZERO) {
-      fixMethod('delete');
-      fixMethod('has');
-      IS_MAP && fixMethod('get');
-    }
-
-    if (BUGGY_ZERO || HASNT_CHAINING) fixMethod(ADDER);
-
-    // weak collections should not contains .clear method
-    if (IS_WEAK && NativePrototype.clear) delete NativePrototype.clear;
-  }
-
-  exported[CONSTRUCTOR_NAME] = Constructor;
-  $({ global: true, forced: Constructor != NativeConstructor }, exported);
-
-  setToStringTag(Constructor, CONSTRUCTOR_NAME);
-
-  if (!IS_WEAK) common.setStrong(Constructor, CONSTRUCTOR_NAME, IS_MAP);
-
-  return Constructor;
-};
-
-},{"../internals/an-instance":53,"../internals/check-correctness-of-iteration":58,"../internals/export":77,"../internals/fails":78,"../internals/function-uncurry-this":84,"../internals/global":89,"../internals/inherit-if-required":95,"../internals/internal-metadata":97,"../internals/is-callable":100,"../internals/is-forced":101,"../internals/is-object":102,"../internals/iterate":105,"../internals/redefine":131,"../internals/set-to-string-tag":135}],63:[function(require,module,exports){
-var hasOwn = require('../internals/has-own-property');
-var ownKeys = require('../internals/own-keys');
-var getOwnPropertyDescriptorModule = require('../internals/object-get-own-property-descriptor');
-var definePropertyModule = require('../internals/object-define-property');
-
-module.exports = function (target, source, exceptions) {
-  var keys = ownKeys(source);
-  var defineProperty = definePropertyModule.f;
-  var getOwnPropertyDescriptor = getOwnPropertyDescriptorModule.f;
-  for (var i = 0; i < keys.length; i++) {
-    var key = keys[i];
-    if (!hasOwn(target, key) && !(exceptions && hasOwn(exceptions, key))) {
-      defineProperty(target, key, getOwnPropertyDescriptor(source, key));
-    }
-  }
-};
-
-},{"../internals/has-own-property":90,"../internals/object-define-property":114,"../internals/object-get-own-property-descriptor":115,"../internals/own-keys":128}],64:[function(require,module,exports){
-var fails = require('../internals/fails');
-
-module.exports = !fails(function () {
-  function F() { /* empty */ }
-  F.prototype.constructor = null;
-  // eslint-disable-next-line es/no-object-getprototypeof -- required for testing
-  return Object.getPrototypeOf(new F()) !== F.prototype;
-});
-
-},{"../internals/fails":78}],65:[function(require,module,exports){
-'use strict';
-var IteratorPrototype = require('../internals/iterators-core').IteratorPrototype;
-var create = require('../internals/object-create');
-var createPropertyDescriptor = require('../internals/create-property-descriptor');
-var setToStringTag = require('../internals/set-to-string-tag');
-var Iterators = require('../internals/iterators');
-
-var returnThis = function () { return this; };
-
-module.exports = function (IteratorConstructor, NAME, next, ENUMERABLE_NEXT) {
-  var TO_STRING_TAG = NAME + ' Iterator';
-  IteratorConstructor.prototype = create(IteratorPrototype, { next: createPropertyDescriptor(+!ENUMERABLE_NEXT, next) });
-  setToStringTag(IteratorConstructor, TO_STRING_TAG, false, true);
-  Iterators[TO_STRING_TAG] = returnThis;
-  return IteratorConstructor;
-};
-
-},{"../internals/create-property-descriptor":67,"../internals/iterators":108,"../internals/iterators-core":107,"../internals/object-create":112,"../internals/set-to-string-tag":135}],66:[function(require,module,exports){
-var DESCRIPTORS = require('../internals/descriptors');
-var definePropertyModule = require('../internals/object-define-property');
-var createPropertyDescriptor = require('../internals/create-property-descriptor');
-
-module.exports = DESCRIPTORS ? function (object, key, value) {
-  return definePropertyModule.f(object, key, createPropertyDescriptor(1, value));
-} : function (object, key, value) {
-  object[key] = value;
-  return object;
-};
-
-},{"../internals/create-property-descriptor":67,"../internals/descriptors":70,"../internals/object-define-property":114}],67:[function(require,module,exports){
-module.exports = function (bitmap, value) {
-  return {
-    enumerable: !(bitmap & 1),
-    configurable: !(bitmap & 2),
-    writable: !(bitmap & 4),
-    value: value
-  };
-};
-
-},{}],68:[function(require,module,exports){
-'use strict';
-var toPropertyKey = require('../internals/to-property-key');
-var definePropertyModule = require('../internals/object-define-property');
-var createPropertyDescriptor = require('../internals/create-property-descriptor');
-
-module.exports = function (object, key, value) {
-  var propertyKey = toPropertyKey(key);
-  if (propertyKey in object) definePropertyModule.f(object, propertyKey, createPropertyDescriptor(0, value));
-  else object[propertyKey] = value;
-};
-
-},{"../internals/create-property-descriptor":67,"../internals/object-define-property":114,"../internals/to-property-key":146}],69:[function(require,module,exports){
-'use strict';
-var $ = require('../internals/export');
-var call = require('../internals/function-call');
-var IS_PURE = require('../internals/is-pure');
-var FunctionName = require('../internals/function-name');
-var isCallable = require('../internals/is-callable');
-var createIteratorConstructor = require('../internals/create-iterator-constructor');
-var getPrototypeOf = require('../internals/object-get-prototype-of');
-var setPrototypeOf = require('../internals/object-set-prototype-of');
-var setToStringTag = require('../internals/set-to-string-tag');
-var createNonEnumerableProperty = require('../internals/create-non-enumerable-property');
-var redefine = require('../internals/redefine');
-var wellKnownSymbol = require('../internals/well-known-symbol');
-var Iterators = require('../internals/iterators');
-var IteratorsCore = require('../internals/iterators-core');
-
-var PROPER_FUNCTION_NAME = FunctionName.PROPER;
-var CONFIGURABLE_FUNCTION_NAME = FunctionName.CONFIGURABLE;
-var IteratorPrototype = IteratorsCore.IteratorPrototype;
-var BUGGY_SAFARI_ITERATORS = IteratorsCore.BUGGY_SAFARI_ITERATORS;
-var ITERATOR = wellKnownSymbol('iterator');
-var KEYS = 'keys';
-var VALUES = 'values';
-var ENTRIES = 'entries';
-
-var returnThis = function () { return this; };
-
-module.exports = function (Iterable, NAME, IteratorConstructor, next, DEFAULT, IS_SET, FORCED) {
-  createIteratorConstructor(IteratorConstructor, NAME, next);
-
-  var getIterationMethod = function (KIND) {
-    if (KIND === DEFAULT && defaultIterator) return defaultIterator;
-    if (!BUGGY_SAFARI_ITERATORS && KIND in IterablePrototype) return IterablePrototype[KIND];
-    switch (KIND) {
-      case KEYS: return function keys() { return new IteratorConstructor(this, KIND); };
-      case VALUES: return function values() { return new IteratorConstructor(this, KIND); };
-      case ENTRIES: return function entries() { return new IteratorConstructor(this, KIND); };
-    } return function () { return new IteratorConstructor(this); };
-  };
-
-  var TO_STRING_TAG = NAME + ' Iterator';
-  var INCORRECT_VALUES_NAME = false;
-  var IterablePrototype = Iterable.prototype;
-  var nativeIterator = IterablePrototype[ITERATOR]
-    || IterablePrototype['@@iterator']
-    || DEFAULT && IterablePrototype[DEFAULT];
-  var defaultIterator = !BUGGY_SAFARI_ITERATORS && nativeIterator || getIterationMethod(DEFAULT);
-  var anyNativeIterator = NAME == 'Array' ? IterablePrototype.entries || nativeIterator : nativeIterator;
-  var CurrentIteratorPrototype, methods, KEY;
-
-  // fix native
-  if (anyNativeIterator) {
-    CurrentIteratorPrototype = getPrototypeOf(anyNativeIterator.call(new Iterable()));
-    if (CurrentIteratorPrototype !== Object.prototype && CurrentIteratorPrototype.next) {
-      if (!IS_PURE && getPrototypeOf(CurrentIteratorPrototype) !== IteratorPrototype) {
-        if (setPrototypeOf) {
-          setPrototypeOf(CurrentIteratorPrototype, IteratorPrototype);
-        } else if (!isCallable(CurrentIteratorPrototype[ITERATOR])) {
-          redefine(CurrentIteratorPrototype, ITERATOR, returnThis);
-        }
-      }
-      // Set @@toStringTag to native iterators
-      setToStringTag(CurrentIteratorPrototype, TO_STRING_TAG, true, true);
-      if (IS_PURE) Iterators[TO_STRING_TAG] = returnThis;
-    }
-  }
-
-  // fix Array.prototype.{ values, @@iterator }.name in V8 / FF
-  if (PROPER_FUNCTION_NAME && DEFAULT == VALUES && nativeIterator && nativeIterator.name !== VALUES) {
-    if (!IS_PURE && CONFIGURABLE_FUNCTION_NAME) {
-      createNonEnumerableProperty(IterablePrototype, 'name', VALUES);
-    } else {
-      INCORRECT_VALUES_NAME = true;
-      defaultIterator = function values() { return call(nativeIterator, this); };
-    }
-  }
-
-  // export additional methods
-  if (DEFAULT) {
-    methods = {
-      values: getIterationMethod(VALUES),
-      keys: IS_SET ? defaultIterator : getIterationMethod(KEYS),
-      entries: getIterationMethod(ENTRIES)
-    };
-    if (FORCED) for (KEY in methods) {
-      if (BUGGY_SAFARI_ITERATORS || INCORRECT_VALUES_NAME || !(KEY in IterablePrototype)) {
-        redefine(IterablePrototype, KEY, methods[KEY]);
-      }
-    } else $({ target: NAME, proto: true, forced: BUGGY_SAFARI_ITERATORS || INCORRECT_VALUES_NAME }, methods);
-  }
-
-  // define iterator
-  if ((!IS_PURE || FORCED) && IterablePrototype[ITERATOR] !== defaultIterator) {
-    redefine(IterablePrototype, ITERATOR, defaultIterator, { name: DEFAULT });
-  }
-  Iterators[NAME] = defaultIterator;
-
-  return methods;
-};
-
-},{"../internals/create-iterator-constructor":65,"../internals/create-non-enumerable-property":66,"../internals/export":77,"../internals/function-call":82,"../internals/function-name":83,"../internals/is-callable":100,"../internals/is-pure":103,"../internals/iterators":108,"../internals/iterators-core":107,"../internals/object-get-prototype-of":119,"../internals/object-set-prototype-of":125,"../internals/redefine":131,"../internals/set-to-string-tag":135,"../internals/well-known-symbol":153}],70:[function(require,module,exports){
-var fails = require('../internals/fails');
-
-// Detect IE8's incomplete defineProperty implementation
-module.exports = !fails(function () {
-  // eslint-disable-next-line es/no-object-defineproperty -- required for testing
-  return Object.defineProperty({}, 1, { get: function () { return 7; } })[1] != 7;
-});
-
-},{"../internals/fails":78}],71:[function(require,module,exports){
-var global = require('../internals/global');
-var isObject = require('../internals/is-object');
-
-var document = global.document;
-// typeof document.createElement is 'object' in old IE
-var EXISTS = isObject(document) && isObject(document.createElement);
-
-module.exports = function (it) {
-  return EXISTS ? document.createElement(it) : {};
-};
-
-},{"../internals/global":89,"../internals/is-object":102}],72:[function(require,module,exports){
-// iterable DOM collections
-// flag - `iterable` interface - 'entries', 'keys', 'values', 'forEach' methods
-module.exports = {
-  CSSRuleList: 0,
-  CSSStyleDeclaration: 0,
-  CSSValueList: 0,
-  ClientRectList: 0,
-  DOMRectList: 0,
-  DOMStringList: 0,
-  DOMTokenList: 1,
-  DataTransferItemList: 0,
-  FileList: 0,
-  HTMLAllCollection: 0,
-  HTMLCollection: 0,
-  HTMLFormElement: 0,
-  HTMLSelectElement: 0,
-  MediaList: 0,
-  MimeTypeArray: 0,
-  NamedNodeMap: 0,
-  NodeList: 1,
-  PaintRequestList: 0,
-  Plugin: 0,
-  PluginArray: 0,
-  SVGLengthList: 0,
-  SVGNumberList: 0,
-  SVGPathSegList: 0,
-  SVGPointList: 0,
-  SVGStringList: 0,
-  SVGTransformList: 0,
-  SourceBufferList: 0,
-  StyleSheetList: 0,
-  TextTrackCueList: 0,
-  TextTrackList: 0,
-  TouchList: 0
-};
-
-},{}],73:[function(require,module,exports){
-// in old WebKit versions, `element.classList` is not an instance of global `DOMTokenList`
-var documentCreateElement = require('../internals/document-create-element');
-
-var classList = documentCreateElement('span').classList;
-var DOMTokenListPrototype = classList && classList.constructor && classList.constructor.prototype;
-
-module.exports = DOMTokenListPrototype === Object.prototype ? undefined : DOMTokenListPrototype;
-
-},{"../internals/document-create-element":71}],74:[function(require,module,exports){
-var getBuiltIn = require('../internals/get-built-in');
-
-module.exports = getBuiltIn('navigator', 'userAgent') || '';
-
-},{"../internals/get-built-in":85}],75:[function(require,module,exports){
-var global = require('../internals/global');
-var userAgent = require('../internals/engine-user-agent');
-
-var process = global.process;
-var Deno = global.Deno;
-var versions = process && process.versions || Deno && Deno.version;
-var v8 = versions && versions.v8;
-var match, version;
-
-if (v8) {
-  match = v8.split('.');
-  // in old Chrome, versions of V8 isn't V8 = Chrome / 10
-  // but their correct versions are not interesting for us
-  version = match[0] > 0 && match[0] < 4 ? 1 : +(match[0] + match[1]);
-}
-
-// BrowserFS NodeJS `process` polyfill incorrectly set `.v8` to `0.0`
-// so check `userAgent` even if `.v8` exists, but 0
-if (!version && userAgent) {
-  match = userAgent.match(/Edge\/(\d+)/);
-  if (!match || match[1] >= 74) {
-    match = userAgent.match(/Chrome\/(\d+)/);
-    if (match) version = +match[1];
-  }
-}
-
-module.exports = version;
-
-},{"../internals/engine-user-agent":74,"../internals/global":89}],76:[function(require,module,exports){
-// IE8- don't enum bug keys
-module.exports = [
-  'constructor',
-  'hasOwnProperty',
-  'isPrototypeOf',
-  'propertyIsEnumerable',
-  'toLocaleString',
-  'toString',
-  'valueOf'
-];
-
-},{}],77:[function(require,module,exports){
-var global = require('../internals/global');
-var getOwnPropertyDescriptor = require('../internals/object-get-own-property-descriptor').f;
-var createNonEnumerableProperty = require('../internals/create-non-enumerable-property');
-var redefine = require('../internals/redefine');
-var setGlobal = require('../internals/set-global');
-var copyConstructorProperties = require('../internals/copy-constructor-properties');
-var isForced = require('../internals/is-forced');
-
-/*
-  options.target      - name of the target object
-  options.global      - target is the global object
-  options.stat        - export as static methods of target
-  options.proto       - export as prototype methods of target
-  options.real        - real prototype method for the `pure` version
-  options.forced      - export even if the native feature is available
-  options.bind        - bind methods to the target, required for the `pure` version
-  options.wrap        - wrap constructors to preventing global pollution, required for the `pure` version
-  options.unsafe      - use the simple assignment of property instead of delete + defineProperty
-  options.sham        - add a flag to not completely full polyfills
-  options.enumerable  - export as enumerable property
-  options.noTargetGet - prevent calling a getter on target
-  options.name        - the .name of the function if it does not match the key
-*/
-module.exports = function (options, source) {
-  var TARGET = options.target;
-  var GLOBAL = options.global;
-  var STATIC = options.stat;
-  var FORCED, target, key, targetProperty, sourceProperty, descriptor;
-  if (GLOBAL) {
-    target = global;
-  } else if (STATIC) {
-    target = global[TARGET] || setGlobal(TARGET, {});
-  } else {
-    target = (global[TARGET] || {}).prototype;
-  }
-  if (target) for (key in source) {
-    sourceProperty = source[key];
-    if (options.noTargetGet) {
-      descriptor = getOwnPropertyDescriptor(target, key);
-      targetProperty = descriptor && descriptor.value;
-    } else targetProperty = target[key];
-    FORCED = isForced(GLOBAL ? key : TARGET + (STATIC ? '.' : '#') + key, options.forced);
-    // contained in target
-    if (!FORCED && targetProperty !== undefined) {
-      if (typeof sourceProperty == typeof targetProperty) continue;
-      copyConstructorProperties(sourceProperty, targetProperty);
-    }
-    // add a flag to not completely full polyfills
-    if (options.sham || (targetProperty && targetProperty.sham)) {
-      createNonEnumerableProperty(sourceProperty, 'sham', true);
-    }
-    // extend global
-    redefine(target, key, sourceProperty, options);
-  }
-};
-
-},{"../internals/copy-constructor-properties":63,"../internals/create-non-enumerable-property":66,"../internals/global":89,"../internals/is-forced":101,"../internals/object-get-own-property-descriptor":115,"../internals/redefine":131,"../internals/set-global":133}],78:[function(require,module,exports){
-module.exports = function (exec) {
-  try {
-    return !!exec();
-  } catch (error) {
-    return true;
-  }
-};
-
-},{}],79:[function(require,module,exports){
-var fails = require('../internals/fails');
-
-module.exports = !fails(function () {
-  // eslint-disable-next-line es/no-object-isextensible, es/no-object-preventextensions -- required for testing
-  return Object.isExtensible(Object.preventExtensions({}));
-});
-
-},{"../internals/fails":78}],80:[function(require,module,exports){
-var uncurryThis = require('../internals/function-uncurry-this');
-var aCallable = require('../internals/a-callable');
-var NATIVE_BIND = require('../internals/function-bind-native');
-
-var bind = uncurryThis(uncurryThis.bind);
-
-// optional / simple context binding
-module.exports = function (fn, that) {
-  aCallable(fn);
-  return that === undefined ? fn : NATIVE_BIND ? bind(fn, that) : function (/* ...args */) {
-    return fn.apply(that, arguments);
-  };
-};
-
-},{"../internals/a-callable":50,"../internals/function-bind-native":81,"../internals/function-uncurry-this":84}],81:[function(require,module,exports){
-var fails = require('../internals/fails');
-
-module.exports = !fails(function () {
-  var test = (function () { /* empty */ }).bind();
-  // eslint-disable-next-line no-prototype-builtins -- safe
-  return typeof test != 'function' || test.hasOwnProperty('prototype');
-});
-
-},{"../internals/fails":78}],82:[function(require,module,exports){
-var NATIVE_BIND = require('../internals/function-bind-native');
-
-var call = Function.prototype.call;
-
-module.exports = NATIVE_BIND ? call.bind(call) : function () {
-  return call.apply(call, arguments);
-};
-
-},{"../internals/function-bind-native":81}],83:[function(require,module,exports){
-var DESCRIPTORS = require('../internals/descriptors');
-var hasOwn = require('../internals/has-own-property');
-
-var FunctionPrototype = Function.prototype;
-// eslint-disable-next-line es/no-object-getownpropertydescriptor -- safe
-var getDescriptor = DESCRIPTORS && Object.getOwnPropertyDescriptor;
-
-var EXISTS = hasOwn(FunctionPrototype, 'name');
-// additional protection from minified / mangled / dropped function names
-var PROPER = EXISTS && (function something() { /* empty */ }).name === 'something';
-var CONFIGURABLE = EXISTS && (!DESCRIPTORS || (DESCRIPTORS && getDescriptor(FunctionPrototype, 'name').configurable));
-
-module.exports = {
-  EXISTS: EXISTS,
-  PROPER: PROPER,
-  CONFIGURABLE: CONFIGURABLE
-};
-
-},{"../internals/descriptors":70,"../internals/has-own-property":90}],84:[function(require,module,exports){
-var NATIVE_BIND = require('../internals/function-bind-native');
-
-var FunctionPrototype = Function.prototype;
-var bind = FunctionPrototype.bind;
-var call = FunctionPrototype.call;
-var uncurryThis = NATIVE_BIND && bind.bind(call, call);
-
-module.exports = NATIVE_BIND ? function (fn) {
-  return fn && uncurryThis(fn);
-} : function (fn) {
-  return fn && function () {
-    return call.apply(fn, arguments);
-  };
-};
-
-},{"../internals/function-bind-native":81}],85:[function(require,module,exports){
-var global = require('../internals/global');
-var isCallable = require('../internals/is-callable');
-
-var aFunction = function (argument) {
-  return isCallable(argument) ? argument : undefined;
-};
-
-module.exports = function (namespace, method) {
-  return arguments.length < 2 ? aFunction(global[namespace]) : global[namespace] && global[namespace][method];
-};
-
-},{"../internals/global":89,"../internals/is-callable":100}],86:[function(require,module,exports){
-var classof = require('../internals/classof');
-var getMethod = require('../internals/get-method');
-var Iterators = require('../internals/iterators');
-var wellKnownSymbol = require('../internals/well-known-symbol');
-
-var ITERATOR = wellKnownSymbol('iterator');
-
-module.exports = function (it) {
-  if (it != undefined) return getMethod(it, ITERATOR)
-    || getMethod(it, '@@iterator')
-    || Iterators[classof(it)];
-};
-
-},{"../internals/classof":60,"../internals/get-method":88,"../internals/iterators":108,"../internals/well-known-symbol":153}],87:[function(require,module,exports){
-var global = require('../internals/global');
-var call = require('../internals/function-call');
-var aCallable = require('../internals/a-callable');
-var anObject = require('../internals/an-object');
-var tryToString = require('../internals/try-to-string');
-var getIteratorMethod = require('../internals/get-iterator-method');
-
-var TypeError = global.TypeError;
-
-module.exports = function (argument, usingIterator) {
-  var iteratorMethod = arguments.length < 2 ? getIteratorMethod(argument) : usingIterator;
-  if (aCallable(iteratorMethod)) return anObject(call(iteratorMethod, argument));
-  throw TypeError(tryToString(argument) + ' is not iterable');
-};
-
-},{"../internals/a-callable":50,"../internals/an-object":54,"../internals/function-call":82,"../internals/get-iterator-method":86,"../internals/global":89,"../internals/try-to-string":149}],88:[function(require,module,exports){
-var aCallable = require('../internals/a-callable');
-
-// `GetMethod` abstract operation
-// https://tc39.es/ecma262/#sec-getmethod
-module.exports = function (V, P) {
-  var func = V[P];
-  return func == null ? undefined : aCallable(func);
-};
-
-},{"../internals/a-callable":50}],89:[function(require,module,exports){
-(function (global){(function (){
-var check = function (it) {
-  return it && it.Math == Math && it;
-};
-
-// https://github.com/zloirock/core-js/issues/86#issuecomment-115759028
-module.exports =
-  // eslint-disable-next-line es/no-global-this -- safe
-  check(typeof globalThis == 'object' && globalThis) ||
-  check(typeof window == 'object' && window) ||
-  // eslint-disable-next-line no-restricted-globals -- safe
-  check(typeof self == 'object' && self) ||
-  check(typeof global == 'object' && global) ||
-  // eslint-disable-next-line no-new-func -- fallback
-  (function () { return this; })() || Function('return this')();
-
-}).call(this)}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],90:[function(require,module,exports){
-var uncurryThis = require('../internals/function-uncurry-this');
-var toObject = require('../internals/to-object');
-
-var hasOwnProperty = uncurryThis({}.hasOwnProperty);
-
-// `HasOwnProperty` abstract operation
-// https://tc39.es/ecma262/#sec-hasownproperty
-module.exports = Object.hasOwn || function hasOwn(it, key) {
-  return hasOwnProperty(toObject(it), key);
-};
-
-},{"../internals/function-uncurry-this":84,"../internals/to-object":144}],91:[function(require,module,exports){
-module.exports = {};
-
-},{}],92:[function(require,module,exports){
-var getBuiltIn = require('../internals/get-built-in');
-
-module.exports = getBuiltIn('document', 'documentElement');
-
-},{"../internals/get-built-in":85}],93:[function(require,module,exports){
-var DESCRIPTORS = require('../internals/descriptors');
-var fails = require('../internals/fails');
-var createElement = require('../internals/document-create-element');
-
-// Thanks to IE8 for its funny defineProperty
-module.exports = !DESCRIPTORS && !fails(function () {
-  // eslint-disable-next-line es/no-object-defineproperty -- required for testing
-  return Object.defineProperty(createElement('div'), 'a', {
-    get: function () { return 7; }
-  }).a != 7;
-});
-
-},{"../internals/descriptors":70,"../internals/document-create-element":71,"../internals/fails":78}],94:[function(require,module,exports){
-var global = require('../internals/global');
-var uncurryThis = require('../internals/function-uncurry-this');
-var fails = require('../internals/fails');
-var classof = require('../internals/classof-raw');
-
-var Object = global.Object;
-var split = uncurryThis(''.split);
-
-// fallback for non-array-like ES3 and non-enumerable old V8 strings
-module.exports = fails(function () {
-  // throws an error in rhino, see https://github.com/mozilla/rhino/issues/346
-  // eslint-disable-next-line no-prototype-builtins -- safe
-  return !Object('z').propertyIsEnumerable(0);
-}) ? function (it) {
-  return classof(it) == 'String' ? split(it, '') : Object(it);
-} : Object;
-
-},{"../internals/classof-raw":59,"../internals/fails":78,"../internals/function-uncurry-this":84,"../internals/global":89}],95:[function(require,module,exports){
-var isCallable = require('../internals/is-callable');
-var isObject = require('../internals/is-object');
-var setPrototypeOf = require('../internals/object-set-prototype-of');
-
-// makes subclassing work correct for wrapped built-ins
-module.exports = function ($this, dummy, Wrapper) {
-  var NewTarget, NewTargetPrototype;
-  if (
-    // it can work only with native `setPrototypeOf`
-    setPrototypeOf &&
-    // we haven't completely correct pre-ES6 way for getting `new.target`, so use this
-    isCallable(NewTarget = dummy.constructor) &&
-    NewTarget !== Wrapper &&
-    isObject(NewTargetPrototype = NewTarget.prototype) &&
-    NewTargetPrototype !== Wrapper.prototype
-  ) setPrototypeOf($this, NewTargetPrototype);
-  return $this;
-};
-
-},{"../internals/is-callable":100,"../internals/is-object":102,"../internals/object-set-prototype-of":125}],96:[function(require,module,exports){
-var uncurryThis = require('../internals/function-uncurry-this');
-var isCallable = require('../internals/is-callable');
-var store = require('../internals/shared-store');
-
-var functionToString = uncurryThis(Function.toString);
-
-// this helper broken in `core-js@3.4.1-3.4.4`, so we can't use `shared` helper
-if (!isCallable(store.inspectSource)) {
-  store.inspectSource = function (it) {
-    return functionToString(it);
-  };
-}
-
-module.exports = store.inspectSource;
-
-},{"../internals/function-uncurry-this":84,"../internals/is-callable":100,"../internals/shared-store":137}],97:[function(require,module,exports){
-var $ = require('../internals/export');
-var uncurryThis = require('../internals/function-uncurry-this');
-var hiddenKeys = require('../internals/hidden-keys');
-var isObject = require('../internals/is-object');
-var hasOwn = require('../internals/has-own-property');
-var defineProperty = require('../internals/object-define-property').f;
-var getOwnPropertyNamesModule = require('../internals/object-get-own-property-names');
-var getOwnPropertyNamesExternalModule = require('../internals/object-get-own-property-names-external');
-var isExtensible = require('../internals/object-is-extensible');
-var uid = require('../internals/uid');
-var FREEZING = require('../internals/freezing');
-
-var REQUIRED = false;
-var METADATA = uid('meta');
-var id = 0;
-
-var setMetadata = function (it) {
-  defineProperty(it, METADATA, { value: {
-    objectID: 'O' + id++, // object ID
-    weakData: {}          // weak collections IDs
-  } });
-};
-
-var fastKey = function (it, create) {
-  // return a primitive with prefix
-  if (!isObject(it)) return typeof it == 'symbol' ? it : (typeof it == 'string' ? 'S' : 'P') + it;
-  if (!hasOwn(it, METADATA)) {
-    // can't set metadata to uncaught frozen object
-    if (!isExtensible(it)) return 'F';
-    // not necessary to add metadata
-    if (!create) return 'E';
-    // add missing metadata
-    setMetadata(it);
-  // return object ID
-  } return it[METADATA].objectID;
-};
-
-var getWeakData = function (it, create) {
-  if (!hasOwn(it, METADATA)) {
-    // can't set metadata to uncaught frozen object
-    if (!isExtensible(it)) return true;
-    // not necessary to add metadata
-    if (!create) return false;
-    // add missing metadata
-    setMetadata(it);
-  // return the store of weak collections IDs
-  } return it[METADATA].weakData;
-};
-
-// add metadata on freeze-family methods calling
-var onFreeze = function (it) {
-  if (FREEZING && REQUIRED && isExtensible(it) && !hasOwn(it, METADATA)) setMetadata(it);
-  return it;
-};
-
-var enable = function () {
-  meta.enable = function () { /* empty */ };
-  REQUIRED = true;
-  var getOwnPropertyNames = getOwnPropertyNamesModule.f;
-  var splice = uncurryThis([].splice);
-  var test = {};
-  test[METADATA] = 1;
-
-  // prevent exposing of metadata key
-  if (getOwnPropertyNames(test).length) {
-    getOwnPropertyNamesModule.f = function (it) {
-      var result = getOwnPropertyNames(it);
-      for (var i = 0, length = result.length; i < length; i++) {
-        if (result[i] === METADATA) {
-          splice(result, i, 1);
-          break;
-        }
-      } return result;
-    };
-
-    $({ target: 'Object', stat: true, forced: true }, {
-      getOwnPropertyNames: getOwnPropertyNamesExternalModule.f
-    });
-  }
-};
-
-var meta = module.exports = {
-  enable: enable,
-  fastKey: fastKey,
-  getWeakData: getWeakData,
-  onFreeze: onFreeze
-};
-
-hiddenKeys[METADATA] = true;
-
-},{"../internals/export":77,"../internals/freezing":79,"../internals/function-uncurry-this":84,"../internals/has-own-property":90,"../internals/hidden-keys":91,"../internals/is-object":102,"../internals/object-define-property":114,"../internals/object-get-own-property-names":117,"../internals/object-get-own-property-names-external":116,"../internals/object-is-extensible":120,"../internals/uid":150}],98:[function(require,module,exports){
-var NATIVE_WEAK_MAP = require('../internals/native-weak-map');
-var global = require('../internals/global');
-var uncurryThis = require('../internals/function-uncurry-this');
-var isObject = require('../internals/is-object');
-var createNonEnumerableProperty = require('../internals/create-non-enumerable-property');
-var hasOwn = require('../internals/has-own-property');
-var shared = require('../internals/shared-store');
-var sharedKey = require('../internals/shared-key');
-var hiddenKeys = require('../internals/hidden-keys');
-
-var OBJECT_ALREADY_INITIALIZED = 'Object already initialized';
-var TypeError = global.TypeError;
-var WeakMap = global.WeakMap;
-var set, get, has;
-
-var enforce = function (it) {
-  return has(it) ? get(it) : set(it, {});
-};
-
-var getterFor = function (TYPE) {
-  return function (it) {
-    var state;
-    if (!isObject(it) || (state = get(it)).type !== TYPE) {
-      throw TypeError('Incompatible receiver, ' + TYPE + ' required');
-    } return state;
-  };
-};
-
-if (NATIVE_WEAK_MAP || shared.state) {
-  var store = shared.state || (shared.state = new WeakMap());
-  var wmget = uncurryThis(store.get);
-  var wmhas = uncurryThis(store.has);
-  var wmset = uncurryThis(store.set);
-  set = function (it, metadata) {
-    if (wmhas(store, it)) throw new TypeError(OBJECT_ALREADY_INITIALIZED);
-    metadata.facade = it;
-    wmset(store, it, metadata);
-    return metadata;
-  };
-  get = function (it) {
-    return wmget(store, it) || {};
-  };
-  has = function (it) {
-    return wmhas(store, it);
-  };
-} else {
-  var STATE = sharedKey('state');
-  hiddenKeys[STATE] = true;
-  set = function (it, metadata) {
-    if (hasOwn(it, STATE)) throw new TypeError(OBJECT_ALREADY_INITIALIZED);
-    metadata.facade = it;
-    createNonEnumerableProperty(it, STATE, metadata);
-    return metadata;
-  };
-  get = function (it) {
-    return hasOwn(it, STATE) ? it[STATE] : {};
-  };
-  has = function (it) {
-    return hasOwn(it, STATE);
-  };
-}
-
-module.exports = {
-  set: set,
-  get: get,
-  has: has,
-  enforce: enforce,
-  getterFor: getterFor
-};
-
-},{"../internals/create-non-enumerable-property":66,"../internals/function-uncurry-this":84,"../internals/global":89,"../internals/has-own-property":90,"../internals/hidden-keys":91,"../internals/is-object":102,"../internals/native-weak-map":111,"../internals/shared-key":136,"../internals/shared-store":137}],99:[function(require,module,exports){
-var wellKnownSymbol = require('../internals/well-known-symbol');
-var Iterators = require('../internals/iterators');
-
-var ITERATOR = wellKnownSymbol('iterator');
-var ArrayPrototype = Array.prototype;
-
-// check on default Array iterator
-module.exports = function (it) {
-  return it !== undefined && (Iterators.Array === it || ArrayPrototype[ITERATOR] === it);
-};
-
-},{"../internals/iterators":108,"../internals/well-known-symbol":153}],100:[function(require,module,exports){
-// `IsCallable` abstract operation
-// https://tc39.es/ecma262/#sec-iscallable
-module.exports = function (argument) {
-  return typeof argument == 'function';
-};
-
-},{}],101:[function(require,module,exports){
-var fails = require('../internals/fails');
-var isCallable = require('../internals/is-callable');
-
-var replacement = /#|\.prototype\./;
-
-var isForced = function (feature, detection) {
-  var value = data[normalize(feature)];
-  return value == POLYFILL ? true
-    : value == NATIVE ? false
-    : isCallable(detection) ? fails(detection)
-    : !!detection;
-};
-
-var normalize = isForced.normalize = function (string) {
-  return String(string).replace(replacement, '.').toLowerCase();
-};
-
-var data = isForced.data = {};
-var NATIVE = isForced.NATIVE = 'N';
-var POLYFILL = isForced.POLYFILL = 'P';
-
-module.exports = isForced;
-
-},{"../internals/fails":78,"../internals/is-callable":100}],102:[function(require,module,exports){
-var isCallable = require('../internals/is-callable');
-
-module.exports = function (it) {
-  return typeof it == 'object' ? it !== null : isCallable(it);
-};
-
-},{"../internals/is-callable":100}],103:[function(require,module,exports){
-module.exports = false;
-
-},{}],104:[function(require,module,exports){
-var global = require('../internals/global');
-var getBuiltIn = require('../internals/get-built-in');
-var isCallable = require('../internals/is-callable');
-var isPrototypeOf = require('../internals/object-is-prototype-of');
-var USE_SYMBOL_AS_UID = require('../internals/use-symbol-as-uid');
-
-var Object = global.Object;
-
-module.exports = USE_SYMBOL_AS_UID ? function (it) {
-  return typeof it == 'symbol';
-} : function (it) {
-  var $Symbol = getBuiltIn('Symbol');
-  return isCallable($Symbol) && isPrototypeOf($Symbol.prototype, Object(it));
-};
-
-},{"../internals/get-built-in":85,"../internals/global":89,"../internals/is-callable":100,"../internals/object-is-prototype-of":121,"../internals/use-symbol-as-uid":151}],105:[function(require,module,exports){
-var global = require('../internals/global');
-var bind = require('../internals/function-bind-context');
-var call = require('../internals/function-call');
-var anObject = require('../internals/an-object');
-var tryToString = require('../internals/try-to-string');
-var isArrayIteratorMethod = require('../internals/is-array-iterator-method');
-var lengthOfArrayLike = require('../internals/length-of-array-like');
-var isPrototypeOf = require('../internals/object-is-prototype-of');
-var getIterator = require('../internals/get-iterator');
-var getIteratorMethod = require('../internals/get-iterator-method');
-var iteratorClose = require('../internals/iterator-close');
-
-var TypeError = global.TypeError;
-
-var Result = function (stopped, result) {
-  this.stopped = stopped;
-  this.result = result;
-};
-
-var ResultPrototype = Result.prototype;
-
-module.exports = function (iterable, unboundFunction, options) {
-  var that = options && options.that;
-  var AS_ENTRIES = !!(options && options.AS_ENTRIES);
-  var IS_ITERATOR = !!(options && options.IS_ITERATOR);
-  var INTERRUPTED = !!(options && options.INTERRUPTED);
-  var fn = bind(unboundFunction, that);
-  var iterator, iterFn, index, length, result, next, step;
-
-  var stop = function (condition) {
-    if (iterator) iteratorClose(iterator, 'normal', condition);
-    return new Result(true, condition);
-  };
-
-  var callFn = function (value) {
-    if (AS_ENTRIES) {
-      anObject(value);
-      return INTERRUPTED ? fn(value[0], value[1], stop) : fn(value[0], value[1]);
-    } return INTERRUPTED ? fn(value, stop) : fn(value);
-  };
-
-  if (IS_ITERATOR) {
-    iterator = iterable;
-  } else {
-    iterFn = getIteratorMethod(iterable);
-    if (!iterFn) throw TypeError(tryToString(iterable) + ' is not iterable');
-    // optimisation for array iterators
-    if (isArrayIteratorMethod(iterFn)) {
-      for (index = 0, length = lengthOfArrayLike(iterable); length > index; index++) {
-        result = callFn(iterable[index]);
-        if (result && isPrototypeOf(ResultPrototype, result)) return result;
-      } return new Result(false);
-    }
-    iterator = getIterator(iterable, iterFn);
-  }
-
-  next = iterator.next;
-  while (!(step = call(next, iterator)).done) {
-    try {
-      result = callFn(step.value);
-    } catch (error) {
-      iteratorClose(iterator, 'throw', error);
-    }
-    if (typeof result == 'object' && result && isPrototypeOf(ResultPrototype, result)) return result;
-  } return new Result(false);
-};
-
-},{"../internals/an-object":54,"../internals/function-bind-context":80,"../internals/function-call":82,"../internals/get-iterator":87,"../internals/get-iterator-method":86,"../internals/global":89,"../internals/is-array-iterator-method":99,"../internals/iterator-close":106,"../internals/length-of-array-like":109,"../internals/object-is-prototype-of":121,"../internals/try-to-string":149}],106:[function(require,module,exports){
-var call = require('../internals/function-call');
-var anObject = require('../internals/an-object');
-var getMethod = require('../internals/get-method');
-
-module.exports = function (iterator, kind, value) {
-  var innerResult, innerError;
-  anObject(iterator);
-  try {
-    innerResult = getMethod(iterator, 'return');
-    if (!innerResult) {
-      if (kind === 'throw') throw value;
-      return value;
-    }
-    innerResult = call(innerResult, iterator);
-  } catch (error) {
-    innerError = true;
-    innerResult = error;
-  }
-  if (kind === 'throw') throw value;
-  if (innerError) throw innerResult;
-  anObject(innerResult);
-  return value;
-};
-
-},{"../internals/an-object":54,"../internals/function-call":82,"../internals/get-method":88}],107:[function(require,module,exports){
-'use strict';
-var fails = require('../internals/fails');
-var isCallable = require('../internals/is-callable');
-var create = require('../internals/object-create');
-var getPrototypeOf = require('../internals/object-get-prototype-of');
-var redefine = require('../internals/redefine');
-var wellKnownSymbol = require('../internals/well-known-symbol');
-var IS_PURE = require('../internals/is-pure');
-
-var ITERATOR = wellKnownSymbol('iterator');
-var BUGGY_SAFARI_ITERATORS = false;
-
-// `%IteratorPrototype%` object
-// https://tc39.es/ecma262/#sec-%iteratorprototype%-object
-var IteratorPrototype, PrototypeOfArrayIteratorPrototype, arrayIterator;
-
-/* eslint-disable es/no-array-prototype-keys -- safe */
-if ([].keys) {
-  arrayIterator = [].keys();
-  // Safari 8 has buggy iterators w/o `next`
-  if (!('next' in arrayIterator)) BUGGY_SAFARI_ITERATORS = true;
-  else {
-    PrototypeOfArrayIteratorPrototype = getPrototypeOf(getPrototypeOf(arrayIterator));
-    if (PrototypeOfArrayIteratorPrototype !== Object.prototype) IteratorPrototype = PrototypeOfArrayIteratorPrototype;
-  }
-}
-
-var NEW_ITERATOR_PROTOTYPE = IteratorPrototype == undefined || fails(function () {
-  var test = {};
-  // FF44- legacy iterators case
-  return IteratorPrototype[ITERATOR].call(test) !== test;
-});
-
-if (NEW_ITERATOR_PROTOTYPE) IteratorPrototype = {};
-else if (IS_PURE) IteratorPrototype = create(IteratorPrototype);
-
-// `%IteratorPrototype%[@@iterator]()` method
-// https://tc39.es/ecma262/#sec-%iteratorprototype%-@@iterator
-if (!isCallable(IteratorPrototype[ITERATOR])) {
-  redefine(IteratorPrototype, ITERATOR, function () {
-    return this;
-  });
-}
-
-module.exports = {
-  IteratorPrototype: IteratorPrototype,
-  BUGGY_SAFARI_ITERATORS: BUGGY_SAFARI_ITERATORS
-};
-
-},{"../internals/fails":78,"../internals/is-callable":100,"../internals/is-pure":103,"../internals/object-create":112,"../internals/object-get-prototype-of":119,"../internals/redefine":131,"../internals/well-known-symbol":153}],108:[function(require,module,exports){
-arguments[4][91][0].apply(exports,arguments)
-},{"dup":91}],109:[function(require,module,exports){
-var toLength = require('../internals/to-length');
-
-// `LengthOfArrayLike` abstract operation
-// https://tc39.es/ecma262/#sec-lengthofarraylike
-module.exports = function (obj) {
-  return toLength(obj.length);
-};
-
-},{"../internals/to-length":143}],110:[function(require,module,exports){
-/* eslint-disable es/no-symbol -- required for testing */
-var V8_VERSION = require('../internals/engine-v8-version');
-var fails = require('../internals/fails');
-
-// eslint-disable-next-line es/no-object-getownpropertysymbols -- required for testing
-module.exports = !!Object.getOwnPropertySymbols && !fails(function () {
-  var symbol = Symbol();
-  // Chrome 38 Symbol has incorrect toString conversion
-  // `get-own-property-symbols` polyfill symbols converted to object are not Symbol instances
-  return !String(symbol) || !(Object(symbol) instanceof Symbol) ||
-    // Chrome 38-40 symbols are not inherited from DOM collections prototypes to instances
-    !Symbol.sham && V8_VERSION && V8_VERSION < 41;
-});
-
-},{"../internals/engine-v8-version":75,"../internals/fails":78}],111:[function(require,module,exports){
-var global = require('../internals/global');
-var isCallable = require('../internals/is-callable');
-var inspectSource = require('../internals/inspect-source');
-
-var WeakMap = global.WeakMap;
-
-module.exports = isCallable(WeakMap) && /native code/.test(inspectSource(WeakMap));
-
-},{"../internals/global":89,"../internals/inspect-source":96,"../internals/is-callable":100}],112:[function(require,module,exports){
-/* global ActiveXObject -- old IE, WSH */
-var anObject = require('../internals/an-object');
-var definePropertiesModule = require('../internals/object-define-properties');
-var enumBugKeys = require('../internals/enum-bug-keys');
-var hiddenKeys = require('../internals/hidden-keys');
-var html = require('../internals/html');
-var documentCreateElement = require('../internals/document-create-element');
-var sharedKey = require('../internals/shared-key');
-
-var GT = '>';
-var LT = '<';
-var PROTOTYPE = 'prototype';
-var SCRIPT = 'script';
-var IE_PROTO = sharedKey('IE_PROTO');
-
-var EmptyConstructor = function () { /* empty */ };
-
-var scriptTag = function (content) {
-  return LT + SCRIPT + GT + content + LT + '/' + SCRIPT + GT;
-};
-
-// Create object with fake `null` prototype: use ActiveX Object with cleared prototype
-var NullProtoObjectViaActiveX = function (activeXDocument) {
-  activeXDocument.write(scriptTag(''));
-  activeXDocument.close();
-  var temp = activeXDocument.parentWindow.Object;
-  activeXDocument = null; // avoid memory leak
-  return temp;
-};
-
-// Create object with fake `null` prototype: use iframe Object with cleared prototype
-var NullProtoObjectViaIFrame = function () {
-  // Thrash, waste and sodomy: IE GC bug
-  var iframe = documentCreateElement('iframe');
-  var JS = 'java' + SCRIPT + ':';
-  var iframeDocument;
-  iframe.style.display = 'none';
-  html.appendChild(iframe);
-  // https://github.com/zloirock/core-js/issues/475
-  iframe.src = String(JS);
-  iframeDocument = iframe.contentWindow.document;
-  iframeDocument.open();
-  iframeDocument.write(scriptTag('document.F=Object'));
-  iframeDocument.close();
-  return iframeDocument.F;
-};
-
-// Check for document.domain and active x support
-// No need to use active x approach when document.domain is not set
-// see https://github.com/es-shims/es5-shim/issues/150
-// variation of https://github.com/kitcambridge/es5-shim/commit/4f738ac066346
-// avoid IE GC bug
-var activeXDocument;
-var NullProtoObject = function () {
-  try {
-    activeXDocument = new ActiveXObject('htmlfile');
-  } catch (error) { /* ignore */ }
-  NullProtoObject = typeof document != 'undefined'
-    ? document.domain && activeXDocument
-      ? NullProtoObjectViaActiveX(activeXDocument) // old IE
-      : NullProtoObjectViaIFrame()
-    : NullProtoObjectViaActiveX(activeXDocument); // WSH
-  var length = enumBugKeys.length;
-  while (length--) delete NullProtoObject[PROTOTYPE][enumBugKeys[length]];
-  return NullProtoObject();
-};
-
-hiddenKeys[IE_PROTO] = true;
-
-// `Object.create` method
-// https://tc39.es/ecma262/#sec-object.create
-module.exports = Object.create || function create(O, Properties) {
-  var result;
-  if (O !== null) {
-    EmptyConstructor[PROTOTYPE] = anObject(O);
-    result = new EmptyConstructor();
-    EmptyConstructor[PROTOTYPE] = null;
-    // add "__proto__" for Object.getPrototypeOf polyfill
-    result[IE_PROTO] = O;
-  } else result = NullProtoObject();
-  return Properties === undefined ? result : definePropertiesModule.f(result, Properties);
-};
-
-},{"../internals/an-object":54,"../internals/document-create-element":71,"../internals/enum-bug-keys":76,"../internals/hidden-keys":91,"../internals/html":92,"../internals/object-define-properties":113,"../internals/shared-key":136}],113:[function(require,module,exports){
-var DESCRIPTORS = require('../internals/descriptors');
-var V8_PROTOTYPE_DEFINE_BUG = require('../internals/v8-prototype-define-bug');
-var definePropertyModule = require('../internals/object-define-property');
-var anObject = require('../internals/an-object');
-var toIndexedObject = require('../internals/to-indexed-object');
-var objectKeys = require('../internals/object-keys');
-
-// `Object.defineProperties` method
-// https://tc39.es/ecma262/#sec-object.defineproperties
-// eslint-disable-next-line es/no-object-defineproperties -- safe
-exports.f = DESCRIPTORS && !V8_PROTOTYPE_DEFINE_BUG ? Object.defineProperties : function defineProperties(O, Properties) {
-  anObject(O);
-  var props = toIndexedObject(Properties);
-  var keys = objectKeys(Properties);
-  var length = keys.length;
-  var index = 0;
-  var key;
-  while (length > index) definePropertyModule.f(O, key = keys[index++], props[key]);
-  return O;
-};
-
-},{"../internals/an-object":54,"../internals/descriptors":70,"../internals/object-define-property":114,"../internals/object-keys":123,"../internals/to-indexed-object":141,"../internals/v8-prototype-define-bug":152}],114:[function(require,module,exports){
-var global = require('../internals/global');
-var DESCRIPTORS = require('../internals/descriptors');
-var IE8_DOM_DEFINE = require('../internals/ie8-dom-define');
-var V8_PROTOTYPE_DEFINE_BUG = require('../internals/v8-prototype-define-bug');
-var anObject = require('../internals/an-object');
-var toPropertyKey = require('../internals/to-property-key');
-
-var TypeError = global.TypeError;
-// eslint-disable-next-line es/no-object-defineproperty -- safe
-var $defineProperty = Object.defineProperty;
-// eslint-disable-next-line es/no-object-getownpropertydescriptor -- safe
-var $getOwnPropertyDescriptor = Object.getOwnPropertyDescriptor;
-var ENUMERABLE = 'enumerable';
-var CONFIGURABLE = 'configurable';
-var WRITABLE = 'writable';
-
-// `Object.defineProperty` method
-// https://tc39.es/ecma262/#sec-object.defineproperty
-exports.f = DESCRIPTORS ? V8_PROTOTYPE_DEFINE_BUG ? function defineProperty(O, P, Attributes) {
-  anObject(O);
-  P = toPropertyKey(P);
-  anObject(Attributes);
-  if (typeof O === 'function' && P === 'prototype' && 'value' in Attributes && WRITABLE in Attributes && !Attributes[WRITABLE]) {
-    var current = $getOwnPropertyDescriptor(O, P);
-    if (current && current[WRITABLE]) {
-      O[P] = Attributes.value;
-      Attributes = {
-        configurable: CONFIGURABLE in Attributes ? Attributes[CONFIGURABLE] : current[CONFIGURABLE],
-        enumerable: ENUMERABLE in Attributes ? Attributes[ENUMERABLE] : current[ENUMERABLE],
-        writable: false
-      };
-    }
-  } return $defineProperty(O, P, Attributes);
-} : $defineProperty : function defineProperty(O, P, Attributes) {
-  anObject(O);
-  P = toPropertyKey(P);
-  anObject(Attributes);
-  if (IE8_DOM_DEFINE) try {
-    return $defineProperty(O, P, Attributes);
-  } catch (error) { /* empty */ }
-  if ('get' in Attributes || 'set' in Attributes) throw TypeError('Accessors not supported');
-  if ('value' in Attributes) O[P] = Attributes.value;
-  return O;
-};
-
-},{"../internals/an-object":54,"../internals/descriptors":70,"../internals/global":89,"../internals/ie8-dom-define":93,"../internals/to-property-key":146,"../internals/v8-prototype-define-bug":152}],115:[function(require,module,exports){
-var DESCRIPTORS = require('../internals/descriptors');
-var call = require('../internals/function-call');
-var propertyIsEnumerableModule = require('../internals/object-property-is-enumerable');
-var createPropertyDescriptor = require('../internals/create-property-descriptor');
-var toIndexedObject = require('../internals/to-indexed-object');
-var toPropertyKey = require('../internals/to-property-key');
-var hasOwn = require('../internals/has-own-property');
-var IE8_DOM_DEFINE = require('../internals/ie8-dom-define');
-
-// eslint-disable-next-line es/no-object-getownpropertydescriptor -- safe
-var $getOwnPropertyDescriptor = Object.getOwnPropertyDescriptor;
-
-// `Object.getOwnPropertyDescriptor` method
-// https://tc39.es/ecma262/#sec-object.getownpropertydescriptor
-exports.f = DESCRIPTORS ? $getOwnPropertyDescriptor : function getOwnPropertyDescriptor(O, P) {
-  O = toIndexedObject(O);
-  P = toPropertyKey(P);
-  if (IE8_DOM_DEFINE) try {
-    return $getOwnPropertyDescriptor(O, P);
-  } catch (error) { /* empty */ }
-  if (hasOwn(O, P)) return createPropertyDescriptor(!call(propertyIsEnumerableModule.f, O, P), O[P]);
-};
-
-},{"../internals/create-property-descriptor":67,"../internals/descriptors":70,"../internals/function-call":82,"../internals/has-own-property":90,"../internals/ie8-dom-define":93,"../internals/object-property-is-enumerable":124,"../internals/to-indexed-object":141,"../internals/to-property-key":146}],116:[function(require,module,exports){
-/* eslint-disable es/no-object-getownpropertynames -- safe */
-var classof = require('../internals/classof-raw');
-var toIndexedObject = require('../internals/to-indexed-object');
-var $getOwnPropertyNames = require('../internals/object-get-own-property-names').f;
-var arraySlice = require('../internals/array-slice-simple');
-
-var windowNames = typeof window == 'object' && window && Object.getOwnPropertyNames
-  ? Object.getOwnPropertyNames(window) : [];
-
-var getWindowNames = function (it) {
-  try {
-    return $getOwnPropertyNames(it);
-  } catch (error) {
-    return arraySlice(windowNames);
-  }
-};
-
-// fallback for IE11 buggy Object.getOwnPropertyNames with iframe and window
-module.exports.f = function getOwnPropertyNames(it) {
-  return windowNames && classof(it) == 'Window'
-    ? getWindowNames(it)
-    : $getOwnPropertyNames(toIndexedObject(it));
-};
-
-},{"../internals/array-slice-simple":57,"../internals/classof-raw":59,"../internals/object-get-own-property-names":117,"../internals/to-indexed-object":141}],117:[function(require,module,exports){
-var internalObjectKeys = require('../internals/object-keys-internal');
-var enumBugKeys = require('../internals/enum-bug-keys');
-
-var hiddenKeys = enumBugKeys.concat('length', 'prototype');
-
-// `Object.getOwnPropertyNames` method
-// https://tc39.es/ecma262/#sec-object.getownpropertynames
-// eslint-disable-next-line es/no-object-getownpropertynames -- safe
-exports.f = Object.getOwnPropertyNames || function getOwnPropertyNames(O) {
-  return internalObjectKeys(O, hiddenKeys);
-};
-
-},{"../internals/enum-bug-keys":76,"../internals/object-keys-internal":122}],118:[function(require,module,exports){
-// eslint-disable-next-line es/no-object-getownpropertysymbols -- safe
-exports.f = Object.getOwnPropertySymbols;
-
-},{}],119:[function(require,module,exports){
-var global = require('../internals/global');
-var hasOwn = require('../internals/has-own-property');
-var isCallable = require('../internals/is-callable');
-var toObject = require('../internals/to-object');
-var sharedKey = require('../internals/shared-key');
-var CORRECT_PROTOTYPE_GETTER = require('../internals/correct-prototype-getter');
-
-var IE_PROTO = sharedKey('IE_PROTO');
-var Object = global.Object;
-var ObjectPrototype = Object.prototype;
-
-// `Object.getPrototypeOf` method
-// https://tc39.es/ecma262/#sec-object.getprototypeof
-module.exports = CORRECT_PROTOTYPE_GETTER ? Object.getPrototypeOf : function (O) {
-  var object = toObject(O);
-  if (hasOwn(object, IE_PROTO)) return object[IE_PROTO];
-  var constructor = object.constructor;
-  if (isCallable(constructor) && object instanceof constructor) {
-    return constructor.prototype;
-  } return object instanceof Object ? ObjectPrototype : null;
-};
-
-},{"../internals/correct-prototype-getter":64,"../internals/global":89,"../internals/has-own-property":90,"../internals/is-callable":100,"../internals/shared-key":136,"../internals/to-object":144}],120:[function(require,module,exports){
-var fails = require('../internals/fails');
-var isObject = require('../internals/is-object');
-var classof = require('../internals/classof-raw');
-var ARRAY_BUFFER_NON_EXTENSIBLE = require('../internals/array-buffer-non-extensible');
-
-// eslint-disable-next-line es/no-object-isextensible -- safe
-var $isExtensible = Object.isExtensible;
-var FAILS_ON_PRIMITIVES = fails(function () { $isExtensible(1); });
-
-// `Object.isExtensible` method
-// https://tc39.es/ecma262/#sec-object.isextensible
-module.exports = (FAILS_ON_PRIMITIVES || ARRAY_BUFFER_NON_EXTENSIBLE) ? function isExtensible(it) {
-  if (!isObject(it)) return false;
-  if (ARRAY_BUFFER_NON_EXTENSIBLE && classof(it) == 'ArrayBuffer') return false;
-  return $isExtensible ? $isExtensible(it) : true;
-} : $isExtensible;
-
-},{"../internals/array-buffer-non-extensible":55,"../internals/classof-raw":59,"../internals/fails":78,"../internals/is-object":102}],121:[function(require,module,exports){
-var uncurryThis = require('../internals/function-uncurry-this');
-
-module.exports = uncurryThis({}.isPrototypeOf);
-
-},{"../internals/function-uncurry-this":84}],122:[function(require,module,exports){
-var uncurryThis = require('../internals/function-uncurry-this');
-var hasOwn = require('../internals/has-own-property');
-var toIndexedObject = require('../internals/to-indexed-object');
-var indexOf = require('../internals/array-includes').indexOf;
-var hiddenKeys = require('../internals/hidden-keys');
-
-var push = uncurryThis([].push);
-
-module.exports = function (object, names) {
-  var O = toIndexedObject(object);
-  var i = 0;
-  var result = [];
-  var key;
-  for (key in O) !hasOwn(hiddenKeys, key) && hasOwn(O, key) && push(result, key);
-  // Don't enum bug & hidden keys
-  while (names.length > i) if (hasOwn(O, key = names[i++])) {
-    ~indexOf(result, key) || push(result, key);
-  }
-  return result;
-};
-
-},{"../internals/array-includes":56,"../internals/function-uncurry-this":84,"../internals/has-own-property":90,"../internals/hidden-keys":91,"../internals/to-indexed-object":141}],123:[function(require,module,exports){
-var internalObjectKeys = require('../internals/object-keys-internal');
-var enumBugKeys = require('../internals/enum-bug-keys');
-
-// `Object.keys` method
-// https://tc39.es/ecma262/#sec-object.keys
-// eslint-disable-next-line es/no-object-keys -- safe
-module.exports = Object.keys || function keys(O) {
-  return internalObjectKeys(O, enumBugKeys);
-};
-
-},{"../internals/enum-bug-keys":76,"../internals/object-keys-internal":122}],124:[function(require,module,exports){
-'use strict';
-var $propertyIsEnumerable = {}.propertyIsEnumerable;
-// eslint-disable-next-line es/no-object-getownpropertydescriptor -- safe
-var getOwnPropertyDescriptor = Object.getOwnPropertyDescriptor;
-
-// Nashorn ~ JDK8 bug
-var NASHORN_BUG = getOwnPropertyDescriptor && !$propertyIsEnumerable.call({ 1: 2 }, 1);
-
-// `Object.prototype.propertyIsEnumerable` method implementation
-// https://tc39.es/ecma262/#sec-object.prototype.propertyisenumerable
-exports.f = NASHORN_BUG ? function propertyIsEnumerable(V) {
-  var descriptor = getOwnPropertyDescriptor(this, V);
-  return !!descriptor && descriptor.enumerable;
-} : $propertyIsEnumerable;
-
-},{}],125:[function(require,module,exports){
-/* eslint-disable no-proto -- safe */
-var uncurryThis = require('../internals/function-uncurry-this');
-var anObject = require('../internals/an-object');
-var aPossiblePrototype = require('../internals/a-possible-prototype');
-
-// `Object.setPrototypeOf` method
-// https://tc39.es/ecma262/#sec-object.setprototypeof
-// Works with __proto__ only. Old v8 can't work with null proto objects.
-// eslint-disable-next-line es/no-object-setprototypeof -- safe
-module.exports = Object.setPrototypeOf || ('__proto__' in {} ? function () {
-  var CORRECT_SETTER = false;
-  var test = {};
-  var setter;
-  try {
-    // eslint-disable-next-line es/no-object-getownpropertydescriptor -- safe
-    setter = uncurryThis(Object.getOwnPropertyDescriptor(Object.prototype, '__proto__').set);
-    setter(test, []);
-    CORRECT_SETTER = test instanceof Array;
-  } catch (error) { /* empty */ }
-  return function setPrototypeOf(O, proto) {
-    anObject(O);
-    aPossiblePrototype(proto);
-    if (CORRECT_SETTER) setter(O, proto);
-    else O.__proto__ = proto;
-    return O;
-  };
-}() : undefined);
-
-},{"../internals/a-possible-prototype":51,"../internals/an-object":54,"../internals/function-uncurry-this":84}],126:[function(require,module,exports){
-'use strict';
-var TO_STRING_TAG_SUPPORT = require('../internals/to-string-tag-support');
-var classof = require('../internals/classof');
-
-// `Object.prototype.toString` method implementation
-// https://tc39.es/ecma262/#sec-object.prototype.tostring
-module.exports = TO_STRING_TAG_SUPPORT ? {}.toString : function toString() {
-  return '[object ' + classof(this) + ']';
-};
-
-},{"../internals/classof":60,"../internals/to-string-tag-support":147}],127:[function(require,module,exports){
-var global = require('../internals/global');
-var call = require('../internals/function-call');
-var isCallable = require('../internals/is-callable');
-var isObject = require('../internals/is-object');
-
-var TypeError = global.TypeError;
-
-// `OrdinaryToPrimitive` abstract operation
-// https://tc39.es/ecma262/#sec-ordinarytoprimitive
-module.exports = function (input, pref) {
-  var fn, val;
-  if (pref === 'string' && isCallable(fn = input.toString) && !isObject(val = call(fn, input))) return val;
-  if (isCallable(fn = input.valueOf) && !isObject(val = call(fn, input))) return val;
-  if (pref !== 'string' && isCallable(fn = input.toString) && !isObject(val = call(fn, input))) return val;
-  throw TypeError("Can't convert object to primitive value");
-};
-
-},{"../internals/function-call":82,"../internals/global":89,"../internals/is-callable":100,"../internals/is-object":102}],128:[function(require,module,exports){
-var getBuiltIn = require('../internals/get-built-in');
-var uncurryThis = require('../internals/function-uncurry-this');
-var getOwnPropertyNamesModule = require('../internals/object-get-own-property-names');
-var getOwnPropertySymbolsModule = require('../internals/object-get-own-property-symbols');
-var anObject = require('../internals/an-object');
-
-var concat = uncurryThis([].concat);
-
-// all object keys, includes non-enumerable and symbols
-module.exports = getBuiltIn('Reflect', 'ownKeys') || function ownKeys(it) {
-  var keys = getOwnPropertyNamesModule.f(anObject(it));
-  var getOwnPropertySymbols = getOwnPropertySymbolsModule.f;
-  return getOwnPropertySymbols ? concat(keys, getOwnPropertySymbols(it)) : keys;
-};
-
-},{"../internals/an-object":54,"../internals/function-uncurry-this":84,"../internals/get-built-in":85,"../internals/object-get-own-property-names":117,"../internals/object-get-own-property-symbols":118}],129:[function(require,module,exports){
-var global = require('../internals/global');
-
-module.exports = global;
-
-},{"../internals/global":89}],130:[function(require,module,exports){
-var redefine = require('../internals/redefine');
-
-module.exports = function (target, src, options) {
-  for (var key in src) redefine(target, key, src[key], options);
-  return target;
-};
-
-},{"../internals/redefine":131}],131:[function(require,module,exports){
-var global = require('../internals/global');
-var isCallable = require('../internals/is-callable');
-var hasOwn = require('../internals/has-own-property');
-var createNonEnumerableProperty = require('../internals/create-non-enumerable-property');
-var setGlobal = require('../internals/set-global');
-var inspectSource = require('../internals/inspect-source');
-var InternalStateModule = require('../internals/internal-state');
-var CONFIGURABLE_FUNCTION_NAME = require('../internals/function-name').CONFIGURABLE;
-
-var getInternalState = InternalStateModule.get;
-var enforceInternalState = InternalStateModule.enforce;
-var TEMPLATE = String(String).split('String');
-
-(module.exports = function (O, key, value, options) {
-  var unsafe = options ? !!options.unsafe : false;
-  var simple = options ? !!options.enumerable : false;
-  var noTargetGet = options ? !!options.noTargetGet : false;
-  var name = options && options.name !== undefined ? options.name : key;
-  var state;
-  if (isCallable(value)) {
-    if (String(name).slice(0, 7) === 'Symbol(') {
-      name = '[' + String(name).replace(/^Symbol\(([^)]*)\)/, '$1') + ']';
-    }
-    if (!hasOwn(value, 'name') || (CONFIGURABLE_FUNCTION_NAME && value.name !== name)) {
-      createNonEnumerableProperty(value, 'name', name);
-    }
-    state = enforceInternalState(value);
-    if (!state.source) {
-      state.source = TEMPLATE.join(typeof name == 'string' ? name : '');
-    }
-  }
-  if (O === global) {
-    if (simple) O[key] = value;
-    else setGlobal(key, value);
-    return;
-  } else if (!unsafe) {
-    delete O[key];
-  } else if (!noTargetGet && O[key]) {
-    simple = true;
-  }
-  if (simple) O[key] = value;
-  else createNonEnumerableProperty(O, key, value);
-// add fake Function#toString for correct work wrapped methods / constructors with methods like LoDash isNative
-})(Function.prototype, 'toString', function toString() {
-  return isCallable(this) && getInternalState(this).source || inspectSource(this);
-});
-
-},{"../internals/create-non-enumerable-property":66,"../internals/function-name":83,"../internals/global":89,"../internals/has-own-property":90,"../internals/inspect-source":96,"../internals/internal-state":98,"../internals/is-callable":100,"../internals/set-global":133}],132:[function(require,module,exports){
-var global = require('../internals/global');
-
-var TypeError = global.TypeError;
-
-// `RequireObjectCoercible` abstract operation
-// https://tc39.es/ecma262/#sec-requireobjectcoercible
-module.exports = function (it) {
-  if (it == undefined) throw TypeError("Can't call method on " + it);
-  return it;
-};
-
-},{"../internals/global":89}],133:[function(require,module,exports){
-var global = require('../internals/global');
-
-// eslint-disable-next-line es/no-object-defineproperty -- safe
-var defineProperty = Object.defineProperty;
-
-module.exports = function (key, value) {
-  try {
-    defineProperty(global, key, { value: value, configurable: true, writable: true });
-  } catch (error) {
-    global[key] = value;
-  } return value;
-};
-
-},{"../internals/global":89}],134:[function(require,module,exports){
-'use strict';
-var getBuiltIn = require('../internals/get-built-in');
-var definePropertyModule = require('../internals/object-define-property');
-var wellKnownSymbol = require('../internals/well-known-symbol');
-var DESCRIPTORS = require('../internals/descriptors');
-
-var SPECIES = wellKnownSymbol('species');
-
-module.exports = function (CONSTRUCTOR_NAME) {
-  var Constructor = getBuiltIn(CONSTRUCTOR_NAME);
-  var defineProperty = definePropertyModule.f;
-
-  if (DESCRIPTORS && Constructor && !Constructor[SPECIES]) {
-    defineProperty(Constructor, SPECIES, {
-      configurable: true,
-      get: function () { return this; }
-    });
-  }
-};
-
-},{"../internals/descriptors":70,"../internals/get-built-in":85,"../internals/object-define-property":114,"../internals/well-known-symbol":153}],135:[function(require,module,exports){
-var defineProperty = require('../internals/object-define-property').f;
-var hasOwn = require('../internals/has-own-property');
-var wellKnownSymbol = require('../internals/well-known-symbol');
-
-var TO_STRING_TAG = wellKnownSymbol('toStringTag');
-
-module.exports = function (target, TAG, STATIC) {
-  if (target && !STATIC) target = target.prototype;
-  if (target && !hasOwn(target, TO_STRING_TAG)) {
-    defineProperty(target, TO_STRING_TAG, { configurable: true, value: TAG });
-  }
-};
-
-},{"../internals/has-own-property":90,"../internals/object-define-property":114,"../internals/well-known-symbol":153}],136:[function(require,module,exports){
-var shared = require('../internals/shared');
-var uid = require('../internals/uid');
-
-var keys = shared('keys');
-
-module.exports = function (key) {
-  return keys[key] || (keys[key] = uid(key));
-};
-
-},{"../internals/shared":138,"../internals/uid":150}],137:[function(require,module,exports){
-var global = require('../internals/global');
-var setGlobal = require('../internals/set-global');
-
-var SHARED = '__core-js_shared__';
-var store = global[SHARED] || setGlobal(SHARED, {});
-
-module.exports = store;
-
-},{"../internals/global":89,"../internals/set-global":133}],138:[function(require,module,exports){
-var IS_PURE = require('../internals/is-pure');
-var store = require('../internals/shared-store');
-
-(module.exports = function (key, value) {
-  return store[key] || (store[key] = value !== undefined ? value : {});
-})('versions', []).push({
-  version: '3.21.1',
-  mode: IS_PURE ? 'pure' : 'global',
-  copyright: '© 2014-2022 Denis Pushkarev (zloirock.ru)',
-  license: 'https://github.com/zloirock/core-js/blob/v3.21.1/LICENSE',
-  source: 'https://github.com/zloirock/core-js'
-});
-
-},{"../internals/is-pure":103,"../internals/shared-store":137}],139:[function(require,module,exports){
-var uncurryThis = require('../internals/function-uncurry-this');
-var toIntegerOrInfinity = require('../internals/to-integer-or-infinity');
-var toString = require('../internals/to-string');
-var requireObjectCoercible = require('../internals/require-object-coercible');
-
-var charAt = uncurryThis(''.charAt);
-var charCodeAt = uncurryThis(''.charCodeAt);
-var stringSlice = uncurryThis(''.slice);
-
-var createMethod = function (CONVERT_TO_STRING) {
-  return function ($this, pos) {
-    var S = toString(requireObjectCoercible($this));
-    var position = toIntegerOrInfinity(pos);
-    var size = S.length;
-    var first, second;
-    if (position < 0 || position >= size) return CONVERT_TO_STRING ? '' : undefined;
-    first = charCodeAt(S, position);
-    return first < 0xD800 || first > 0xDBFF || position + 1 === size
-      || (second = charCodeAt(S, position + 1)) < 0xDC00 || second > 0xDFFF
-        ? CONVERT_TO_STRING
-          ? charAt(S, position)
-          : first
-        : CONVERT_TO_STRING
-          ? stringSlice(S, position, position + 2)
-          : (first - 0xD800 << 10) + (second - 0xDC00) + 0x10000;
-  };
-};
-
-module.exports = {
-  // `String.prototype.codePointAt` method
-  // https://tc39.es/ecma262/#sec-string.prototype.codepointat
-  codeAt: createMethod(false),
-  // `String.prototype.at` method
-  // https://github.com/mathiasbynens/String.prototype.at
-  charAt: createMethod(true)
-};
-
-},{"../internals/function-uncurry-this":84,"../internals/require-object-coercible":132,"../internals/to-integer-or-infinity":142,"../internals/to-string":148}],140:[function(require,module,exports){
-var toIntegerOrInfinity = require('../internals/to-integer-or-infinity');
-
-var max = Math.max;
-var min = Math.min;
-
-// Helper for a popular repeating case of the spec:
-// Let integer be ? ToInteger(index).
-// If integer < 0, let result be max((length + integer), 0); else let result be min(integer, length).
-module.exports = function (index, length) {
-  var integer = toIntegerOrInfinity(index);
-  return integer < 0 ? max(integer + length, 0) : min(integer, length);
-};
-
-},{"../internals/to-integer-or-infinity":142}],141:[function(require,module,exports){
-// toObject with fallback for non-array-like ES3 strings
-var IndexedObject = require('../internals/indexed-object');
-var requireObjectCoercible = require('../internals/require-object-coercible');
-
-module.exports = function (it) {
-  return IndexedObject(requireObjectCoercible(it));
-};
-
-},{"../internals/indexed-object":94,"../internals/require-object-coercible":132}],142:[function(require,module,exports){
-var ceil = Math.ceil;
-var floor = Math.floor;
-
-// `ToIntegerOrInfinity` abstract operation
-// https://tc39.es/ecma262/#sec-tointegerorinfinity
-module.exports = function (argument) {
-  var number = +argument;
-  // eslint-disable-next-line no-self-compare -- safe
-  return number !== number || number === 0 ? 0 : (number > 0 ? floor : ceil)(number);
-};
-
-},{}],143:[function(require,module,exports){
-var toIntegerOrInfinity = require('../internals/to-integer-or-infinity');
-
-var min = Math.min;
-
-// `ToLength` abstract operation
-// https://tc39.es/ecma262/#sec-tolength
-module.exports = function (argument) {
-  return argument > 0 ? min(toIntegerOrInfinity(argument), 0x1FFFFFFFFFFFFF) : 0; // 2 ** 53 - 1 == 9007199254740991
-};
-
-},{"../internals/to-integer-or-infinity":142}],144:[function(require,module,exports){
-var global = require('../internals/global');
-var requireObjectCoercible = require('../internals/require-object-coercible');
-
-var Object = global.Object;
-
-// `ToObject` abstract operation
-// https://tc39.es/ecma262/#sec-toobject
-module.exports = function (argument) {
-  return Object(requireObjectCoercible(argument));
-};
-
-},{"../internals/global":89,"../internals/require-object-coercible":132}],145:[function(require,module,exports){
-var global = require('../internals/global');
-var call = require('../internals/function-call');
-var isObject = require('../internals/is-object');
-var isSymbol = require('../internals/is-symbol');
-var getMethod = require('../internals/get-method');
-var ordinaryToPrimitive = require('../internals/ordinary-to-primitive');
-var wellKnownSymbol = require('../internals/well-known-symbol');
-
-var TypeError = global.TypeError;
-var TO_PRIMITIVE = wellKnownSymbol('toPrimitive');
-
-// `ToPrimitive` abstract operation
-// https://tc39.es/ecma262/#sec-toprimitive
-module.exports = function (input, pref) {
-  if (!isObject(input) || isSymbol(input)) return input;
-  var exoticToPrim = getMethod(input, TO_PRIMITIVE);
-  var result;
-  if (exoticToPrim) {
-    if (pref === undefined) pref = 'default';
-    result = call(exoticToPrim, input, pref);
-    if (!isObject(result) || isSymbol(result)) return result;
-    throw TypeError("Can't convert object to primitive value");
-  }
-  if (pref === undefined) pref = 'number';
-  return ordinaryToPrimitive(input, pref);
-};
-
-},{"../internals/function-call":82,"../internals/get-method":88,"../internals/global":89,"../internals/is-object":102,"../internals/is-symbol":104,"../internals/ordinary-to-primitive":127,"../internals/well-known-symbol":153}],146:[function(require,module,exports){
-var toPrimitive = require('../internals/to-primitive');
-var isSymbol = require('../internals/is-symbol');
-
-// `ToPropertyKey` abstract operation
-// https://tc39.es/ecma262/#sec-topropertykey
-module.exports = function (argument) {
-  var key = toPrimitive(argument, 'string');
-  return isSymbol(key) ? key : key + '';
-};
-
-},{"../internals/is-symbol":104,"../internals/to-primitive":145}],147:[function(require,module,exports){
-var wellKnownSymbol = require('../internals/well-known-symbol');
-
-var TO_STRING_TAG = wellKnownSymbol('toStringTag');
-var test = {};
-
-test[TO_STRING_TAG] = 'z';
-
-module.exports = String(test) === '[object z]';
-
-},{"../internals/well-known-symbol":153}],148:[function(require,module,exports){
-var global = require('../internals/global');
-var classof = require('../internals/classof');
-
-var String = global.String;
-
-module.exports = function (argument) {
-  if (classof(argument) === 'Symbol') throw TypeError('Cannot convert a Symbol value to a string');
-  return String(argument);
-};
-
-},{"../internals/classof":60,"../internals/global":89}],149:[function(require,module,exports){
-var global = require('../internals/global');
-
-var String = global.String;
-
-module.exports = function (argument) {
-  try {
-    return String(argument);
-  } catch (error) {
-    return 'Object';
-  }
-};
-
-},{"../internals/global":89}],150:[function(require,module,exports){
-var uncurryThis = require('../internals/function-uncurry-this');
-
-var id = 0;
-var postfix = Math.random();
-var toString = uncurryThis(1.0.toString);
-
-module.exports = function (key) {
-  return 'Symbol(' + (key === undefined ? '' : key) + ')_' + toString(++id + postfix, 36);
-};
-
-},{"../internals/function-uncurry-this":84}],151:[function(require,module,exports){
-/* eslint-disable es/no-symbol -- required for testing */
-var NATIVE_SYMBOL = require('../internals/native-symbol');
-
-module.exports = NATIVE_SYMBOL
-  && !Symbol.sham
-  && typeof Symbol.iterator == 'symbol';
-
-},{"../internals/native-symbol":110}],152:[function(require,module,exports){
-var DESCRIPTORS = require('../internals/descriptors');
-var fails = require('../internals/fails');
-
-// V8 ~ Chrome 36-
-// https://bugs.chromium.org/p/v8/issues/detail?id=3334
-module.exports = DESCRIPTORS && fails(function () {
-  // eslint-disable-next-line es/no-object-defineproperty -- required for testing
-  return Object.defineProperty(function () { /* empty */ }, 'prototype', {
-    value: 42,
-    writable: false
-  }).prototype != 42;
-});
-
-},{"../internals/descriptors":70,"../internals/fails":78}],153:[function(require,module,exports){
-var global = require('../internals/global');
-var shared = require('../internals/shared');
-var hasOwn = require('../internals/has-own-property');
-var uid = require('../internals/uid');
-var NATIVE_SYMBOL = require('../internals/native-symbol');
-var USE_SYMBOL_AS_UID = require('../internals/use-symbol-as-uid');
-
-var WellKnownSymbolsStore = shared('wks');
-var Symbol = global.Symbol;
-var symbolFor = Symbol && Symbol['for'];
-var createWellKnownSymbol = USE_SYMBOL_AS_UID ? Symbol : Symbol && Symbol.withoutSetter || uid;
-
-module.exports = function (name) {
-  if (!hasOwn(WellKnownSymbolsStore, name) || !(NATIVE_SYMBOL || typeof WellKnownSymbolsStore[name] == 'string')) {
-    var description = 'Symbol.' + name;
-    if (NATIVE_SYMBOL && hasOwn(Symbol, name)) {
-      WellKnownSymbolsStore[name] = Symbol[name];
-    } else if (USE_SYMBOL_AS_UID && symbolFor) {
-      WellKnownSymbolsStore[name] = symbolFor(description);
-    } else {
-      WellKnownSymbolsStore[name] = createWellKnownSymbol(description);
-    }
-  } return WellKnownSymbolsStore[name];
-};
-
-},{"../internals/global":89,"../internals/has-own-property":90,"../internals/native-symbol":110,"../internals/shared":138,"../internals/uid":150,"../internals/use-symbol-as-uid":151}],154:[function(require,module,exports){
-'use strict';
-var toIndexedObject = require('../internals/to-indexed-object');
-var addToUnscopables = require('../internals/add-to-unscopables');
-var Iterators = require('../internals/iterators');
-var InternalStateModule = require('../internals/internal-state');
-var defineProperty = require('../internals/object-define-property').f;
-var defineIterator = require('../internals/define-iterator');
-var IS_PURE = require('../internals/is-pure');
-var DESCRIPTORS = require('../internals/descriptors');
-
-var ARRAY_ITERATOR = 'Array Iterator';
-var setInternalState = InternalStateModule.set;
-var getInternalState = InternalStateModule.getterFor(ARRAY_ITERATOR);
-
-// `Array.prototype.entries` method
-// https://tc39.es/ecma262/#sec-array.prototype.entries
-// `Array.prototype.keys` method
-// https://tc39.es/ecma262/#sec-array.prototype.keys
-// `Array.prototype.values` method
-// https://tc39.es/ecma262/#sec-array.prototype.values
-// `Array.prototype[@@iterator]` method
-// https://tc39.es/ecma262/#sec-array.prototype-@@iterator
-// `CreateArrayIterator` internal method
-// https://tc39.es/ecma262/#sec-createarrayiterator
-module.exports = defineIterator(Array, 'Array', function (iterated, kind) {
-  setInternalState(this, {
-    type: ARRAY_ITERATOR,
-    target: toIndexedObject(iterated), // target
-    index: 0,                          // next index
-    kind: kind                         // kind
-  });
-// `%ArrayIteratorPrototype%.next` method
-// https://tc39.es/ecma262/#sec-%arrayiteratorprototype%.next
-}, function () {
-  var state = getInternalState(this);
-  var target = state.target;
-  var kind = state.kind;
-  var index = state.index++;
-  if (!target || index >= target.length) {
-    state.target = undefined;
-    return { value: undefined, done: true };
-  }
-  if (kind == 'keys') return { value: index, done: false };
-  if (kind == 'values') return { value: target[index], done: false };
-  return { value: [index, target[index]], done: false };
-}, 'values');
-
-// argumentsList[@@iterator] is %ArrayProto_values%
-// https://tc39.es/ecma262/#sec-createunmappedargumentsobject
-// https://tc39.es/ecma262/#sec-createmappedargumentsobject
-var values = Iterators.Arguments = Iterators.Array;
-
-// https://tc39.es/ecma262/#sec-array.prototype-@@unscopables
-addToUnscopables('keys');
-addToUnscopables('values');
-addToUnscopables('entries');
-
-// V8 ~ Chrome 45- bug
-if (!IS_PURE && DESCRIPTORS && values.name !== 'values') try {
-  defineProperty(values, 'name', { value: 'values' });
-} catch (error) { /* empty */ }
-
-},{"../internals/add-to-unscopables":52,"../internals/define-iterator":69,"../internals/descriptors":70,"../internals/internal-state":98,"../internals/is-pure":103,"../internals/iterators":108,"../internals/object-define-property":114,"../internals/to-indexed-object":141}],155:[function(require,module,exports){
-'use strict';
-var collection = require('../internals/collection');
-var collectionStrong = require('../internals/collection-strong');
-
-// `Map` constructor
-// https://tc39.es/ecma262/#sec-map-objects
-collection('Map', function (init) {
-  return function Map() { return init(this, arguments.length ? arguments[0] : undefined); };
-}, collectionStrong);
-
-},{"../internals/collection":62,"../internals/collection-strong":61}],156:[function(require,module,exports){
-var $ = require('../internals/export');
-var iterate = require('../internals/iterate');
-var createProperty = require('../internals/create-property');
-
-// `Object.fromEntries` method
-// https://github.com/tc39/proposal-object-from-entries
-$({ target: 'Object', stat: true }, {
-  fromEntries: function fromEntries(iterable) {
-    var obj = {};
-    iterate(iterable, function (k, v) {
-      createProperty(obj, k, v);
-    }, { AS_ENTRIES: true });
-    return obj;
-  }
-});
-
-},{"../internals/create-property":68,"../internals/export":77,"../internals/iterate":105}],157:[function(require,module,exports){
-var TO_STRING_TAG_SUPPORT = require('../internals/to-string-tag-support');
-var redefine = require('../internals/redefine');
-var toString = require('../internals/object-to-string');
-
-// `Object.prototype.toString` method
-// https://tc39.es/ecma262/#sec-object.prototype.tostring
-if (!TO_STRING_TAG_SUPPORT) {
-  redefine(Object.prototype, 'toString', toString, { unsafe: true });
-}
-
-},{"../internals/object-to-string":126,"../internals/redefine":131,"../internals/to-string-tag-support":147}],158:[function(require,module,exports){
-'use strict';
-var collection = require('../internals/collection');
-var collectionStrong = require('../internals/collection-strong');
-
-// `Set` constructor
-// https://tc39.es/ecma262/#sec-set-objects
-collection('Set', function (init) {
-  return function Set() { return init(this, arguments.length ? arguments[0] : undefined); };
-}, collectionStrong);
-
-},{"../internals/collection":62,"../internals/collection-strong":61}],159:[function(require,module,exports){
-'use strict';
-var charAt = require('../internals/string-multibyte').charAt;
-var toString = require('../internals/to-string');
-var InternalStateModule = require('../internals/internal-state');
-var defineIterator = require('../internals/define-iterator');
-
-var STRING_ITERATOR = 'String Iterator';
-var setInternalState = InternalStateModule.set;
-var getInternalState = InternalStateModule.getterFor(STRING_ITERATOR);
-
-// `String.prototype[@@iterator]` method
-// https://tc39.es/ecma262/#sec-string.prototype-@@iterator
-defineIterator(String, 'String', function (iterated) {
-  setInternalState(this, {
-    type: STRING_ITERATOR,
-    string: toString(iterated),
-    index: 0
-  });
-// `%StringIteratorPrototype%.next` method
-// https://tc39.es/ecma262/#sec-%stringiteratorprototype%.next
-}, function next() {
-  var state = getInternalState(this);
-  var string = state.string;
-  var index = state.index;
-  var point;
-  if (index >= string.length) return { value: undefined, done: true };
-  point = charAt(string, index);
-  state.index += point.length;
-  return { value: point, done: false };
-});
-
-},{"../internals/define-iterator":69,"../internals/internal-state":98,"../internals/string-multibyte":139,"../internals/to-string":148}],160:[function(require,module,exports){
-var global = require('../internals/global');
-var DOMIterables = require('../internals/dom-iterables');
-var DOMTokenListPrototype = require('../internals/dom-token-list-prototype');
-var ArrayIteratorMethods = require('../modules/es.array.iterator');
-var createNonEnumerableProperty = require('../internals/create-non-enumerable-property');
-var wellKnownSymbol = require('../internals/well-known-symbol');
-
-var ITERATOR = wellKnownSymbol('iterator');
-var TO_STRING_TAG = wellKnownSymbol('toStringTag');
-var ArrayValues = ArrayIteratorMethods.values;
-
-var handlePrototype = function (CollectionPrototype, COLLECTION_NAME) {
-  if (CollectionPrototype) {
-    // some Chrome versions have non-configurable methods on DOMTokenList
-    if (CollectionPrototype[ITERATOR] !== ArrayValues) try {
-      createNonEnumerableProperty(CollectionPrototype, ITERATOR, ArrayValues);
-    } catch (error) {
-      CollectionPrototype[ITERATOR] = ArrayValues;
-    }
-    if (!CollectionPrototype[TO_STRING_TAG]) {
-      createNonEnumerableProperty(CollectionPrototype, TO_STRING_TAG, COLLECTION_NAME);
-    }
-    if (DOMIterables[COLLECTION_NAME]) for (var METHOD_NAME in ArrayIteratorMethods) {
-      // some Chrome versions have non-configurable methods on DOMTokenList
-      if (CollectionPrototype[METHOD_NAME] !== ArrayIteratorMethods[METHOD_NAME]) try {
-        createNonEnumerableProperty(CollectionPrototype, METHOD_NAME, ArrayIteratorMethods[METHOD_NAME]);
-      } catch (error) {
-        CollectionPrototype[METHOD_NAME] = ArrayIteratorMethods[METHOD_NAME];
-      }
-    }
-  }
-};
-
-for (var COLLECTION_NAME in DOMIterables) {
-  handlePrototype(global[COLLECTION_NAME] && global[COLLECTION_NAME].prototype, COLLECTION_NAME);
-}
-
-handlePrototype(DOMTokenListPrototype, 'DOMTokenList');
-
-},{"../internals/create-non-enumerable-property":66,"../internals/dom-iterables":72,"../internals/dom-token-list-prototype":73,"../internals/global":89,"../internals/well-known-symbol":153,"../modules/es.array.iterator":154}],161:[function(require,module,exports){
-// https://github.com/tc39/proposal-object-from-entries
-require('../modules/es.object.from-entries');
-
-},{"../modules/es.object.from-entries":156}],162:[function(require,module,exports){
-var parent = require('../../es/map');
-require('../../modules/web.dom-collections.iterator');
-
-module.exports = parent;
-
-},{"../../es/map":48,"../../modules/web.dom-collections.iterator":160}],163:[function(require,module,exports){
-var parent = require('../../es/set');
-require('../../modules/web.dom-collections.iterator');
-
-module.exports = parent;
-
-},{"../../es/set":49,"../../modules/web.dom-collections.iterator":160}],164:[function(require,module,exports){
+},{}],61:[function(require,module,exports){
 /*
  * Copyright (c) 2019 Digital Bazaar, Inc. All rights reserved.
  */
@@ -6849,7 +4403,7 @@ function _resolveContextUrls({context, base}) {
   }
 }
 
-},{"./JsonLdError":165,"./ResolvedContext":169,"./types":183,"./url":184,"./util":185}],165:[function(require,module,exports){
+},{"./JsonLdError":62,"./ResolvedContext":66,"./types":80,"./url":81,"./util":82}],62:[function(require,module,exports){
 /*
  * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
  */
@@ -6874,7 +4428,7 @@ module.exports = class JsonLdError extends Error {
   }
 };
 
-},{}],166:[function(require,module,exports){
+},{}],63:[function(require,module,exports){
 /*
  * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
  */
@@ -6928,7 +4482,7 @@ module.exports = jsonld => {
   return JsonLdProcessor;
 };
 
-},{}],167:[function(require,module,exports){
+},{}],64:[function(require,module,exports){
 /*
  * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
  */
@@ -6937,7 +4491,7 @@ module.exports = jsonld => {
 // TODO: move `NQuads` to its own package
 module.exports = require('rdf-canonize').NQuads;
 
-},{"rdf-canonize":188}],168:[function(require,module,exports){
+},{"rdf-canonize":85}],65:[function(require,module,exports){
 /*
  * Copyright (c) 2017-2019 Digital Bazaar, Inc. All rights reserved.
  */
@@ -6977,7 +4531,7 @@ module.exports = class RequestQueue {
   }
 };
 
-},{}],169:[function(require,module,exports){
+},{}],66:[function(require,module,exports){
 /*
  * Copyright (c) 2019 Digital Bazaar, Inc. All rights reserved.
  */
@@ -7009,7 +4563,7 @@ module.exports = class ResolvedContext {
   }
 };
 
-},{"lru-cache":186}],170:[function(require,module,exports){
+},{"lru-cache":83}],67:[function(require,module,exports){
 /*
  * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
  */
@@ -8189,7 +5743,7 @@ function _checkNestProperty(activeCtx, nestProperty, options) {
   }
 }
 
-},{"./JsonLdError":165,"./context":172,"./graphTypes":178,"./types":183,"./url":184,"./util":185}],171:[function(require,module,exports){
+},{"./JsonLdError":62,"./context":69,"./graphTypes":75,"./types":80,"./url":81,"./util":82}],68:[function(require,module,exports){
 /*
  * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
  */
@@ -8223,7 +5777,7 @@ module.exports = {
   XSD_STRING: XSD + 'string',
 };
 
-},{}],172:[function(require,module,exports){
+},{}],69:[function(require,module,exports){
 /*
  * Copyright (c) 2017-2019 Digital Bazaar, Inc. All rights reserved.
  */
@@ -9695,7 +7249,7 @@ function _deepCompare(x1, x2) {
   return true;
 }
 
-},{"./JsonLdError":165,"./types":183,"./url":184,"./util":185}],173:[function(require,module,exports){
+},{"./JsonLdError":62,"./types":80,"./url":81,"./util":82}],70:[function(require,module,exports){
 /*
  * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
  */
@@ -9814,7 +7368,7 @@ function _get(xhr, url, headers) {
   });
 }
 
-},{"../JsonLdError":165,"../RequestQueue":168,"../constants":171,"../url":184,"../util":185}],174:[function(require,module,exports){
+},{"../JsonLdError":62,"../RequestQueue":65,"../constants":68,"../url":81,"../util":82}],71:[function(require,module,exports){
 /*
  * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
  */
@@ -10931,7 +8485,7 @@ async function _expandIndexMap(
   return rval;
 }
 
-},{"./JsonLdError":165,"./context":172,"./graphTypes":178,"./types":183,"./url":184,"./util":185}],175:[function(require,module,exports){
+},{"./JsonLdError":62,"./context":69,"./graphTypes":75,"./types":80,"./url":81,"./util":82}],72:[function(require,module,exports){
 /*
  * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
  */
@@ -10971,7 +8525,7 @@ api.flatten = input => {
   return flattened;
 };
 
-},{"./graphTypes":178,"./nodeMap":180}],176:[function(require,module,exports){
+},{"./graphTypes":75,"./nodeMap":77}],73:[function(require,module,exports){
 /*
  * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
  */
@@ -11798,7 +9352,7 @@ function _valueMatch(pattern, value) {
   return true;
 }
 
-},{"./JsonLdError":165,"./context":172,"./graphTypes":178,"./nodeMap":180,"./types":183,"./url":184,"./util":185}],177:[function(require,module,exports){
+},{"./JsonLdError":62,"./context":69,"./graphTypes":75,"./nodeMap":77,"./types":80,"./url":81,"./util":82}],74:[function(require,module,exports){
 /*
  * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
  */
@@ -12147,7 +9701,7 @@ function _RDFToObject(o, useNativeTypes, rdfDirection) {
   return rval;
 }
 
-},{"./JsonLdError":165,"./constants":171,"./graphTypes":178,"./types":183,"./util":185}],178:[function(require,module,exports){
+},{"./JsonLdError":62,"./constants":68,"./graphTypes":75,"./types":80,"./util":82}],75:[function(require,module,exports){
 /*
  * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
  */
@@ -12268,7 +9822,7 @@ api.isBlankNode = v => {
   return false;
 };
 
-},{"./types":183}],179:[function(require,module,exports){
+},{"./types":80}],76:[function(require,module,exports){
 /**
  * A JavaScript implementation of the JSON-LD API.
  *
@@ -13297,7 +10851,7 @@ wrapper(factory);
 // export API
 module.exports = factory;
 
-},{"./ContextResolver":164,"./JsonLdError":165,"./JsonLdProcessor":166,"./NQuads":167,"./RequestQueue":168,"./compact":170,"./context":172,"./expand":174,"./flatten":175,"./frame":176,"./fromRdf":177,"./graphTypes":178,"./nodeMap":180,"./platform":181,"./toRdf":182,"./types":183,"./url":184,"./util":185,"lru-cache":186,"rdf-canonize":188}],180:[function(require,module,exports){
+},{"./ContextResolver":61,"./JsonLdError":62,"./JsonLdProcessor":63,"./NQuads":64,"./RequestQueue":65,"./compact":67,"./context":69,"./expand":71,"./flatten":72,"./frame":73,"./fromRdf":74,"./graphTypes":75,"./nodeMap":77,"./platform":78,"./toRdf":79,"./types":80,"./url":81,"./util":82,"lru-cache":83,"rdf-canonize":85}],77:[function(require,module,exports){
 /*
  * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
  */
@@ -13589,7 +11143,7 @@ api.mergeNodeMaps = graphs => {
   return defaultGraph;
 };
 
-},{"./JsonLdError":165,"./context":172,"./graphTypes":178,"./types":183,"./util":185}],181:[function(require,module,exports){
+},{"./JsonLdError":62,"./context":69,"./graphTypes":75,"./types":80,"./util":82}],78:[function(require,module,exports){
 /*
  * Copyright (c) 2021 Digital Bazaar, Inc. All rights reserved.
  */
@@ -13630,7 +11184,7 @@ api.setupGlobals = function(jsonld) {
   }
 };
 
-},{"./documentLoaders/xhr":173}],182:[function(require,module,exports){
+},{"./documentLoaders/xhr":70}],79:[function(require,module,exports){
 /*
  * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
  */
@@ -13912,7 +11466,7 @@ function _objectToRDF(item, issuer, dataset, graphTerm, rdfDirection) {
   return object;
 }
 
-},{"./constants":171,"./context":172,"./graphTypes":178,"./nodeMap":180,"./types":183,"./url":184,"./util":185,"canonicalize":45}],183:[function(require,module,exports){
+},{"./constants":68,"./context":69,"./graphTypes":75,"./nodeMap":77,"./types":80,"./url":81,"./util":82,"canonicalize":60}],80:[function(require,module,exports){
 /*
  * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
  */
@@ -14006,7 +11560,7 @@ api.isString = v => (typeof v === 'string' ||
  */
 api.isUndefined = v => typeof v === 'undefined';
 
-},{}],184:[function(require,module,exports){
+},{}],81:[function(require,module,exports){
 /*
  * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
  */
@@ -14309,7 +11863,7 @@ api.isAbsolute = v => types.isString(v) && isAbsoluteRegex.test(v);
  */
 api.isRelative = v => types.isString(v);
 
-},{"./types":183}],185:[function(require,module,exports){
+},{"./types":80}],82:[function(require,module,exports){
 /*
  * Copyright (c) 2017-2019 Digital Bazaar, Inc. All rights reserved.
  */
@@ -14762,7 +12316,7 @@ function _labelBlankNodes(issuer, element) {
   return element;
 }
 
-},{"./JsonLdError":165,"./graphTypes":178,"./types":183,"rdf-canonize":188}],186:[function(require,module,exports){
+},{"./JsonLdError":62,"./graphTypes":75,"./types":80,"rdf-canonize":85}],83:[function(require,module,exports){
 'use strict'
 
 // A linked list to keep track of recently-used-ness
@@ -15098,7 +12652,7 @@ const forEachStep = (self, fn, node, thisp) => {
 
 module.exports = LRUCache
 
-},{"yallist":201}],187:[function(require,module,exports){
+},{"yallist":98}],84:[function(require,module,exports){
 // shim for using process in browser
 var process = module.exports = {};
 
@@ -15284,7 +12838,7 @@ process.chdir = function (dir) {
 };
 process.umask = function() { return 0; };
 
-},{}],188:[function(require,module,exports){
+},{}],85:[function(require,module,exports){
 /**
  * An implementation of the RDF Dataset Normalization specification.
  *
@@ -15294,7 +12848,7 @@ process.umask = function() { return 0; };
  */
 module.exports = require('./lib');
 
-},{"./lib":197}],189:[function(require,module,exports){
+},{"./lib":94}],86:[function(require,module,exports){
 /*
  * Copyright (c) 2016-2021 Digital Bazaar, Inc. All rights reserved.
  */
@@ -15376,7 +12930,7 @@ module.exports = class IdentifierIssuer {
   }
 };
 
-},{}],190:[function(require,module,exports){
+},{}],87:[function(require,module,exports){
 /*!
  * Copyright (c) 2016-2022 Digital Bazaar, Inc. All rights reserved.
  */
@@ -15425,7 +12979,7 @@ module.exports = class MessageDigest {
   }
 };
 
-},{"setimmediate":198}],191:[function(require,module,exports){
+},{"setimmediate":95}],88:[function(require,module,exports){
 /*!
  * Copyright (c) 2016-2022 Digital Bazaar, Inc. All rights reserved.
  */
@@ -15830,7 +13384,7 @@ function _unescape(s) {
   });
 }
 
-},{}],192:[function(require,module,exports){
+},{}],89:[function(require,module,exports){
 /*!
  * Copyright (c) 2016-2022 Digital Bazaar, Inc. All rights reserved.
  */
@@ -15915,7 +13469,7 @@ module.exports = class Permuter {
   }
 };
 
-},{}],193:[function(require,module,exports){
+},{}],90:[function(require,module,exports){
 (function (setImmediate){(function (){
 /*!
  * Copyright (c) 2016-2022 Digital Bazaar, Inc. All rights reserved.
@@ -16446,7 +14000,7 @@ function _stringHashCompare(a, b) {
 }
 
 }).call(this)}).call(this,require("timers").setImmediate)
-},{"./IdentifierIssuer":189,"./MessageDigest":190,"./NQuads":191,"./Permuter":192,"timers":199}],194:[function(require,module,exports){
+},{"./IdentifierIssuer":86,"./MessageDigest":87,"./NQuads":88,"./Permuter":89,"timers":96}],91:[function(require,module,exports){
 /*!
  * Copyright (c) 2016-2022 Digital Bazaar, Inc. All rights reserved.
  */
@@ -16955,7 +14509,7 @@ function _stringHashCompare(a, b) {
   return a.hash < b.hash ? -1 : a.hash > b.hash ? 1 : 0;
 }
 
-},{"./IdentifierIssuer":189,"./MessageDigest":190,"./NQuads":191,"./Permuter":192}],195:[function(require,module,exports){
+},{"./IdentifierIssuer":86,"./MessageDigest":87,"./NQuads":88,"./Permuter":89}],92:[function(require,module,exports){
 /*!
  * Copyright (c) 2016-2022 Digital Bazaar, Inc. All rights reserved.
  */
@@ -17048,7 +14602,7 @@ module.exports = class URDNA2012 extends URDNA2015 {
   }
 };
 
-},{"./MessageDigest":190,"./URDNA2015":193}],196:[function(require,module,exports){
+},{"./MessageDigest":87,"./URDNA2015":90}],93:[function(require,module,exports){
 /*!
  * Copyright (c) 2016-2021 Digital Bazaar, Inc. All rights reserved.
  */
@@ -17135,7 +14689,7 @@ module.exports = class URDNA2012Sync extends URDNA2015Sync {
   }
 };
 
-},{"./MessageDigest":190,"./URDNA2015Sync":194}],197:[function(require,module,exports){
+},{"./MessageDigest":87,"./URDNA2015Sync":91}],94:[function(require,module,exports){
 /**
  * An implementation of the RDF Dataset Normalization specification.
  * This library works in the browser and node.js.
@@ -17316,7 +14870,7 @@ exports._canonizeSync = function(dataset, options) {
     'Invalid RDF Dataset Canonicalization algorithm: ' + options.algorithm);
 };
 
-},{"./IdentifierIssuer":189,"./NQuads":191,"./URDNA2015":193,"./URDNA2015Sync":194,"./URGNA2012":195,"./URGNA2012Sync":196,"rdf-canonize-native":44}],198:[function(require,module,exports){
+},{"./IdentifierIssuer":86,"./NQuads":88,"./URDNA2015":90,"./URDNA2015Sync":91,"./URGNA2012":92,"./URGNA2012Sync":93,"rdf-canonize-native":59}],95:[function(require,module,exports){
 (function (process,global){(function (){
 (function (global, undefined) {
     "use strict";
@@ -17506,7 +15060,7 @@ exports._canonizeSync = function(dataset, options) {
 }(typeof self === "undefined" ? typeof global === "undefined" ? this : global : self));
 
 }).call(this)}).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"_process":187}],199:[function(require,module,exports){
+},{"_process":84}],96:[function(require,module,exports){
 (function (setImmediate,clearImmediate){(function (){
 var nextTick = require('process/browser.js').nextTick;
 var apply = Function.prototype.apply;
@@ -17585,7 +15139,7 @@ exports.clearImmediate = typeof clearImmediate === "function" ? clearImmediate :
   delete immediateIds[id];
 };
 }).call(this)}).call(this,require("timers").setImmediate,require("timers").clearImmediate)
-},{"process/browser.js":187,"timers":199}],200:[function(require,module,exports){
+},{"process/browser.js":84,"timers":96}],97:[function(require,module,exports){
 'use strict'
 module.exports = function (Yallist) {
   Yallist.prototype[Symbol.iterator] = function* () {
@@ -17595,7 +15149,7 @@ module.exports = function (Yallist) {
   }
 }
 
-},{}],201:[function(require,module,exports){
+},{}],98:[function(require,module,exports){
 'use strict'
 module.exports = Yallist
 
@@ -18023,5 +15577,5 @@ try {
   require('./iterator.js')(Yallist)
 } catch (er) {}
 
-},{"./iterator.js":200}]},{},[11])(11)
+},{"./iterator.js":97}]},{},[12])(12)
 });

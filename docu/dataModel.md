@@ -15,7 +15,7 @@ The algorithm that translates the data model of schema.org to the one used by th
 <a name="Class"></a>
 ### Class
 
-A Class (also known as <a href="http://schema.org/Class" target="_blank">Type</a> in schema.org) is a concept that describes entities like an "Hotel" or a "Person". Classes can have <a href="#Property">properties</a> that describe them. Classes are organized in a "multiple inheritance hierarchy" where each Class may be a sub-class of one or multiple Classes, where "Thing" is the most general Class.
+A Class (also known as <a href="http://schema.org/Class" target="_blank">Type</a> in schema.org) is a concept that describes entities like a "Hotel" or a "Person". Classes can have <a href="#Property">properties</a> that describe them. Classes are organized in a "multiple inheritance hierarchy" where each Class may be a subclass of one or multiple Classes, where "Thing" is the most general Class.
 
 Classes have following important attributes (for a complete list check the <a href="https://github.com/semantifyit/schema-org-adapter/blob/master/docu/api.md#Class" target="_blank">API</a>):
 
@@ -23,14 +23,14 @@ Classes have following important attributes (for a complete list check the <a hr
 * **name**: The name(s) (multilinguality) of the Class. e.g. `Hotel`
 * **description**: The description(s) about the Class.
 * **properties**: The possible <a href="#Property">properties</a> that this Class can have. e.g. `http://schema.org/openingHoursSpecification`
-* **super-classes**: Classes that are "parents" of this Class. e.g. `http://schema.org/LodgingBusiness`
-* **sub-classes**: Classes that are "children" of this Class.
+* **superclasses**: Classes that are "parents" of this Class. e.g. `http://schema.org/LodgingBusiness`
+* **subclasses**: Classes that are "children" of this Class.
 * **superseded by**: A newer Class that is meant to substitute this Class, in general it is recommended to not use superseded Classes.
 
 <a name="Property"></a>
 ### Property
 
-A Property is a characteristic that a <a href="#Class">Class</a> can have, like "name" or "address". Properties have one or multiple classes as **domains**, those domains (and their sub-classes) can use the Property. Properties have one or multiple classes/enumerations/data types as **ranges**, describing valid value types for the Property. 
+A Property is a characteristic that a <a href="#Class">Class</a> can have, like "name" or "address". Properties have one or multiple classes as **domains**, those domains (and their subclasses) can use the Property. Properties have one or multiple classes/enumerations/data types as **ranges**, describing valid value types for the Property. 
 
 Properties have following important attributes (for a complete list check the <a href="https://github.com/semantifyit/schema-org-adapter/blob/master/docu/api.md#Property" target="_blank">API</a>):
 
@@ -61,7 +61,7 @@ However, in the data model of **SDOAdapter** Enumerations are treated as <a href
 
 * **enumeration members**: The <a href="#EnumerationMember">Enumeration Members</a> that are predefined instances (values) for this Enumeration . e.g. `http://schema.org/Saturday`
 
-**SDOAdapter** treats any Class that is directly or indirectly a sub-class of the Class `http://schema.org/Enumeration` as an Enumeration. For details, check  <a href="https://github.com/semantifyit/schema-org-adapter/blob/master/docu/algorithm.md" target="_blank">algorithm.md</a>. 
+**SDOAdapter** treats any Class that is directly or indirectly a subclass of the Class `http://schema.org/Enumeration` as an Enumeration. For details, check  <a href="https://github.com/semantifyit/schema-org-adapter/blob/master/docu/algorithm.md" target="_blank">algorithm.md</a>. 
 
 
 <a name="EnumerationMember"></a>
