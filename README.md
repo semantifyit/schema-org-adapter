@@ -4,17 +4,19 @@
 <br><br>
 <a href="https://www.typescriptlang.org/"><img src="https://img.shields.io/npm/types/scrub-js.svg" alt="Built with TypeScript" /></a>
 <a href="https://github.com/semantifyit/schema-org-adapter/issues"><img src="https://img.shields.io/github/issues/semantifyit/schema-org-adapter.svg" alt="Issues open" /></a>
-<a href="https://github.com/semantifyit/schema-org-adapter/issues"><img src="https://img.shields.io/snyk/vulnerabilities/github/semantifyit/schema-org-adapter" alt="Snyk Vulnerability Test" /></a>
 <br>
 <a href="https://eslint.org/"><img src="https://img.shields.io/badge/code%20style-ESLint-brightgreen" alt="Code style in ESLint" /></a>
-<a href="https://npms.io/search?q=schema-org-adapter"><img src="https://img.shields.io/npms-io/quality-score/schema-org-adapter" alt="npms.io Code Quality" /></a>
 <img src="https://raw.githubusercontent.com/semantifyit/schema-org-adapter/master/docu/coverage/badge-functions.svg?sanitize=true" alt="Functions test coverage" />
 <br>
 <a href="https://www.npmjs.com/package/schema-org-adapter" rel="nofollow"><img src="https://img.shields.io/npm/v/schema-org-adapter.svg" alt="NPM Version"></a>
-<a href="https://github.com/semantifyit/schema-org-adapter/"><img src="https://img.shields.io/tokei/lines/github/semantifyit/schema-org-adapter" alt="Total lines of code" /></a>
 <a href="https://www.apache.org/licenses/LICENSE-2.0"><img src="https://img.shields.io/badge/License-Apache%202.0-blue.svg" alt="License: CC BY-SA 4.0" /></a>
 </div>
 <br>
+
+<div align="center"><h3>
+Version 6 out now! Check the <a href="https://github.com/semantifyit/schema-org-adapter/blob/master/docu/migration-guide-6.md">Migration Guide</a>
+when upgrading!
+</h3></div>
 
 ## Features
 &#8984; **Empowers the semantic web:** <a href="http://schema.org/" target="_blank">Schema.org</a> has become the standard vocabulary for the semantic web. The **Schema.org Adapter** (SDO-Adapter) gives developers a clear API to access the schema.org vocabulary in a simple way.
@@ -101,6 +103,7 @@ const addressRanges = addressInstance.getRanges();
 ## Changelog
 
 ### [History.md](https://github.com/semantifyit/schema-org-adapter/blob/master/History.md)
+### [Migration Guide to v6.0.0](https://github.com/semantifyit/schema-org-adapter/blob/master/docu/migration-guide-6.md)
 
 <div align="center">
 <h3><a href="https://semantify.it/" target="_blank">semantify.it</a></h3>

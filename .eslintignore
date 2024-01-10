@@ -3,4 +3,4 @@ dist
 docu
 docs
 node_modules
-tests/data
+tests/resources

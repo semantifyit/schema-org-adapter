@@ -1,6 +1,7 @@
-import { Graph } from "../Graph";
+import { Graph } from "../classes/Graph";
 import { TermTypeIRIValue, TermTypeLabelValue } from "../data/namespaces";
 import { FilterObject } from "./FilterObject.type";
+import { OutputIRIType } from "./OutputIRIType.type";
 
 /** @ignore */
 export interface ErrorFunction {
@@ -14,6 +15,7 @@ export type ParamObjSdoAdapter = {
   schemaHttps?: boolean;
   equateVocabularyProtocols?: boolean;
   onError?: ErrorFunction;
+  outputFormat?: OutputIRIType;
 };
 
 /** @ignore */
@@ -61,7 +63,7 @@ export type ToJsonProperty = ToJsonTerm & {
   domains: string[];
   superProperties: string[];
   subProperties: string[];
-  inverseOf: string;
+  inverseOf: string | null;
 };
 
 /** @ignore */

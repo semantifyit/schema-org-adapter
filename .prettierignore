@@ -3,4 +3,4 @@ lib
 docs
 docu
 node_modules
-tests/data
+tests/resources/data

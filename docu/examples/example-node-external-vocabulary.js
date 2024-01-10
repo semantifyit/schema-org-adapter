@@ -1,5 +1,5 @@
 const { SOA } = require("../../lib/index"); // run the npm-script "buildTs" to generate js files for this example
-const VOC_EXAMPLE = require("../../tests/data/vocabulary-animal.json"); // load our external vocabulary
+const VOC_EXAMPLE = require("../../tests/resources/data/vocabularies/vocabulary-animal.json"); // load our external vocabulary
 
 main();
 
@@ -11,7 +11,7 @@ async function main() {
   // create an instance of the SDOAdapter with the latest schema.org vocabulary and the example vocabulary
   const mySA = await SOA.create({schemaVersion: "latest", vocabularies:[VOC_EXAMPLE], equateVocabularyProtocols: true});
   let AnimalClass = mySA.getClass("ex:Animal"); // get a JS-Class for the Class-Term https://example-vocab.ex/Animal , note that the compacted version of the IRI is also a valid parameter for the function
-  console.log(JSON.stringify(AnimalClass.toJSON(true, null), null, 2)); // AnimalClass.toJSON() prints a JSON version of the Class, note that here we pass 'true' as parameter for the reasoning (the result will contain attributes resolved though reasoning, e.g. properties of superclasses)
+  console.log(JSON.stringify(AnimalClass.toJSON(), null, 2)); // AnimalClass.toJSON() prints a JSON version of the Class, note that here we pass 'true' as parameter for the reasoning (the result will contain attributes resolved though reasoning, e.g. properties of superclasses)
   /*
   {
     "id": "ex:Animal",
@@ -47,7 +47,7 @@ async function main() {
   }
   */
   let TigerClass = mySA.getClass("ex:Tiger");
-  console.log(JSON.stringify(TigerClass.toJSON(true, null), null, 2));
+  console.log(JSON.stringify(TigerClass.toJSON(), null, 2));
   /*
    {
       "id": "ex:Tiger",

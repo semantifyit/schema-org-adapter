@@ -1,0 +1,1 @@
+{"version":3,"file":"checkIfUrlExists.js","sourceRoot":"./","sources":["utilities/infrastructure/checkIfUrlExists.ts"],"names":[],"mappings":";;;;;;AAAA,kDAA0B;AAQnB,KAAK,UAAU,gBAAgB,CAAC,GAAW;IAChD,IAAI;QACF,MAAM,eAAK,CAAC,IAAI,CAAC,GAAG,CAAC,CAAC;QACtB,OAAO,IAAI,CAAC;KACb;IAAC,OAAO,CAAC,EAAE;QACV,OAAO,KAAK,CAAC;KACd;AACH,CAAC;AAPD,4CAOC"}

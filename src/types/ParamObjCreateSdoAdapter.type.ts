@@ -1,4 +1,5 @@
 import { ErrorFunction, Vocabulary } from "./types";
+import { OutputIRIType } from "./OutputIRIType.type";
 
 /**
  *  A **parameter object** to {@link create | create a new SDO Adapter} instance. All attributes of this object are optional (as well as the parameter object itself) and describe a certain setting that should be used for the created {@link SDOAdapter | SDO Adapter}.
@@ -6,10 +7,11 @@ import { ErrorFunction, Vocabulary } from "./types";
  * ```json
  * {
  *   schemaVersion: "latest",
- *   vocabularies: ["https://raw.githubusercontent.com/semantifyit/schema-org-adapter/master/tests/data/vocabulary-animal.json"],
+ *   vocabularies: ["https://raw.githubusercontent.com/semantifyit/schema-org-adapter/master/tests/resources/data/vocabularies/vocabulary-animal.json"],
  *   commit: "9a3ba46",
  *   schemaHttps: true,
  *   equateVocabularyProtocols: true,
+ *   outputFormat: "Compact",
  *   onError: (e) => {
  *     console.error(e);
  *   }
@@ -43,4 +45,12 @@ export type ParamObjCreateSdoAdapter = {
    * The schema.org vocabulary version that should be added to the SDO Adapter right after initialization. You have to pass only the version string, e.g. `"13.0"`. It is also possible to pass `"latest"` to automatically fetch the latest version of schema.org.
    */
   schemaVersion?: string;
+  /**
+   * Defines the format in which the IRI results from functions should be returned.
+   * This option can be set for the SDO-Adapter on initialization, which becomes the standard (default = "Compact").
+   * After the initialization it is also possible to pass this option to some API-functions to get IRIs in a different format. The options are as follows:
+   * * "Compact": The resulting IRIs are given in compact form, e.g. "schema:Hotel"
+   * * "Absolute": The resulting IRIs are given in absolute form, e.g. "https://schema.org/Hotel"
+   */
+  outputFormat?: OutputIRIType;
 };

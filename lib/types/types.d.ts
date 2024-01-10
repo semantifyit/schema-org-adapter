@@ -1,6 +1,7 @@
-import { Graph } from "../Graph";
+import { Graph } from "../classes/Graph";
 import { TermTypeIRIValue, TermTypeLabelValue } from "../data/namespaces";
 import { FilterObject } from "./FilterObject.type";
+import { OutputIRIType } from "./OutputIRIType.type";
 export interface ErrorFunction {
     (msg: string): void;
 }
@@ -9,6 +10,7 @@ export declare type ParamObjSdoAdapter = {
     schemaHttps?: boolean;
     equateVocabularyProtocols?: boolean;
     onError?: ErrorFunction;
+    outputFormat?: OutputIRIType;
 };
 export declare type ToJsonTerm = {
     id: string;
@@ -44,7 +46,7 @@ export declare type ToJsonProperty = ToJsonTerm & {
     domains: string[];
     superProperties: string[];
     subProperties: string[];
-    inverseOf: string;
+    inverseOf: string | null;
 };
 export declare type ContextWord = string;
 export declare type ContextObject = Record<string, ContextWord>;

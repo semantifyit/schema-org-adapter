@@ -19,19 +19,19 @@
 <script>
   (async function() {
     const schemaUrl = "https://raw.githubusercontent.com/semantifyit/schemaorg/main/data/releases/13.0/schemaorg-all-https.jsonld";
-    const externalVocabURL = "https://raw.githubusercontent.com/semantifyit/schema-org-adapter/master/tests/data/vocabulary-animal.json";
+    const externalVocabURL = "https://raw.githubusercontent.com/semantifyit/schema-org-adapter/master/tests/resources/data/vocabularies/vocabulary-animal.json";
     let mySdoAdapter = await SOA.create({ schemaHttps: true, vocabularies: [schemaUrl, externalVocabURL] });
     console.log(await mySdoAdapter.constructURLSchemaVocabulary("latest"));
     let testClass = mySdoAdapter.getClass("Hotel");
     console.log(mySdoAdapter.getVocabularies());
     console.log(testClass.getName());
     console.log(testClass.getDescription("en"));
-    console.log(testClass.toJSON(true));
+    console.log(testClass.toJSON());
     let testClassExternal = mySdoAdapter.getClass("Tiger");
-    console.log(testClassExternal.toJSON(true));
+    console.log(testClassExternal.toJSON({outputFormat:"Absolute"}));
     let testProperty = mySdoAdapter.getProperty("accountablePerson");
-    console.log(testProperty.getRanges());
-    document.getElementById("output").innerHTML = JSON.stringify(testClass.toJSON(true), null, 2);
+    console.log(testProperty.getRanges({outputFormat:"Absolute"}));
+    document.getElementById("output").innerHTML = JSON.stringify(testClass.toJSON(), null, 2);
   })();
 </script>
 </html>

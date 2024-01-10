@@ -1,9 +1,5 @@
-import { SDOAdapter } from "./SDOAdapter";
-import {
-  fetchSchemaVersions,
-  getLatestSchemaVersion,
-  constructURLSchemaVocabulary,
-} from "./Infrastructure";
+import { SDOAdapter } from "./classes/SDOAdapter";
+import { fetchSchemaVersions, getLatestSchemaVersion, constructURLSchemaVocabulary } from "./classes/Infrastructure";
 import { ParamObjCreateSdoAdapter } from "./types/ParamObjCreateSdoAdapter.type";
 
 /**
@@ -22,11 +18,7 @@ import { ParamObjCreateSdoAdapter } from "./types/ParamObjCreateSdoAdapter.type"
 async function create(paramObj?: ParamObjCreateSdoAdapter) {
   const newInstance = new SDOAdapter(paramObj);
   if (paramObj && paramObj.schemaVersion) {
-    const schemaUrl = await constructURLSchemaVocabulary(
-      paramObj.schemaVersion,
-      paramObj.schemaHttps,
-      paramObj.commit
-    );
+    const schemaUrl = await constructURLSchemaVocabulary(paramObj.schemaVersion, paramObj.schemaHttps, paramObj.commit);
     await newInstance.addVocabularies(schemaUrl);
   }
   if (paramObj && paramObj.vocabularies) {
@@ -36,9 +28,4 @@ async function create(paramObj?: ParamObjCreateSdoAdapter) {
 }
 
 // export as separate functions for bundled dist
-export {
-  create,
-  fetchSchemaVersions,
-  getLatestSchemaVersion,
-  constructURLSchemaVocabulary,
-};
+export { create, fetchSchemaVersions, getLatestSchemaVersion, constructURLSchemaVocabulary };

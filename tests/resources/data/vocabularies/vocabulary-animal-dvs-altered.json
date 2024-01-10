@@ -1,0 +1,78 @@
+{
+  "@context": {
+    "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+    "xsd": "http://www.w3.org/2001/XMLSchema#",
+    "ds": "https://vocab.sti2.at/ds/",
+    "schema": "https://schema.org/",
+    "schematisch": "https://schematisch.org/",
+    "rdfs:subClassOf": {
+      "@id": "rdfs:subClassOf",
+      "@type": "@id"
+    },
+    "schema:domainIncludes": {
+      "@id": "schema:domainIncludes",
+      "@type": "@id"
+    },
+    "schema:rangeIncludes": {
+      "@id": "schema:rangeIncludes",
+      "@type": "@id"
+    },
+    "ex": "https://example-vocab.ex/",
+    "ex2": "https://example-second-vocab.ex/"
+  },
+  "@id": "https://semantify.it/voc/21345335",
+  "@type": "ds:Vocabulary",
+  "schema:name": [
+    {
+      "@language": "en",
+      "@value": "Animals altered"
+    }
+  ],
+  "schema:description": [
+    {
+      "@language": "en",
+      "@value": "A vocabulary for Animals. Its not complete yet, but we got Tigers!"
+    }
+  ],
+  "@graph": [
+    {
+      "@id": "ex2:Reptilia",
+      "@type": "rdfs:Class",
+      "rdfs:comment": "Reptiles belong to the class Reptilia which consist of snakes, crocodiles and alligators.",
+      "rdfs:label": [
+        {
+         "@value": "Reptilia",
+          "@language": "en"
+        },
+        {
+          "@value": "Reptilien",
+          "@language": "de"
+        }
+      ],
+      "rdfs:subClassOf": "ex:Animal"
+    },
+    {
+      "@id": "ex2:numberOfLegs",
+      "@type": "rdf:Property",
+      "rdfs:comment": "The number of legs an animal has.",
+      "rdfs:label": "numberOfLegs",
+      "schema:domainIncludes": "ex:Animal",
+      "schema:rangeIncludes": "schema:Integer"
+    },
+    {
+      "@id": "schematisch:Hotel",
+      "@type": "rdfs:Class",
+      "rdfs:comment": "Testing strange vocab indicator",
+      "rdfs:label": "Hotel",
+      "rdfs:subClassOf": "ex:Thing"
+    },
+    {
+      "@id": "schematisch:Schema",
+      "@type": "rdfs:Class",
+      "rdfs:comment": "Testing strange vocab indicator",
+      "rdfs:label": "schema",
+      "rdfs:subClassOf": "ex:Thing"
+    }
+  ]
+}

@@ -84,7 +84,7 @@ To have a correct classification for our data model it is needed to clean the da
 
  For each entry in the classes-memory check if its `superClasses` contain **Enumeration**. If this is the case, it is known that this class is an enumeration, so this data entry is transformed and moved to the enumerations-memory.
   
- Enumerations from the GoodRelations Vocabulary for E-Commerce are problematic, since they do not have the same structure as the other SDO enumerations. Usually enumerations from SDO do not have properties and do not have subclasses. And they have enumeration instances (enumerationMembers) baked in the SDO vocabulary. GoodRelations enumerations do not have instances, instead they provide example URIs for possible values in the description of the enumeration. e.g.: `http://schema.org/PaymentMethod`
+ Enumerations from the GoodRelations Vocabulary for E-Commerce are problematic, since they do not have the same structure as the other SDO enumerations. Usually enumerations from SDO do not have properties and do not have subclasses. And they have enumeration instances (enumerationMembers) baked in the SDO vocabulary. GoodRelations enumerations do not have instances, instead they provide example IRIs for possible values in the description of the enumeration. e.g.: `http://schema.org/PaymentMethod`
  
  The standard SDO approach and the GoodRelation approach of modelling enumerations are very different and there are arguments to defend any of the two design decisions. However, the fact that both enumeration design models are part of the SDO Core makes it difficult to create tools/algorithms which are aware and specialized around SDO enumerations.
  

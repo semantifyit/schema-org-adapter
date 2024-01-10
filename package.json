@@ -1,6 +1,6 @@
 {
   "name": "schema-org-adapter",
-  "version": "5.4.2",
+  "version": "6.0.0",
   "engines": {
     "node": ">=10.0.0"
   },
@@ -14,15 +14,15 @@
     "buildDistMinified": "browserify lib/dist.js -p tinyify -s SOA > dist/schema-org-adapter.min.js",
     "test:badges": "npm run-script testSoaRepo && npm run-script badges",
     "testSoaRepo": "jest",
-    "testSoaRepo2": "jest tests/Property.test.ts",
+    "testSoaRepo2": "jest tests/classes/Property.test.ts",
     "testSchemaRepo": "COMMIT=ae70d0a9dbab49c005fd8dd1fd522f7236b04be0 jest",
-    "testSchemaRepoInfra": "COMMIT=ae70d0a9dbab49c005fd8dd1fd522f7236b04be0 jest tests/Infrastructure.test.ts",
+    "testSchemaRepoInfra": "COMMIT=ae70d0a9dbab49c005fd8dd1fd522f7236b04be0 jest tests/classes/Infrastructure.test.ts",
     "badges": "jest-coverage-badges input './docu/coverage/coverage-summary.json' output './docu/coverage'",
-    "eslint-check": "eslint src/*.ts tests/*.ts",
-    "eslint-repair": "eslint --fix src/*.ts tests/*.ts",
-    "eslint-check-lib": "eslint lib/*.js --no-ignore",
-    "prettier-check": "prettier --check src/*.ts tests/*.ts",
-    "prettier-repair": "prettier --write src/*.ts tests/*.ts",
+    "eslint-check": "eslint src/**/*.ts tests/**/*.ts",
+    "eslint-repair": "eslint --fix src/**/*.ts tests/**/*.ts",
+    "eslint-check-lib": "eslint lib/**/*.js --no-ignore",
+    "prettier-check": "prettier --check src/**/*.ts tests/**/*.ts",
+    "prettier-repair": "prettier --write src/**/*.ts tests/**/*.ts",
     "genTypeDoc": "typedoc",
     "watchTypeDoc": "typedoc --watch",
     "watchTs": "tsc -b src --watch"
@@ -75,10 +75,10 @@
   "jest": {
     "preset": "ts-jest/presets/js-with-ts",
     "testEnvironment": "node",
-    "testTimeout": 30000,
+    "testTimeout": 300000,
     "collectCoverage": true,
     "collectCoverageFrom": [
-      "src/*.ts"
+      "src/**/*.ts"
     ],
     "coverageDirectory": "docu/coverage",
     "coverageReporters": [
@@ -98,5 +98,9 @@
     "History.md",
     "LICENSE",
     "package.json"
-  ]
+  ],
+  "prettier": {
+    "printWidth": 120,
+    "trailingComma" : "none"
+  }
 }

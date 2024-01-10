@@ -1,3 +1,13 @@
+6.0.0 / 2024-01-10
+==================
+* Major changes to the API, check the [migration guide to version 6.0](/docu/migration-guide-6.md) for details!
+  * Many functions now have an optional parameter object as input with optional parameter-keys
+* Improved comments, examples and documentation to make it clear that IRI is the wished term (instead of URI or URL)
+* It is possible to work with absolute IRIs as input and output of functions, see type `OutputIRIType` and the migration guide for details
+* Added several reasoning functions to check if a term is in a valid specific relationship to another term (e.g. `exampleClass.isValidDomainOf("example:property")`). Note that all these reasoning functions start with "isValid" in their naming.
+* Major code and tests refactoring, this should affect users only if they were using test resources from SDO-Adapter (e.g. example vocabulary files are now under `/tests/resources/data/vocabularies` ). Tests check the functionality of the API for all schema.org versions that are available instead of only the latest.
+* The latest versions of schema.org should be supported soon again (once our fork of the schema.org repository is updated)
+
 5.4.2 / 2023-03-07
 ==================
 * Added package-lock.json from 5.4.1

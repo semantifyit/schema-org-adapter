@@ -12,11 +12,11 @@ export const NS = {
     date: "xsd:date",
     time: "xsd:time",
     dateTime: "xsd:dateTime",
-    anyURI: "xsd:anyURI",
+    anyURI: "xsd:anyURI"
   },
   rdf: {
     _url: "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
-    property: "rdf:Property",
+    property: "rdf:Property"
   },
   rdfs: {
     _url: "http://www.w3.org/2000/01/rdf-schema#",
@@ -24,7 +24,7 @@ export const NS = {
     subClassOf: "rdfs:subClassOf",
     subPropertyOf: "rdfs:subPropertyOf",
     label: "rdfs:label",
-    comment: "rdfs:comment",
+    comment: "rdfs:comment"
   },
   schema: {
     _url: "https://schema.org/",
@@ -36,11 +36,11 @@ export const NS = {
     supersededBy: "schema:supersededBy",
     inverseOf: "schema:inverseOf",
     source: "schema:source",
-    category: "schema:category",
+    category: "schema:category"
   },
   dcterms: {
     _url: "http://purl.org/dc/terms/",
-    source: "dcterms:source",
+    source: "dcterms:source"
   },
   soa: {
     _url: "http://schema-org-adapter.at/vocabTerms/",
@@ -50,11 +50,11 @@ export const NS = {
     hasProperty: "soa:hasProperty",
     isRangeOf: "soa:isRangeOf",
     hasEnumerationMember: "soa:hasEnumerationMember",
-    enumerationDomainIncludes: "soa:enumerationDomainIncludes",
+    enumerationDomainIncludes: "soa:enumerationDomainIncludes"
   },
   ds: {
-    _url: "https://vocab.sti2.at/ds/",
-  },
+    _url: "https://vocab.sti2.at/ds/"
+  }
 } as const;
 
 /** @ignore
@@ -65,7 +65,7 @@ export const TermTypeLabel = {
   property: "Property",
   enumeration: "Enumeration",
   enumerationMember: "EnumerationMember",
-  dataType: "DataType",
+  dataType: "DataType"
 } as const;
 
 /** @ignore
@@ -76,7 +76,7 @@ export const TermTypeIRI = {
   property: NS.rdf.property,
   enumeration: NS.schema.enumeration,
   enumerationMember: NS.soa.enumerationMember,
-  dataType: NS.schema.dataType,
+  dataType: NS.schema.dataType
 } as const;
 
 /** @ignore

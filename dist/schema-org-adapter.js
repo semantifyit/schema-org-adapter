@@ -3,8 +3,12 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Class = void 0;
 const Term_1 = require("./Term");
-const reasoning_1 = require("./reasoning");
-const namespaces_1 = require("./data/namespaces");
+const namespaces_1 = require("../data/namespaces");
+const inferPropertiesFromSuperClasses_1 = require("../utilities/reasoning/inferPropertiesFromSuperClasses");
+const inferSuperClasses_1 = require("../utilities/reasoning/inferSuperClasses");
+const inferSubClasses_1 = require("../utilities/reasoning/inferSubClasses");
+const inferRangeOf_1 = require("../utilities/reasoning/inferRangeOf");
+const filterAndTransformIRIList_1 = require("../utilities/general/filterAndTransformIRIList");
 class Class extends Term_1.Term {
     constructor(IRI, graph) {
         super(IRI, graph);
@@ -14,68 +18,87 @@ class Class extends Term_1.Term {
     getTermObj() {
         return this.graph.classes[this.IRI];
     }
-    getProperties(implicit = true, filter) {
+    getProperties(paramObj) {
         const classObj = this.getTermObj();
         const result = [];
         result.push(...classObj[namespaces_1.NS.soa.hasProperty]);
-        if (implicit) {
-            result.push(...(0, reasoning_1.inferPropertiesFromSuperClasses)(classObj[namespaces_1.NS.rdfs.subClassOf], this.graph));
+        if (!((paramObj === null || paramObj === void 0 ? void 0 : paramObj.implicit) === false)) {
+            result.push(...(0, inferPropertiesFromSuperClasses_1.inferPropertiesFromSuperClasses)(classObj[namespaces_1.NS.rdfs.subClassOf], this.graph));
         }
-        return (0, reasoning_1.applyFilter)({ data: result, filter, graph: this.graph });
+        return (0, filterAndTransformIRIList_1.filterAndTransformIRIList)(result, this.graph, paramObj);
     }
-    getSuperClasses(implicit = true, filter) {
+    getSuperClasses(paramObj) {
         const classObj = this.getTermObj();
         const result = [];
-        if (implicit) {
-            result.push(...(0, reasoning_1.inferSuperClasses)(this.IRI, this.graph));
+        if (!((paramObj === null || paramObj === void 0 ? void 0 : paramObj.implicit) === false)) {
+            result.push(...(0, inferSuperClasses_1.inferSuperClasses)(this.IRI, this.graph));
         }
         else {
             result.push(...classObj[namespaces_1.NS.rdfs.subClassOf]);
         }
-        return (0, reasoning_1.applyFilter)({ data: result, filter, graph: this.graph });
+        return (0, filterAndTransformIRIList_1.filterAndTransformIRIList)(result, this.graph, paramObj);
     }
-    getSubClasses(implicit = true, filter) {
+    getSubClasses(paramObj) {
         const classObj = this.getTermObj();
         const result = [];
-        if (implicit) {
-            result.push(...(0, reasoning_1.inferSubClasses)(this.IRI, this.graph));
+        if (!((paramObj === null || paramObj === void 0 ? void 0 : paramObj.implicit) === false)) {
+            result.push(...(0, inferSubClasses_1.inferSubClasses)(this.IRI, this.graph));
         }
         else {
             result.push(...classObj[namespaces_1.NS.soa.superClassOf]);
         }
-        return (0, reasoning_1.applyFilter)({ data: result, filter, graph: this.graph });
+        return (0, filterAndTransformIRIList_1.filterAndTransformIRIList)(result, this.graph, paramObj);
     }
-    isRangeOf(implicit = true, filter) {
+    isRangeOf(paramObj) {
         const result = [];
-        if (implicit) {
-            result.push(...(0, reasoning_1.inferRangeOf)(this.IRI, this.graph));
+        if (!((paramObj === null || paramObj === void 0 ? void 0 : paramObj.implicit) === false)) {
+            result.push(...(0, inferRangeOf_1.inferRangeOf)(this.IRI, this.graph));
         }
         else {
             result.push(...this.getTermObj()[namespaces_1.NS.soa.isRangeOf]);
         }
-        return (0, reasoning_1.applyFilter)({ data: result, filter, graph: this.graph });
+        return (0, filterAndTransformIRIList_1.filterAndTransformIRIList)(result, this.graph, paramObj);
     }
-    toString(implicit = true, filter) {
-        return JSON.stringify(this.toJSON(implicit, filter), null, 2);
+    toString(paramObj) {
+        return JSON.stringify(this.toJSON(paramObj), null, 2);
     }
-    toJSON(implicit = true, filter) {
+    toJSON(paramObj) {
         const result = super.toJSON();
-        result.superClasses = this.getSuperClasses(implicit, filter);
-        result.subClasses = this.getSubClasses(implicit, filter);
-        result.properties = this.getProperties(implicit, filter);
-        result.rangeOf = this.isRangeOf(implicit, filter);
+        result.superClasses = this.getSuperClasses(paramObj);
+        result.subClasses = this.getSubClasses(paramObj);
+        result.properties = this.getProperties(paramObj);
+        result.rangeOf = this.isRangeOf(paramObj);
         return result;
+    }
+    isValidSubClassOf(superClassId, implicit = true) {
+        const c = this.graph.getClass(superClassId);
+        return this.getSuperClasses({ implicit, outputFormat: "Compact" }).includes(c.getIRI("Compact"));
+    }
+    isValidSuperClassOf(subClassId, implicit = true) {
+        const c = this.graph.getClass(subClassId);
+        return this.getSubClasses({ implicit, outputFormat: "Compact" }).includes(c.getIRI("Compact"));
+    }
+    isValidRangeOf(propertyId, implicit = true) {
+        const p = this.graph.getProperty(propertyId);
+        return this.isRangeOf({ implicit, outputFormat: "Compact" }).includes(p.getIRI("Compact"));
+    }
+    isValidDomainOf(propertyId, implicit = true) {
+        const p = this.graph.getProperty(propertyId);
+        return this.getProperties({ implicit, outputFormat: "Compact" }).includes(p.getIRI("Compact"));
     }
 }
 exports.Class = Class;
 
-},{"./Term":10,"./data/namespaces":11,"./reasoning":14}],2:[function(require,module,exports){
+},{"../data/namespaces":10,"../utilities/general/filterAndTransformIRIList":13,"../utilities/reasoning/inferPropertiesFromSuperClasses":48,"../utilities/reasoning/inferRangeOf":49,"../utilities/reasoning/inferSubClasses":50,"../utilities/reasoning/inferSuperClasses":53,"./Term":9}],2:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.DataType = void 0;
 const Term_1 = require("./Term");
-const reasoning_1 = require("./reasoning");
-const namespaces_1 = require("./data/namespaces");
+const namespaces_1 = require("../data/namespaces");
+const inferSuperDataTypes_1 = require("../utilities/reasoning/inferSuperDataTypes");
+const inferRangeOf_1 = require("../utilities/reasoning/inferRangeOf");
+const inferSubDataTypes_1 = require("../utilities/reasoning/inferSubDataTypes");
+const filterAndTransformIRIList_1 = require("../utilities/general/filterAndTransformIRIList");
 class DataType extends Term_1.Term {
     constructor(IRI, graph) {
         super(IRI, graph);
@@ -85,59 +108,71 @@ class DataType extends Term_1.Term {
     getTermObj() {
         return this.graph.dataTypes[this.IRI];
     }
-    getSuperDataTypes(implicit = true, filter) {
+    getSuperDataTypes(paramObj) {
         const dataTypeObj = this.getTermObj();
         const result = [];
-        if (implicit) {
-            result.push(...(0, reasoning_1.inferSuperDataTypes)(this.IRI, this.graph));
+        if (!((paramObj === null || paramObj === void 0 ? void 0 : paramObj.implicit) === false)) {
+            result.push(...(0, inferSuperDataTypes_1.inferSuperDataTypes)(this.IRI, this.graph));
         }
         else {
             result.push(...dataTypeObj[namespaces_1.NS.rdfs.subClassOf]);
         }
-        return (0, reasoning_1.applyFilter)({ data: result, filter, graph: this.graph });
+        return (0, filterAndTransformIRIList_1.filterAndTransformIRIList)(result, this.graph, paramObj);
     }
-    getSubDataTypes(implicit = true, filter) {
+    getSubDataTypes(paramObj) {
         const dataTypeObj = this.getTermObj();
         const result = [];
-        if (implicit) {
-            result.push(...(0, reasoning_1.inferSubDataTypes)(this.IRI, this.graph));
+        if (!((paramObj === null || paramObj === void 0 ? void 0 : paramObj.implicit) === false)) {
+            result.push(...(0, inferSubDataTypes_1.inferSubDataTypes)(this.IRI, this.graph));
         }
         else {
             result.push(...dataTypeObj[namespaces_1.NS.soa.superClassOf]);
         }
-        return (0, reasoning_1.applyFilter)({ data: result, filter, graph: this.graph });
+        return (0, filterAndTransformIRIList_1.filterAndTransformIRIList)(result, this.graph, paramObj);
     }
-    isRangeOf(implicit = true, filter) {
+    isRangeOf(paramObj) {
         const result = [];
-        if (implicit) {
-            result.push(...(0, reasoning_1.inferRangeOf)(this.IRI, this.graph));
+        if (!((paramObj === null || paramObj === void 0 ? void 0 : paramObj.implicit) === false)) {
+            result.push(...(0, inferRangeOf_1.inferRangeOf)(this.IRI, this.graph));
         }
         else {
             result.push(...this.getTermObj()[namespaces_1.NS.soa.isRangeOf]);
         }
-        return (0, reasoning_1.applyFilter)({ data: result, filter, graph: this.graph });
+        return (0, filterAndTransformIRIList_1.filterAndTransformIRIList)(result, this.graph, paramObj);
     }
-    toJSON(implicit = true, filter) {
+    toJSON(paramObj) {
         const result = super.toJSON();
-        result.superDataTypes = this.getSuperDataTypes(implicit, filter);
-        result.subDataTypes = this.getSubDataTypes(implicit, filter);
-        result.rangeOf = this.isRangeOf(implicit, filter);
+        result.superDataTypes = this.getSuperDataTypes(paramObj);
+        result.subDataTypes = this.getSubDataTypes(paramObj);
+        result.rangeOf = this.isRangeOf(paramObj);
         return result;
     }
-    toString(implicit = true, filter) {
-        return JSON.stringify(this.toJSON(implicit, filter), null, 2);
+    toString(paramObj) {
+        return JSON.stringify(this.toJSON(paramObj), null, 2);
+    }
+    isValidSuperDataTypeOf(subDataTypeId, implicit = true) {
+        const dt = this.graph.getDataType(subDataTypeId);
+        return this.getSubDataTypes({ implicit, outputFormat: "Compact" }).includes(dt.getIRI("Compact"));
+    }
+    isValidSubDataTypeOf(superDataTypeId, implicit = true) {
+        const dt = this.graph.getDataType(superDataTypeId);
+        return this.getSuperDataTypes({ implicit, outputFormat: "Compact" }).includes(dt.getIRI("Compact"));
+    }
+    isValidRangeOf(propertyId, implicit = true) {
+        const p = this.graph.getProperty(propertyId);
+        return this.isRangeOf({ implicit, outputFormat: "Compact" }).includes(p.getIRI("Compact"));
     }
 }
 exports.DataType = DataType;
 
-},{"./Term":10,"./data/namespaces":11,"./reasoning":14}],3:[function(require,module,exports){
+},{"../data/namespaces":10,"../utilities/general/filterAndTransformIRIList":13,"../utilities/reasoning/inferRangeOf":49,"../utilities/reasoning/inferSubDataTypes":51,"../utilities/reasoning/inferSuperDataTypes":54,"./Term":9}],3:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Enumeration = void 0;
 const Class_1 = require("./Class");
-const namespaces_1 = require("./data/namespaces");
-const reasoning_1 = require("./reasoning");
-const isNil_1 = require("./utilities/isNil");
+const namespaces_1 = require("../data/namespaces");
+const isNil_1 = require("../utilities/general/isNil");
+const filterAndTransformIRIList_1 = require("../utilities/general/filterAndTransformIRIList");
 class Enumeration extends Class_1.Class {
     constructor(IRI, graph) {
         super(IRI, graph);
@@ -147,11 +182,11 @@ class Enumeration extends Class_1.Class {
     getTermObj() {
         return this.graph.enumerations[this.IRI];
     }
-    getEnumerationMembers(implicit = true, filter) {
+    getEnumerationMembers(paramObj) {
         const result = [];
         result.push(...this.getTermObj()[namespaces_1.NS.soa.hasEnumerationMember]);
-        if (implicit) {
-            const subClasses = this.getSubClasses(true);
+        if (!((paramObj === null || paramObj === void 0 ? void 0 : paramObj.implicit) === false)) {
+            const subClasses = this.getSubClasses(paramObj);
             for (const actSubClass of subClasses) {
                 const actualEnumeration = this.graph.enumerations[actSubClass];
                 if (!(0, isNil_1.isNil)(actualEnumeration)) {
@@ -159,27 +194,33 @@ class Enumeration extends Class_1.Class {
                 }
             }
         }
-        return (0, reasoning_1.applyFilter)({ data: result, filter, graph: this.graph });
+        return (0, filterAndTransformIRIList_1.filterAndTransformIRIList)(result, this.graph, paramObj);
     }
-    toString(implicit = true, filter) {
-        return JSON.stringify(this.toJSON(implicit, filter), null, 2);
+    toString(paramObj) {
+        return JSON.stringify(this.toJSON(paramObj), null, 2);
     }
-    toJSON(implicit = true, filter) {
-        const result = super.toJSON(implicit, filter);
-        result.enumerationMembers = this.getEnumerationMembers(implicit, filter);
+    toJSON(paramObj) {
+        const result = super.toJSON(paramObj);
+        result.enumerationMembers = this.getEnumerationMembers(paramObj);
         return result;
+    }
+    isValidDomainEnumerationOf(enumerationMemberId, implicit = true) {
+        const em = this.graph.getEnumerationMember(enumerationMemberId);
+        return this.getEnumerationMembers({ implicit, outputFormat: "Compact" }).includes(em.getIRI("Compact"));
     }
 }
 exports.Enumeration = Enumeration;
 
-},{"./Class":1,"./data/namespaces":11,"./reasoning":14,"./utilities/isNil":21}],4:[function(require,module,exports){
+},{"../data/namespaces":10,"../utilities/general/filterAndTransformIRIList":13,"../utilities/general/isNil":16,"./Class":1}],4:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.EnumerationMember = void 0;
 const Term_1 = require("./Term");
-const reasoning_1 = require("./reasoning");
-const namespaces_1 = require("./data/namespaces");
-const cloneJson_1 = require("./utilities/cloneJson");
+const namespaces_1 = require("../data/namespaces");
+const cloneJson_1 = require("../utilities/general/cloneJson");
+const inferSuperClasses_1 = require("../utilities/reasoning/inferSuperClasses");
+const applyFilter_1 = require("../utilities/reasoning/applyFilter");
+const filterAndTransformIRIList_1 = require("../utilities/general/filterAndTransformIRIList");
 class EnumerationMember extends Term_1.Term {
     constructor(IRI, graph) {
         super(IRI, graph);
@@ -189,35 +230,39 @@ class EnumerationMember extends Term_1.Term {
     getTermObj() {
         return this.graph.enumerationMembers[this.IRI];
     }
-    getDomainEnumerations(implicit = true, filter) {
+    getDomainEnumerations(paramObj) {
         const enumObj = this.getTermObj();
         let result = [];
         result.push(...enumObj[namespaces_1.NS.soa.enumerationDomainIncludes]);
-        if (implicit) {
+        if (!((paramObj === null || paramObj === void 0 ? void 0 : paramObj.implicit) === false)) {
             const domainEnumerationsToCheck = (0, cloneJson_1.cloneJson)(result);
             for (const actDE of domainEnumerationsToCheck) {
-                result.push(...(0, reasoning_1.inferSuperClasses)(actDE, this.graph));
+                result.push(...(0, inferSuperClasses_1.inferSuperClasses)(actDE, this.graph));
             }
-            result = (0, reasoning_1.applyFilter)({
+            result = (0, applyFilter_1.applyFilter)({
                 data: result,
                 filter: { termType: namespaces_1.TermTypeLabel.enumeration },
-                graph: this.graph,
+                graph: this.graph
             });
         }
-        return (0, reasoning_1.applyFilter)({ data: result, filter, graph: this.graph });
+        return (0, filterAndTransformIRIList_1.filterAndTransformIRIList)(result, this.graph, paramObj);
     }
-    toString(implicit = true, filter) {
-        return JSON.stringify(this.toJSON(implicit, filter), null, 2);
+    toString(paramObj) {
+        return JSON.stringify(this.toJSON(paramObj), null, 2);
     }
-    toJSON(implicit = true, filter) {
+    toJSON(paramObj) {
         const result = super.toJSON();
-        result["domainEnumerations"] = this.getDomainEnumerations(implicit, filter);
+        result["domainEnumerations"] = this.getDomainEnumerations(paramObj);
         return result;
+    }
+    isValidEnumerationMemberOf(enumerationId, implicit = true) {
+        const e = this.graph.getEnumeration(enumerationId);
+        return this.getDomainEnumerations({ implicit, outputFormat: "Compact" }).includes(e.getIRI("Compact"));
     }
 }
 exports.EnumerationMember = EnumerationMember;
 
-},{"./Term":10,"./data/namespaces":11,"./reasoning":14,"./utilities/cloneJson":16}],5:[function(require,module,exports){
+},{"../data/namespaces":10,"../utilities/general/cloneJson":12,"../utilities/general/filterAndTransformIRIList":13,"../utilities/reasoning/applyFilter":47,"../utilities/reasoning/inferSuperClasses":53,"./Term":9}],5:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Graph = void 0;
@@ -226,33 +271,46 @@ const Property_1 = require("./Property");
 const Enumeration_1 = require("./Enumeration");
 const EnumerationMember_1 = require("./EnumerationMember");
 const DataType_1 = require("./DataType");
-const namespaces_1 = require("./data/namespaces");
-const graphUtilities_1 = require("./graphUtilities");
-const reasoning_1 = require("./reasoning");
-const cloneJson_1 = require("./utilities/cloneJson");
-const isArray_1 = require("./utilities/isArray");
-const isString_1 = require("./utilities/isString");
-const isObject_1 = require("./utilities/isObject");
-const toCompactIRI_1 = require("./utilities/toCompactIRI");
-const switchIRIProtocol_1 = require("./utilities/switchIRIProtocol");
+const namespaces_1 = require("../data/namespaces");
+const cloneJson_1 = require("../utilities/general/cloneJson");
+const isArray_1 = require("../utilities/general/isArray");
+const isString_1 = require("../utilities/general/isString");
+const isObject_1 = require("../utilities/general/isObject");
+const toCompactIRI_1 = require("../utilities/general/toCompactIRI");
+const switchIRIProtocol_1 = require("../utilities/general/switchIRIProtocol");
+const discoverEquateNamespaces_1 = require("../utilities/graph/discoverEquateNamespaces");
+const discoverUsedSchemaOrgProtocol_1 = require("../utilities/graph/discoverUsedSchemaOrgProtocol");
+const preProcessVocab_1 = require("../utilities/graph/preProcessVocab");
+const generateContext_1 = require("../utilities/graph/generateContext");
+const curateVocabNode_1 = require("../utilities/graph/curateVocabNode");
+const extractFromClassMemory_1 = require("../utilities/graph/extractFromClassMemory");
+const addInheritanceTermsClassAndEnum_1 = require("../utilities/graph/addInheritanceTermsClassAndEnum");
+const addInheritanceTermsDataTypesAndProperties_1 = require("../utilities/graph/addInheritanceTermsDataTypesAndProperties");
+const addEmptyArray_1 = require("../utilities/graph/addEmptyArray");
+const nodeMergeOverwrite_1 = require("../utilities/graph/nodeMergeOverwrite");
+const nodeMergeLanguageTerm_1 = require("../utilities/graph/nodeMergeLanguageTerm");
+const nodeMergeAddIds_1 = require("../utilities/graph/nodeMergeAddIds");
+const getStandardContext_1 = require("../utilities/graph/getStandardContext");
+const applyFilter_1 = require("../utilities/reasoning/applyFilter");
+const isIgnoredVocabNode_1 = require("../utilities/graph/isIgnoredVocabNode");
 class Graph {
-    constructor(sdoAdapter) {
+    constructor(sdoAdapter, outputFormat = "Compact") {
         this.sdoAdapter = sdoAdapter;
-        this.context = (0, graphUtilities_1.getStandardContext)();
+        this.context = (0, getStandardContext_1.getStandardContext)();
         this.classes = {};
         this.properties = {};
         this.dataTypes = {};
         this.enumerations = {};
         this.enumerationMembers = {};
+        this.outputFormat = outputFormat;
     }
     async addVocabulary(vocab, vocabURL) {
         if (this.context.schema === undefined) {
-            this.context.schema =
-                (0, graphUtilities_1.discoverUsedSchemaOrgProtocol)(vocab) + "://schema.org/";
+            this.context.schema = (0, discoverUsedSchemaOrgProtocol_1.discoverUsedSchemaOrgProtocol)(vocab) + "://schema.org/";
         }
         try {
             if (this.sdoAdapter.equateVocabularyProtocols) {
-                const equateNamespaces = (0, graphUtilities_1.discoverEquateNamespaces)(this.context, vocab);
+                const equateNamespaces = (0, discoverEquateNamespaces_1.discoverEquateNamespaces)(this.context, vocab);
                 if (equateNamespaces.length > 0) {
                     const adaptedContext = (0, cloneJson_1.cloneJson)(vocab["@context"]);
                     equateNamespaces.forEach((ens) => {
@@ -263,23 +321,24 @@ class Graph {
                         const keyToUse = Object.keys(this.context).find((el) => this.context[el] === (0, switchIRIProtocol_1.switchIRIProtocol)(ens));
                         adaptedContext[keyToUse] = ens;
                     });
-                    vocab = (await (0, graphUtilities_1.preProcessVocab)(vocab, adaptedContext));
+                    vocab = (await (0, preProcessVocab_1.preProcessVocab)(vocab, adaptedContext));
                     equateNamespaces.forEach((ens) => {
                         const keyToUse = Object.keys(this.context).find((el) => this.context[el] === (0, switchIRIProtocol_1.switchIRIProtocol)(ens));
-                        vocab["@context"][keyToUse] =
-                            this.context[keyToUse];
+                        vocab["@context"][keyToUse] = this.context[keyToUse];
                     });
                 }
             }
-            this.context = (0, graphUtilities_1.generateContext)(this.context, vocab["@context"]);
-            vocab = (await (0, graphUtilities_1.preProcessVocab)(vocab, this.context));
+            this.context = (0, generateContext_1.generateContext)(this.context, vocab["@context"]);
+            vocab = (await (0, preProcessVocab_1.preProcessVocab)(vocab, this.context));
             const vocabularies = this.sdoAdapter.getVocabularies();
             for (let vocabNode of vocab["@graph"]) {
-                vocabNode = (0, graphUtilities_1.curateVocabNode)(vocabNode, vocabularies);
+                vocabNode = (0, curateVocabNode_1.curateVocabNode)(vocabNode, vocabularies);
             }
             for (let i = 0; i < vocab["@graph"].length; i++) {
                 const curNode = (0, cloneJson_1.cloneJson)(vocab["@graph"][i]);
-                if ((0, isString_1.isString)(curNode["@type"])) {
+                if ((0, isIgnoredVocabNode_1.isIgnoredVocabNode)(curNode)) {
+                }
+                else if ((0, isString_1.isString)(curNode["@type"])) {
                     switch (curNode["@type"]) {
                         case namespaces_1.TermTypeIRI.class:
                             this.addGraphNode(this.classes, curNode, vocabURL);
@@ -293,8 +352,7 @@ class Graph {
                     }
                 }
                 else if ((0, isArray_1.isArray)(curNode["@type"])) {
-                    if (curNode["@type"].includes(namespaces_1.TermTypeIRI.class) &&
-                        curNode["@type"].includes(namespaces_1.TermTypeIRI.dataType)) {
+                    if (curNode["@type"].includes(namespaces_1.TermTypeIRI.class) && curNode["@type"].includes(namespaces_1.TermTypeIRI.dataType)) {
                         this.addGraphNode(this.dataTypes, curNode, vocabURL);
                     }
                     else {
@@ -302,31 +360,30 @@ class Graph {
                     }
                 }
                 else {
-                    this.sdoAdapter.onError("unexpected @type format for the following node: " +
-                        JSON.stringify(curNode, null, 2));
+                    this.sdoAdapter.onError("unexpected @type format for the following node: " + JSON.stringify(curNode, null, 2));
                 }
             }
-            (0, graphUtilities_1.extractFromClassMemory)(this.classes, this.enumerations, this.addGraphNode, vocabURL);
-            (0, graphUtilities_1.extractFromClassMemory)(this.classes, this.dataTypes, this.addGraphNode, vocabURL);
+            (0, extractFromClassMemory_1.extractFromClassMemory)(this.classes, this.enumerations, this.addGraphNode, vocabURL);
+            (0, extractFromClassMemory_1.extractFromClassMemory)(this.classes, this.dataTypes, this.addGraphNode, vocabURL);
             Object.values(this.dataTypes).forEach((el) => (el["@type"] = namespaces_1.TermTypeIRI.dataType));
-            (0, graphUtilities_1.addInheritanceTermsClassAndEnum)(this.classes, this.enumerations, namespaces_1.NS.rdfs.subClassOf, namespaces_1.NS.soa.superClassOf);
-            (0, graphUtilities_1.addInheritanceTermsClassAndEnum)(this.enumerations, this.enumerations, namespaces_1.NS.rdfs.subClassOf, namespaces_1.NS.soa.superClassOf);
-            (0, graphUtilities_1.addInheritanceTermsDataTypesAndProperties)(this.dataTypes, namespaces_1.NS.rdfs.subClassOf, namespaces_1.NS.soa.superClassOf);
-            (0, graphUtilities_1.addInheritanceTermsDataTypesAndProperties)(this.properties, namespaces_1.NS.rdfs.subPropertyOf, namespaces_1.NS.soa.superPropertyOf);
+            (0, addInheritanceTermsClassAndEnum_1.addInheritanceTermsClassAndEnum)(this.classes, this.enumerations, namespaces_1.NS.rdfs.subClassOf, namespaces_1.NS.soa.superClassOf);
+            (0, addInheritanceTermsClassAndEnum_1.addInheritanceTermsClassAndEnum)(this.enumerations, this.enumerations, namespaces_1.NS.rdfs.subClassOf, namespaces_1.NS.soa.superClassOf);
+            (0, addInheritanceTermsDataTypesAndProperties_1.addInheritanceTermsDataTypesAndProperties)(this.dataTypes, namespaces_1.NS.rdfs.subClassOf, namespaces_1.NS.soa.superClassOf);
+            (0, addInheritanceTermsDataTypesAndProperties_1.addInheritanceTermsDataTypesAndProperties)(this.properties, namespaces_1.NS.rdfs.subPropertyOf, namespaces_1.NS.soa.superPropertyOf);
             Object.values(this.classes).forEach((el) => {
-                (0, graphUtilities_1.addEmptyArray)(el, namespaces_1.NS.soa.hasProperty);
-                (0, graphUtilities_1.addEmptyArray)(el, namespaces_1.NS.soa.isRangeOf);
+                (0, addEmptyArray_1.addEmptyArray)(el, namespaces_1.NS.soa.hasProperty);
+                (0, addEmptyArray_1.addEmptyArray)(el, namespaces_1.NS.soa.isRangeOf);
             });
             Object.values(this.enumerations).forEach((el) => {
-                (0, graphUtilities_1.addEmptyArray)(el, namespaces_1.NS.soa.hasEnumerationMember);
-                (0, graphUtilities_1.addEmptyArray)(el, namespaces_1.NS.soa.isRangeOf);
-                (0, graphUtilities_1.addEmptyArray)(el, namespaces_1.NS.soa.hasProperty);
+                (0, addEmptyArray_1.addEmptyArray)(el, namespaces_1.NS.soa.hasEnumerationMember);
+                (0, addEmptyArray_1.addEmptyArray)(el, namespaces_1.NS.soa.isRangeOf);
+                (0, addEmptyArray_1.addEmptyArray)(el, namespaces_1.NS.soa.hasProperty);
             });
             Object.values(this.dataTypes).forEach((el) => {
-                (0, graphUtilities_1.addEmptyArray)(el, namespaces_1.NS.soa.isRangeOf);
+                (0, addEmptyArray_1.addEmptyArray)(el, namespaces_1.NS.soa.isRangeOf);
             });
             Object.values(this.enumerationMembers).forEach((el) => {
-                (0, graphUtilities_1.addEmptyArray)(el, namespaces_1.NS.soa.enumerationDomainIncludes);
+                (0, addEmptyArray_1.addEmptyArray)(el, namespaces_1.NS.soa.enumerationDomainIncludes);
             });
             const propertyKeys = Object.keys(this.properties);
             for (const actPropKey of propertyKeys) {
@@ -337,9 +394,7 @@ class Graph {
                         if (!target) {
                             target = this.enumerations[actDomain];
                         }
-                        if (target &&
-                            (0, isArray_1.isArray)(target[namespaces_1.NS.soa.hasProperty]) &&
-                            !target[namespaces_1.NS.soa.hasProperty].includes(actPropKey)) {
+                        if (target && (0, isArray_1.isArray)(target[namespaces_1.NS.soa.hasProperty]) && !target[namespaces_1.NS.soa.hasProperty].includes(actPropKey)) {
                             target[namespaces_1.NS.soa.hasProperty].push(actPropKey);
                         }
                     }
@@ -347,12 +402,8 @@ class Graph {
                 const rangeIncludesArray = this.properties[actPropKey][namespaces_1.NS.schema.rangeIncludes];
                 if ((0, isArray_1.isArray)(rangeIncludesArray)) {
                     for (const actRange of rangeIncludesArray) {
-                        const target = this.classes[actRange] ||
-                            this.enumerations[actRange] ||
-                            this.dataTypes[actRange];
-                        if (target &&
-                            (0, isArray_1.isArray)(target[namespaces_1.NS.soa.isRangeOf]) &&
-                            !target[namespaces_1.NS.soa.isRangeOf].includes(actPropKey)) {
+                        const target = this.classes[actRange] || this.enumerations[actRange] || this.dataTypes[actRange];
+                        if (target && (0, isArray_1.isArray)(target[namespaces_1.NS.soa.isRangeOf]) && !target[namespaces_1.NS.soa.isRangeOf].includes(actPropKey)) {
                             target[namespaces_1.NS.soa.isRangeOf].push(actPropKey);
                         }
                     }
@@ -397,23 +448,23 @@ class Graph {
             }
             else {
                 const oldNode = memory[newNode["@id"]];
-                (0, graphUtilities_1.nodeMergeOverwrite)(oldNode, newNode, namespaces_1.NS.schema.isPartOf);
-                (0, graphUtilities_1.nodeMergeOverwrite)(oldNode, newNode, namespaces_1.NS.dcterms.source);
-                (0, graphUtilities_1.nodeMergeOverwrite)(oldNode, newNode, namespaces_1.NS.schema.source);
-                (0, graphUtilities_1.nodeMergeOverwrite)(oldNode, newNode, namespaces_1.NS.schema.category);
-                (0, graphUtilities_1.nodeMergeOverwrite)(oldNode, newNode, namespaces_1.NS.schema.supersededBy);
-                (0, graphUtilities_1.nodeMergeLanguageTerm)(oldNode, newNode, namespaces_1.NS.rdfs.label);
-                (0, graphUtilities_1.nodeMergeLanguageTerm)(oldNode, newNode, namespaces_1.NS.rdfs.comment);
-                (0, graphUtilities_1.nodeMergeAddIds)(oldNode, newNode, namespaces_1.NS.rdfs.subClassOf);
-                (0, graphUtilities_1.nodeMergeAddIds)(oldNode, newNode, namespaces_1.NS.soa.superClassOf);
-                (0, graphUtilities_1.nodeMergeAddIds)(oldNode, newNode, namespaces_1.NS.soa.hasProperty);
-                (0, graphUtilities_1.nodeMergeAddIds)(oldNode, newNode, namespaces_1.NS.soa.isRangeOf);
-                (0, graphUtilities_1.nodeMergeAddIds)(oldNode, newNode, namespaces_1.NS.soa.enumerationDomainIncludes);
-                (0, graphUtilities_1.nodeMergeAddIds)(oldNode, newNode, namespaces_1.NS.soa.hasEnumerationMember);
-                (0, graphUtilities_1.nodeMergeAddIds)(oldNode, newNode, namespaces_1.NS.rdfs.subPropertyOf);
-                (0, graphUtilities_1.nodeMergeAddIds)(oldNode, newNode, namespaces_1.NS.schema.domainIncludes);
-                (0, graphUtilities_1.nodeMergeAddIds)(oldNode, newNode, namespaces_1.NS.schema.rangeIncludes);
-                (0, graphUtilities_1.nodeMergeAddIds)(oldNode, newNode, namespaces_1.NS.soa.superPropertyOf);
+                (0, nodeMergeOverwrite_1.nodeMergeOverwrite)(oldNode, newNode, namespaces_1.NS.schema.isPartOf);
+                (0, nodeMergeOverwrite_1.nodeMergeOverwrite)(oldNode, newNode, namespaces_1.NS.dcterms.source);
+                (0, nodeMergeOverwrite_1.nodeMergeOverwrite)(oldNode, newNode, namespaces_1.NS.schema.source);
+                (0, nodeMergeOverwrite_1.nodeMergeOverwrite)(oldNode, newNode, namespaces_1.NS.schema.category);
+                (0, nodeMergeOverwrite_1.nodeMergeOverwrite)(oldNode, newNode, namespaces_1.NS.schema.supersededBy);
+                (0, nodeMergeLanguageTerm_1.nodeMergeLanguageTerm)(oldNode, newNode, namespaces_1.NS.rdfs.label);
+                (0, nodeMergeLanguageTerm_1.nodeMergeLanguageTerm)(oldNode, newNode, namespaces_1.NS.rdfs.comment);
+                (0, nodeMergeAddIds_1.nodeMergeAddIds)(oldNode, newNode, namespaces_1.NS.rdfs.subClassOf);
+                (0, nodeMergeAddIds_1.nodeMergeAddIds)(oldNode, newNode, namespaces_1.NS.soa.superClassOf);
+                (0, nodeMergeAddIds_1.nodeMergeAddIds)(oldNode, newNode, namespaces_1.NS.soa.hasProperty);
+                (0, nodeMergeAddIds_1.nodeMergeAddIds)(oldNode, newNode, namespaces_1.NS.soa.isRangeOf);
+                (0, nodeMergeAddIds_1.nodeMergeAddIds)(oldNode, newNode, namespaces_1.NS.soa.enumerationDomainIncludes);
+                (0, nodeMergeAddIds_1.nodeMergeAddIds)(oldNode, newNode, namespaces_1.NS.soa.hasEnumerationMember);
+                (0, nodeMergeAddIds_1.nodeMergeAddIds)(oldNode, newNode, namespaces_1.NS.rdfs.subPropertyOf);
+                (0, nodeMergeAddIds_1.nodeMergeAddIds)(oldNode, newNode, namespaces_1.NS.schema.domainIncludes);
+                (0, nodeMergeAddIds_1.nodeMergeAddIds)(oldNode, newNode, namespaces_1.NS.schema.rangeIncludes);
+                (0, nodeMergeAddIds_1.nodeMergeAddIds)(oldNode, newNode, namespaces_1.NS.soa.superPropertyOf);
                 if (vocabURL) {
                     if (oldNode["vocabURLs"]) {
                         if (!oldNode["vocabURLs"].includes(vocabURL)) {
@@ -435,7 +486,7 @@ class Graph {
     getTerm(id, filter) {
         const compactIRI = this.discoverCompactIRI(id);
         if (!compactIRI) {
-            throw new Error("There is no term with the IRI " + id);
+            throw new Error("There is no term associated with '" + id + "'");
         }
         let targetObj;
         let targetType;
@@ -466,15 +517,15 @@ class Graph {
             tryCounter++;
         } while (!targetObj && tryCounter < 6);
         if (!targetObj || !targetType) {
-            throw new Error("There is no term with the IRI " + id);
+            throw new Error("There is no term associated with '" + id + "'");
         }
-        targetObj = (0, reasoning_1.applyFilter)({
+        targetObj = (0, applyFilter_1.applyFilter)({
             data: [targetObj["@id"]],
             filter,
-            graph: this,
+            graph: this
         });
         if (targetObj.length === 0) {
-            throw new Error("There is no term with that IRI and filter settings.");
+            throw new Error("There is no term associated with '" + id + "' and the given filter settings");
         }
         switch (targetType) {
             case "Class":
@@ -495,9 +546,9 @@ class Graph {
         if (compactIRI) {
             let classObj = this.classes[compactIRI];
             if (classObj) {
-                classObj = (0, reasoning_1.applyFilter)({ data: [compactIRI], filter, graph: this });
+                classObj = (0, applyFilter_1.applyFilter)({ data: [compactIRI], filter, graph: this });
                 if (classObj.length === 0) {
-                    throw new Error("There is no class with that IRI and filter settings.");
+                    throw new Error("There is no class associated with '" + id + "' and the given filter settings");
                 }
                 else {
                     return new Class_1.Class(compactIRI, this);
@@ -510,89 +561,88 @@ class Graph {
                         return this.getEnumeration(compactIRI, filter);
                     }
                     catch (e) {
-                        throw new Error("There is no class with that IRI and filter settings.");
+                        throw new Error("There is no class associated with '" + id + "' and the given filter settings");
                     }
                 }
             }
         }
-        throw new Error("There is no class with the IRI " + id);
+        throw new Error("There is no class associated with '" + id + "'");
     }
     getProperty(id, filter) {
         const compactIRI = this.discoverCompactIRI(id);
         if (compactIRI) {
             let propertyObj = this.properties[compactIRI];
             if (propertyObj) {
-                propertyObj = (0, reasoning_1.applyFilter)({ data: [compactIRI], filter, graph: this });
+                propertyObj = (0, applyFilter_1.applyFilter)({ data: [compactIRI], filter, graph: this });
                 if (propertyObj.length === 0) {
-                    throw new Error("There is no property with that URI and filter settings.");
+                    throw new Error("There is no property associated with '" + id + "' and the given filter settings.");
                 }
                 else {
                     return new Property_1.Property(compactIRI, this);
                 }
             }
         }
-        throw new Error("There is no property with that URI.");
+        throw new Error("There is no property associated with '" + id + "'");
     }
     getDataType(id, filter) {
         const compactIRI = this.discoverCompactIRI(id);
         if (compactIRI) {
             let dataTypeObj = this.dataTypes[compactIRI];
             if (dataTypeObj) {
-                dataTypeObj = (0, reasoning_1.applyFilter)({ data: [compactIRI], filter, graph: this });
+                dataTypeObj = (0, applyFilter_1.applyFilter)({ data: [compactIRI], filter, graph: this });
                 if (dataTypeObj.length === 0) {
-                    throw new Error("There is no data-type with that IRI and filter settings.");
+                    throw new Error("There is no data-type associated with '" + id + "' and the given filter settings.");
                 }
                 else {
                     return new DataType_1.DataType(compactIRI, this);
                 }
             }
         }
-        throw new Error("There is no data-type with the IRI " + id);
+        throw new Error("There is no data-type associated with '" + id + "'");
     }
     getEnumeration(id, filter) {
         const compactIRI = this.discoverCompactIRI(id);
         if (compactIRI) {
             let enumObj = this.enumerations[compactIRI];
             if (enumObj) {
-                enumObj = (0, reasoning_1.applyFilter)({ data: [compactIRI], filter, graph: this });
+                enumObj = (0, applyFilter_1.applyFilter)({ data: [compactIRI], filter, graph: this });
                 if (enumObj.length === 0) {
-                    throw new Error("There is no enumeration with that IRI and filter settings.");
+                    throw new Error("There is no enumeration associated with '" + id + "' and the given filter settings");
                 }
                 else {
                     return new Enumeration_1.Enumeration(compactIRI, this);
                 }
             }
         }
-        throw new Error("There is no enumeration with the IRI " + id);
+        throw new Error("There is no enumeration associated with '" + id + "'");
     }
     getEnumerationMember(id, filter) {
         const compactIRI = this.discoverCompactIRI(id);
         if (compactIRI) {
             let enumObj = this.enumerationMembers[compactIRI];
             if (enumObj) {
-                enumObj = (0, reasoning_1.applyFilter)({ data: [compactIRI], filter, graph: this });
+                enumObj = (0, applyFilter_1.applyFilter)({ data: [compactIRI], filter, graph: this });
                 if (enumObj.length === 0) {
-                    throw new Error("There is no EnumerationMember with that IRI and filter settings.");
+                    throw new Error("There is no EnumerationMember associated with '" + id + "' and the given filter settings");
                 }
                 else {
                     return new EnumerationMember_1.EnumerationMember(compactIRI, this);
                 }
             }
         }
-        throw new Error("There is no EnumerationMember with the IRI " + id);
+        throw new Error("There is no EnumerationMember associated with '" + id + "'");
     }
     discoverCompactIRI(input) {
         if (input.includes(":")) {
-            const terms = Object.keys(this.context);
-            for (const actTerm of terms) {
-                const absoluteIRI = this.context[actTerm];
-                if ((0, isString_1.isString)(absoluteIRI)) {
-                    if (input.startsWith(actTerm)) {
+            const contextKeys = Object.keys(this.context);
+            for (const contextKey of contextKeys) {
+                const contextValue = this.context[contextKey];
+                if ((0, isString_1.isString)(contextValue)) {
+                    if (input.startsWith(contextKey + ":")) {
                         return input;
                     }
-                    else if (input.startsWith(absoluteIRI) ||
-                        (this.sdoAdapter.equateVocabularyProtocols &&
-                            input.startsWith((0, switchIRIProtocol_1.switchIRIProtocol)(absoluteIRI)))) {
+                    else if (input.startsWith(contextValue) ||
+                        (this.sdoAdapter.equateVocabularyProtocols && input.startsWith((0, switchIRIProtocol_1.switchIRIProtocol)(contextValue)))) {
                         try {
                             return (0, toCompactIRI_1.toCompactIRI)(input, this.context, this.sdoAdapter.equateVocabularyProtocols);
                         }
@@ -651,19 +701,19 @@ class Graph {
 }
 exports.Graph = Graph;
 
-},{"./Class":1,"./DataType":2,"./Enumeration":3,"./EnumerationMember":4,"./Property":7,"./data/namespaces":11,"./graphUtilities":13,"./reasoning":14,"./utilities/cloneJson":16,"./utilities/isArray":19,"./utilities/isObject":22,"./utilities/isString":23,"./utilities/switchIRIProtocol":25,"./utilities/toCompactIRI":28}],6:[function(require,module,exports){
+},{"../data/namespaces":10,"../utilities/general/cloneJson":12,"../utilities/general/isArray":14,"../utilities/general/isObject":17,"../utilities/general/isString":18,"../utilities/general/switchIRIProtocol":20,"../utilities/general/toCompactIRI":23,"../utilities/graph/addEmptyArray":25,"../utilities/graph/addInheritanceTermsClassAndEnum":26,"../utilities/graph/addInheritanceTermsDataTypesAndProperties":27,"../utilities/graph/curateVocabNode":31,"../utilities/graph/discoverEquateNamespaces":32,"../utilities/graph/discoverUsedSchemaOrgProtocol":33,"../utilities/graph/extractFromClassMemory":34,"../utilities/graph/generateContext":35,"../utilities/graph/getStandardContext":36,"../utilities/graph/isIgnoredVocabNode":37,"../utilities/graph/nodeMergeAddIds":38,"../utilities/graph/nodeMergeLanguageTerm":39,"../utilities/graph/nodeMergeOverwrite":40,"../utilities/graph/preProcessVocab":41,"../utilities/reasoning/applyFilter":47,"./Class":1,"./DataType":2,"./Enumeration":3,"./EnumerationMember":4,"./Property":7}],6:[function(require,module,exports){
 "use strict";
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getLatestSchemaVersion = exports.fetchSchemaVersions = exports.constructURLSchemaVocabulary = void 0;
-const RetrievalMemory_1 = require("./RetrievalMemory");
-const getFileNameForSchemaOrgVersion_1 = require("./utilities/getFileNameForSchemaOrgVersion");
-const checkIfUrlExists_1 = require("./utilities/checkIfUrlExists");
+const RetrievalMemory_1 = require("../utilities/infrastructure/RetrievalMemory");
+const getFileNameForSchemaOrgVersion_1 = require("../utilities/infrastructure/getFileNameForSchemaOrgVersion");
+const checkIfUrlExists_1 = require("../utilities/infrastructure/checkIfUrlExists");
 const axios_1 = __importDefault(require("axios"));
-const sortReleaseEntriesByDate_1 = require("./utilities/sortReleaseEntriesByDate");
-const getGitHubBaseURL_1 = require("./utilities/getGitHubBaseURL");
+const sortReleaseEntriesByDate_1 = require("../utilities/infrastructure/sortReleaseEntriesByDate");
+const getGitHubBaseURL_1 = require("../utilities/infrastructure/getGitHubBaseURL");
 const myRetrievalMemory = RetrievalMemory_1.RetrievalMemory.getInstance();
 async function constructURLSchemaVocabulary(version = "latest", schemaHttps = true, commit) {
     if (version === "latest") {
@@ -692,9 +742,7 @@ async function fetchSchemaVersions(cacheClear = false, commit) {
         throw new Error("Unable to retrieve the schema.org versions file at " + urlSchemaVersions);
     }
     if (!versionFile || !versionFile.data || !versionFile.data.releaseLog) {
-        throw new Error("The schema.org versions file at " +
-            urlSchemaVersions +
-            " returned an unexpected result.");
+        throw new Error("The schema.org versions file at " + urlSchemaVersions + " returned an unexpected result.");
     }
     const schemaVersions = versionFile.data;
     myRetrievalMemory.setData("versionsFile", schemaVersions, commit);
@@ -714,7 +762,7 @@ async function fetchSchemaVersions(cacheClear = false, commit) {
         }
     }
     if (!latestVersion) {
-        throw new Error("Could not find any valid vocabulary file in the schema.org versions to be declared as \"latest\".");
+        throw new Error('Could not find any valid vocabulary file in the schema.org versions to be declared as "latest".');
     }
     myRetrievalMemory.setData("latest", latestVersion, commit);
     return schemaVersions;
@@ -735,13 +783,19 @@ async function getLatestSchemaVersion(commit) {
 }
 exports.getLatestSchemaVersion = getLatestSchemaVersion;
 
-},{"./RetrievalMemory":8,"./utilities/checkIfUrlExists":15,"./utilities/getFileNameForSchemaOrgVersion":17,"./utilities/getGitHubBaseURL":18,"./utilities/sortReleaseEntriesByDate":24,"axios":30}],7:[function(require,module,exports){
+},{"../utilities/infrastructure/RetrievalMemory":42,"../utilities/infrastructure/checkIfUrlExists":43,"../utilities/infrastructure/getFileNameForSchemaOrgVersion":44,"../utilities/infrastructure/getGitHubBaseURL":45,"../utilities/infrastructure/sortReleaseEntriesByDate":46,"axios":56}],7:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Property = void 0;
 const Term_1 = require("./Term");
-const reasoning_1 = require("./reasoning");
-const namespaces_1 = require("./data/namespaces");
+const namespaces_1 = require("../data/namespaces");
+const inferSubDataTypes_1 = require("../utilities/reasoning/inferSubDataTypes");
+const inferSubClasses_1 = require("../utilities/reasoning/inferSubClasses");
+const inferSuperProperties_1 = require("../utilities/reasoning/inferSuperProperties");
+const inferSubProperties_1 = require("../utilities/reasoning/inferSubProperties");
+const filterAndTransformIRIList_1 = require("../utilities/general/filterAndTransformIRIList");
+const outputTransformation_1 = require("../utilities/general/outputTransformation");
+const isString_1 = require("../utilities/general/isString");
 class Property extends Term_1.Term {
     constructor(IRI, graph) {
         super(IRI, graph);
@@ -751,111 +805,98 @@ class Property extends Term_1.Term {
     getTermObj() {
         return this.graph.properties[this.IRI];
     }
-    getRanges(implicit = true, filter) {
+    getRanges(paramObj) {
         const propertyObj = this.getTermObj();
         const result = [];
         result.push(...propertyObj[namespaces_1.NS.schema.rangeIncludes]);
-        if (implicit) {
+        if (!((paramObj === null || paramObj === void 0 ? void 0 : paramObj.implicit) === false)) {
             for (const actRes of result) {
-                result.push(...(0, reasoning_1.inferSubDataTypes)(actRes, this.graph));
+                result.push(...(0, inferSubDataTypes_1.inferSubDataTypes)(actRes, this.graph));
             }
             for (const actRes of result) {
-                result.push(...(0, reasoning_1.inferSubClasses)(actRes, this.graph));
+                result.push(...(0, inferSubClasses_1.inferSubClasses)(actRes, this.graph));
             }
         }
-        return (0, reasoning_1.applyFilter)({ data: result, filter, graph: this.graph });
+        return (0, filterAndTransformIRIList_1.filterAndTransformIRIList)(result, this.graph, paramObj);
     }
-    getDomains(implicit = true, filter) {
+    getDomains(paramObj) {
         const propertyObj = this.getTermObj();
         const result = [];
         result.push(...propertyObj[namespaces_1.NS.schema.domainIncludes]);
-        if (implicit) {
+        if (!((paramObj === null || paramObj === void 0 ? void 0 : paramObj.implicit) === false)) {
             const inferredSubClasses = [];
             for (const actRes of result) {
-                inferredSubClasses.push(...(0, reasoning_1.inferSubClasses)(actRes, this.graph));
+                inferredSubClasses.push(...(0, inferSubClasses_1.inferSubClasses)(actRes, this.graph));
             }
             result.push(...inferredSubClasses);
         }
-        return (0, reasoning_1.applyFilter)({ data: result, filter, graph: this.graph });
+        return (0, filterAndTransformIRIList_1.filterAndTransformIRIList)(result, this.graph, paramObj);
     }
-    getSuperProperties(implicit = true, filter) {
+    getSuperProperties(paramObj) {
         const propertyObj = this.getTermObj();
         const result = [];
-        if (implicit) {
-            result.push(...(0, reasoning_1.inferSuperProperties)(this.IRI, this.graph));
+        if (!((paramObj === null || paramObj === void 0 ? void 0 : paramObj.implicit) === false)) {
+            result.push(...(0, inferSuperProperties_1.inferSuperProperties)(this.IRI, this.graph));
         }
         else {
             result.push(...propertyObj[namespaces_1.NS.rdfs.subPropertyOf]);
         }
-        return (0, reasoning_1.applyFilter)({ data: result, filter, graph: this.graph });
+        return (0, filterAndTransformIRIList_1.filterAndTransformIRIList)(result, this.graph, paramObj);
     }
-    getSubProperties(implicit = true, filter) {
+    getSubProperties(paramObj) {
         const propertyObj = this.getTermObj();
         const result = [];
-        if (implicit) {
-            result.push(...(0, reasoning_1.inferSubProperties)(this.IRI, this.graph));
+        if (!((paramObj === null || paramObj === void 0 ? void 0 : paramObj.implicit) === false)) {
+            result.push(...(0, inferSubProperties_1.inferSubProperties)(this.IRI, this.graph));
         }
         else {
             result.push(...propertyObj[namespaces_1.NS.soa.superPropertyOf]);
         }
-        return (0, reasoning_1.applyFilter)({ data: result, filter, graph: this.graph });
+        return (0, filterAndTransformIRIList_1.filterAndTransformIRIList)(result, this.graph, paramObj);
     }
-    getInverseOf() {
+    getInverseOf(outputIRIType = "Compact") {
         const propertyObj = this.getTermObj();
-        return propertyObj[namespaces_1.NS.schema.inverseOf];
+        if ((0, isString_1.isString)(propertyObj[namespaces_1.NS.schema.inverseOf])) {
+            return (0, outputTransformation_1.outputTransformation)(propertyObj[namespaces_1.NS.schema.inverseOf], this.graph, outputIRIType);
+        }
+        return null;
     }
-    toString(implicit = true, filter) {
-        return JSON.stringify(this.toJSON(implicit, filter), null, 2);
+    toString(paramObj) {
+        return JSON.stringify(this.toJSON(paramObj), null, 2);
     }
-    toJSON(implicit = true, filter) {
+    toJSON(paramObj) {
         const result = super.toJSON();
-        result["ranges"] = this.getRanges(implicit, filter);
-        result["domains"] = this.getDomains(implicit, filter);
-        result["superProperties"] = this.getSuperProperties(implicit, filter);
-        result["subProperties"] = this.getSubProperties(implicit, filter);
-        result["inverseOf"] = this.getInverseOf();
+        result["ranges"] = this.getRanges(paramObj);
+        result["domains"] = this.getDomains(paramObj);
+        result["superProperties"] = this.getSuperProperties(paramObj);
+        result["subProperties"] = this.getSubProperties(paramObj);
+        result["inverseOf"] = this.getInverseOf(paramObj === null || paramObj === void 0 ? void 0 : paramObj.outputFormat);
         return result;
+    }
+    isValidDomain(domainId, implicit = true) {
+        const domain = this.graph.getClass(domainId);
+        return this.getDomains({ implicit, outputFormat: "Compact" }).includes(domain.getIRI("Compact"));
+    }
+    isValidRange(rangeId, implicit = true) {
+        const range = this.graph.getTerm(rangeId);
+        return this.getRanges({ implicit, outputFormat: "Compact" }).includes(range.getIRI("Compact"));
+    }
+    isValidSuperPropertyOf(subPropertyId, implicit = true) {
+        const p = this.graph.getProperty(subPropertyId);
+        return this.getSubProperties({ implicit, outputFormat: "Compact" }).includes(p.getIRI("Compact"));
+    }
+    isValidSubPropertyOf(superPropertyId, implicit = true) {
+        const p = this.graph.getProperty(superPropertyId);
+        return this.getSuperProperties({ implicit, outputFormat: "Compact" }).includes(p.getIRI("Compact"));
+    }
+    isValidInverseOf(inversePropertyId) {
+        const p = this.graph.getProperty(inversePropertyId);
+        return this.getInverseOf("Compact") === p.getIRI("Compact");
     }
 }
 exports.Property = Property;
 
-},{"./Term":10,"./data/namespaces":11,"./reasoning":14}],8:[function(require,module,exports){
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.RetrievalMemory = void 0;
-const cloneJson_1 = require("./utilities/cloneJson");
-class RetrievalMemory {
-    constructor() {
-        this.cache = new Map();
-    }
-    static getInstance() {
-        if (!RetrievalMemory.instance) {
-            RetrievalMemory.instance = new RetrievalMemory();
-        }
-        return RetrievalMemory.instance;
-    }
-    setData(dataId, data, commit = "standard") {
-        let entry = this.cache.get(commit);
-        if (!entry) {
-            entry = {};
-            this.cache.set(commit, entry);
-        }
-        entry[dataId] = (0, cloneJson_1.cloneJson)(data);
-    }
-    getData(dataId, commit = "standard") {
-        const entry = this.cache.get(commit);
-        if (entry) {
-            return (0, cloneJson_1.cloneJson)(entry[dataId]);
-        }
-        return undefined;
-    }
-    deleteCache() {
-        this.cache = new Map();
-    }
-}
-exports.RetrievalMemory = RetrievalMemory;
-
-},{"./utilities/cloneJson":16}],9:[function(require,module,exports){
+},{"../data/namespaces":10,"../utilities/general/filterAndTransformIRIList":13,"../utilities/general/isString":18,"../utilities/general/outputTransformation":19,"../utilities/reasoning/inferSubClasses":50,"../utilities/reasoning/inferSubDataTypes":51,"../utilities/reasoning/inferSubProperties":52,"../utilities/reasoning/inferSuperProperties":55,"./Term":9}],8:[function(require,module,exports){
 "use strict";
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
@@ -865,10 +906,10 @@ exports.SDOAdapter = void 0;
 const Graph_1 = require("./Graph");
 const axios_1 = __importDefault(require("axios"));
 const Infrastructure_1 = require("./Infrastructure");
-const reasoning_1 = require("./reasoning");
-const isString_1 = require("./utilities/isString");
-const isObject_1 = require("./utilities/isObject");
-const toArray_1 = require("./utilities/toArray");
+const isString_1 = require("../utilities/general/isString");
+const isObject_1 = require("../utilities/general/isObject");
+const toArray_1 = require("../utilities/general/toArray");
+const filterAndTransformIRIList_1 = require("../utilities/general/filterAndTransformIRIList");
 class SDOAdapter {
     constructor(paramObj) {
         if (paramObj === null || paramObj === void 0 ? void 0 : paramObj.commit) {
@@ -893,14 +934,18 @@ class SDOAdapter {
         else {
             this.equateVocabularyProtocols = false;
         }
-        this.graph = new Graph_1.Graph(this);
+        if (paramObj === null || paramObj === void 0 ? void 0 : paramObj.outputFormat) {
+            this.graph = new Graph_1.Graph(this, paramObj.outputFormat);
+        }
+        else {
+            this.graph = new Graph_1.Graph(this);
+        }
     }
     async addVocabularies(vocabArray) {
         vocabArray = (0, toArray_1.toArray)(vocabArray);
         for (const vocab of vocabArray) {
             if ((0, isString_1.isString)(vocab)) {
-                if (vocab.startsWith("www") ||
-                    vocab.startsWith("http")) {
+                if (vocab.startsWith("www") || vocab.startsWith("http")) {
                     try {
                         let fetchedVocab = await this.fetchVocabularyFromURL(vocab);
                         if ((0, isString_1.isString)(fetchedVocab)) {
@@ -909,9 +954,7 @@ class SDOAdapter {
                         await this.graph.addVocabulary(fetchedVocab, vocab);
                     }
                     catch (e) {
-                        throw new Error("The given URL " +
-                            vocab +
-                            " did not contain a valid JSON-LD vocabulary.");
+                        throw new Error("The given URL " + vocab + " did not contain a valid JSON-LD vocabulary.");
                     }
                 }
                 else {
@@ -936,8 +979,8 @@ class SDOAdapter {
         try {
             const res = await axios_1.default.get(url, {
                 headers: {
-                    Accept: "application/ld+json, application/json",
-                },
+                    Accept: "application/ld+json, application/json"
+                }
             });
             return res.data;
         }
@@ -950,11 +993,11 @@ class SDOAdapter {
     }
     getAllTerms(filter) {
         const result = [];
-        const classesIRIList = this.getListOfClasses(filter);
-        const enumerationsIRIList = this.getListOfEnumerations(filter);
-        const propertiesIRIList = this.getListOfProperties(filter);
-        const dataTypesIRIList = this.getListOfDataTypes(filter);
-        const enumerationMembersIRIList = this.getListOfEnumerationMembers(filter);
+        const classesIRIList = this.getListOfClasses({ filter, outputFormat: "Compact" });
+        const enumerationsIRIList = this.getListOfEnumerations({ filter, outputFormat: "Compact" });
+        const propertiesIRIList = this.getListOfProperties({ filter, outputFormat: "Compact" });
+        const dataTypesIRIList = this.getListOfDataTypes({ filter, outputFormat: "Compact" });
+        const enumerationMembersIRIList = this.getListOfEnumerationMembers({ filter, outputFormat: "Compact" });
         for (const c of classesIRIList) {
             result.push(this.getClass(c));
         }
@@ -972,104 +1015,84 @@ class SDOAdapter {
         }
         return result;
     }
-    getListOfTerms(filter) {
+    getListOfTerms(paramObj) {
         const result = [];
         result.push(...Object.keys(this.graph.classes));
         result.push(...Object.keys(this.graph.enumerations));
         result.push(...Object.keys(this.graph.properties));
         result.push(...Object.keys(this.graph.dataTypes));
         result.push(...Object.keys(this.graph.enumerationMembers));
-        return (0, reasoning_1.applyFilter)({ data: result, filter, graph: this.graph });
+        return (0, filterAndTransformIRIList_1.filterAndTransformIRIList)(result, this.graph, paramObj);
     }
     getClass(id, filter) {
         return this.graph.getClass(id, filter);
     }
     getAllClasses(filter) {
         const result = [];
-        const classesIRIList = this.getListOfClasses(filter);
+        const classesIRIList = this.getListOfClasses({ filter, outputFormat: "Compact" });
         for (const c of classesIRIList) {
             result.push(this.getClass(c));
         }
         return result;
     }
-    getListOfClasses(filter) {
-        return (0, reasoning_1.applyFilter)({
-            data: Object.keys(this.graph.classes),
-            filter,
-            graph: this.graph,
-        });
+    getListOfClasses(paramObj) {
+        return (0, filterAndTransformIRIList_1.filterAndTransformIRIList)(Object.keys(this.graph.classes), this.graph, paramObj);
     }
     getProperty(id, filter) {
         return this.graph.getProperty(id, filter);
     }
     getAllProperties(filter) {
         const result = [];
-        const propertiesIRIList = this.getListOfProperties(filter);
+        const propertiesIRIList = this.getListOfProperties({ filter, outputFormat: "Compact" });
         for (const p of propertiesIRIList) {
             result.push(this.getProperty(p));
         }
         return result;
     }
-    getListOfProperties(filter) {
-        return (0, reasoning_1.applyFilter)({
-            data: Object.keys(this.graph.properties),
-            filter,
-            graph: this.graph,
-        });
+    getListOfProperties(paramObj) {
+        return (0, filterAndTransformIRIList_1.filterAndTransformIRIList)(Object.keys(this.graph.properties), this.graph, paramObj);
     }
     getDataType(id, filter) {
         return this.graph.getDataType(id, filter);
     }
     getAllDataTypes(filter) {
         const result = [];
-        const dataTypesIRIList = this.getListOfDataTypes(filter);
+        const dataTypesIRIList = this.getListOfDataTypes({ filter, outputFormat: "Compact" });
         for (const dt of dataTypesIRIList) {
             result.push(this.getDataType(dt));
         }
         return result;
     }
-    getListOfDataTypes(filter) {
-        return (0, reasoning_1.applyFilter)({
-            data: Object.keys(this.graph.dataTypes),
-            filter,
-            graph: this.graph,
-        });
+    getListOfDataTypes(paramObj) {
+        return (0, filterAndTransformIRIList_1.filterAndTransformIRIList)(Object.keys(this.graph.dataTypes), this.graph, paramObj);
     }
     getEnumeration(id, filter) {
         return this.graph.getEnumeration(id, filter);
     }
     getAllEnumerations(filter) {
         const result = [];
-        const enumerationsIRIList = this.getListOfEnumerations(filter);
+        const enumerationsIRIList = this.getListOfEnumerations({ filter, outputFormat: "Compact" });
         for (const en of enumerationsIRIList) {
             result.push(this.getEnumeration(en));
         }
         return result;
     }
-    getListOfEnumerations(filter) {
-        return (0, reasoning_1.applyFilter)({
-            data: Object.keys(this.graph.enumerations),
-            filter,
-            graph: this.graph,
-        });
+    getListOfEnumerations(paramObj) {
+        return (0, filterAndTransformIRIList_1.filterAndTransformIRIList)(Object.keys(this.graph.enumerations), this.graph, paramObj);
     }
     getEnumerationMember(id, filter) {
         return this.graph.getEnumerationMember(id, filter);
     }
     getAllEnumerationMembers(filter) {
         const result = [];
-        const enumerationMembersIRIList = this.getListOfEnumerationMembers(filter);
+        const enumerationMembersIRIList = this.getListOfEnumerationMembers({ filter, outputFormat: "Compact" });
         for (const enm of enumerationMembersIRIList) {
             result.push(this.getEnumerationMember(enm));
         }
         return result;
     }
-    getListOfEnumerationMembers(filter) {
-        return (0, reasoning_1.applyFilter)({
-            data: Object.keys(this.graph.enumerationMembers),
-            filter,
-            graph: this.graph,
-        });
+    getListOfEnumerationMembers(paramObj) {
+        return (0, filterAndTransformIRIList_1.filterAndTransformIRIList)(Object.keys(this.graph.enumerationMembers), this.graph, paramObj);
     }
     getVocabularies(omitStandardVocabs = true) {
         const vocabKeys = Object.keys(this.graph.context);
@@ -1104,11 +1127,10 @@ class SDOAdapter {
             "void",
             "geo",
             "wgs",
-            "ds",
+            "ds"
         ];
         vocabKeys.forEach((el) => {
-            if ((0, isString_1.isString)(this.graph.context[el]) &&
-                (!omitStandardVocabs || !blacklist.includes(el))) {
+            if ((0, isString_1.isString)(this.graph.context[el]) && (!omitStandardVocabs || !blacklist.includes(el))) {
                 result[el] = this.graph.context[el];
             }
         });
@@ -1123,21 +1145,22 @@ class SDOAdapter {
 }
 exports.SDOAdapter = SDOAdapter;
 
-},{"./Graph":5,"./Infrastructure":6,"./reasoning":14,"./utilities/isObject":22,"./utilities/isString":23,"./utilities/toArray":27,"axios":30}],10:[function(require,module,exports){
+},{"../utilities/general/filterAndTransformIRIList":13,"../utilities/general/isObject":17,"../utilities/general/isString":18,"../utilities/general/toArray":22,"./Graph":5,"./Infrastructure":6,"axios":56}],9:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Term = void 0;
-const namespaces_1 = require("./data/namespaces");
-const toAbsoluteIRI_1 = require("./utilities/toAbsoluteIRI");
-const isNil_1 = require("./utilities/isNil");
-const isString_1 = require("./utilities/isString");
+const namespaces_1 = require("../data/namespaces");
+const toAbsoluteIRI_1 = require("../utilities/general/toAbsoluteIRI");
+const isNil_1 = require("../utilities/general/isNil");
+const isString_1 = require("../utilities/general/isString");
+const outputTransformation_1 = require("../utilities/general/outputTransformation");
 class Term {
     constructor(IRI, graph) {
         this.IRI = IRI;
         this.graph = graph;
     }
-    getIRI(compactForm = false) {
-        if (compactForm) {
+    getIRI(outputIRIType = "Absolute") {
+        if (outputIRIType === "Compact") {
             return this.IRI;
         }
         return (0, toAbsoluteIRI_1.toAbsoluteIRI)(this.IRI, this.graph.context);
@@ -1172,10 +1195,10 @@ class Term {
         }
         return null;
     }
-    isSupersededBy() {
+    isSupersededBy(outputIRIType = "Compact") {
         const termObj = this.getTermObj();
         if ((0, isString_1.isString)(termObj[namespaces_1.NS.schema.supersededBy])) {
-            return termObj[namespaces_1.NS.schema.supersededBy];
+            return (0, outputTransformation_1.outputTransformation)(termObj[namespaces_1.NS.schema.supersededBy], this.graph, outputIRIType);
         }
         return null;
     }
@@ -1198,22 +1221,22 @@ class Term {
     }
     toJSON() {
         return {
-            id: this.getIRI(true),
-            IRI: this.getIRI(),
+            id: this.getIRI("Compact"),
+            IRI: this.getIRI("Absolute"),
             typeLabel: this.getTermTypeLabel(),
             typeIRI: this.getTermTypeIRI(),
             vocabURLs: this.getVocabURLs(),
             vocabulary: this.getVocabulary(),
             source: this.getSource(),
-            supersededBy: this.isSupersededBy(),
+            supersededBy: this.isSupersededBy("Compact"),
             name: this.getName(),
-            description: this.getDescription(),
+            description: this.getDescription()
         };
     }
 }
 exports.Term = Term;
 
-},{"./data/namespaces":11,"./utilities/isNil":21,"./utilities/isString":23,"./utilities/toAbsoluteIRI":26}],11:[function(require,module,exports){
+},{"../data/namespaces":10,"../utilities/general/isNil":16,"../utilities/general/isString":18,"../utilities/general/outputTransformation":19,"../utilities/general/toAbsoluteIRI":21}],10:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.TermTypeIRI = exports.TermTypeLabel = exports.NS = void 0;
@@ -1229,11 +1252,11 @@ exports.NS = {
         date: "xsd:date",
         time: "xsd:time",
         dateTime: "xsd:dateTime",
-        anyURI: "xsd:anyURI",
+        anyURI: "xsd:anyURI"
     },
     rdf: {
         _url: "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
-        property: "rdf:Property",
+        property: "rdf:Property"
     },
     rdfs: {
         _url: "http://www.w3.org/2000/01/rdf-schema#",
@@ -1241,7 +1264,7 @@ exports.NS = {
         subClassOf: "rdfs:subClassOf",
         subPropertyOf: "rdfs:subPropertyOf",
         label: "rdfs:label",
-        comment: "rdfs:comment",
+        comment: "rdfs:comment"
     },
     schema: {
         _url: "https://schema.org/",
@@ -1253,11 +1276,11 @@ exports.NS = {
         supersededBy: "schema:supersededBy",
         inverseOf: "schema:inverseOf",
         source: "schema:source",
-        category: "schema:category",
+        category: "schema:category"
     },
     dcterms: {
         _url: "http://purl.org/dc/terms/",
-        source: "dcterms:source",
+        source: "dcterms:source"
     },
     soa: {
         _url: "http://schema-org-adapter.at/vocabTerms/",
@@ -1267,33 +1290,33 @@ exports.NS = {
         hasProperty: "soa:hasProperty",
         isRangeOf: "soa:isRangeOf",
         hasEnumerationMember: "soa:hasEnumerationMember",
-        enumerationDomainIncludes: "soa:enumerationDomainIncludes",
+        enumerationDomainIncludes: "soa:enumerationDomainIncludes"
     },
     ds: {
-        _url: "https://vocab.sti2.at/ds/",
-    },
+        _url: "https://vocab.sti2.at/ds/"
+    }
 };
 exports.TermTypeLabel = {
     class: "Class",
     property: "Property",
     enumeration: "Enumeration",
     enumerationMember: "EnumerationMember",
-    dataType: "DataType",
+    dataType: "DataType"
 };
 exports.TermTypeIRI = {
     class: exports.NS.rdfs.class,
     property: exports.NS.rdf.property,
     enumeration: exports.NS.schema.enumeration,
     enumerationMember: exports.NS.soa.enumerationMember,
-    dataType: exports.NS.schema.dataType,
+    dataType: exports.NS.schema.dataType
 };
 
-},{}],12:[function(require,module,exports){
+},{}],11:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.constructURLSchemaVocabulary = exports.getLatestSchemaVersion = exports.fetchSchemaVersions = exports.create = void 0;
-const SDOAdapter_1 = require("./SDOAdapter");
-const Infrastructure_1 = require("./Infrastructure");
+const SDOAdapter_1 = require("./classes/SDOAdapter");
+const Infrastructure_1 = require("./classes/Infrastructure");
 Object.defineProperty(exports, "fetchSchemaVersions", { enumerable: true, get: function () { return Infrastructure_1.fetchSchemaVersions; } });
 Object.defineProperty(exports, "getLatestSchemaVersion", { enumerable: true, get: function () { return Infrastructure_1.getLatestSchemaVersion; } });
 Object.defineProperty(exports, "constructURLSchemaVocabulary", { enumerable: true, get: function () { return Infrastructure_1.constructURLSchemaVocabulary; } });
@@ -1310,22 +1333,297 @@ async function create(paramObj) {
 }
 exports.create = create;
 
-},{"./Infrastructure":6,"./SDOAdapter":9}],13:[function(require,module,exports){
+},{"./classes/Infrastructure":6,"./classes/SDOAdapter":8}],12:[function(require,module,exports){
 "use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.nodeMergeAddIds = exports.nodeMergeLanguageTerm = exports.nodeMergeOverwrite = exports.addEmptyArray = exports.addInheritanceTermsDataTypesAndProperties = exports.addInheritanceTermsClassAndEnum = exports.extractFromClassMemory = exports.getStandardContext = exports.checkIfNamespaceFromListIsUsed = exports.discoverEquateNamespaces = exports.discoverUsedSchemaOrgProtocol = exports.preProcessVocab = exports.generateContext = exports.curateVocabNode = void 0;
-const namespaces_1 = require("./data/namespaces");
-const jsonld_1 = __importDefault(require("jsonld"));
-const cloneJson_1 = require("./utilities/cloneJson");
-const isObject_1 = require("./utilities/isObject");
-const isString_1 = require("./utilities/isString");
-const isNil_1 = require("./utilities/isNil");
-const isLanguageObjectVocab_1 = require("./utilities/isLanguageObjectVocab");
-const isArray_1 = require("./utilities/isArray");
-const switchIRIProtocol_1 = require("./utilities/switchIRIProtocol");
+exports.cloneJson = void 0;
+function cloneJson(input) {
+    if (input === undefined) {
+        return input;
+    }
+    return JSON.parse(JSON.stringify(input));
+}
+exports.cloneJson = cloneJson;
+
+},{}],13:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.filterAndTransformIRIList = void 0;
+const outputTransformation_1 = require("./outputTransformation");
+const applyFilter_1 = require("../reasoning/applyFilter");
+function filterAndTransformIRIList(compactIRIList, graph, paramObj) {
+    return (0, outputTransformation_1.outputTransformation)((0, applyFilter_1.applyFilter)({ data: compactIRIList, filter: paramObj === null || paramObj === void 0 ? void 0 : paramObj.filter, graph: graph }), graph, paramObj === null || paramObj === void 0 ? void 0 : paramObj.outputFormat);
+}
+exports.filterAndTransformIRIList = filterAndTransformIRIList;
+
+},{"../reasoning/applyFilter":47,"./outputTransformation":19}],14:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.isArray = void 0;
+function isArray(value) {
+    return Array.isArray(value);
+}
+exports.isArray = isArray;
+
+},{}],15:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.isLanguageObjectVocab = void 0;
+const isString_1 = require("./isString");
+const isObject_1 = require("./isObject");
+function isLanguageObjectVocab(value) {
+    if ((0, isObject_1.isObject)(value)) {
+        if ((0, isString_1.isString)(value["@language"]) && (0, isString_1.isString)(value["@value"])) {
+            return true;
+        }
+    }
+    return false;
+}
+exports.isLanguageObjectVocab = isLanguageObjectVocab;
+
+},{"./isObject":17,"./isString":18}],16:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.isNil = void 0;
+function isNil(value) {
+    return value === undefined || value === null;
+}
+exports.isNil = isNil;
+
+},{}],17:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.isObject = void 0;
+const isNil_1 = require("./isNil");
+const isArray_1 = require("./isArray");
+function isObject(value) {
+    if ((0, isArray_1.isArray)(value)) {
+        return false;
+    }
+    if ((0, isNil_1.isNil)(value)) {
+        return false;
+    }
+    return typeof value === "object";
+}
+exports.isObject = isObject;
+
+},{"./isArray":14,"./isNil":16}],18:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.isString = void 0;
+const isNil_1 = require("./isNil");
+function isString(value) {
+    if ((0, isNil_1.isNil)(value)) {
+        return false;
+    }
+    return typeof value === "string" || value instanceof String;
+}
+exports.isString = isString;
+
+},{"./isNil":16}],19:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.outputTransformation = void 0;
+const toAbsoluteIRI_1 = require("./toAbsoluteIRI");
+const isString_1 = require("./isString");
+const isArray_1 = require("./isArray");
+function outputTransformation(input, graph, outputFormat) {
+    const format = outputFormat ? outputFormat : graph.outputFormat;
+    if (format === "Compact") {
+        return input;
+    }
+    if ((0, isString_1.isString)(input)) {
+        return (0, toAbsoluteIRI_1.toAbsoluteIRI)(input, graph.context);
+    }
+    else if ((0, isArray_1.isArray)(input) && input.every((s) => (0, isString_1.isString)(s))) {
+        return input.map((s) => (0, toAbsoluteIRI_1.toAbsoluteIRI)(s, graph.context));
+    }
+    throw new Error("Wrong input type! - must be string or array of strings");
+}
+exports.outputTransformation = outputTransformation;
+
+},{"./isArray":14,"./isString":18,"./toAbsoluteIRI":21}],20:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.switchIRIProtocol = void 0;
+function switchIRIProtocol(IRI) {
+    if (IRI.startsWith("https://")) {
+        return "http" + IRI.substring(5);
+    }
+    else if (IRI.startsWith("http://")) {
+        return "https" + IRI.substring(4);
+    }
+    return IRI;
+}
+exports.switchIRIProtocol = switchIRIProtocol;
+
+},{}],21:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.toAbsoluteIRI = void 0;
+function toAbsoluteIRI(compactIRI, context) {
+    const terms = Object.keys(context);
+    for (let i = 0; i < terms.length; i++) {
+        const vocabIRI = context[terms[i]];
+        if (compactIRI.substring(0, compactIRI.indexOf(":")) === terms[i]) {
+            return vocabIRI.concat(compactIRI.substring(compactIRI.indexOf(":") + 1));
+        }
+    }
+    throw new Error("Trying to get an absolute IRI for a term with no entry in the Context");
+}
+exports.toAbsoluteIRI = toAbsoluteIRI;
+
+},{}],22:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.toArray = void 0;
+const toArray = (o) => (Array.isArray(o) ? o : [o]);
+exports.toArray = toArray;
+
+},{}],23:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.toCompactIRI = void 0;
+const isString_1 = require("./isString");
+const switchIRIProtocol_1 = require("./switchIRIProtocol");
+function toCompactIRI(absoluteIRI, context, equateVocabularyProtocols = false) {
+    for (const contextTerm of Object.keys(context)) {
+        const vocabIRI = context[contextTerm];
+        if ((0, isString_1.isString)(vocabIRI) && absoluteIRI.startsWith(vocabIRI)) {
+            return (contextTerm + ":" + absoluteIRI.substring(vocabIRI.length));
+        }
+        if (equateVocabularyProtocols && (0, isString_1.isString)(vocabIRI)) {
+            const protocolSwitchedIRI = (0, switchIRIProtocol_1.switchIRIProtocol)(vocabIRI);
+            if (absoluteIRI.startsWith(protocolSwitchedIRI)) {
+                return (contextTerm + ":" + absoluteIRI.substring(protocolSwitchedIRI.length));
+            }
+        }
+    }
+    throw new Error("Trying to get a compact IRI for a term with no entry in the Context");
+}
+exports.toCompactIRI = toCompactIRI;
+
+},{"./isString":18,"./switchIRIProtocol":20}],24:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.uniquifyArray = void 0;
+function uniquifyArray(array) {
+    return [...new Set(array)];
+}
+exports.uniquifyArray = uniquifyArray;
+
+},{}],25:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.addEmptyArray = void 0;
+function addEmptyArray(termObject, property) {
+    if (!termObject[property]) {
+        termObject[property] = [];
+    }
+}
+exports.addEmptyArray = addEmptyArray;
+
+},{}],26:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.addInheritanceTermsClassAndEnum = void 0;
+function addInheritanceTermsClassAndEnum(memory, enumerationsMemory, subOfProperty, superOfProperty) {
+    const classesKeys = Object.keys(memory);
+    for (const actClassKey of classesKeys) {
+        const superClasses = memory[actClassKey][subOfProperty];
+        if (!memory[actClassKey][superOfProperty]) {
+            memory[actClassKey][superOfProperty] = [];
+        }
+        for (const actSuperClass of superClasses) {
+            let superClass = memory[actSuperClass];
+            if (!superClass) {
+                superClass = enumerationsMemory[actSuperClass];
+            }
+            if (superClass) {
+                if (superClass[superOfProperty]) {
+                    if (!superClass[superOfProperty].includes(actClassKey)) {
+                        superClass[superOfProperty].push(actClassKey);
+                    }
+                }
+                else {
+                    superClass[superOfProperty] = [actClassKey];
+                }
+            }
+        }
+    }
+}
+exports.addInheritanceTermsClassAndEnum = addInheritanceTermsClassAndEnum;
+
+},{}],27:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.addInheritanceTermsDataTypesAndProperties = void 0;
+function addInheritanceTermsDataTypesAndProperties(memory, subOfProperty, superOfProperty) {
+    const dataTypeKeys = Object.keys(memory);
+    for (const actDtKey of dataTypeKeys) {
+        const superClasses = memory[actDtKey][subOfProperty];
+        if (!memory[actDtKey][superOfProperty]) {
+            memory[actDtKey][superOfProperty] = [];
+        }
+        if (!superClasses) {
+            memory[actDtKey][subOfProperty] = [];
+        }
+        else {
+            for (const actSuperClass of superClasses) {
+                const superClass = memory[actSuperClass];
+                if (superClass) {
+                    if (superClass[superOfProperty]) {
+                        if (!superClass[superOfProperty].includes(actDtKey)) {
+                            superClass[superOfProperty].push(actDtKey);
+                        }
+                    }
+                    else {
+                        superClass[superOfProperty] = [actDtKey];
+                    }
+                }
+            }
+        }
+    }
+}
+exports.addInheritanceTermsDataTypesAndProperties = addInheritanceTermsDataTypesAndProperties;
+
+},{}],28:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.checkIfNamespaceFromListIsUsed = void 0;
+const isObject_1 = require("../general/isObject");
+const isString_1 = require("../general/isString");
+function checkIfNamespaceFromListIsUsed(value, namespaceArray, result) {
+    if (Array.isArray(value)) {
+        value.forEach(function (val) {
+            checkIfNamespaceFromListIsUsed(val, namespaceArray, result);
+        });
+    }
+    else {
+        let toCheck;
+        if ((0, isObject_1.isObject)(value) && (0, isString_1.isString)(value["@id"])) {
+            toCheck = value["@id"];
+        }
+        else {
+            toCheck = value;
+        }
+        if ((0, isString_1.isString)(toCheck) && toCheck.startsWith("http")) {
+            const match = namespaceArray.find((el) => toCheck.startsWith(el));
+            if (match && !result.has(match)) {
+                result.add(match);
+            }
+        }
+    }
+}
+exports.checkIfNamespaceFromListIsUsed = checkIfNamespaceFromListIsUsed;
+
+},{"../general/isObject":17,"../general/isString":18}],29:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.curateLanguageTerm = void 0;
+const isString_1 = require("../general/isString");
+const isLanguageObjectVocab_1 = require("../general/isLanguageObjectVocab");
+const isArray_1 = require("../general/isArray");
 function curateLanguageTerm(vocabNode, term) {
     if (vocabNode[term] !== undefined) {
         if ((0, isString_1.isString)(vocabNode[term])) {
@@ -1352,6 +1650,13 @@ function curateLanguageTerm(vocabNode, term) {
         vocabNode[term] = {};
     }
 }
+exports.curateLanguageTerm = curateLanguageTerm;
+
+},{"../general/isArray":14,"../general/isLanguageObjectVocab":15,"../general/isString":18}],30:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.curateRelationshipTermArray = void 0;
+const isString_1 = require("../general/isString");
 function curateRelationshipTermArray(vocabNode, term, initDefaultIf) {
     if ((0, isString_1.isString)(vocabNode[term])) {
         vocabNode[term] = [vocabNode[term]];
@@ -1361,13 +1666,23 @@ function curateRelationshipTermArray(vocabNode, term, initDefaultIf) {
         vocabNode[term] = [];
     }
 }
+exports.curateRelationshipTermArray = curateRelationshipTermArray;
+
+},{"../general/isString":18}],31:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.curateVocabNode = void 0;
+const namespaces_1 = require("../../data/namespaces");
+const isString_1 = require("../general/isString");
+const curateLanguageTerm_1 = require("./curateLanguageTerm");
+const curateRelationshipTermArray_1 = require("./curateRelationshipTermArray");
 function curateVocabNode(vocabNode, vocabularies) {
-    curateLanguageTerm(vocabNode, namespaces_1.NS.rdfs.comment);
-    curateLanguageTerm(vocabNode, namespaces_1.NS.rdfs.label);
-    curateRelationshipTermArray(vocabNode, namespaces_1.NS.rdfs.subClassOf, namespaces_1.TermTypeIRI.class);
-    curateRelationshipTermArray(vocabNode, namespaces_1.NS.rdfs.subPropertyOf, namespaces_1.TermTypeIRI.property);
-    curateRelationshipTermArray(vocabNode, namespaces_1.NS.schema.domainIncludes, namespaces_1.TermTypeIRI.property);
-    curateRelationshipTermArray(vocabNode, namespaces_1.NS.schema.rangeIncludes, namespaces_1.TermTypeIRI.property);
+    (0, curateLanguageTerm_1.curateLanguageTerm)(vocabNode, namespaces_1.NS.rdfs.comment);
+    (0, curateLanguageTerm_1.curateLanguageTerm)(vocabNode, namespaces_1.NS.rdfs.label);
+    (0, curateRelationshipTermArray_1.curateRelationshipTermArray)(vocabNode, namespaces_1.NS.rdfs.subClassOf, namespaces_1.TermTypeIRI.class);
+    (0, curateRelationshipTermArray_1.curateRelationshipTermArray)(vocabNode, namespaces_1.NS.rdfs.subPropertyOf, namespaces_1.TermTypeIRI.property);
+    (0, curateRelationshipTermArray_1.curateRelationshipTermArray)(vocabNode, namespaces_1.NS.schema.domainIncludes, namespaces_1.TermTypeIRI.property);
+    (0, curateRelationshipTermArray_1.curateRelationshipTermArray)(vocabNode, namespaces_1.NS.schema.rangeIncludes, namespaces_1.TermTypeIRI.property);
     if (vocabNode[namespaces_1.NS.schema.inverseOf] === undefined &&
         vocabNode["@type"] === namespaces_1.TermTypeIRI.property) {
         vocabNode[namespaces_1.NS.schema.inverseOf] = null;
@@ -1391,6 +1706,145 @@ function curateVocabNode(vocabNode, vocabularies) {
     return vocabNode;
 }
 exports.curateVocabNode = curateVocabNode;
+
+},{"../../data/namespaces":10,"../general/isString":18,"./curateLanguageTerm":29,"./curateRelationshipTermArray":30}],32:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.discoverEquateNamespaces = void 0;
+const isString_1 = require("../general/isString");
+const switchIRIProtocol_1 = require("../general/switchIRIProtocol");
+const namespaces_1 = require("../../data/namespaces");
+const checkIfNamespaceFromListIsUsed_1 = require("./checkIfNamespaceFromListIsUsed");
+function discoverEquateNamespaces(currentContext, vocabulary) {
+    const result = new Set();
+    const protocolSwitchedNamespaces = [];
+    Object.values(currentContext).forEach(function (el) {
+        if ((0, isString_1.isString)(el)) {
+            protocolSwitchedNamespaces.push((0, switchIRIProtocol_1.switchIRIProtocol)(el));
+        }
+    });
+    if (vocabulary["@context"]) {
+        Object.values(vocabulary["@context"]).forEach(function (el) {
+            if ((0, isString_1.isString)(el) && protocolSwitchedNamespaces.includes(el)) {
+                result.add(el);
+            }
+        });
+    }
+    if (Array.isArray(vocabulary["@graph"])) {
+        vocabulary["@graph"].forEach(function (vocabNode) {
+            (0, checkIfNamespaceFromListIsUsed_1.checkIfNamespaceFromListIsUsed)(vocabNode["@id"], protocolSwitchedNamespaces, result);
+            (0, checkIfNamespaceFromListIsUsed_1.checkIfNamespaceFromListIsUsed)(vocabNode["@type"], protocolSwitchedNamespaces, result);
+            (0, checkIfNamespaceFromListIsUsed_1.checkIfNamespaceFromListIsUsed)(vocabNode[namespaces_1.NS.rdfs.subClassOf], protocolSwitchedNamespaces, result);
+            (0, checkIfNamespaceFromListIsUsed_1.checkIfNamespaceFromListIsUsed)(vocabNode["http://www.w3.org/2000/01/rdf-schema#subClassOf"], protocolSwitchedNamespaces, result);
+            (0, checkIfNamespaceFromListIsUsed_1.checkIfNamespaceFromListIsUsed)(vocabNode[namespaces_1.NS.schema.domainIncludes], protocolSwitchedNamespaces, result);
+            (0, checkIfNamespaceFromListIsUsed_1.checkIfNamespaceFromListIsUsed)(vocabNode["http://schema.org/domainIncludes"], protocolSwitchedNamespaces, result);
+            (0, checkIfNamespaceFromListIsUsed_1.checkIfNamespaceFromListIsUsed)(vocabNode["https://schema.org/domainIncludes"], protocolSwitchedNamespaces, result);
+            (0, checkIfNamespaceFromListIsUsed_1.checkIfNamespaceFromListIsUsed)(vocabNode[namespaces_1.NS.schema.rangeIncludes], protocolSwitchedNamespaces, result);
+            (0, checkIfNamespaceFromListIsUsed_1.checkIfNamespaceFromListIsUsed)(vocabNode["http://schema.org/rangeIncludes"], protocolSwitchedNamespaces, result);
+            (0, checkIfNamespaceFromListIsUsed_1.checkIfNamespaceFromListIsUsed)(vocabNode["https://schema.org/rangeIncludes"], protocolSwitchedNamespaces, result);
+            (0, checkIfNamespaceFromListIsUsed_1.checkIfNamespaceFromListIsUsed)(vocabNode[namespaces_1.NS.rdfs.subPropertyOf], protocolSwitchedNamespaces, result);
+            (0, checkIfNamespaceFromListIsUsed_1.checkIfNamespaceFromListIsUsed)(vocabNode["http://www.w3.org/2000/01/rdf-schema#subPropertyOf"], protocolSwitchedNamespaces, result);
+            (0, checkIfNamespaceFromListIsUsed_1.checkIfNamespaceFromListIsUsed)(vocabNode[namespaces_1.NS.schema.inverseOf], protocolSwitchedNamespaces, result);
+            (0, checkIfNamespaceFromListIsUsed_1.checkIfNamespaceFromListIsUsed)(vocabNode["http://schema.org/inverseOf"], protocolSwitchedNamespaces, result);
+            (0, checkIfNamespaceFromListIsUsed_1.checkIfNamespaceFromListIsUsed)(vocabNode["https://schema.org/inverseOf"], protocolSwitchedNamespaces, result);
+        });
+    }
+    return Array.from(result);
+}
+exports.discoverEquateNamespaces = discoverEquateNamespaces;
+
+},{"../../data/namespaces":10,"../general/isString":18,"../general/switchIRIProtocol":20,"./checkIfNamespaceFromListIsUsed":28}],33:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.discoverUsedSchemaOrgProtocol = void 0;
+const isObject_1 = require("../general/isObject");
+const isString_1 = require("../general/isString");
+function discoverUsedSchemaOrgProtocol(vocabulary) {
+    const httpsIRI = "https://schema.org/";
+    const httpIRI = "http://schema.org/";
+    if (vocabulary["@context"]) {
+        for (const contextEntry of Object.values(vocabulary["@context"])) {
+            if ((0, isObject_1.isObject)(contextEntry) && contextEntry["@vocab"]) {
+                if (contextEntry["@vocab"] === httpsIRI) {
+                    return "https";
+                }
+                else if (contextEntry["@vocab"] === httpIRI) {
+                    return "http";
+                }
+            }
+            else if ((0, isString_1.isString)(contextEntry)) {
+                if (contextEntry === httpsIRI) {
+                    return "https";
+                }
+                else if (contextEntry === httpIRI) {
+                    return "http";
+                }
+            }
+        }
+    }
+    const stringifiedVocab = JSON.stringify(vocabulary);
+    const amountHttps = stringifiedVocab.split(httpsIRI).length - 1;
+    const amountHttp = stringifiedVocab.split(httpIRI).length - 1;
+    if (amountHttps > amountHttp) {
+        return "https";
+    }
+    else if (amountHttp > amountHttps) {
+        return "http";
+    }
+    else {
+        return httpsIRI;
+    }
+}
+exports.discoverUsedSchemaOrgProtocol = discoverUsedSchemaOrgProtocol;
+
+},{"../general/isObject":17,"../general/isString":18}],34:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.extractFromClassMemory = void 0;
+const namespaces_1 = require("../../data/namespaces");
+const cloneJson_1 = require("../general/cloneJson");
+function extractFromClassMemory(classMemory, otherMemory, addGraphNodeFn, vocabURL) {
+    let termSwitched;
+    do {
+        termSwitched = false;
+        const classesKeys = Object.keys(classMemory);
+        const otherKeys = Object.keys(otherMemory);
+        for (const actClassKey of classesKeys) {
+            if (otherKeys.includes(actClassKey)) {
+                termSwitched = true;
+                addGraphNodeFn(otherMemory, classMemory[actClassKey], vocabURL);
+                delete classMemory[actClassKey];
+            }
+            else if (classMemory[actClassKey][namespaces_1.NS.rdfs.subClassOf] !== undefined) {
+                const subClassArray = classMemory[actClassKey][namespaces_1.NS.rdfs.subClassOf];
+                for (const actSubClass of subClassArray) {
+                    if (actSubClass === namespaces_1.TermTypeIRI.enumeration ||
+                        otherKeys.includes(actSubClass)) {
+                        if (classMemory[actClassKey] && !otherMemory[actClassKey]) {
+                            termSwitched = true;
+                            otherMemory[actClassKey] = (0, cloneJson_1.cloneJson)(classMemory[actClassKey]);
+                            delete classMemory[actClassKey];
+                        }
+                        else if (classMemory[actClassKey] && otherMemory[actClassKey]) {
+                            termSwitched = true;
+                            addGraphNodeFn(otherMemory, classMemory[actClassKey], vocabURL);
+                            delete classMemory[actClassKey];
+                        }
+                    }
+                }
+            }
+        }
+    } while (termSwitched);
+}
+exports.extractFromClassMemory = extractFromClassMemory;
+
+},{"../../data/namespaces":10,"../general/cloneJson":12}],35:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.generateContext = void 0;
+const cloneJson_1 = require("../general/cloneJson");
+const isString_1 = require("../general/isString");
+const isObject_1 = require("../general/isObject");
 function generateContext(currentContext, newContext) {
     const keysCurrentContext = Object.keys(currentContext);
     const keysNewContext = Object.keys(newContext);
@@ -1449,132 +1903,12 @@ function generateContext(currentContext, newContext) {
     return orderedResultContext;
 }
 exports.generateContext = generateContext;
-async function preProcessVocab(vocab, newContext) {
-    let foundInnerGraph = false;
-    do {
-        const newGraph = [];
-        foundInnerGraph = false;
-        for (let i = 0; i < vocab["@graph"].length; i++) {
-            if (vocab["@graph"][i]["@graph"] !== undefined) {
-                newGraph.push(...(0, cloneJson_1.cloneJson)(vocab["@graph"][i]["@graph"]));
-                foundInnerGraph = true;
-            }
-            else {
-                newGraph.push((0, cloneJson_1.cloneJson)(vocab["@graph"][i]));
-            }
-        }
-        vocab["@graph"] = (0, cloneJson_1.cloneJson)(newGraph);
-    } while (foundInnerGraph);
-    const compactedVocab = await jsonld_1.default.compact(vocab, newContext);
-    if (compactedVocab["@graph"] === undefined) {
-        delete compactedVocab["@context"];
-        return {
-            "@context": newContext,
-            "@graph": [compactedVocab],
-        };
-    }
-    else {
-        return compactedVocab;
-    }
-}
-exports.preProcessVocab = preProcessVocab;
-function discoverUsedSchemaOrgProtocol(vocabulary) {
-    const httpsIRI = "https://schema.org/";
-    const httpIRI = "http://schema.org/";
-    if (vocabulary["@context"]) {
-        for (const contextEntry of Object.values(vocabulary["@context"])) {
-            if ((0, isObject_1.isObject)(contextEntry) && contextEntry["@vocab"]) {
-                if (contextEntry["@vocab"] === httpsIRI) {
-                    return "https";
-                }
-                else if (contextEntry["@vocab"] === httpIRI) {
-                    return "http";
-                }
-            }
-            else if ((0, isString_1.isString)(contextEntry)) {
-                if (contextEntry === httpsIRI) {
-                    return "https";
-                }
-                else if (contextEntry === httpIRI) {
-                    return "http";
-                }
-            }
-        }
-    }
-    const stringifiedVocab = JSON.stringify(vocabulary);
-    const amountHttps = stringifiedVocab.split(httpsIRI).length - 1;
-    const amountHttp = stringifiedVocab.split(httpIRI).length - 1;
-    if (amountHttps > amountHttp) {
-        return "https";
-    }
-    else if (amountHttp > amountHttps) {
-        return "http";
-    }
-    else {
-        return httpsIRI;
-    }
-}
-exports.discoverUsedSchemaOrgProtocol = discoverUsedSchemaOrgProtocol;
-function discoverEquateNamespaces(currentContext, vocabulary) {
-    const result = new Set();
-    const protocolSwitchedNamespaces = [];
-    Object.values(currentContext).forEach(function (el) {
-        if ((0, isString_1.isString)(el)) {
-            protocolSwitchedNamespaces.push((0, switchIRIProtocol_1.switchIRIProtocol)(el));
-        }
-    });
-    if (vocabulary["@context"]) {
-        Object.values(vocabulary["@context"]).forEach(function (el) {
-            if ((0, isString_1.isString)(el) && protocolSwitchedNamespaces.includes(el)) {
-                result.add(el);
-            }
-        });
-    }
-    if (Array.isArray(vocabulary["@graph"])) {
-        vocabulary["@graph"].forEach(function (vocabNode) {
-            checkIfNamespaceFromListIsUsed(vocabNode["@id"], protocolSwitchedNamespaces, result);
-            checkIfNamespaceFromListIsUsed(vocabNode["@type"], protocolSwitchedNamespaces, result);
-            checkIfNamespaceFromListIsUsed(vocabNode[namespaces_1.NS.rdfs.subClassOf], protocolSwitchedNamespaces, result);
-            checkIfNamespaceFromListIsUsed(vocabNode["http://www.w3.org/2000/01/rdf-schema#subClassOf"], protocolSwitchedNamespaces, result);
-            checkIfNamespaceFromListIsUsed(vocabNode[namespaces_1.NS.schema.domainIncludes], protocolSwitchedNamespaces, result);
-            checkIfNamespaceFromListIsUsed(vocabNode["http://schema.org/domainIncludes"], protocolSwitchedNamespaces, result);
-            checkIfNamespaceFromListIsUsed(vocabNode["https://schema.org/domainIncludes"], protocolSwitchedNamespaces, result);
-            checkIfNamespaceFromListIsUsed(vocabNode[namespaces_1.NS.schema.rangeIncludes], protocolSwitchedNamespaces, result);
-            checkIfNamespaceFromListIsUsed(vocabNode["http://schema.org/rangeIncludes"], protocolSwitchedNamespaces, result);
-            checkIfNamespaceFromListIsUsed(vocabNode["https://schema.org/rangeIncludes"], protocolSwitchedNamespaces, result);
-            checkIfNamespaceFromListIsUsed(vocabNode[namespaces_1.NS.rdfs.subPropertyOf], protocolSwitchedNamespaces, result);
-            checkIfNamespaceFromListIsUsed(vocabNode["http://www.w3.org/2000/01/rdf-schema#subPropertyOf"], protocolSwitchedNamespaces, result);
-            checkIfNamespaceFromListIsUsed(vocabNode[namespaces_1.NS.schema.inverseOf], protocolSwitchedNamespaces, result);
-            checkIfNamespaceFromListIsUsed(vocabNode["http://schema.org/inverseOf"], protocolSwitchedNamespaces, result);
-            checkIfNamespaceFromListIsUsed(vocabNode["https://schema.org/inverseOf"], protocolSwitchedNamespaces, result);
-        });
-    }
-    return Array.from(result);
-}
-exports.discoverEquateNamespaces = discoverEquateNamespaces;
-function checkIfNamespaceFromListIsUsed(value, namespaceArray, result) {
-    if (Array.isArray(value)) {
-        value.forEach(function (val) {
-            checkIfNamespaceFromListIsUsed(val, namespaceArray, result);
-        });
-    }
-    else {
-        let toCheck;
-        if ((0, isObject_1.isObject)(value) && (0, isString_1.isString)(value["@id"])) {
-            toCheck = value["@id"];
-        }
-        else {
-            toCheck = value;
-        }
-        if ((0, isString_1.isString)(toCheck) && toCheck.startsWith("http")) {
-            const match = namespaceArray.find((el) => toCheck.startsWith(el));
-            if (match && !result.has(match)) {
-                result.add(match);
-            }
-        }
-    }
-}
-exports.checkIfNamespaceFromListIsUsed = checkIfNamespaceFromListIsUsed;
+
+},{"../general/cloneJson":12,"../general/isObject":17,"../general/isString":18}],36:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.getStandardContext = void 0;
+const namespaces_1 = require("../../data/namespaces");
 function getStandardContext() {
     const standardContext = {
         rdf: namespaces_1.NS.rdf._url,
@@ -1610,115 +1944,28 @@ function getStandardContext() {
     return standardContext;
 }
 exports.getStandardContext = getStandardContext;
-function extractFromClassMemory(classMemory, otherMemory, addGraphNodeFn, vocabURL) {
-    let termSwitched;
-    do {
-        termSwitched = false;
-        const classesKeys = Object.keys(classMemory);
-        const otherKeys = Object.keys(otherMemory);
-        for (const actClassKey of classesKeys) {
-            if (otherKeys.includes(actClassKey)) {
-                termSwitched = true;
-                addGraphNodeFn(otherMemory, classMemory[actClassKey], vocabURL);
-                delete classMemory[actClassKey];
-            }
-            else if (classMemory[actClassKey][namespaces_1.NS.rdfs.subClassOf] !== undefined) {
-                const subClassArray = classMemory[actClassKey][namespaces_1.NS.rdfs.subClassOf];
-                for (const actSubClass of subClassArray) {
-                    if (actSubClass === namespaces_1.TermTypeIRI.enumeration ||
-                        otherKeys.includes(actSubClass)) {
-                        if (classMemory[actClassKey] && !otherMemory[actClassKey]) {
-                            termSwitched = true;
-                            otherMemory[actClassKey] = (0, cloneJson_1.cloneJson)(classMemory[actClassKey]);
-                            delete classMemory[actClassKey];
-                        }
-                        else if (classMemory[actClassKey] && otherMemory[actClassKey]) {
-                            termSwitched = true;
-                            addGraphNodeFn(otherMemory, classMemory[actClassKey], vocabURL);
-                            delete classMemory[actClassKey];
-                        }
-                    }
-                }
-            }
-        }
-    } while (termSwitched);
+
+},{"../../data/namespaces":10}],37:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.isIgnoredVocabNode = void 0;
+const isString_1 = require("../general/isString");
+function isIgnoredVocabNode(vocabNode) {
+    const id = vocabNode["@id"];
+    return !(0, isString_1.isString)(id) ||
+        id.startsWith("file://") ||
+        id.includes("://www.w3.org/wiki/WebSchemas/SchemaDotOrgSources") ||
+        id.includes("://meta.schema.org/") ||
+        id.includes("://publications.europa.eu") ||
+        id.includes("://www.w3.org/ns/regorg#RegisteredOrganization");
 }
-exports.extractFromClassMemory = extractFromClassMemory;
-function addInheritanceTermsClassAndEnum(memory, enumerationsMemory, subOfProperty, superOfProperty) {
-    const classesKeys = Object.keys(memory);
-    for (const actClassKey of classesKeys) {
-        const superClasses = memory[actClassKey][subOfProperty];
-        if (!memory[actClassKey][superOfProperty]) {
-            memory[actClassKey][superOfProperty] = [];
-        }
-        for (const actSuperClass of superClasses) {
-            let superClass = memory[actSuperClass];
-            if (!superClass) {
-                superClass = enumerationsMemory[actSuperClass];
-            }
-            if (superClass) {
-                if (superClass[superOfProperty]) {
-                    if (!superClass[superOfProperty].includes(actClassKey)) {
-                        superClass[superOfProperty].push(actClassKey);
-                    }
-                }
-                else {
-                    superClass[superOfProperty] = [actClassKey];
-                }
-            }
-        }
-    }
-}
-exports.addInheritanceTermsClassAndEnum = addInheritanceTermsClassAndEnum;
-function addInheritanceTermsDataTypesAndProperties(memory, subOfProperty, superOfProperty) {
-    const dataTypeKeys = Object.keys(memory);
-    for (const actDtKey of dataTypeKeys) {
-        const superClasses = memory[actDtKey][subOfProperty];
-        if (!memory[actDtKey][superOfProperty]) {
-            memory[actDtKey][superOfProperty] = [];
-        }
-        if (!superClasses) {
-            memory[actDtKey][subOfProperty] = [];
-        }
-        else {
-            for (const actSuperClass of superClasses) {
-                const superClass = memory[actSuperClass];
-                if (superClass) {
-                    if (superClass[superOfProperty]) {
-                        if (!superClass[superOfProperty].includes(actDtKey)) {
-                            superClass[superOfProperty].push(actDtKey);
-                        }
-                    }
-                    else {
-                        superClass[superOfProperty] = [actDtKey];
-                    }
-                }
-            }
-        }
-    }
-}
-exports.addInheritanceTermsDataTypesAndProperties = addInheritanceTermsDataTypesAndProperties;
-function addEmptyArray(termObject, property) {
-    if (!termObject[property]) {
-        termObject[property] = [];
-    }
-}
-exports.addEmptyArray = addEmptyArray;
-function nodeMergeOverwrite(oldNode, newNode, property) {
-    if (!(0, isNil_1.isNil)(newNode[property])) {
-        oldNode[property] = newNode[property];
-    }
-}
-exports.nodeMergeOverwrite = nodeMergeOverwrite;
-function nodeMergeLanguageTerm(oldNode, newNode, property) {
-    if (!(0, isNil_1.isNil)(newNode[property])) {
-        const langKeys = Object.keys(newNode[property]);
-        for (const actLangKey of langKeys) {
-            oldNode[property][actLangKey] = newNode[property][actLangKey];
-        }
-    }
-}
-exports.nodeMergeLanguageTerm = nodeMergeLanguageTerm;
+exports.isIgnoredVocabNode = isIgnoredVocabNode;
+
+},{"../general/isString":18}],38:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.nodeMergeAddIds = void 0;
+const isNil_1 = require("../general/isNil");
 function nodeMergeAddIds(oldNode, newNode, property) {
     if (!(0, isNil_1.isNil)(newNode[property])) {
         for (const arrayElement of newNode[property]) {
@@ -1730,14 +1977,176 @@ function nodeMergeAddIds(oldNode, newNode, property) {
 }
 exports.nodeMergeAddIds = nodeMergeAddIds;
 
-},{"./data/namespaces":11,"./utilities/cloneJson":16,"./utilities/isArray":19,"./utilities/isLanguageObjectVocab":20,"./utilities/isNil":21,"./utilities/isObject":22,"./utilities/isString":23,"./utilities/switchIRIProtocol":25,"jsonld":76}],14:[function(require,module,exports){
+},{"../general/isNil":16}],39:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.inferRangeOf = exports.inferSubProperties = exports.inferSuperProperties = exports.inferSubDataTypes = exports.inferSuperDataTypes = exports.inferSubClasses = exports.inferSuperClasses = exports.inferPropertiesFromSuperClasses = exports.applyFilter = void 0;
-const namespaces_1 = require("./data/namespaces");
-const cloneJson_1 = require("./utilities/cloneJson");
-const uniquifyArray_1 = require("./utilities/uniquifyArray");
-const toArray_1 = require("./utilities/toArray");
+exports.nodeMergeLanguageTerm = void 0;
+const isNil_1 = require("../general/isNil");
+function nodeMergeLanguageTerm(oldNode, newNode, property) {
+    if (!(0, isNil_1.isNil)(newNode[property])) {
+        const langKeys = Object.keys(newNode[property]);
+        for (const actLangKey of langKeys) {
+            oldNode[property][actLangKey] = newNode[property][actLangKey];
+        }
+    }
+}
+exports.nodeMergeLanguageTerm = nodeMergeLanguageTerm;
+
+},{"../general/isNil":16}],40:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.nodeMergeOverwrite = void 0;
+const isNil_1 = require("../general/isNil");
+function nodeMergeOverwrite(oldNode, newNode, property) {
+    if (!(0, isNil_1.isNil)(newNode[property])) {
+        oldNode[property] = newNode[property];
+    }
+}
+exports.nodeMergeOverwrite = nodeMergeOverwrite;
+
+},{"../general/isNil":16}],41:[function(require,module,exports){
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.preProcessVocab = void 0;
+const cloneJson_1 = require("../general/cloneJson");
+const jsonld_1 = __importDefault(require("jsonld"));
+async function preProcessVocab(vocab, newContext) {
+    let foundInnerGraph = false;
+    do {
+        const newGraph = [];
+        foundInnerGraph = false;
+        for (let i = 0; i < vocab["@graph"].length; i++) {
+            if (vocab["@graph"][i]["@graph"] !== undefined) {
+                newGraph.push(...(0, cloneJson_1.cloneJson)(vocab["@graph"][i]["@graph"]));
+                foundInnerGraph = true;
+            }
+            else {
+                newGraph.push((0, cloneJson_1.cloneJson)(vocab["@graph"][i]));
+            }
+        }
+        vocab["@graph"] = (0, cloneJson_1.cloneJson)(newGraph);
+    } while (foundInnerGraph);
+    const compactedVocab = await jsonld_1.default.compact(vocab, newContext);
+    if (compactedVocab["@graph"] === undefined) {
+        delete compactedVocab["@context"];
+        return {
+            "@context": newContext,
+            "@graph": [compactedVocab],
+        };
+    }
+    else {
+        return compactedVocab;
+    }
+}
+exports.preProcessVocab = preProcessVocab;
+
+},{"../general/cloneJson":12,"jsonld":102}],42:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.RetrievalMemory = void 0;
+const cloneJson_1 = require("../general/cloneJson");
+class RetrievalMemory {
+    constructor() {
+        this.cache = new Map();
+    }
+    static getInstance() {
+        if (!RetrievalMemory.instance) {
+            RetrievalMemory.instance = new RetrievalMemory();
+        }
+        return RetrievalMemory.instance;
+    }
+    setData(dataId, data, commit = "standard") {
+        let entry = this.cache.get(commit);
+        if (!entry) {
+            entry = {};
+            this.cache.set(commit, entry);
+        }
+        entry[dataId] = (0, cloneJson_1.cloneJson)(data);
+    }
+    getData(dataId, commit = "standard") {
+        const entry = this.cache.get(commit);
+        if (entry) {
+            return (0, cloneJson_1.cloneJson)(entry[dataId]);
+        }
+        return undefined;
+    }
+    deleteCache() {
+        this.cache = new Map();
+    }
+}
+exports.RetrievalMemory = RetrievalMemory;
+
+},{"../general/cloneJson":12}],43:[function(require,module,exports){
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.checkIfUrlExists = void 0;
+const axios_1 = __importDefault(require("axios"));
+async function checkIfUrlExists(url) {
+    try {
+        await axios_1.default.head(url);
+        return true;
+    }
+    catch (e) {
+        return false;
+    }
+}
+exports.checkIfUrlExists = checkIfUrlExists;
+
+},{"axios":56}],44:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.getFileNameForSchemaOrgVersion = void 0;
+function getFileNameForSchemaOrgVersion(version, schemaHttps = true) {
+    if (!(Number(version) > 3.0)) {
+        throw new Error("There is no jsonld file for the wanted schema.org version " + version);
+    }
+    if (!(Number(version) > 8.0)) {
+        return "all-layers.jsonld";
+    }
+    if (schemaHttps) {
+        return "schemaorg-all-https.jsonld";
+    }
+    return "schemaorg-all-http.jsonld";
+}
+exports.getFileNameForSchemaOrgVersion = getFileNameForSchemaOrgVersion;
+
+},{}],45:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.getGitHubBaseURL = void 0;
+function getGitHubBaseURL(commit) {
+    if (commit) {
+        return "https://raw.githubusercontent.com/schemaorg/schemaorg/" + commit;
+    }
+    else {
+        return "https://raw.githubusercontent.com/semantifyit/schemaorg/main";
+    }
+}
+exports.getGitHubBaseURL = getGitHubBaseURL;
+
+},{}],46:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.sortReleaseEntriesByDate = void 0;
+function sortReleaseEntriesByDate(releaseLog) {
+    const versionEntries = Object.entries(releaseLog);
+    return versionEntries.sort((a, b) => +new Date(b[1]) - +new Date(a[1]));
+}
+exports.sortReleaseEntriesByDate = sortReleaseEntriesByDate;
+
+},{}],47:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.applyFilter = void 0;
+const uniquifyArray_1 = require("../general/uniquifyArray");
+const toArray_1 = require("../general/toArray");
+const namespaces_1 = require("../../data/namespaces");
 function applyFilter(paramObj) {
     const { data, filter, graph } = paramObj;
     if (!Array.isArray(data) ||
@@ -1777,7 +2186,7 @@ function applyFilter(paramObj) {
         if (namespaces) {
             let matchFound = false;
             for (let v = 0; v < namespaces.length; v++) {
-                if (actualTerm.getIRI(true).startsWith(namespaces[v])) {
+                if (actualTerm.getIRI("Compact").startsWith(namespaces[v])) {
                     matchFound = true;
                     break;
                 }
@@ -1802,6 +2211,13 @@ function applyFilter(paramObj) {
     return result;
 }
 exports.applyFilter = applyFilter;
+
+},{"../../data/namespaces":10,"../general/toArray":22,"../general/uniquifyArray":24}],48:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.inferPropertiesFromSuperClasses = void 0;
+const namespaces_1 = require("../../data/namespaces");
+const uniquifyArray_1 = require("../general/uniquifyArray");
 function inferPropertiesFromSuperClasses(superClasses, graph) {
     const result = [];
     for (const superClass of superClasses) {
@@ -1816,29 +2232,52 @@ function inferPropertiesFromSuperClasses(superClasses, graph) {
     return (0, uniquifyArray_1.uniquifyArray)(result);
 }
 exports.inferPropertiesFromSuperClasses = inferPropertiesFromSuperClasses;
-function inferSuperClasses(classIRI, graph) {
-    let result = [];
-    const classObj = graph.classes[classIRI] || graph.enumerations[classIRI];
+
+},{"../../data/namespaces":10,"../general/uniquifyArray":24}],49:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.inferRangeOf = void 0;
+const namespaces_1 = require("../../data/namespaces");
+const uniquifyArray_1 = require("../general/uniquifyArray");
+const inferSuperClasses_1 = require("./inferSuperClasses");
+const inferSuperDataTypes_1 = require("./inferSuperDataTypes");
+function inferRangeOf(rangeIRI, graph) {
+    const classObj = graph.classes[rangeIRI] || graph.enumerations[rangeIRI];
+    const result = [];
     if (classObj) {
-        result.push(...classObj[namespaces_1.NS.rdfs.subClassOf]);
-        let addition = (0, cloneJson_1.cloneJson)(result);
-        do {
-            let newAddition = [];
-            for (const curAdd of addition) {
-                const parentClassObj = graph.classes[curAdd] || graph.enumerations[curAdd];
-                if (parentClassObj) {
-                    newAddition.push(...parentClassObj[namespaces_1.NS.rdfs.subClassOf]);
+        result.push(...classObj[namespaces_1.NS.soa.isRangeOf]);
+        const superClasses = (0, inferSuperClasses_1.inferSuperClasses)(rangeIRI, graph);
+        for (const superClass of superClasses) {
+            const superClassObj = graph.classes[superClass] || graph.enumerations[superClass];
+            if (superClassObj) {
+                result.push(...superClassObj[namespaces_1.NS.soa.isRangeOf]);
+            }
+        }
+    }
+    else {
+        const dataTypeObj = graph.dataTypes[rangeIRI];
+        if (dataTypeObj) {
+            result.push(...dataTypeObj[namespaces_1.NS.soa.isRangeOf]);
+            const superDataTypes = (0, inferSuperDataTypes_1.inferSuperDataTypes)(rangeIRI, graph);
+            for (const superDataType of superDataTypes) {
+                const superDataTypeObj = graph.dataTypes[superDataType];
+                if (superDataTypeObj) {
+                    result.push(...superDataTypeObj[namespaces_1.NS.soa.isRangeOf]);
                 }
             }
-            newAddition = (0, uniquifyArray_1.uniquifyArray)(newAddition);
-            addition = (0, cloneJson_1.cloneJson)(newAddition);
-            result.push(...newAddition);
-        } while (addition.length !== 0);
-        result = (0, uniquifyArray_1.uniquifyArray)(result);
+        }
     }
-    return result;
+    return (0, uniquifyArray_1.uniquifyArray)(result);
 }
-exports.inferSuperClasses = inferSuperClasses;
+exports.inferRangeOf = inferRangeOf;
+
+},{"../../data/namespaces":10,"../general/uniquifyArray":24,"./inferSuperClasses":53,"./inferSuperDataTypes":54}],50:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.inferSubClasses = void 0;
+const namespaces_1 = require("../../data/namespaces");
+const cloneJson_1 = require("../general/cloneJson");
+const uniquifyArray_1 = require("../general/uniquifyArray");
 function inferSubClasses(classIRI, graph) {
     let result = [];
     const classObj = graph.classes[classIRI] || graph.enumerations[classIRI];
@@ -1862,29 +2301,14 @@ function inferSubClasses(classIRI, graph) {
     return result;
 }
 exports.inferSubClasses = inferSubClasses;
-function inferSuperDataTypes(dataTypeIRI, graph) {
-    let result = [];
-    const dataTypeObj = graph.dataTypes[dataTypeIRI];
-    if (dataTypeObj) {
-        result.push(...dataTypeObj[namespaces_1.NS.rdfs.subClassOf]);
-        let addition = (0, cloneJson_1.cloneJson)(result);
-        do {
-            let newAddition = [];
-            for (const curAdd of addition) {
-                const parentDataTypeObj = graph.dataTypes[curAdd];
-                if (parentDataTypeObj) {
-                    newAddition.push(...parentDataTypeObj[namespaces_1.NS.rdfs.subClassOf]);
-                }
-            }
-            newAddition = (0, uniquifyArray_1.uniquifyArray)(newAddition);
-            addition = (0, cloneJson_1.cloneJson)(newAddition);
-            result.push(...newAddition);
-        } while (addition.length !== 0);
-        result = (0, uniquifyArray_1.uniquifyArray)(result);
-    }
-    return result;
-}
-exports.inferSuperDataTypes = inferSuperDataTypes;
+
+},{"../../data/namespaces":10,"../general/cloneJson":12,"../general/uniquifyArray":24}],51:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.inferSubDataTypes = void 0;
+const namespaces_1 = require("../../data/namespaces");
+const cloneJson_1 = require("../general/cloneJson");
+const uniquifyArray_1 = require("../general/uniquifyArray");
 function inferSubDataTypes(dataTypeIRI, graph) {
     let result = [];
     const dataTypeObj = graph.dataTypes[dataTypeIRI];
@@ -1908,29 +2332,14 @@ function inferSubDataTypes(dataTypeIRI, graph) {
     return result;
 }
 exports.inferSubDataTypes = inferSubDataTypes;
-function inferSuperProperties(propertyIRI, graph) {
-    let result = [];
-    const propertyObj = graph.properties[propertyIRI];
-    if (propertyObj) {
-        result.push(...propertyObj[namespaces_1.NS.rdfs.subPropertyOf]);
-        let addition = (0, cloneJson_1.cloneJson)(result);
-        do {
-            let newAddition = [];
-            for (const curAdd of addition) {
-                const parentPropertyObj = graph.properties[curAdd];
-                if (parentPropertyObj) {
-                    newAddition.push(...parentPropertyObj[namespaces_1.NS.rdfs.subPropertyOf]);
-                }
-            }
-            newAddition = (0, uniquifyArray_1.uniquifyArray)(newAddition);
-            addition = (0, cloneJson_1.cloneJson)(newAddition);
-            result.push(...newAddition);
-        } while (addition.length !== 0);
-        result = (0, uniquifyArray_1.uniquifyArray)(result);
-    }
-    return result;
-}
-exports.inferSuperProperties = inferSuperProperties;
+
+},{"../../data/namespaces":10,"../general/cloneJson":12,"../general/uniquifyArray":24}],52:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.inferSubProperties = void 0;
+const namespaces_1 = require("../../data/namespaces");
+const cloneJson_1 = require("../general/cloneJson");
+const uniquifyArray_1 = require("../general/uniquifyArray");
 function inferSubProperties(propertyIRI, graph) {
     let result = [];
     const propertyObj = graph.properties[propertyIRI];
@@ -1954,276 +2363,103 @@ function inferSubProperties(propertyIRI, graph) {
     return result;
 }
 exports.inferSubProperties = inferSubProperties;
-function inferRangeOf(rangeIRI, graph) {
-    const classObj = graph.classes[rangeIRI] || graph.enumerations[rangeIRI];
-    const result = [];
+
+},{"../../data/namespaces":10,"../general/cloneJson":12,"../general/uniquifyArray":24}],53:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.inferSuperClasses = void 0;
+const namespaces_1 = require("../../data/namespaces");
+const cloneJson_1 = require("../general/cloneJson");
+const uniquifyArray_1 = require("../general/uniquifyArray");
+function inferSuperClasses(classIRI, graph) {
+    let result = [];
+    const classObj = graph.classes[classIRI] || graph.enumerations[classIRI];
     if (classObj) {
-        result.push(...classObj[namespaces_1.NS.soa.isRangeOf]);
-        const superClasses = inferSuperClasses(rangeIRI, graph);
-        for (const superClass of superClasses) {
-            const superClassObj = graph.classes[superClass] || graph.enumerations[superClass];
-            if (superClassObj) {
-                result.push(...superClassObj[namespaces_1.NS.soa.isRangeOf]);
-            }
-        }
-    }
-    else {
-        const dataTypeObj = graph.dataTypes[rangeIRI];
-        if (dataTypeObj) {
-            result.push(...dataTypeObj[namespaces_1.NS.soa.isRangeOf]);
-            const superDataTypes = inferSuperDataTypes(rangeIRI, graph);
-            for (const superDataType of superDataTypes) {
-                const superDataTypeObj = graph.dataTypes[superDataType];
-                if (superDataTypeObj) {
-                    result.push(...superDataTypeObj[namespaces_1.NS.soa.isRangeOf]);
+        result.push(...classObj[namespaces_1.NS.rdfs.subClassOf]);
+        let addition = (0, cloneJson_1.cloneJson)(result);
+        do {
+            let newAddition = [];
+            for (const curAdd of addition) {
+                const parentClassObj = graph.classes[curAdd] || graph.enumerations[curAdd];
+                if (parentClassObj) {
+                    newAddition.push(...parentClassObj[namespaces_1.NS.rdfs.subClassOf]);
                 }
             }
-        }
+            newAddition = (0, uniquifyArray_1.uniquifyArray)(newAddition);
+            addition = (0, cloneJson_1.cloneJson)(newAddition);
+            result.push(...newAddition);
+        } while (addition.length !== 0);
+        result = (0, uniquifyArray_1.uniquifyArray)(result);
     }
-    return (0, uniquifyArray_1.uniquifyArray)(result);
+    return result;
 }
-exports.inferRangeOf = inferRangeOf;
+exports.inferSuperClasses = inferSuperClasses;
 
-},{"./data/namespaces":11,"./utilities/cloneJson":16,"./utilities/toArray":27,"./utilities/uniquifyArray":29}],15:[function(require,module,exports){
-"use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.checkIfUrlExists = void 0;
-const axios_1 = __importDefault(require("axios"));
-async function checkIfUrlExists(url) {
-    try {
-        await axios_1.default.head(url);
-        return true;
-    }
-    catch (e) {
-        return false;
-    }
-}
-exports.checkIfUrlExists = checkIfUrlExists;
-
-},{"axios":30}],16:[function(require,module,exports){
+},{"../../data/namespaces":10,"../general/cloneJson":12,"../general/uniquifyArray":24}],54:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.cloneJson = void 0;
-function cloneJson(input) {
-    if (input === undefined) {
-        return input;
-    }
-    return JSON.parse(JSON.stringify(input));
-}
-exports.cloneJson = cloneJson;
-
-},{}],17:[function(require,module,exports){
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.getFileNameForSchemaOrgVersion = void 0;
-function getFileNameForSchemaOrgVersion(version, schemaHttps = true) {
-    switch (version) {
-        case "2.0":
-        case "2.1":
-        case "2.2":
-        case "3.0":
-            throw new Error("There is no jsonld file for the wanted schema.org version " + version);
-        case "3.1":
-        case "3.2":
-        case "3.3":
-        case "3.4":
-        case "3.5":
-        case "3.6":
-        case "3.7":
-        case "3.8":
-        case "3.9":
-        case "4.0":
-        case "5.0":
-        case "6.0":
-        case "7.0":
-        case "7.01":
-        case "7.02":
-        case "7.03":
-        case "7.04":
-        case "8.0":
-            return "all-layers.jsonld";
-        case "9.0":
-            if (schemaHttps) {
-                return "schemaorg-all-https.jsonld";
+exports.inferSuperDataTypes = void 0;
+const namespaces_1 = require("../../data/namespaces");
+const cloneJson_1 = require("../general/cloneJson");
+const uniquifyArray_1 = require("../general/uniquifyArray");
+function inferSuperDataTypes(dataTypeIRI, graph) {
+    let result = [];
+    const dataTypeObj = graph.dataTypes[dataTypeIRI];
+    if (dataTypeObj) {
+        result.push(...dataTypeObj[namespaces_1.NS.rdfs.subClassOf]);
+        let addition = (0, cloneJson_1.cloneJson)(result);
+        do {
+            let newAddition = [];
+            for (const curAdd of addition) {
+                const parentDataTypeObj = graph.dataTypes[curAdd];
+                if (parentDataTypeObj) {
+                    newAddition.push(...parentDataTypeObj[namespaces_1.NS.rdfs.subClassOf]);
+                }
             }
-            else {
-                return "schemaorg-all-http.jsonld";
+            newAddition = (0, uniquifyArray_1.uniquifyArray)(newAddition);
+            addition = (0, cloneJson_1.cloneJson)(newAddition);
+            result.push(...newAddition);
+        } while (addition.length !== 0);
+        result = (0, uniquifyArray_1.uniquifyArray)(result);
+    }
+    return result;
+}
+exports.inferSuperDataTypes = inferSuperDataTypes;
+
+},{"../../data/namespaces":10,"../general/cloneJson":12,"../general/uniquifyArray":24}],55:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.inferSuperProperties = void 0;
+const namespaces_1 = require("../../data/namespaces");
+const cloneJson_1 = require("../general/cloneJson");
+const uniquifyArray_1 = require("../general/uniquifyArray");
+function inferSuperProperties(propertyIRI, graph) {
+    let result = [];
+    const propertyObj = graph.properties[propertyIRI];
+    if (propertyObj) {
+        result.push(...propertyObj[namespaces_1.NS.rdfs.subPropertyOf]);
+        let addition = (0, cloneJson_1.cloneJson)(result);
+        do {
+            let newAddition = [];
+            for (const curAdd of addition) {
+                const parentPropertyObj = graph.properties[curAdd];
+                if (parentPropertyObj) {
+                    newAddition.push(...parentPropertyObj[namespaces_1.NS.rdfs.subPropertyOf]);
+                }
             }
-        default:
-            if (schemaHttps) {
-                return "schemaorg-all-https.jsonld";
-            }
-            else {
-                return "schemaorg-all-http.jsonld";
-            }
+            newAddition = (0, uniquifyArray_1.uniquifyArray)(newAddition);
+            addition = (0, cloneJson_1.cloneJson)(newAddition);
+            result.push(...newAddition);
+        } while (addition.length !== 0);
+        result = (0, uniquifyArray_1.uniquifyArray)(result);
     }
+    return result;
 }
-exports.getFileNameForSchemaOrgVersion = getFileNameForSchemaOrgVersion;
+exports.inferSuperProperties = inferSuperProperties;
 
-},{}],18:[function(require,module,exports){
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.getGitHubBaseURL = void 0;
-function getGitHubBaseURL(commit) {
-    if (commit) {
-        return "https://raw.githubusercontent.com/schemaorg/schemaorg/" + commit;
-    }
-    else {
-        return "https://raw.githubusercontent.com/semantifyit/schemaorg/main";
-    }
-}
-exports.getGitHubBaseURL = getGitHubBaseURL;
-
-},{}],19:[function(require,module,exports){
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.isArray = void 0;
-function isArray(value) {
-    return Array.isArray(value);
-}
-exports.isArray = isArray;
-
-},{}],20:[function(require,module,exports){
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.isLanguageObjectVocab = void 0;
-const isString_1 = require("./isString");
-const isObject_1 = require("./isObject");
-function isLanguageObjectVocab(value) {
-    if ((0, isObject_1.isObject)(value)) {
-        if ((0, isString_1.isString)(value["@language"]) && (0, isString_1.isString)(value["@value"])) {
-            return true;
-        }
-    }
-    return false;
-}
-exports.isLanguageObjectVocab = isLanguageObjectVocab;
-
-},{"./isObject":22,"./isString":23}],21:[function(require,module,exports){
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.isNil = void 0;
-function isNil(value) {
-    return value === undefined || value === null;
-}
-exports.isNil = isNil;
-
-},{}],22:[function(require,module,exports){
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.isObject = void 0;
-const isNil_1 = require("./isNil");
-const isArray_1 = require("./isArray");
-function isObject(value) {
-    if ((0, isArray_1.isArray)(value)) {
-        return false;
-    }
-    if ((0, isNil_1.isNil)(value)) {
-        return false;
-    }
-    return typeof value === "object";
-}
-exports.isObject = isObject;
-
-},{"./isArray":19,"./isNil":21}],23:[function(require,module,exports){
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.isString = void 0;
-const isNil_1 = require("./isNil");
-function isString(value) {
-    if ((0, isNil_1.isNil)(value)) {
-        return false;
-    }
-    return typeof value === "string" || value instanceof String;
-}
-exports.isString = isString;
-
-},{"./isNil":21}],24:[function(require,module,exports){
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.sortReleaseEntriesByDate = void 0;
-function sortReleaseEntriesByDate(releaseLog) {
-    const versionEntries = Object.entries(releaseLog);
-    return versionEntries.sort((a, b) => +new Date(b[1]) - +new Date(a[1]));
-}
-exports.sortReleaseEntriesByDate = sortReleaseEntriesByDate;
-
-},{}],25:[function(require,module,exports){
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.switchIRIProtocol = void 0;
-function switchIRIProtocol(IRI) {
-    if (IRI.startsWith("https://")) {
-        return "http" + IRI.substring(5);
-    }
-    else if (IRI.startsWith("http://")) {
-        return "https" + IRI.substring(4);
-    }
-    return IRI;
-}
-exports.switchIRIProtocol = switchIRIProtocol;
-
-},{}],26:[function(require,module,exports){
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.toAbsoluteIRI = void 0;
-function toAbsoluteIRI(compactIRI, context) {
-    const terms = Object.keys(context);
-    for (let i = 0; i < terms.length; i++) {
-        const vocabIRI = context[terms[i]];
-        if (compactIRI.substring(0, compactIRI.indexOf(":")) === terms[i]) {
-            return vocabIRI.concat(compactIRI.substring(compactIRI.indexOf(":") + 1));
-        }
-    }
-    throw new Error("Trying to get an absolute IRI for a term with no entry in the Context");
-}
-exports.toAbsoluteIRI = toAbsoluteIRI;
-
-},{}],27:[function(require,module,exports){
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.toArray = void 0;
-const toArray = (o) => (Array.isArray(o) ? o : [o]);
-exports.toArray = toArray;
-
-},{}],28:[function(require,module,exports){
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.toCompactIRI = void 0;
-const isString_1 = require("./isString");
-const switchIRIProtocol_1 = require("./switchIRIProtocol");
-function toCompactIRI(absoluteIRI, context, equateVocabularyProtocols = false) {
-    for (const contextTerm of Object.keys(context)) {
-        const vocabIRI = context[contextTerm];
-        if ((0, isString_1.isString)(vocabIRI) && absoluteIRI.startsWith(vocabIRI)) {
-            return (contextTerm + ":" + absoluteIRI.substring(vocabIRI.length));
-        }
-        if (equateVocabularyProtocols && (0, isString_1.isString)(vocabIRI)) {
-            const protocolSwitchedIRI = (0, switchIRIProtocol_1.switchIRIProtocol)(vocabIRI);
-            if (absoluteIRI.startsWith(protocolSwitchedIRI)) {
-                return (contextTerm + ":" + absoluteIRI.substring(protocolSwitchedIRI.length));
-            }
-        }
-    }
-    throw new Error("Trying to get a compact IRI for a term with no entry in the Context");
-}
-exports.toCompactIRI = toCompactIRI;
-
-},{"./isString":23,"./switchIRIProtocol":25}],29:[function(require,module,exports){
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.uniquifyArray = void 0;
-function uniquifyArray(array) {
-    return [...new Set(array)];
-}
-exports.uniquifyArray = uniquifyArray;
-
-},{}],30:[function(require,module,exports){
+},{"../../data/namespaces":10,"../general/cloneJson":12,"../general/uniquifyArray":24}],56:[function(require,module,exports){
 module.exports = require('./lib/axios');
-},{"./lib/axios":32}],31:[function(require,module,exports){
+},{"./lib/axios":58}],57:[function(require,module,exports){
 'use strict';
 
 var utils = require('./../utils');
@@ -2414,7 +2650,7 @@ module.exports = function xhrAdapter(config) {
   });
 };
 
-},{"../core/buildFullPath":38,"../core/createError":39,"./../core/settle":43,"./../helpers/buildURL":47,"./../helpers/cookies":49,"./../helpers/isURLSameOrigin":52,"./../helpers/parseHeaders":54,"./../utils":57}],32:[function(require,module,exports){
+},{"../core/buildFullPath":64,"../core/createError":65,"./../core/settle":69,"./../helpers/buildURL":73,"./../helpers/cookies":75,"./../helpers/isURLSameOrigin":78,"./../helpers/parseHeaders":80,"./../utils":83}],58:[function(require,module,exports){
 'use strict';
 
 var utils = require('./utils');
@@ -2472,7 +2708,7 @@ module.exports = axios;
 // Allow use of default import syntax in TypeScript
 module.exports.default = axios;
 
-},{"./cancel/Cancel":33,"./cancel/CancelToken":34,"./cancel/isCancel":35,"./core/Axios":36,"./core/mergeConfig":42,"./defaults":45,"./helpers/bind":46,"./helpers/isAxiosError":51,"./helpers/spread":55,"./utils":57}],33:[function(require,module,exports){
+},{"./cancel/Cancel":59,"./cancel/CancelToken":60,"./cancel/isCancel":61,"./core/Axios":62,"./core/mergeConfig":68,"./defaults":71,"./helpers/bind":72,"./helpers/isAxiosError":77,"./helpers/spread":81,"./utils":83}],59:[function(require,module,exports){
 'use strict';
 
 /**
@@ -2493,7 +2729,7 @@ Cancel.prototype.__CANCEL__ = true;
 
 module.exports = Cancel;
 
-},{}],34:[function(require,module,exports){
+},{}],60:[function(require,module,exports){
 'use strict';
 
 var Cancel = require('./Cancel');
@@ -2552,14 +2788,14 @@ CancelToken.source = function source() {
 
 module.exports = CancelToken;
 
-},{"./Cancel":33}],35:[function(require,module,exports){
+},{"./Cancel":59}],61:[function(require,module,exports){
 'use strict';
 
 module.exports = function isCancel(value) {
   return !!(value && value.__CANCEL__);
 };
 
-},{}],36:[function(require,module,exports){
+},{}],62:[function(require,module,exports){
 'use strict';
 
 var utils = require('./../utils');
@@ -2709,7 +2945,7 @@ utils.forEach(['post', 'put', 'patch'], function forEachMethodWithData(method) {
 
 module.exports = Axios;
 
-},{"../helpers/buildURL":47,"../helpers/validator":56,"./../utils":57,"./InterceptorManager":37,"./dispatchRequest":40,"./mergeConfig":42}],37:[function(require,module,exports){
+},{"../helpers/buildURL":73,"../helpers/validator":82,"./../utils":83,"./InterceptorManager":63,"./dispatchRequest":66,"./mergeConfig":68}],63:[function(require,module,exports){
 'use strict';
 
 var utils = require('./../utils');
@@ -2765,7 +3001,7 @@ InterceptorManager.prototype.forEach = function forEach(fn) {
 
 module.exports = InterceptorManager;
 
-},{"./../utils":57}],38:[function(require,module,exports){
+},{"./../utils":83}],64:[function(require,module,exports){
 'use strict';
 
 var isAbsoluteURL = require('../helpers/isAbsoluteURL');
@@ -2787,7 +3023,7 @@ module.exports = function buildFullPath(baseURL, requestedURL) {
   return requestedURL;
 };
 
-},{"../helpers/combineURLs":48,"../helpers/isAbsoluteURL":50}],39:[function(require,module,exports){
+},{"../helpers/combineURLs":74,"../helpers/isAbsoluteURL":76}],65:[function(require,module,exports){
 'use strict';
 
 var enhanceError = require('./enhanceError');
@@ -2807,7 +3043,7 @@ module.exports = function createError(message, config, code, request, response) 
   return enhanceError(error, config, code, request, response);
 };
 
-},{"./enhanceError":41}],40:[function(require,module,exports){
+},{"./enhanceError":67}],66:[function(require,module,exports){
 'use strict';
 
 var utils = require('./../utils');
@@ -2891,7 +3127,7 @@ module.exports = function dispatchRequest(config) {
   });
 };
 
-},{"../cancel/isCancel":35,"../defaults":45,"./../utils":57,"./transformData":44}],41:[function(require,module,exports){
+},{"../cancel/isCancel":61,"../defaults":71,"./../utils":83,"./transformData":70}],67:[function(require,module,exports){
 'use strict';
 
 /**
@@ -2935,7 +3171,7 @@ module.exports = function enhanceError(error, config, code, request, response) {
   return error;
 };
 
-},{}],42:[function(require,module,exports){
+},{}],68:[function(require,module,exports){
 'use strict';
 
 var utils = require('../utils');
@@ -3024,7 +3260,7 @@ module.exports = function mergeConfig(config1, config2) {
   return config;
 };
 
-},{"../utils":57}],43:[function(require,module,exports){
+},{"../utils":83}],69:[function(require,module,exports){
 'use strict';
 
 var createError = require('./createError');
@@ -3051,7 +3287,7 @@ module.exports = function settle(resolve, reject, response) {
   }
 };
 
-},{"./createError":39}],44:[function(require,module,exports){
+},{"./createError":65}],70:[function(require,module,exports){
 'use strict';
 
 var utils = require('./../utils');
@@ -3075,7 +3311,7 @@ module.exports = function transformData(data, headers, fns) {
   return data;
 };
 
-},{"./../defaults":45,"./../utils":57}],45:[function(require,module,exports){
+},{"./../defaults":71,"./../utils":83}],71:[function(require,module,exports){
 (function (process){(function (){
 'use strict';
 
@@ -3213,7 +3449,7 @@ utils.forEach(['post', 'put', 'patch'], function forEachMethodWithData(method) {
 module.exports = defaults;
 
 }).call(this)}).call(this,require('_process'))
-},{"./adapters/http":31,"./adapters/xhr":31,"./core/enhanceError":41,"./helpers/normalizeHeaderName":53,"./utils":57,"_process":84}],46:[function(require,module,exports){
+},{"./adapters/http":57,"./adapters/xhr":57,"./core/enhanceError":67,"./helpers/normalizeHeaderName":79,"./utils":83,"_process":110}],72:[function(require,module,exports){
 'use strict';
 
 module.exports = function bind(fn, thisArg) {
@@ -3226,7 +3462,7 @@ module.exports = function bind(fn, thisArg) {
   };
 };
 
-},{}],47:[function(require,module,exports){
+},{}],73:[function(require,module,exports){
 'use strict';
 
 var utils = require('./../utils');
@@ -3298,7 +3534,7 @@ module.exports = function buildURL(url, params, paramsSerializer) {
   return url;
 };
 
-},{"./../utils":57}],48:[function(require,module,exports){
+},{"./../utils":83}],74:[function(require,module,exports){
 'use strict';
 
 /**
@@ -3314,7 +3550,7 @@ module.exports = function combineURLs(baseURL, relativeURL) {
     : baseURL;
 };
 
-},{}],49:[function(require,module,exports){
+},{}],75:[function(require,module,exports){
 'use strict';
 
 var utils = require('./../utils');
@@ -3369,7 +3605,7 @@ module.exports = (
     })()
 );
 
-},{"./../utils":57}],50:[function(require,module,exports){
+},{"./../utils":83}],76:[function(require,module,exports){
 'use strict';
 
 /**
@@ -3385,7 +3621,7 @@ module.exports = function isAbsoluteURL(url) {
   return /^([a-z][a-z\d\+\-\.]*:)?\/\//i.test(url);
 };
 
-},{}],51:[function(require,module,exports){
+},{}],77:[function(require,module,exports){
 'use strict';
 
 /**
@@ -3398,7 +3634,7 @@ module.exports = function isAxiosError(payload) {
   return (typeof payload === 'object') && (payload.isAxiosError === true);
 };
 
-},{}],52:[function(require,module,exports){
+},{}],78:[function(require,module,exports){
 'use strict';
 
 var utils = require('./../utils');
@@ -3468,7 +3704,7 @@ module.exports = (
     })()
 );
 
-},{"./../utils":57}],53:[function(require,module,exports){
+},{"./../utils":83}],79:[function(require,module,exports){
 'use strict';
 
 var utils = require('../utils');
@@ -3482,7 +3718,7 @@ module.exports = function normalizeHeaderName(headers, normalizedName) {
   });
 };
 
-},{"../utils":57}],54:[function(require,module,exports){
+},{"../utils":83}],80:[function(require,module,exports){
 'use strict';
 
 var utils = require('./../utils');
@@ -3537,7 +3773,7 @@ module.exports = function parseHeaders(headers) {
   return parsed;
 };
 
-},{"./../utils":57}],55:[function(require,module,exports){
+},{"./../utils":83}],81:[function(require,module,exports){
 'use strict';
 
 /**
@@ -3566,7 +3802,7 @@ module.exports = function spread(callback) {
   };
 };
 
-},{}],56:[function(require,module,exports){
+},{}],82:[function(require,module,exports){
 'use strict';
 
 var pkg = require('./../../package.json');
@@ -3673,7 +3909,7 @@ module.exports = {
   validators: validators
 };
 
-},{"./../../package.json":58}],57:[function(require,module,exports){
+},{"./../../package.json":84}],83:[function(require,module,exports){
 'use strict';
 
 var bind = require('./helpers/bind');
@@ -4024,7 +4260,7 @@ module.exports = {
   stripBOM: stripBOM
 };
 
-},{"./helpers/bind":46}],58:[function(require,module,exports){
+},{"./helpers/bind":72}],84:[function(require,module,exports){
 module.exports={
   "name": "axios",
   "version": "0.21.4",
@@ -4110,9 +4346,9 @@ module.exports={
   ]
 }
 
-},{}],59:[function(require,module,exports){
+},{}],85:[function(require,module,exports){
 
-},{}],60:[function(require,module,exports){
+},{}],86:[function(require,module,exports){
 /* jshint esversion: 6 */
 /* jslint node: true */
 'use strict';
@@ -4140,7 +4376,7 @@ module.exports = function serialize (object) {
   }, '') + '}';
 };
 
-},{}],61:[function(require,module,exports){
+},{}],87:[function(require,module,exports){
 /*
  * Copyright (c) 2019 Digital Bazaar, Inc. All rights reserved.
  */
@@ -4403,7 +4639,7 @@ function _resolveContextUrls({context, base}) {
   }
 }
 
-},{"./JsonLdError":62,"./ResolvedContext":66,"./types":80,"./url":81,"./util":82}],62:[function(require,module,exports){
+},{"./JsonLdError":88,"./ResolvedContext":92,"./types":106,"./url":107,"./util":108}],88:[function(require,module,exports){
 /*
  * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
  */
@@ -4428,7 +4664,7 @@ module.exports = class JsonLdError extends Error {
   }
 };
 
-},{}],63:[function(require,module,exports){
+},{}],89:[function(require,module,exports){
 /*
  * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
  */
@@ -4482,7 +4718,7 @@ module.exports = jsonld => {
   return JsonLdProcessor;
 };
 
-},{}],64:[function(require,module,exports){
+},{}],90:[function(require,module,exports){
 /*
  * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
  */
@@ -4491,7 +4727,7 @@ module.exports = jsonld => {
 // TODO: move `NQuads` to its own package
 module.exports = require('rdf-canonize').NQuads;
 
-},{"rdf-canonize":85}],65:[function(require,module,exports){
+},{"rdf-canonize":111}],91:[function(require,module,exports){
 /*
  * Copyright (c) 2017-2019 Digital Bazaar, Inc. All rights reserved.
  */
@@ -4531,7 +4767,7 @@ module.exports = class RequestQueue {
   }
 };
 
-},{}],66:[function(require,module,exports){
+},{}],92:[function(require,module,exports){
 /*
  * Copyright (c) 2019 Digital Bazaar, Inc. All rights reserved.
  */
@@ -4563,7 +4799,7 @@ module.exports = class ResolvedContext {
   }
 };
 
-},{"lru-cache":83}],67:[function(require,module,exports){
+},{"lru-cache":109}],93:[function(require,module,exports){
 /*
  * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
  */
@@ -5743,7 +5979,7 @@ function _checkNestProperty(activeCtx, nestProperty, options) {
   }
 }
 
-},{"./JsonLdError":62,"./context":69,"./graphTypes":75,"./types":80,"./url":81,"./util":82}],68:[function(require,module,exports){
+},{"./JsonLdError":88,"./context":95,"./graphTypes":101,"./types":106,"./url":107,"./util":108}],94:[function(require,module,exports){
 /*
  * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
  */
@@ -5777,7 +6013,7 @@ module.exports = {
   XSD_STRING: XSD + 'string',
 };
 
-},{}],69:[function(require,module,exports){
+},{}],95:[function(require,module,exports){
 /*
  * Copyright (c) 2017-2019 Digital Bazaar, Inc. All rights reserved.
  */
@@ -7249,7 +7485,7 @@ function _deepCompare(x1, x2) {
   return true;
 }
 
-},{"./JsonLdError":62,"./types":80,"./url":81,"./util":82}],70:[function(require,module,exports){
+},{"./JsonLdError":88,"./types":106,"./url":107,"./util":108}],96:[function(require,module,exports){
 /*
  * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
  */
@@ -7368,7 +7604,7 @@ function _get(xhr, url, headers) {
   });
 }
 
-},{"../JsonLdError":62,"../RequestQueue":65,"../constants":68,"../url":81,"../util":82}],71:[function(require,module,exports){
+},{"../JsonLdError":88,"../RequestQueue":91,"../constants":94,"../url":107,"../util":108}],97:[function(require,module,exports){
 /*
  * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
  */
@@ -8485,7 +8721,7 @@ async function _expandIndexMap(
   return rval;
 }
 
-},{"./JsonLdError":62,"./context":69,"./graphTypes":75,"./types":80,"./url":81,"./util":82}],72:[function(require,module,exports){
+},{"./JsonLdError":88,"./context":95,"./graphTypes":101,"./types":106,"./url":107,"./util":108}],98:[function(require,module,exports){
 /*
  * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
  */
@@ -8525,7 +8761,7 @@ api.flatten = input => {
   return flattened;
 };
 
-},{"./graphTypes":75,"./nodeMap":77}],73:[function(require,module,exports){
+},{"./graphTypes":101,"./nodeMap":103}],99:[function(require,module,exports){
 /*
  * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
  */
@@ -9352,7 +9588,7 @@ function _valueMatch(pattern, value) {
   return true;
 }
 
-},{"./JsonLdError":62,"./context":69,"./graphTypes":75,"./nodeMap":77,"./types":80,"./url":81,"./util":82}],74:[function(require,module,exports){
+},{"./JsonLdError":88,"./context":95,"./graphTypes":101,"./nodeMap":103,"./types":106,"./url":107,"./util":108}],100:[function(require,module,exports){
 /*
  * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
  */
@@ -9701,7 +9937,7 @@ function _RDFToObject(o, useNativeTypes, rdfDirection) {
   return rval;
 }
 
-},{"./JsonLdError":62,"./constants":68,"./graphTypes":75,"./types":80,"./util":82}],75:[function(require,module,exports){
+},{"./JsonLdError":88,"./constants":94,"./graphTypes":101,"./types":106,"./util":108}],101:[function(require,module,exports){
 /*
  * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
  */
@@ -9822,7 +10058,7 @@ api.isBlankNode = v => {
   return false;
 };
 
-},{"./types":80}],76:[function(require,module,exports){
+},{"./types":106}],102:[function(require,module,exports){
 /**
  * A JavaScript implementation of the JSON-LD API.
  *
@@ -10851,7 +11087,7 @@ wrapper(factory);
 // export API
 module.exports = factory;
 
-},{"./ContextResolver":61,"./JsonLdError":62,"./JsonLdProcessor":63,"./NQuads":64,"./RequestQueue":65,"./compact":67,"./context":69,"./expand":71,"./flatten":72,"./frame":73,"./fromRdf":74,"./graphTypes":75,"./nodeMap":77,"./platform":78,"./toRdf":79,"./types":80,"./url":81,"./util":82,"lru-cache":83,"rdf-canonize":85}],77:[function(require,module,exports){
+},{"./ContextResolver":87,"./JsonLdError":88,"./JsonLdProcessor":89,"./NQuads":90,"./RequestQueue":91,"./compact":93,"./context":95,"./expand":97,"./flatten":98,"./frame":99,"./fromRdf":100,"./graphTypes":101,"./nodeMap":103,"./platform":104,"./toRdf":105,"./types":106,"./url":107,"./util":108,"lru-cache":109,"rdf-canonize":111}],103:[function(require,module,exports){
 /*
  * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
  */
@@ -11143,7 +11379,7 @@ api.mergeNodeMaps = graphs => {
   return defaultGraph;
 };
 
-},{"./JsonLdError":62,"./context":69,"./graphTypes":75,"./types":80,"./util":82}],78:[function(require,module,exports){
+},{"./JsonLdError":88,"./context":95,"./graphTypes":101,"./types":106,"./util":108}],104:[function(require,module,exports){
 /*
  * Copyright (c) 2021 Digital Bazaar, Inc. All rights reserved.
  */
@@ -11184,7 +11420,7 @@ api.setupGlobals = function(jsonld) {
   }
 };
 
-},{"./documentLoaders/xhr":70}],79:[function(require,module,exports){
+},{"./documentLoaders/xhr":96}],105:[function(require,module,exports){
 /*
  * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
  */
@@ -11466,7 +11702,7 @@ function _objectToRDF(item, issuer, dataset, graphTerm, rdfDirection) {
   return object;
 }
 
-},{"./constants":68,"./context":69,"./graphTypes":75,"./nodeMap":77,"./types":80,"./url":81,"./util":82,"canonicalize":60}],80:[function(require,module,exports){
+},{"./constants":94,"./context":95,"./graphTypes":101,"./nodeMap":103,"./types":106,"./url":107,"./util":108,"canonicalize":86}],106:[function(require,module,exports){
 /*
  * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
  */
@@ -11560,7 +11796,7 @@ api.isString = v => (typeof v === 'string' ||
  */
 api.isUndefined = v => typeof v === 'undefined';
 
-},{}],81:[function(require,module,exports){
+},{}],107:[function(require,module,exports){
 /*
  * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
  */
@@ -11863,7 +12099,7 @@ api.isAbsolute = v => types.isString(v) && isAbsoluteRegex.test(v);
  */
 api.isRelative = v => types.isString(v);
 
-},{"./types":80}],82:[function(require,module,exports){
+},{"./types":106}],108:[function(require,module,exports){
 /*
  * Copyright (c) 2017-2019 Digital Bazaar, Inc. All rights reserved.
  */
@@ -12316,7 +12552,7 @@ function _labelBlankNodes(issuer, element) {
   return element;
 }
 
-},{"./JsonLdError":62,"./graphTypes":75,"./types":80,"rdf-canonize":85}],83:[function(require,module,exports){
+},{"./JsonLdError":88,"./graphTypes":101,"./types":106,"rdf-canonize":111}],109:[function(require,module,exports){
 'use strict'
 
 // A linked list to keep track of recently-used-ness
@@ -12652,7 +12888,7 @@ const forEachStep = (self, fn, node, thisp) => {
 
 module.exports = LRUCache
 
-},{"yallist":98}],84:[function(require,module,exports){
+},{"yallist":124}],110:[function(require,module,exports){
 // shim for using process in browser
 var process = module.exports = {};
 
@@ -12838,7 +13074,7 @@ process.chdir = function (dir) {
 };
 process.umask = function() { return 0; };
 
-},{}],85:[function(require,module,exports){
+},{}],111:[function(require,module,exports){
 /**
  * An implementation of the RDF Dataset Normalization specification.
  *
@@ -12848,7 +13084,7 @@ process.umask = function() { return 0; };
  */
 module.exports = require('./lib');
 
-},{"./lib":94}],86:[function(require,module,exports){
+},{"./lib":120}],112:[function(require,module,exports){
 /*
  * Copyright (c) 2016-2021 Digital Bazaar, Inc. All rights reserved.
  */
@@ -12930,7 +13166,7 @@ module.exports = class IdentifierIssuer {
   }
 };
 
-},{}],87:[function(require,module,exports){
+},{}],113:[function(require,module,exports){
 /*!
  * Copyright (c) 2016-2022 Digital Bazaar, Inc. All rights reserved.
  */
@@ -12979,7 +13215,7 @@ module.exports = class MessageDigest {
   }
 };
 
-},{"setimmediate":95}],88:[function(require,module,exports){
+},{"setimmediate":121}],114:[function(require,module,exports){
 /*!
  * Copyright (c) 2016-2022 Digital Bazaar, Inc. All rights reserved.
  */
@@ -13384,7 +13620,7 @@ function _unescape(s) {
   });
 }
 
-},{}],89:[function(require,module,exports){
+},{}],115:[function(require,module,exports){
 /*!
  * Copyright (c) 2016-2022 Digital Bazaar, Inc. All rights reserved.
  */
@@ -13469,7 +13705,7 @@ module.exports = class Permuter {
   }
 };
 
-},{}],90:[function(require,module,exports){
+},{}],116:[function(require,module,exports){
 (function (setImmediate){(function (){
 /*!
  * Copyright (c) 2016-2022 Digital Bazaar, Inc. All rights reserved.
@@ -14000,7 +14236,7 @@ function _stringHashCompare(a, b) {
 }
 
 }).call(this)}).call(this,require("timers").setImmediate)
-},{"./IdentifierIssuer":86,"./MessageDigest":87,"./NQuads":88,"./Permuter":89,"timers":96}],91:[function(require,module,exports){
+},{"./IdentifierIssuer":112,"./MessageDigest":113,"./NQuads":114,"./Permuter":115,"timers":122}],117:[function(require,module,exports){
 /*!
  * Copyright (c) 2016-2022 Digital Bazaar, Inc. All rights reserved.
  */
@@ -14509,7 +14745,7 @@ function _stringHashCompare(a, b) {
   return a.hash < b.hash ? -1 : a.hash > b.hash ? 1 : 0;
 }
 
-},{"./IdentifierIssuer":86,"./MessageDigest":87,"./NQuads":88,"./Permuter":89}],92:[function(require,module,exports){
+},{"./IdentifierIssuer":112,"./MessageDigest":113,"./NQuads":114,"./Permuter":115}],118:[function(require,module,exports){
 /*!
  * Copyright (c) 2016-2022 Digital Bazaar, Inc. All rights reserved.
  */
@@ -14602,7 +14838,7 @@ module.exports = class URDNA2012 extends URDNA2015 {
   }
 };
 
-},{"./MessageDigest":87,"./URDNA2015":90}],93:[function(require,module,exports){
+},{"./MessageDigest":113,"./URDNA2015":116}],119:[function(require,module,exports){
 /*!
  * Copyright (c) 2016-2021 Digital Bazaar, Inc. All rights reserved.
  */
@@ -14689,7 +14925,7 @@ module.exports = class URDNA2012Sync extends URDNA2015Sync {
   }
 };
 
-},{"./MessageDigest":87,"./URDNA2015Sync":91}],94:[function(require,module,exports){
+},{"./MessageDigest":113,"./URDNA2015Sync":117}],120:[function(require,module,exports){
 /**
  * An implementation of the RDF Dataset Normalization specification.
  * This library works in the browser and node.js.
@@ -14870,7 +15106,7 @@ exports._canonizeSync = function(dataset, options) {
     'Invalid RDF Dataset Canonicalization algorithm: ' + options.algorithm);
 };
 
-},{"./IdentifierIssuer":86,"./NQuads":88,"./URDNA2015":90,"./URDNA2015Sync":91,"./URGNA2012":92,"./URGNA2012Sync":93,"rdf-canonize-native":59}],95:[function(require,module,exports){
+},{"./IdentifierIssuer":112,"./NQuads":114,"./URDNA2015":116,"./URDNA2015Sync":117,"./URGNA2012":118,"./URGNA2012Sync":119,"rdf-canonize-native":85}],121:[function(require,module,exports){
 (function (process,global){(function (){
 (function (global, undefined) {
     "use strict";
@@ -15060,7 +15296,7 @@ exports._canonizeSync = function(dataset, options) {
 }(typeof self === "undefined" ? typeof global === "undefined" ? this : global : self));
 
 }).call(this)}).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"_process":84}],96:[function(require,module,exports){
+},{"_process":110}],122:[function(require,module,exports){
 (function (setImmediate,clearImmediate){(function (){
 var nextTick = require('process/browser.js').nextTick;
 var apply = Function.prototype.apply;
@@ -15139,7 +15375,7 @@ exports.clearImmediate = typeof clearImmediate === "function" ? clearImmediate :
   delete immediateIds[id];
 };
 }).call(this)}).call(this,require("timers").setImmediate,require("timers").clearImmediate)
-},{"process/browser.js":84,"timers":96}],97:[function(require,module,exports){
+},{"process/browser.js":110,"timers":122}],123:[function(require,module,exports){
 'use strict'
 module.exports = function (Yallist) {
   Yallist.prototype[Symbol.iterator] = function* () {
@@ -15149,7 +15385,7 @@ module.exports = function (Yallist) {
   }
 }
 
-},{}],98:[function(require,module,exports){
+},{}],124:[function(require,module,exports){
 'use strict'
 module.exports = Yallist
 
@@ -15577,5 +15813,5 @@ try {
   require('./iterator.js')(Yallist)
 } catch (er) {}
 
-},{"./iterator.js":97}]},{},[12])(12)
+},{"./iterator.js":123}]},{},[11])(11)
 });
