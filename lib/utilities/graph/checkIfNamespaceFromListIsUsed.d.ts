@@ -1,2 +1,0 @@
-export declare function checkIfNamespaceFromListIsUsed(value: string | object | (string | object)[], namespaceArray: string[], result: Set<string>): void;
-//# sourceMappingURL=checkIfNamespaceFromListIsUsed.d.ts.map

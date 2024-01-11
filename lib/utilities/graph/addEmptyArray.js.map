@@ -1,1 +1,0 @@
-{"version":3,"file":"addEmptyArray.js","sourceRoot":"./","sources":["utilities/graph/addEmptyArray.ts"],"names":[],"mappings":";;;AAMA,SAAgB,aAAa,CAAC,UAA0B,EAAE,QAAgB;IACxE,IAAI,CAAC,UAAU,CAAC,QAAQ,CAAC,EAAE;QACzB,UAAU,CAAC,QAAQ,CAAC,GAAG,EAAE,CAAC;KAC3B;AACH,CAAC;AAJD,sCAIC"}

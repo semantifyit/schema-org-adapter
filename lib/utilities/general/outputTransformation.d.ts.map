@@ -1,1 +1,0 @@
-{"version":3,"file":"outputTransformation.d.ts","sourceRoot":"./","sources":["utilities/general/outputTransformation.ts"],"names":[],"mappings":"AAAA,OAAO,EAAE,aAAa,EAAE,MAAM,gCAAgC,CAAC;AAE/D,OAAO,EAAE,KAAK,EAAE,MAAM,qBAAqB,CAAC;AAO5C,wBAAgB,oBAAoB,CAAC,CAAC,SAAS,MAAM,GAAG,MAAM,EAAE,EAAE,KAAK,EAAE,CAAC,EAAE,KAAK,EAAE,KAAK,EAAE,YAAY,CAAC,EAAE,aAAa,GAAG,CAAC,CAczH"}

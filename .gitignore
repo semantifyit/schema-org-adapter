@@ -85,7 +85,4 @@ fabric.properties
 
 # Generated js files should not be on github (but on npm) - dist files should be in both
 # Include eslint config for lib (checks if all functions work on es-2018)
-lib/*.js
-lib/*.js.map
-lib/*.d.ts
-lib/*.d.ts.map
+lib/

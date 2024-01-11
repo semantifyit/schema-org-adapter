@@ -1,1 +1,0 @@
-{"version":3,"file":"cloneJson.js","sourceRoot":"./","sources":["utilities/general/cloneJson.ts"],"names":[],"mappings":";;;AAMA,SAAgB,SAAS,CAAI,KAAQ;IACnC,IAAI,KAAK,KAAK,SAAS,EAAE;QACvB,OAAO,KAAK,CAAC;KACd;IACD,OAAO,IAAI,CAAC,KAAK,CAAC,IAAI,CAAC,SAAS,CAAC,KAAK,CAAC,CAAC,CAAC;AAC3C,CAAC;AALD,8BAKC"}

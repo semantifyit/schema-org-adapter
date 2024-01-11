@@ -1,6 +1,6 @@
 {
   "name": "schema-org-adapter",
-  "version": "6.0.0",
+  "version": "6.0.1",
   "engines": {
     "node": ">=10.0.0"
   },
@@ -8,7 +8,8 @@
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
   "scripts": {
-    "buildAll": "npm run-script buildTs && npm run-script buildDist && npm run-script buildDistMinified",
+    "prebuild": "rimraf lib",
+    "buildAll": "npm run-script prebuild && npm run-script buildTs && npm run-script buildDist && npm run-script buildDistMinified",
     "buildTs": "tsc -b src",
     "buildDist": "browserify lib/dist.js -s SOA > dist/schema-org-adapter.js",
     "buildDistMinified": "browserify lib/dist.js -p tinyify -s SOA > dist/schema-org-adapter.min.js",
@@ -66,6 +67,7 @@
     "jest": "^27.2.0",
     "jest-coverage-badges": "^1.1.2",
     "prettier": "^2.4.0",
+    "rimraf": "^5.0.5",
     "tinyify": "^3.0.0",
     "ts-jest": "^27.0.7",
     "typedoc": "^0.22.10",

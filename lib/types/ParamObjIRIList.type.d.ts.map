@@ -1,1 +1,0 @@
-{"version":3,"file":"ParamObjIRIList.type.d.ts","sourceRoot":"./","sources":["types/ParamObjIRIList.type.ts"],"names":[],"mappings":"AAAA,OAAO,EAAE,YAAY,EAAE,MAAM,qBAAqB,CAAC;AACnD,OAAO,EAAE,aAAa,EAAE,MAAM,sBAAsB,CAAC;AAKrD,oBAAY,eAAe,GAAG;IAI5B,MAAM,CAAC,EAAE,YAAY,CAAC;IAStB,YAAY,CAAC,EAAE,aAAa,CAAC;CAC9B,CAAC"}
