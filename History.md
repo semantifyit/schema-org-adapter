@@ -1,3 +1,7 @@
+6.0.1 / 2024-01-11
+==================
+* Fixed /lib output. No generated files from previous builds will remain
+
 6.0.0 / 2024-01-10
 ==================
 * Major changes to the API, check the [migration guide to version 6.0](/docu/migration-guide-6.md) for details!
