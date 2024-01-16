@@ -18,6 +18,8 @@
     "testSoaRepo2": "jest tests/classes/Property.test.ts",
     "testSchemaRepo": "COMMIT=ae70d0a9dbab49c005fd8dd1fd522f7236b04be0 jest",
     "testSchemaRepoInfra": "COMMIT=ae70d0a9dbab49c005fd8dd1fd522f7236b04be0 jest tests/classes/Infrastructure.test.ts",
+    "buildTestExperimental1": "tsc tests/experimental/vocabulary-comparison.ts",
+    "runTestExperimental1": "node tests/experimental/vocabulary-comparison.js",
     "badges": "jest-coverage-badges input './docu/coverage/coverage-summary.json' output './docu/coverage'",
     "eslint-check": "eslint src/**/*.ts tests/**/*.ts",
     "eslint-repair": "eslint --fix src/**/*.ts tests/**/*.ts",
@@ -50,6 +52,7 @@
   "dependencies": {
     "axios": "^0.21.4",
     "core-js": "^3.20.0",
+    "deep-object-diff": "^1.1.9",
     "jsonld": "^5.2.0"
   },
   "devDependencies": {
@@ -103,6 +106,6 @@
   ],
   "prettier": {
     "printWidth": 120,
-    "trailingComma" : "none"
+    "trailingComma": "none"
   }
 }
