@@ -1,0 +1,23 @@
+name: schema-org-adapter
+id: ari:cloud:compass:092f58fe-3a7a-406c-abcf-7bcbc65ebd4b:component/5eafce75-ceac-4e23-8e2b-ac4ed8100a28/cf0d8293-8288-42a1-9896-c61576b2df85
+description: Fast, simple & flexible API for the Schema.org Vocabulary (and vocabulary extensions!) for Node and Browsers
+configVersion: 1
+typeId: LIBRARY
+ownerId: null
+fields:
+  tier: 4
+links:
+  - name: null
+    type: REPOSITORY
+    url: https://github.com/semantifyit/schema-org-adapter
+relationships:
+  DEPENDS_ON: []
+labels:
+  - json-ld
+  - language:typescript
+  - org
+  - schema
+  - schema-org
+  - source:github
+  - vocabulary
+customFields: null
