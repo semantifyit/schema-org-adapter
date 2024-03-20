@@ -1,3 +1,7 @@
+6.1.1 / 2024-03-20
+==================
+* Moved dependency `deep-object-diff` to dev-dependency
+
 6.1.0 / 2024-03-20
 ==================
 * Fixed IRI-List output for all functions: It should never happen that the same IRI is present more than 1 time in the result array
