@@ -53,7 +53,7 @@
       "@id": "schema:PathologyTest",
       "rdfs:label": [
         {
-          "@value": "PathologyTest",
+          "@value": "Pathologie Test",
           "@language": "de"
         },
         {
@@ -75,6 +75,16 @@
         {
           "@value": "PatologyTest",
           "@language": "pl"
+        }
+      ],
+      "rdfs:comment": [
+        {
+          "@value": "Dies ist ein Pathologie Test",
+          "@language": "de"
+        },
+        {
+          "@value": "This is a Pathology Test",
+          "@language": "en"
         }
       ],
       "@type": "rdfs:Class",

@@ -6,6 +6,7 @@ import {
 } from "../resources/utilities/testUtilities";
 import { isObject } from "../../src/utilities/general/isObject";
 import { SDOAdapter } from "../../src";
+import { uniquifyArray } from "../../src/utilities/general/uniquifyArray";
 
 /**
  *  Tests regarding the JS-Class for "DataType"
@@ -117,6 +118,11 @@ describe("DataType tests - All schema versions", () => {
       expect(integer.isRangeOf({ implicit: false })).toContain("schema:numberOfSeasons");
       expect(integer.isRangeOf()).toContain("schema:elevation");
       expect(integer.isRangeOf({ implicit: false })).not.toContain("schema:elevation");
+      const integerDomainProps = integer.isRangeOf();
+      expect(integerDomainProps).toHaveLength(uniquifyArray(integerDomainProps).length);
+      const text = sdoAdapter.getDataType("schema:Text");
+      const textDomainProps = text.isRangeOf();
+      expect(textDomainProps).toHaveLength(uniquifyArray(textDomainProps).length);
     });
   });
 

@@ -225,6 +225,32 @@ export abstract class Term {
   }
 
   /**
+   * Returns all names (`rdfs:label`) of this Term as an Object. Each name (value) has a language tag (key) associated with it. Language tags are unique for each term (e.g. there is at most one name for any given language).
+   *
+   * @example
+   * ```JS
+   * const tigerClass = mySdoAdapter.getClass("ex:Tiger");
+   * tigerClass.getNames();
+   * // returns the name of this class in all available languages:
+   * {
+   *   "en": "Tiger",
+   *   "de": "Tiger",
+   *   "es": "Tigre",
+   *   "zh": "虎"
+   * }
+   * ```
+   *
+   * @returns  The names (with language tag) of this Term
+   */
+  getNames(): null | Record<string, string> {
+    const termObj = this.getTermObj()[NS.rdfs.label];
+    if (isNil(termObj)) {
+      return null;
+    }
+    return termObj;
+  }
+
+  /**
    * Returns the description (`rdfs:comment`) of this Term. It is possible to pass a language tag as parameter to get the description in that language, as long as the vocabulary provides that language. The english (`"en"`) language is understood as default.
    *
    * @example
@@ -244,6 +270,30 @@ export abstract class Term {
       return null;
     }
     return termObj[language];
+  }
+
+  /**
+   * Returns all descriptions (`rdfs:comment`) of this Term as an Object. Each description (value) has a language tag (key) associated with it. Language tags are unique for each term (e.g. there is at most one description for any given language)
+   *
+   * @example
+   * ```JS
+   * const tigerClass = mySdoAdapter.getClass("ex:Tiger");
+   * tigerClass.getDescriptions();
+   * // returns the descriptions of this class in all available languages:
+   * {
+   *   "en": "The tiger (Panthera tigris) is the largest species among the Felidae and classified in the genus Panthera.",
+   *   "zh": "虎（学名：Panthera tigris），俗称老虎、大虫，被人称为百獸之王，是現存体型最大的两种猫科动物之一（另一种是狮)"
+   * }
+   * ```
+   *
+   * @returns  The descriptions of this Term
+   */
+  getDescriptions(): null | Record<string, string> {
+    const termObj = this.getTermObj()[NS.rdfs.comment];
+    if (isNil(termObj)) {
+      return null;
+    }
+    return termObj;
   }
 
   /**

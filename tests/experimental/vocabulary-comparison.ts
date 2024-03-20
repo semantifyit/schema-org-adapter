@@ -58,7 +58,11 @@ function getDiff(obj1: any, obj2: any) {
   const result = {};
   for (const k of Object.keys(d)) {
     // if (typeof d[k] !== "object" || Object.keys(d[k]).length !== 0) {
-    if (k !== "schema:source" && k !== "schema:contributor" && (typeof d[k] !== "object" || Object.keys(d[k]).length !== 0)) {
+    if (
+      k !== "schema:source" &&
+      k !== "schema:contributor" &&
+      (typeof d[k] !== "object" || Object.keys(d[k]).length !== 0)
+    ) {
       result[k] = d[k];
     }
   }

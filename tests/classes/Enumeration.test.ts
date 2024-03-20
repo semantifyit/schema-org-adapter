@@ -10,6 +10,7 @@ import {
   testSdoAdapter
 } from "../resources/utilities/testUtilities";
 import VOC_ENUM from "../resources/data/vocabularies/vocabulary-day-of-week.json";
+import { uniquifyArray } from "../../src/utilities/general/uniquifyArray";
 
 /**
  *  Tests regarding the JS-Class for "Enumeration"
@@ -122,8 +123,11 @@ describe("Enumeration tests - All schema versions", () => {
       const MedicalEnumeration = sdoAdapter.getEnumeration("schema:MedicalEnumeration");
       expect(MedicalEnumeration.getEnumerationMembers({ implicit: false }).length).toBe(0);
       expect(MedicalEnumeration.getEnumerationMembers({ implicit: true }).length).not.toBe(0); // enumeration members of subclasses are taken into account
+      expect(MedicalEnumeration.getEnumerationMembers().length).not.toBe(0); // enumeration members of subclasses are taken into account
       expect(MedicalEnumeration.getEnumerationMembers({ implicit: false })).not.toContain("schema:Radiography");
       expect(MedicalEnumeration.getEnumerationMembers({ implicit: true })).toContain("schema:Radiography");
+      const enumMembers = MedicalEnumeration.getEnumerationMembers();
+      expect(enumMembers).toHaveLength(uniquifyArray(enumMembers).length);
     });
   });
 
@@ -267,6 +271,11 @@ describe("Enumeration tests - All schema versions", () => {
     expect(classList2).not.toContain("schema:DayOfWeek");
     expect(dow2a.getName("en")).toBe("DayOfWeek");
     expect(dow2a.getName("fr")).toBe("Jour de la semaine");
+    // Test .getNames()
+    const dayOfWeekOriginalNames = VOC_ENUM["@graph"].find((n) => n["@id"] === "schema:DayOfWeek")["rdfs:label"];
+    const dayOfWeekProcessedNames = dow2a.getNames();
+    expect(Object.keys(dayOfWeekProcessedNames)).toHaveLength(dayOfWeekOriginalNames.length);
+    expect(dayOfWeekOriginalNames.every((n) => dayOfWeekProcessedNames[n["@language"]] === n["@value"])).toBeTruthy();
   });
 
   test("converting a class into enumeration in new vocab", async () => {
@@ -298,6 +307,11 @@ describe("Enumeration tests - All schema versions", () => {
       expect(pt2b.getName("en")).toBe("PathologyTest");
       expect(pt2b.getName("fr")).toBe("Pathologie");
     }).not.toThrow();
+    // Test .getDescriptions()
+    const dayOfWeekOriginalDescriptions = VOC_ENUM["@graph"].find((n) => n["@id"] === "schema:PathologyTest")["rdfs:comment"];
+    const dayOfWeekProcessedDescriptions = mySA2.getEnumeration("schema:PathologyTest").getDescriptions();
+    expect(Object.keys(dayOfWeekProcessedDescriptions)).toHaveLength(dayOfWeekOriginalDescriptions.length);
+    expect(dayOfWeekOriginalDescriptions.every((n) => dayOfWeekProcessedDescriptions[n["@language"]] === n["@value"])).toBeTruthy();
   });
 
   test("getListOfEnumerations()", async () => {

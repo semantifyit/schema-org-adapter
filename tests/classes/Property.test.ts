@@ -6,6 +6,7 @@ import {
   isOrIncludesAbsoluteIRI,
   SdoAdapterMap
 } from "../resources/utilities/testUtilities";
+import { uniquifyArray } from "../../src/utilities/general/uniquifyArray";
 
 /**
  *  Tests regarding the JS-Class for "Property"
@@ -132,6 +133,9 @@ describe("Property tests - All schema versions", () => {
       expect(elevation.getRanges({ implicit: false })).not.toContain("schema:Integer");
       expect(elevation.getRanges({ implicit: true })).toContain("schema:URL");
       expect(elevation.getRanges({ implicit: false })).not.toContain("schema:URL");
+      const about = sdoAdapter.getProperty("schema:about");
+      const aboutRanges = about.getRanges();
+      expect(aboutRanges).toHaveLength(uniquifyArray(aboutRanges).length);
     });
   });
 
@@ -154,6 +158,9 @@ describe("Property tests - All schema versions", () => {
           }
         })
       ).toContain("ex:Tiger");
+      const name = sdoAdapter.getProperty("schema:name");
+      const nameDomains = name.getDomains();
+      expect(nameDomains).toHaveLength(uniquifyArray(nameDomains).length);
     });
   });
 

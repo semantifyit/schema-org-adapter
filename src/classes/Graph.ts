@@ -5,7 +5,7 @@ import { EnumerationMember } from "./EnumerationMember";
 import { DataType } from "./DataType";
 import { SDOAdapter } from "./SDOAdapter";
 import { Context, TermMemory, Vocabulary, VocabularyNode } from "../types/types";
-import { NS, TermTypeIRI } from "../data/namespaces";
+import { NS, TermTypeIRI, TermTypeLabel } from "../data/namespaces";
 import { cloneJson } from "../utilities/general/cloneJson";
 import { isArray } from "../utilities/general/isArray";
 import { isString } from "../utilities/general/isString";
@@ -29,6 +29,7 @@ import { getStandardContext } from "../utilities/graph/getStandardContext";
 import { applyFilter } from "../utilities/reasoning/applyFilter";
 import { isIgnoredVocabNode } from "../utilities/graph/isIgnoredVocabNode";
 import { OutputIRIType } from "../types/OutputIRIType.type";
+import { checkVocabNodeType } from "../utilities/graph/checkVocabNodeType";
 
 /** @ignore */
 export class Graph {
@@ -116,43 +117,30 @@ export class Graph {
        */
       for (let i = 0; i < vocab["@graph"].length; i++) {
         const curNode = cloneJson(vocab["@graph"][i]);
-
-        if (isIgnoredVocabNode(curNode)) {
-          // ignore nodes that make no sense and "prominent" cases that are not really part of the vocabulary
-        } else if (isString(curNode["@type"])) {
-          switch (curNode["@type"]) {
-            case TermTypeIRI.class:
-              this.addGraphNode(this.classes, curNode, vocabURL);
-              break;
-            case TermTypeIRI.property:
-              this.addGraphNode(this.properties, curNode, vocabURL);
-              break;
-            default:
-              // @type is not something expected -> assume enumerationMember
-              this.addGraphNode(this.enumerationMembers, curNode, vocabURL);
-              break;
+        // ignore nodes that make no sense and "prominent" cases that are not really part of the vocabulary
+        if (!isIgnoredVocabNode(curNode)) {
+          try {
+            // Enumerations are perceived as Classes at this point
+            const nodeType = checkVocabNodeType(curNode["@type"]);
+            switch (nodeType) {
+              case TermTypeLabel.class:
+                this.addGraphNode(this.classes, curNode, vocabURL);
+                break;
+              case TermTypeLabel.property:
+                this.addGraphNode(this.properties, curNode, vocabURL);
+                break;
+              case TermTypeLabel.dataType:
+                this.addGraphNode(this.dataTypes, curNode, vocabURL);
+                break;
+              case TermTypeLabel.enumerationMember:
+                this.addGraphNode(this.enumerationMembers, curNode, vocabURL);
+                break;
+            }
+          } catch (e) {
+            this.sdoAdapter.onError(
+              "unexpected @type format for the following node: " + JSON.stringify(curNode, null, 2)
+            );
           }
-        } else if (isArray(curNode["@type"])) {
-          // @type is not a string -> datatype or enumeration
-          // [
-          //     "rdfs:Class",
-          //     "schema:DataType"
-          // ]
-          // [
-          //   "schema:MedicalImagingTechnique",
-          //   "schema:MedicalSpecialty"
-          // ]
-          if (curNode["@type"].includes(TermTypeIRI.class) && curNode["@type"].includes(TermTypeIRI.dataType)) {
-            // datatype
-            this.addGraphNode(this.dataTypes, curNode, vocabURL);
-          } else {
-            // enumeration member
-            this.addGraphNode(this.enumerationMembers, curNode, vocabURL);
-          }
-        } else {
-          this.sdoAdapter.onError(
-            "unexpected @type format for the following node: " + JSON.stringify(curNode, null, 2)
-          );
         }
       }
       // C) Classification cleaning
@@ -183,10 +171,11 @@ export class Graph {
       addInheritanceTermsDataTypesAndProperties(this.properties, NS.rdfs.subPropertyOf, NS.soa.superPropertyOf);
       // E) Relationships
       /*  In this step additional fields are added to certain data entries to add links to other data entries, which should make it easier to use the generated data set.#
-                        soa:hasProperty is an inverse of schema:domainIncludes
-                        soa:isRangeOf is an inverse of schema:rangeIncludes
-                        soa:hasEnumerationMember is used for enumerations to list all its enumeration members (their @type includes the @id of the enumeration)
-                        soa:enumerationDomainIncludes is an inverse of soa:hasEnumerationMember */
+        soa:hasProperty is an inverse of schema:domainIncludes
+        soa:isRangeOf is an inverse of schema:rangeIncludes
+        soa:hasEnumerationMember is used for enumerations to list all its enumeration members (their @type includes the @id of the enumeration)
+        soa:enumerationDomainIncludes is an inverse of soa:hasEnumerationMember
+      */
       // E.0) add empty arrays for the relationships
       Object.values(this.classes).forEach((el) => {
         addEmptyArray(el, NS.soa.hasProperty);
@@ -204,9 +193,10 @@ export class Graph {
         addEmptyArray(el, NS.soa.enumerationDomainIncludes);
       });
       /* E.1) Add explicit hasProperty and isRangeOf to classes, enumerations, and data types
-                        For each entry in the classes/enumeration/dataType memory, the soa:hasProperty field is added.
-                        This data field holds all properties which belong to this class/enumeration (class/enumeration is domain for property).
-                        Also the soa:isRangeOf field is added -> holds all properties which use to this class/enumeration/dataType as range (class/enumeration/dataType is range for property). */
+        For each entry in the classes/enumeration/dataType memory, the soa:hasProperty field is added.
+        This data field holds all properties which belong to this class/enumeration (class/enumeration is domain for property).
+        Also, the soa:isRangeOf field is added -> holds all properties which use to this class/enumeration/dataType as range (class/enumeration/dataType is range for property).
+      */
       const propertyKeys = Object.keys(this.properties);
       for (const actPropKey of propertyKeys) {
         const domainIncludesArray: string[] = this.properties[actPropKey][NS.schema.domainIncludes];
@@ -285,6 +275,12 @@ export class Graph {
         const oldNode = memory[newNode["@id"]];
         // @id stays the same
         // @type should stay the same (we already defined the memory to save it)
+        // EnumerationMembers could have additional domain-classes defined here!
+        const nodeType = checkVocabNodeType(newNode["@type"]);
+        if (nodeType === TermTypeLabel.enumerationMember) {
+          // add any enumeration types that aren't defined yet
+          nodeMergeAddIds(oldNode, newNode, "@type");
+        }
         // schema:isPartOf -> overwrite
         nodeMergeOverwrite(oldNode, newNode, NS.schema.isPartOf);
         // dcterms:source/schema:source -> overwrite

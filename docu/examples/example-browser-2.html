@@ -29,6 +29,8 @@
     console.log(testClass.toJSON());
     let testClassExternal = mySdoAdapter.getClass("Tiger");
     console.log(testClassExternal.toJSON({outputFormat:"Absolute"}));
+    console.log(testClassExternal.getNames());
+    console.log(testClassExternal.getDescriptions());
     let testProperty = mySdoAdapter.getProperty("accountablePerson");
     console.log(testProperty.getRanges({outputFormat:"Absolute"}));
     document.getElementById("output").innerHTML = JSON.stringify(testClass.toJSON(), null, 2);

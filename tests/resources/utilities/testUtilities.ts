@@ -40,7 +40,7 @@ export async function executeTestForEach(
   fn: (sdoAdapter: SDOAdapter) => void
 ) {
   for (const v of Object.keys(sdoAdapterMap)) {
-    console.log("schema version " + v);
+    // console.log("schema version " + v);
     fn(sdoAdapterMap[v]);
   }
 }

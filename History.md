@@ -1,3 +1,9 @@
+6.1.0 / 2024-03-20
+==================
+* Fixed IRI-List output for all functions: It should never happen that the same IRI is present more than 1 time in the result array
+* Improved vocabulary parsing: The node-merging algorithm now also applies for the @type property of enumeration members
+* Added .getNames() and .getDescriptions() to the Term-API. These functions return all available language variations of names and descriptions as an object (key = language).
+
 6.0.1 / 2024-01-11
 ==================
 * Fixed /lib output. No generated files from previous builds will remain

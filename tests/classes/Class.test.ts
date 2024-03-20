@@ -6,6 +6,7 @@ import {
   SdoAdapterMap
 } from "../resources/utilities/testUtilities";
 import { SDOAdapter } from "../../src";
+import { uniquifyArray } from "../../src/utilities/general/uniquifyArray";
 
 /**
  *  Tests regarding the JS-Class for "Class"
@@ -134,6 +135,12 @@ describe("Class tests - All schema versions", () => {
       }
       const crWork = sdoAdapter.getClass("schema:CreativeWork");
       expect(crWork.getProperties({ implicit: true })).not.toContain("schema:legislationJurisdiction");
+      const eventSeries = sdoAdapter.getClass("schema:EventSeries");
+      const eventSeriesProperties = eventSeries.getProperties();
+      expect(eventSeriesProperties).toHaveLength(uniquifyArray(eventSeriesProperties).length);
+      const hotel = sdoAdapter.getClass("schema:Hotel");
+      const hotelProperties = hotel.getProperties();
+      expect(hotelProperties).toHaveLength(uniquifyArray(hotelProperties).length);
     });
   });
 
@@ -145,6 +152,8 @@ describe("Class tests - All schema versions", () => {
       const hotel = sdoAdapter.getClass("schema:Hotel");
       expect(hotel.getSuperClasses({ implicit: true })).toContain("schema:Thing");
       expect(hotel.getSuperClasses({ implicit: false })).not.toContain("schema:Thing");
+      const hotelSCs = hotel.getSuperClasses();
+      expect(hotelSCs).toHaveLength(uniquifyArray(hotelSCs).length);
     });
   });
 
@@ -156,6 +165,8 @@ describe("Class tests - All schema versions", () => {
       const lodgingBusiness = sdoAdapter.getClass("schema:LodgingBusiness");
       expect(lodgingBusiness.getSubClasses()).toContain("schema:Hotel");
       expect(lodgingBusiness.getSubClasses()).not.toContain("schema:Thing");
+      const thingSCs = thing.getSubClasses();
+      expect(thingSCs).toHaveLength(uniquifyArray(thingSCs).length);
     });
   });
 
@@ -170,6 +181,8 @@ describe("Class tests - All schema versions", () => {
       expect(restaurant.isRangeOf({ implicit: false })).not.toContain("schema:about");
       const foodEstablishment = sdoAdapter.getClass("schema:FoodEstablishment");
       expect(restaurant.isRangeOf().length === foodEstablishment.isRangeOf().length).toBe(true);
+      const thingDomainProps = thing.isRangeOf();
+      expect(thingDomainProps).toHaveLength(uniquifyArray(thingDomainProps).length);
     });
   });
 
