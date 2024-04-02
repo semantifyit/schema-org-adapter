@@ -45,9 +45,6 @@ export function applyFilter(paramObj: FilterParamObj): string[] {
     } catch (e) {
       continue; // skip this term if it is not known
     }
-    if(!actualTerm){
-      console.log("ALAAAAAAAAAAAAARM")
-    }
     // superseded
     if (filter.isSuperseded !== undefined) {
       if (!filter.isSuperseded && actualTerm.isSupersededBy() != null) {

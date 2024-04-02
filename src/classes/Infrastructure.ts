@@ -95,7 +95,6 @@ export async function fetchSchemaVersions(cacheClear = false, commit?: string): 
     // If the version stated as latest by schema.org doesn't exist, then try the other versions given in the release log until we find a valid one
     const sortedArray = sortReleaseEntriesByDate(schemaVersions.releaseLog);
     // Sort release entries by the date. latest is first in array
-    console.log("sortedArray", sortedArray);
     for (const currVersion of sortedArray) {
       if (await checkIfUrlExists(await constructURLSchemaVocabulary(currVersion[0], true, commit))) {
         latestVersion = currVersion[0];
