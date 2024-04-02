@@ -247,8 +247,16 @@ export class Class extends Term {
    * @returns if the other class is a valid superclass of this class
    */
   isValidSubClassOf(superClassId: string, implicit = true): boolean {
+    const superClasses = this.getSuperClasses({ implicit, outputFormat: "Compact" });
+    const compactIRI = this.graph.discoverCompactIRI(superClassId);
+    if (compactIRI && superClasses.includes(compactIRI)) {
+      // try "dry-run" with compactIRI, to not have to create an instance (which may even not exist in the current vocab)
+      return true;
+    }
     const c = this.graph.getClass(superClassId);
-    return this.getSuperClasses({ implicit, outputFormat: "Compact" }).includes(c.getIRI("Compact"));
+    // if there is an error here, at this point we got no "right" compact IRI as input and there is no class identified with the input
+    // if we just return "false" the user may not differentiate between an intended inference result and some non-existing term (or not matching termType, which may also not been intended)
+    return superClasses.includes(c.getIRI("Compact"));
   }
 
   /**
@@ -266,8 +274,16 @@ export class Class extends Term {
    * @returns if the other class is a valid subclass of this class
    */
   isValidSuperClassOf(subClassId: string, implicit = true): boolean {
+    const subClasses = this.getSubClasses({ implicit, outputFormat: "Compact" });
+    const compactIRI = this.graph.discoverCompactIRI(subClassId);
+    if (compactIRI && subClasses.includes(compactIRI)) {
+      // try "dry-run" with compactIRI, to not have to create an instance (which may even not exist in the current vocab)
+      return true;
+    }
     const c = this.graph.getClass(subClassId);
-    return this.getSubClasses({ implicit, outputFormat: "Compact" }).includes(c.getIRI("Compact"));
+    // if there is an error here, at this point we got no "right" compact IRI as input and there is no class identified with the input
+    // if we just return "false" the user may not differentiate between an intended inference result and some non-existing term (or not matching termType, which may also not been intended)
+    return subClasses.includes(c.getIRI("Compact"));
   }
 
   /**
@@ -285,8 +301,17 @@ export class Class extends Term {
    * @returns if this class is a valid range for the given property
    */
   isValidRangeOf(propertyId: string, implicit = true): boolean {
+    const rangeOf = this.isRangeOf({ implicit, outputFormat: "Compact" });
+    const compactIRI = this.graph.discoverCompactIRI(propertyId);
+    if (compactIRI && rangeOf.includes(compactIRI)) {
+      // try "dry-run" with compactIRI, to not have to create an instance (which may even not exist in the current vocab)
+      return true;
+    }
     const p = this.graph.getProperty(propertyId);
-    return this.isRangeOf({ implicit, outputFormat: "Compact" }).includes(p.getIRI("Compact"));
+    // if there is an error here, at this point we got no "right" compact IRI as input and there is no property identified with the input
+    // if we just return "false" the user may not differentiate between an intended inference result and some non-existing term (or not matching termType, which may also not been intended)
+    // it will usually throw an error in this case, since property-ranges are defined in the property vocabulary node
+    return rangeOf.includes(p.getIRI("Compact"));
   }
 
   /**
@@ -304,7 +329,16 @@ export class Class extends Term {
    * @returns if this class is a valid domain for the given property
    */
   isValidDomainOf(propertyId: string, implicit = true): boolean {
+    const properties = this.getProperties({ implicit, outputFormat: "Compact" });
+    const compactIRI = this.graph.discoverCompactIRI(propertyId);
+    if (compactIRI && properties.includes(compactIRI)) {
+      // try "dry-run" with compactIRI, to not have to create an instance (which may even not exist in the current vocab)
+      return true;
+    }
     const p = this.graph.getProperty(propertyId);
-    return this.getProperties({ implicit, outputFormat: "Compact" }).includes(p.getIRI("Compact"));
+    // if there is an error here, at this point we got no "right" compact IRI as input and there is no property identified with the input
+    // if we just return "false" the user may not differentiate between an intended inference result and some non-existing term (or not matching termType, which may also not been intended)
+    // it will usually throw an error in this case, since property-domains are defined in the property vocabulary node
+    return properties.includes(p.getIRI("Compact"));
   }
 }

@@ -10,6 +10,7 @@ import {
   testSdoAdapter
 } from "../resources/utilities/testUtilities";
 import VOC_ENUM from "../resources/data/vocabularies/vocabulary-day-of-week.json";
+import VOC_ANIMAL from "../resources/data/vocabularies/vocabulary-animal-dvs.json";
 import { uniquifyArray } from "../../src/utilities/general/uniquifyArray";
 
 /**
@@ -17,9 +18,13 @@ import { uniquifyArray } from "../../src/utilities/general/uniquifyArray";
  */
 describe("Enumeration tests - All schema versions", () => {
   let sdoAdapterMap: SdoAdapterMap;
+  let sdoOnlyAnimal: SDOAdapter;
 
   beforeAll(async () => {
     sdoAdapterMap = await initializeSdoAdapterMap();
+    sdoOnlyAnimal = await SOA.create({
+      vocabularies: [VOC_ANIMAL]
+    });
   });
 
   test("constructor()", async () => {
@@ -308,10 +313,14 @@ describe("Enumeration tests - All schema versions", () => {
       expect(pt2b.getName("fr")).toBe("Pathologie");
     }).not.toThrow();
     // Test .getDescriptions()
-    const dayOfWeekOriginalDescriptions = VOC_ENUM["@graph"].find((n) => n["@id"] === "schema:PathologyTest")["rdfs:comment"];
+    const dayOfWeekOriginalDescriptions = VOC_ENUM["@graph"].find((n) => n["@id"] === "schema:PathologyTest")[
+      "rdfs:comment"
+    ];
     const dayOfWeekProcessedDescriptions = mySA2.getEnumeration("schema:PathologyTest").getDescriptions();
     expect(Object.keys(dayOfWeekProcessedDescriptions)).toHaveLength(dayOfWeekOriginalDescriptions.length);
-    expect(dayOfWeekOriginalDescriptions.every((n) => dayOfWeekProcessedDescriptions[n["@language"]] === n["@value"])).toBeTruthy();
+    expect(
+      dayOfWeekOriginalDescriptions.every((n) => dayOfWeekProcessedDescriptions[n["@language"]] === n["@value"])
+    ).toBeTruthy();
   });
 
   test("getListOfEnumerations()", async () => {
@@ -353,7 +362,26 @@ describe("Enumeration tests - All schema versions", () => {
       expect(dayOfWeek.isValidSubClassOf("schema:Thing", false)).toBeFalsy();
       expect(dayOfWeek.isValidSubClassOf("schema:Enumeration", true)).toBeTruthy();
       expect(dayOfWeek.isValidSubClassOf("schema:Enumeration", false)).toBeTruthy();
+      expect(dayOfWeek.isValidSubClassOf("Enumeration")).toBeTruthy();
+      expect(dayOfWeek.isValidSubClassOf("https://schema.org/Enumeration")).toBeTruthy();
     });
+  });
+
+  test("isValidSubClassOf() 2", async () => {
+    const enum1 = sdoOnlyAnimal.getEnumeration("ex:AnimalLivingEnvironment");
+    // schema:Enumeration is not defined in the sdoAdapter, but it is referenced as superClass of the term
+    expect(enum1.isValidSubClassOf("schema:Enumeration", true)).toBeTruthy();
+    expect(enum1.isValidSubClassOf("schema:Enumeration", false)).toBeTruthy();
+    // as long as schema is present in the context, the following should work
+    expect(enum1.isValidSubClassOf("https://schema.org/Enumeration")).toBeTruthy();
+    // this one cant be known, since no labels are available (term is not defined in this vocabulary)
+    expect(() => {
+      enum1.isValidSubClassOf("Enumeration");
+    }).toThrow();
+    // throws an Error since the given compact IRI doesn't belong to any known Class which isn't a referenced superClass
+    expect(() => {
+      enum1.isValidSubClassOf("ex:numberOfLegs");
+    }).toThrow();
   });
 
   test("isValidSuperClassOf()", async () => {

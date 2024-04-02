@@ -71,20 +71,40 @@ class Class extends Term_1.Term {
         return result;
     }
     isValidSubClassOf(superClassId, implicit = true) {
+        const superClasses = this.getSuperClasses({ implicit, outputFormat: "Compact" });
+        const compactIRI = this.graph.discoverCompactIRI(superClassId);
+        if (compactIRI && superClasses.includes(compactIRI)) {
+            return true;
+        }
         const c = this.graph.getClass(superClassId);
-        return this.getSuperClasses({ implicit, outputFormat: "Compact" }).includes(c.getIRI("Compact"));
+        return superClasses.includes(c.getIRI("Compact"));
     }
     isValidSuperClassOf(subClassId, implicit = true) {
+        const subClasses = this.getSubClasses({ implicit, outputFormat: "Compact" });
+        const compactIRI = this.graph.discoverCompactIRI(subClassId);
+        if (compactIRI && subClasses.includes(compactIRI)) {
+            return true;
+        }
         const c = this.graph.getClass(subClassId);
-        return this.getSubClasses({ implicit, outputFormat: "Compact" }).includes(c.getIRI("Compact"));
+        return subClasses.includes(c.getIRI("Compact"));
     }
     isValidRangeOf(propertyId, implicit = true) {
+        const rangeOf = this.isRangeOf({ implicit, outputFormat: "Compact" });
+        const compactIRI = this.graph.discoverCompactIRI(propertyId);
+        if (compactIRI && rangeOf.includes(compactIRI)) {
+            return true;
+        }
         const p = this.graph.getProperty(propertyId);
-        return this.isRangeOf({ implicit, outputFormat: "Compact" }).includes(p.getIRI("Compact"));
+        return rangeOf.includes(p.getIRI("Compact"));
     }
     isValidDomainOf(propertyId, implicit = true) {
+        const properties = this.getProperties({ implicit, outputFormat: "Compact" });
+        const compactIRI = this.graph.discoverCompactIRI(propertyId);
+        if (compactIRI && properties.includes(compactIRI)) {
+            return true;
+        }
         const p = this.graph.getProperty(propertyId);
-        return this.getProperties({ implicit, outputFormat: "Compact" }).includes(p.getIRI("Compact"));
+        return properties.includes(p.getIRI("Compact"));
     }
 }
 exports.Class = Class;
@@ -151,16 +171,31 @@ class DataType extends Term_1.Term {
         return JSON.stringify(this.toJSON(paramObj), null, 2);
     }
     isValidSuperDataTypeOf(subDataTypeId, implicit = true) {
+        const subDataTypes = this.getSubDataTypes({ implicit, outputFormat: "Compact" });
+        const compactIRI = this.graph.discoverCompactIRI(subDataTypeId);
+        if (compactIRI && subDataTypes.includes(compactIRI)) {
+            return true;
+        }
         const dt = this.graph.getDataType(subDataTypeId);
-        return this.getSubDataTypes({ implicit, outputFormat: "Compact" }).includes(dt.getIRI("Compact"));
+        return subDataTypes.includes(dt.getIRI("Compact"));
     }
     isValidSubDataTypeOf(superDataTypeId, implicit = true) {
+        const superDataTypes = this.getSuperDataTypes({ implicit, outputFormat: "Compact" });
+        const compactIRI = this.graph.discoverCompactIRI(superDataTypeId);
+        if (compactIRI && superDataTypes.includes(compactIRI)) {
+            return true;
+        }
         const dt = this.graph.getDataType(superDataTypeId);
-        return this.getSuperDataTypes({ implicit, outputFormat: "Compact" }).includes(dt.getIRI("Compact"));
+        return superDataTypes.includes(dt.getIRI("Compact"));
     }
     isValidRangeOf(propertyId, implicit = true) {
+        const rangeOf = this.isRangeOf({ implicit, outputFormat: "Compact" });
+        const compactIRI = this.graph.discoverCompactIRI(propertyId);
+        if (compactIRI && rangeOf.includes(compactIRI)) {
+            return true;
+        }
         const p = this.graph.getProperty(propertyId);
-        return this.isRangeOf({ implicit, outputFormat: "Compact" }).includes(p.getIRI("Compact"));
+        return rangeOf.includes(p.getIRI("Compact"));
     }
 }
 exports.DataType = DataType;
@@ -205,8 +240,13 @@ class Enumeration extends Class_1.Class {
         return result;
     }
     isValidDomainEnumerationOf(enumerationMemberId, implicit = true) {
+        const enumerationMembers = this.getEnumerationMembers({ implicit, outputFormat: "Compact" });
+        const compactIRI = this.graph.discoverCompactIRI(enumerationMemberId);
+        if (compactIRI && enumerationMembers.includes(compactIRI)) {
+            return true;
+        }
         const em = this.graph.getEnumerationMember(enumerationMemberId);
-        return this.getEnumerationMembers({ implicit, outputFormat: "Compact" }).includes(em.getIRI("Compact"));
+        return enumerationMembers.includes(em.getIRI("Compact"));
     }
 }
 exports.Enumeration = Enumeration;
@@ -256,8 +296,13 @@ class EnumerationMember extends Term_1.Term {
         return result;
     }
     isValidEnumerationMemberOf(enumerationId, implicit = true) {
+        const domainEnumerations = this.getDomainEnumerations({ implicit, outputFormat: "Compact" });
+        const compactIRI = this.graph.discoverCompactIRI(enumerationId);
+        if (compactIRI && domainEnumerations.includes(compactIRI)) {
+            return true;
+        }
         const e = this.graph.getEnumeration(enumerationId);
-        return this.getDomainEnumerations({ implicit, outputFormat: "Compact" }).includes(e.getIRI("Compact"));
+        return domainEnumerations.includes(e.getIRI("Compact"));
     }
 }
 exports.EnumerationMember = EnumerationMember;
@@ -875,24 +920,49 @@ class Property extends Term_1.Term {
         return result;
     }
     isValidDomain(domainId, implicit = true) {
+        const domains = this.getDomains({ implicit, outputFormat: "Compact" });
+        const compactIRI = this.graph.discoverCompactIRI(domainId);
+        if (compactIRI && domains.includes(compactIRI)) {
+            return true;
+        }
         const domain = this.graph.getClass(domainId);
-        return this.getDomains({ implicit, outputFormat: "Compact" }).includes(domain.getIRI("Compact"));
+        return domains.includes(domain.getIRI("Compact"));
     }
     isValidRange(rangeId, implicit = true) {
+        const ranges = this.getRanges({ implicit, outputFormat: "Compact" });
+        const compactIRI = this.graph.discoverCompactIRI(rangeId);
+        if (compactIRI && ranges.includes(compactIRI)) {
+            return true;
+        }
         const range = this.graph.getTerm(rangeId);
-        return this.getRanges({ implicit, outputFormat: "Compact" }).includes(range.getIRI("Compact"));
+        return ranges.includes(range.getIRI("Compact"));
     }
     isValidSuperPropertyOf(subPropertyId, implicit = true) {
+        const subProperties = this.getSubProperties({ implicit, outputFormat: "Compact" });
+        const compactIRI = this.graph.discoverCompactIRI(subPropertyId);
+        if (compactIRI && subProperties.includes(compactIRI)) {
+            return true;
+        }
         const p = this.graph.getProperty(subPropertyId);
-        return this.getSubProperties({ implicit, outputFormat: "Compact" }).includes(p.getIRI("Compact"));
+        return subProperties.includes(p.getIRI("Compact"));
     }
     isValidSubPropertyOf(superPropertyId, implicit = true) {
+        const superProperties = this.getSuperProperties({ implicit, outputFormat: "Compact" });
+        const compactIRI = this.graph.discoverCompactIRI(superPropertyId);
+        if (compactIRI && superProperties.includes(compactIRI)) {
+            return true;
+        }
         const p = this.graph.getProperty(superPropertyId);
-        return this.getSuperProperties({ implicit, outputFormat: "Compact" }).includes(p.getIRI("Compact"));
+        return superProperties.includes(p.getIRI("Compact"));
     }
     isValidInverseOf(inversePropertyId) {
+        const inverse = this.getInverseOf("Compact");
+        const compactIRI = this.graph.discoverCompactIRI(inversePropertyId);
+        if (compactIRI && inverse === compactIRI) {
+            return true;
+        }
         const p = this.graph.getProperty(inversePropertyId);
-        return this.getInverseOf("Compact") === p.getIRI("Compact");
+        return inverse === p.getIRI("Compact");
     }
 }
 exports.Property = Property;
@@ -1702,6 +1772,7 @@ exports.curateLanguageTerm = curateLanguageTerm;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.curateRelationshipTermArray = void 0;
 const isString_1 = require("../general/isString");
+const isArray_1 = require("../general/isArray");
 function curateRelationshipTermArray(vocabNode, term, initDefaultIf) {
     if ((0, isString_1.isString)(vocabNode[term])) {
         vocabNode[term] = [vocabNode[term]];
@@ -1710,10 +1781,13 @@ function curateRelationshipTermArray(vocabNode, term, initDefaultIf) {
         vocabNode["@type"] === initDefaultIf) {
         vocabNode[term] = [];
     }
+    if ((0, isArray_1.isArray)(vocabNode[term])) {
+        vocabNode[term] = vocabNode[term].filter((iri) => iri !== vocabNode["@id"]);
+    }
 }
 exports.curateRelationshipTermArray = curateRelationshipTermArray;
 
-},{"../general/isString":18}],32:[function(require,module,exports){
+},{"../general/isArray":14,"../general/isString":18}],32:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.curateVocabNode = void 0;
@@ -2226,9 +2300,15 @@ function applyFilter(paramObj) {
         }
     }
     for (let i = 0; i < unifiedDataArray.length; i++) {
-        const actualTerm = graph.getTerm(unifiedDataArray[i]);
-        if (!actualTerm) {
+        let actualTerm;
+        try {
+            actualTerm = graph.getTerm(unifiedDataArray[i]);
+        }
+        catch (e) {
             continue;
+        }
+        if (!actualTerm) {
+            console.log("ALAAAAAAAAAAAAARM");
         }
         if (filter.isSuperseded !== undefined) {
             if (!filter.isSuperseded && actualTerm.isSupersededBy() != null) {

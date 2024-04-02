@@ -159,7 +159,15 @@ export class Enumeration extends Class {
    * @returns if the given Enumeration Member is a valid instance of this Enumeration
    */
   isValidDomainEnumerationOf(enumerationMemberId: string, implicit = true) {
+    const enumerationMembers = this.getEnumerationMembers({ implicit, outputFormat: "Compact" });
+    const compactIRI = this.graph.discoverCompactIRI(enumerationMemberId);
+    if (compactIRI && enumerationMembers.includes(compactIRI)) {
+      // try "dry-run" with compactIRI, to not have to create an instance (which may even not exist in the current vocab)
+      return true;
+    }
     const em = this.graph.getEnumerationMember(enumerationMemberId);
-    return this.getEnumerationMembers({ implicit, outputFormat: "Compact" }).includes(em.getIRI("Compact"));
+    // if there is an error here, at this point we got no "right" compact IRI as input and there is no property identified with the input
+    // if we just return "false" the user may not differentiate between an intended inference result and some non-existing term (or not matching termType, which may also not been intended)
+    return enumerationMembers.includes(em.getIRI("Compact"));
   }
 }

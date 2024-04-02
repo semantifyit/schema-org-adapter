@@ -208,8 +208,16 @@ export class DataType extends Term {
    * @returns if this DataType is a valid super-datatype of the given sub-datatype
    */
   isValidSuperDataTypeOf(subDataTypeId: string, implicit = true) {
+    const subDataTypes = this.getSubDataTypes({ implicit, outputFormat: "Compact" });
+    const compactIRI = this.graph.discoverCompactIRI(subDataTypeId);
+    if (compactIRI && subDataTypes.includes(compactIRI)) {
+      // try "dry-run" with compactIRI, to not have to create an instance (which may even not exist in the current vocab)
+      return true;
+    }
     const dt = this.graph.getDataType(subDataTypeId);
-    return this.getSubDataTypes({ implicit, outputFormat: "Compact" }).includes(dt.getIRI("Compact"));
+    // if there is an error here, at this point we got no "right" compact IRI as input and there is no datatype identified with the input
+    // if we just return "false" the user may not differentiate between an intended inference result and some non-existing term (or not matching termType, which may also not been intended)
+    return subDataTypes.includes(dt.getIRI("Compact"));
   }
 
   /**
@@ -226,8 +234,16 @@ export class DataType extends Term {
    * @returns if this DataType is a valid sub-datatype of the given super-datatype
    */
   isValidSubDataTypeOf(superDataTypeId: string, implicit = true) {
+    const superDataTypes = this.getSuperDataTypes({ implicit, outputFormat: "Compact" });
+    const compactIRI = this.graph.discoverCompactIRI(superDataTypeId);
+    if (compactIRI && superDataTypes.includes(compactIRI)) {
+      // try "dry-run" with compactIRI, to not have to create an instance (which may even not exist in the current vocab)
+      return true;
+    }
     const dt = this.graph.getDataType(superDataTypeId);
-    return this.getSuperDataTypes({ implicit, outputFormat: "Compact" }).includes(dt.getIRI("Compact"));
+    // if there is an error here, at this point we got no "right" compact IRI as input and there is no datatype identified with the input
+    // if we just return "false" the user may not differentiate between an intended inference result and some non-existing term (or not matching termType, which may also not been intended)
+    return superDataTypes.includes(dt.getIRI("Compact"));
   }
 
   /**
@@ -244,7 +260,16 @@ export class DataType extends Term {
    * @returns if this DataType is a valid range of the given Property
    */
   isValidRangeOf(propertyId: string, implicit = true) {
+    const rangeOf = this.isRangeOf({ implicit, outputFormat: "Compact" });
+    const compactIRI = this.graph.discoverCompactIRI(propertyId);
+    if (compactIRI && rangeOf.includes(compactIRI)) {
+      // try "dry-run" with compactIRI, to not have to create an instance (which may even not exist in the current vocab)
+      return true;
+    }
     const p = this.graph.getProperty(propertyId);
-    return this.isRangeOf({ implicit, outputFormat: "Compact" }).includes(p.getIRI("Compact"));
+    // if there is an error here, at this point we got no "right" compact IRI as input and there is no property identified with the input
+    // if we just return "false" the user may not differentiate between an intended inference result and some non-existing term (or not matching termType, which may also not been intended)
+    // it will usually throw an error in this case, since property-ranges are defined in the property vocabulary node
+    return rangeOf.includes(p.getIRI("Compact"));
   }
 }

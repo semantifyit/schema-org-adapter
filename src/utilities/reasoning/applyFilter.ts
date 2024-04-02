@@ -2,6 +2,7 @@ import { FilterParamObj } from "../../types/types";
 import { uniquifyArray } from "../general/uniquifyArray";
 import { toArray } from "../general/toArray";
 import { TermTypeLabel, TermTypeLabelValue } from "../../data/namespaces";
+import { Term } from "../../classes/Term";
 
 /** @ignore
  * Applies a filter to the IRIs in the given Array
@@ -38,11 +39,15 @@ export function applyFilter(paramObj: FilterParamObj): string[] {
   }
   // check for every term, if it passes the filter conditions
   for (let i = 0; i < unifiedDataArray.length; i++) {
-    const actualTerm = graph.getTerm(unifiedDataArray[i]);
-    if (!actualTerm) {
+    let actualTerm: Term;
+    try {
+      actualTerm = graph.getTerm(unifiedDataArray[i]);
+    } catch (e) {
       continue; // skip this term if it is not known
     }
-
+    if(!actualTerm){
+      console.log("ALAAAAAAAAAAAAARM")
+    }
     // superseded
     if (filter.isSuperseded !== undefined) {
       if (!filter.isSuperseded && actualTerm.isSupersededBy() != null) {

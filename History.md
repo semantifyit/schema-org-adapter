@@ -1,3 +1,8 @@
+6.1.2 / 2024-04-02
+==================
+* Improved vocabulary curation: Terms that define themselves as superclass/property no longer trigger infinite recursions - (while this is theoretically always true in RDF-terms, SDO-Adapter was not expecting them being stated explicitly in input-vocabularies. The API of SDO-Adapter will continue to exclude those self-referenced-terms in their results.)
+* Improved filter- and inference-functions: Some terms may only be referenced in the input vocabularies without having to be defined themselves (e.g. vocabulary extensions). Some functions have been improved to work without having to create a term-instance for those referenced terms if possible.
+
 6.1.1 / 2024-03-20
 ==================
 * Moved dependency `deep-object-diff` to dev-dependency

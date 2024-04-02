@@ -1,6 +1,7 @@
 import { VocabularyNode } from "../../types/types";
 import { TermTypeIRIValue } from "../../data/namespaces";
 import { isString } from "../general/isString";
+import { isArray } from "../general/isArray";
 
 /** @ignore
  * curates the value for a given relationship term in a given vocabulary node that should have an array as value
@@ -23,5 +24,9 @@ export function curateRelationshipTermArray(
   ) {
     // initialize an empty array
     vocabNode[term] = [];
+  }
+  // remove terms that are defined as subclasses of themselves (see vocabulary-animal-altered-2.json for details)
+  if (isArray(vocabNode[term])) {
+    vocabNode[term] = vocabNode[term].filter((iri: string) => iri !== vocabNode["@id"]);
   }
 }

@@ -1,4 +1,4 @@
-import { FilterObject } from "../../../src";
+import { FilterObject, SOA } from "../../../src";
 import { testSdoAdapter } from "../../resources/utilities/testUtilities";
 import VOC_OBJ_ZOO from "../../resources/data/vocabularies/vocabulary-animal.json";
 
@@ -59,4 +59,16 @@ describe("applyFilter()", () => {
     expect(() => mySA.getListOfProperties({ filter: fakeFilter })).toThrow();
     expect(mySA.getListOfDataTypes({ filter: filter13 })).toContain("schema:Text");
   });
+
+  // applyFilter with partial vocabulary (referenced terms are not part of the current vocabulary)
+  test("applyFilter 2", async () => {
+    const mySA = await SOA.create({
+      vocabularies: [VOC_OBJ_ZOO]
+    })
+    const enum1 = mySA.getEnumeration("ex:AnimalLivingEnvironment");
+    const filter = { termType: ["Enumeration"] } as FilterObject;
+    expect(enum1.getSuperClasses()).toContain("schema:Enumeration");
+    expect(enum1.getSuperClasses({ filter})).not.toContain("schema:Enumeration");
+  });
+
 });
