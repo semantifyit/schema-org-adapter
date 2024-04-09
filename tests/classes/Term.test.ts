@@ -5,6 +5,7 @@ import {
   SdoAdapterMap
 } from "../resources/utilities/testUtilities";
 import { SDOAdapter } from "../../src";
+import { SchemaModuleNamespaceMap } from "../../src/data/schemaModules";
 
 /**
  *  Tests regarding the JS-Class for "Term"
@@ -14,6 +15,31 @@ describe("Term tests - All schema versions", () => {
 
   beforeAll(async () => {
     sdoAdapterMap = await initializeSdoAdapterMap();
+  });
+
+  test("schema modules", async () => {
+    // checks the vocabulary of all terms and if they are in line with the expected values we have for schema modules (in the const SchemaModuleNamespaceMap)
+    const vocabListGlobal = [];
+    // from a schema module, or from the example external vocabulary
+    const expectedModuleNamespaces = ["//example-vocab.ex", ...Object.values(SchemaModuleNamespaceMap)];
+    await executeTestForEach(sdoAdapterMap, (sdoAdapter: SDOAdapter) => {
+      const vocabListLocal = [];
+      const terms = sdoAdapter.getAllTerms();
+      for (const t of terms) {
+        const vocab = t.getVocabulary();
+        if (!vocabListGlobal.includes(vocab)) {
+          vocabListGlobal.push(vocab);
+        }
+        if (!vocabListLocal.includes(vocab)) {
+          vocabListLocal.push(vocab);
+        }
+      }
+      // check if all vocabularies are as expected
+      for (const v of vocabListLocal) {
+        expect(expectedModuleNamespaces.find((el) => v.includes(el))).toBeTruthy();
+      }
+    });
+    // console.log(vocabListGlobal);
   });
 
   test("getTerm()", async () => {

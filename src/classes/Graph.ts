@@ -36,6 +36,7 @@ export class Graph {
   sdoAdapter: SDOAdapter;
   context: Context;
   outputFormat: OutputIRIType;
+  defaultFilter?: FilterObject;
   // keys are the compact IRI
   classes: TermMemory;
   properties: TermMemory;
@@ -44,18 +45,18 @@ export class Graph {
   enumerationMembers: TermMemory;
 
   /**
-   * @param sdoAdapter - The parent sdoAdapter-class to which this Graph belongs
-   * @param outputFormat - The default output format for IRI-results
+   * @param params - the parameters to create a Graph
    */
-  constructor(sdoAdapter: SDOAdapter, outputFormat: OutputIRIType = "Compact") {
-    this.sdoAdapter = sdoAdapter;
+  constructor(params: { sdoAdapter: SDOAdapter; outputFormat?: OutputIRIType; defaultFilter?: FilterObject }) {
+    this.sdoAdapter = params.sdoAdapter;
     this.context = getStandardContext();
     this.classes = {}; // keys are the compact IRI
     this.properties = {}; // keys are the compact IRI
     this.dataTypes = {}; // keys are the compact IRI
     this.enumerations = {}; // keys are the compact IRI
     this.enumerationMembers = {}; // keys are the compact IRI
-    this.outputFormat = outputFormat;
+    this.outputFormat = params.outputFormat || "Compact";
+    this.defaultFilter = params.defaultFilter;
   }
 
   /**

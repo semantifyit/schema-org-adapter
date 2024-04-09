@@ -13,6 +13,7 @@ import { FilterObject } from "../types/FilterObject.type";
 import { toArray } from "../utilities/general/toArray";
 import { ParamObjIRIList } from "../types/ParamObjIRIList.type";
 import { filterAndTransformIRIList } from "../utilities/general/filterAndTransformIRIList";
+import { checkFilterValidity } from "../utilities/reasoning/checkFilterValidity";
 
 /**
  * An **SDOAdapter** is an instance of the library itself that holds its own settings and vocabularies (specified by the user). Based on these internal settings and vocabularies the SDOAdapter provides corresponding data through the methods described below (an SDOAdapter can only provide data about a vocabulary, if that vocabulary has been added to the instance). An SDOAdapter instance is created with {@link create | .create()}, have a look at the different settings.
@@ -65,11 +66,16 @@ export class SDOAdapter {
     } else {
       this.equateVocabularyProtocols = false;
     }
-    if (paramObj?.outputFormat) {
-      this.graph = new Graph(this, paramObj.outputFormat);
-    } else {
-      this.graph = new Graph(this);
+    // check validity of default filter (if given)
+    if (paramObj?.defaultFilter) {
+      checkFilterValidity(paramObj.defaultFilter);
     }
+
+    this.graph = new Graph({
+      sdoAdapter: this,
+      outputFormat: paramObj?.outputFormat,
+      defaultFilter: paramObj?.defaultFilter
+    });
   }
 
   /**
@@ -686,5 +692,36 @@ export class SDOAdapter {
    */
   async constructURLSchemaVocabulary(version = "latest"): Promise<string> {
     return await constructURLSchemaVocabulary(version, this.schemaHttps, this.commit);
+  }
+
+  /**
+   * Returns the default filter specified for this SDOAdapter, if any
+   *
+   * @example
+   * ```JS
+   * const defaultFilter = mySdoAdapter.getDefaultFilter();
+   * ```
+   *
+   * @returns The default filter of this SDOAdapter, if any
+   */
+  getDefaultFilter() {
+    return this.graph.defaultFilter;
+  }
+
+  /**
+   * Overwrites the default filter for this SDOAdapter. The default filter is not supposed to change often, and should be set during the creation of a SDOAdapter instance.
+   *
+   * @example
+   * ```JS
+   * mySdoAdapter.setDefaultFilter({
+   *   schemaModuleExclude: "attic",
+   *   isSuperseded: false
+   * });
+   * ```
+   *
+   * @param defaultFilter - The default filter for this SDOAdapter (pass no parameter to reset the filter)
+   */
+  setDefaultFilter(defaultFilter?: FilterObject) {
+    this.graph.defaultFilter = defaultFilter;
   }
 }

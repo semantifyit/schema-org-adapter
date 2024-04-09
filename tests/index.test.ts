@@ -1,4 +1,4 @@
-import { SOA } from "../src/index";
+import { FilterObject, SOA } from "../src/index";
 import { commit, debugFuncErr } from "./resources/utilities/testUtilities";
 import VOC_OBJ_SDO_3_7 from "./resources/data/vocabularies/schema/schema-3.7.json";
 import VOC_OBJ_GWON from "./resources/data/vocabularies/graph-with-one-node.json";
@@ -28,6 +28,31 @@ describe("SDO Adapter methods", () => {
     });
     const testClass = mySA.getClass("namespace:AwesomePerson");
     expect(testClass.getName()).toEqual("validValue");
+  });
+
+  test("default filter", async () => {
+    const defaultFilter: FilterObject = {
+      schemaModuleExclude: "attic",
+      isSuperseded: false
+    };
+    const mySA = await SOA.create({
+      commit: commit,
+      defaultFilter,
+      vocabularies: [VOC_OBJ_SDO_3_7]
+    });
+    expect(() => {
+      mySA.getClass("schema:StupidType");
+    }).toThrow();
+    expect(mySA.getDefaultFilter()).toEqual(defaultFilter);
+    mySA.setDefaultFilter();
+    expect(() => {
+      mySA.getClass("schema:StupidType");
+    }).not.toThrow();
+    mySA.setDefaultFilter(defaultFilter);
+    expect(mySA.getDefaultFilter()).toEqual(defaultFilter);
+    expect(() => {
+      mySA.getClass("schema:StupidType");
+    }).toThrow();
   });
 
   test("constructURLSchemaVocabulary()", async () => {

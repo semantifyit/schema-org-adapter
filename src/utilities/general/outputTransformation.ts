@@ -2,7 +2,7 @@ import { OutputIRIType } from "../../types/OutputIRIType.type";
 import { toAbsoluteIRI } from "./toAbsoluteIRI";
 import { Graph } from "../../classes/Graph";
 import { isString } from "./isString";
-import { isArray } from "./isArray";
+import { isArrayOfStrings } from "./isArrayOfStrings";
 
 /** @ignore
  * transforms the input compact IRI(s) into the desired output format if given, else the default format stated in the Graph is taken
@@ -16,7 +16,7 @@ export function outputTransformation<T extends string | string[]>(input: T, grap
   if (isString(input)) {
     // input is a string
     return toAbsoluteIRI(input, graph.context) as T;
-  } else if (isArray(input) && input.every((s) => isString(s))) {
+  } else if (isArrayOfStrings(input)) {
     // input is an array of strings
     return input.map((s) => toAbsoluteIRI(s, graph.context)) as T;
   }

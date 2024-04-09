@@ -16,6 +16,7 @@ export type ParamObjSdoAdapter = {
   equateVocabularyProtocols?: boolean;
   onError?: ErrorFunction;
   outputFormat?: OutputIRIType;
+  defaultFilter?: FilterObject;
 };
 
 /** @ignore */

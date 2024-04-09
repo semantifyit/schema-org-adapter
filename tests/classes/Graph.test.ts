@@ -7,10 +7,11 @@ import { debugFuncErr } from "../resources/utilities/testUtilities";
 import { SDOAdapter } from "../../src/classes/SDOAdapter";
 
 async function initGraph() {
-  const mySA = new SDOAdapter({
-    onError: debugFuncErr
+  return new Graph({
+    sdoAdapter: new SDOAdapter({
+      onError: debugFuncErr
+    })
   });
-  return new Graph(mySA);
 }
 
 /**

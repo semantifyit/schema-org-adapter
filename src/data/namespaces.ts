@@ -96,6 +96,10 @@ export type TermType = keyof typeof TermTypeLabel;
  */
 export type TermTypeLabelValue = typeof TermTypeLabel[TermType];
 
+export function isTermTypeLabelValue(value: string): value is TermTypeLabelValue {
+  return Object.values(TermTypeLabel).includes(value as TermTypeLabelValue);
+}
+
 /**
  * An IRI (string) indicating the type of Term:
  * > {@link Class} -> `"rdfs:Class"`<br>
@@ -107,3 +111,7 @@ export type TermTypeLabelValue = typeof TermTypeLabel[TermType];
  * Type for values of TermTypeIRI
  */
 export type TermTypeIRIValue = typeof TermTypeIRI[TermType];
+
+export function isTermTypeIRIValue(value: string): value is TermTypeIRIValue {
+  return Object.values(TermTypeIRI).includes(value as TermTypeIRIValue);
+}

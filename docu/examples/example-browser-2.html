@@ -20,7 +20,13 @@
   (async function() {
     const schemaUrl = "https://raw.githubusercontent.com/semantifyit/schemaorg/main/data/releases/13.0/schemaorg-all-https.jsonld";
     const externalVocabURL = "https://raw.githubusercontent.com/semantifyit/schema-org-adapter/master/tests/resources/data/vocabularies/vocabulary-animal.json";
-    let mySdoAdapter = await SOA.create({ schemaHttps: true, vocabularies: [schemaUrl, externalVocabURL] });
+    let mySdoAdapter = await SOA.create({
+      schemaHttps: true,
+      vocabularies: [schemaUrl, externalVocabURL],
+      defaultFilter: {
+        schemaModuleExclude: "attic"
+      }
+    });
     console.log(await mySdoAdapter.constructURLSchemaVocabulary("latest"));
     let testClass = mySdoAdapter.getClass("Hotel");
     console.log(mySdoAdapter.getVocabularies());
@@ -28,11 +34,11 @@
     console.log(testClass.getDescription("en"));
     console.log(testClass.toJSON());
     let testClassExternal = mySdoAdapter.getClass("Tiger");
-    console.log(testClassExternal.toJSON({outputFormat:"Absolute"}));
+    console.log(testClassExternal.toJSON({ outputFormat: "Absolute" }));
     console.log(testClassExternal.getNames());
     console.log(testClassExternal.getDescriptions());
     let testProperty = mySdoAdapter.getProperty("accountablePerson");
-    console.log(testProperty.getRanges({outputFormat:"Absolute"}));
+    console.log(testProperty.getRanges({ outputFormat: "Absolute" }));
     document.getElementById("output").innerHTML = JSON.stringify(testClass.toJSON(), null, 2);
   })();
 </script>

@@ -1,3 +1,11 @@
+6.2.0 / 2024-04-09
+==================
+* Added the option to set a default filter (on creation of a SDOAdapter or after creation with `.setDefaultFilter()` ) that applies by default on any API function when no specific filter is passed for that function.
+* Improved the filter capabilities:
+  * Added `schemaModule` as an option to filter schema.org vocabulary terms based on their [schema module](https://schema.org/docs/schemas.html)
+  * Added exclude-filters, which have opposite filtering effect. Added `termTypeExclude`, `fromVocabularyExclude`, and `schemaModuleExclude`. These filters can NOT be used together with their non-excluding variants.
+* Added basic verification for input filters.
+
 6.1.2 / 2024-04-02
 ==================
 * Improved vocabulary curation: Terms that define themselves as superclass/property no longer trigger infinite recursions - (while this is theoretically always true in RDF-terms, SDO-Adapter was not expecting them being stated explicitly in input-vocabularies. The API of SDO-Adapter will continue to exclude those self-referenced-terms in their results.)

@@ -1,5 +1,6 @@
 import { ErrorFunction, Vocabulary } from "./types";
 import { OutputIRIType } from "./OutputIRIType.type";
+import { FilterObject } from "./FilterObject.type";
 
 /**
  *  A **parameter object** to {@link create | create a new SDO Adapter} instance. All attributes of this object are optional (as well as the parameter object itself) and describe a certain setting that should be used for the created {@link SDOAdapter | SDO Adapter}.
@@ -12,6 +13,10 @@ import { OutputIRIType } from "./OutputIRIType.type";
  *   schemaHttps: true,
  *   equateVocabularyProtocols: true,
  *   outputFormat: "Compact",
+ *   defaultFilter: {
+ *    schemaModuleExclude: ["attic", "meta"],
+ *    isSuperseded: false
+ *   },
  *   onError: (e) => {
  *     console.error(e);
  *   }
@@ -53,4 +58,8 @@ export type ParamObjCreateSdoAdapter = {
    * * "Absolute": The resulting IRIs are given in absolute form, e.g. "https://schema.org/Hotel"
    */
   outputFormat?: OutputIRIType;
+  /**
+   * Sets a default filter for all results provided by the created SDO Adapter. Everytime no filter is passed to a function, this default filter is used.
+   */
+  defaultFilter?: FilterObject;
 };

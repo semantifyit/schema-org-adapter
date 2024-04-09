@@ -1,6 +1,6 @@
 {
   "name": "schema-org-adapter",
-  "version": "6.1.2",
+  "version": "6.2.0",
   "engines": {
     "node": ">=10.0.0"
   },
@@ -15,9 +15,8 @@
     "buildDistMinified": "browserify lib/dist.js -p tinyify -s SOA > dist/schema-org-adapter.min.js",
     "test:badges": "npm run-script testSoaRepo && npm run-script badges",
     "testSoaRepo": "jest",
-    "testSoaRepo2": "jest tests/classes/Property.test.ts",
-    "testSchemaRepo": "COMMIT=ae70d0a9dbab49c005fd8dd1fd522f7236b04be0 jest",
-    "testSchemaRepoInfra": "COMMIT=ae70d0a9dbab49c005fd8dd1fd522f7236b04be0 jest tests/classes/Infrastructure.test.ts",
+    "testSchemaRepo": "COMMIT=e2cb239a9ca9b65e3938fe000328855fbe899054 jest",
+    "testSchemaRepoInfra": "COMMIT=e2cb239a9ca9b65e3938fe000328855fbe899054 jest tests/classes/Infrastructure.test.ts",
     "buildTestExperimental1": "tsc tests/experimental/vocabulary-comparison.ts",
     "runTestExperimental1": "node tests/experimental/vocabulary-comparison.js",
     "badges": "jest-coverage-badges input './docu/coverage/coverage-summary.json' output './docu/coverage'",

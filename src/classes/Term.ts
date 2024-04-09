@@ -146,12 +146,10 @@ export abstract class Term {
    * ```
    * @returns The vocabulary URL of this term (extension or namespace)
    */
-  getVocabulary(): string | null {
+  getVocabulary(): string {
     const termObj = this.getTermObj();
-    if (!isNil(termObj[NS.schema.isPartOf])) {
-      return termObj[NS.schema.isPartOf];
-    }
-    return null;
+    // in curateVocabNode() there should always be a value set for isPartOf (it is expected that all vocab nodes have a compact IRI as identifier)
+    return termObj[NS.schema.isPartOf];
   }
 
   /**
