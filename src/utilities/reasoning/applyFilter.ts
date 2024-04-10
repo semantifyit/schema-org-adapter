@@ -49,7 +49,6 @@ function createTermInstances(data: string[], graph: Graph) {
     try {
       result.push(graph.getTerm(termIri,{})); // empty filter to avoid recursion
     } catch (e) {
-      console.log(e)
       // term doesn't exist, we filter them out
     }
   }

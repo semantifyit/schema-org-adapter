@@ -2370,7 +2370,6 @@ function createTermInstances(data, graph) {
             result.push(graph.getTerm(termIri, {}));
         }
         catch (e) {
-            console.log(e);
         }
     }
     return result;

@@ -1,3 +1,7 @@
+6.2.1 / 2024-04-10
+==================
+* Removed a leftover console.log() from applyFilter() 
+
 6.2.0 / 2024-04-09
 ==================
 * Added the option to set a default filter (on creation of a SDOAdapter or after creation with `.setDefaultFilter()` ) that applies by default on any API function when no specific filter is passed for that function.
