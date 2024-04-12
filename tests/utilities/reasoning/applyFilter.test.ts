@@ -109,13 +109,44 @@ describe("applyFilter()", () => {
   // applyFilter with partial vocabulary (referenced terms are not part of the current vocabulary)
   test("applyFilter partial vocabulary", async () => {
     const mySA = await SOA.create({
-      vocabularies: [VOC_OBJ_ZOO],
+      vocabularies: [VOC_OBJ_ZOO]
     });
     const enum1 = mySA.getEnumeration("ex:AnimalLivingEnvironment");
     expect(enum1.getSuperClasses()).toContain("schema:Enumeration");
-    // schema:Enumeration is a Class, but this can't be known by the filterFunction since schema:Enumeration itself is not present in the external vocabulary
+    // schema:Enumeration is a Class, but this can't be known by the filterFunction since schema:Enumeration itself is not present in the external vocabulary. In strict mode it will always be filtered out, in non-strict mode it will always be included
     expect(enum1.getSuperClasses({ filter: { termType: ["Class"] } })).not.toContain("schema:Enumeration");
+    expect(enum1.getSuperClasses({
+      filter: {
+        termType: ["Class"],
+        strictMode: true
+      }
+    })).not.toContain("schema:Enumeration");
+    expect(enum1.getSuperClasses({
+      filter: {
+        termType: ["Enumeration"],
+        strictMode: true
+      }
+    })).not.toContain("schema:Enumeration");
+    expect(enum1.getSuperClasses({
+      filter: {
+        termType: ["Class"],
+        strictMode: false
+      }
+    })).toContain("schema:Enumeration");
+    expect(enum1.getSuperClasses({
+      filter: {
+        termType: ["Enumeration"],
+        strictMode: false
+      }
+    })).toContain("schema:Enumeration");
+    // the filter for vocabulary filter doesn't need the term, so, in non-strict mode, it should include unknown terms only when the vocabulary matches
+    expect(enum1.getSuperClasses({ filter: { fromVocabulary: ["schema"] } })).not.toContain("schema:Enumeration");
+    expect(enum1.getSuperClasses({ filter: { fromVocabulary: ["schema"], strictMode: true } })).not.toContain("schema:Enumeration");
+    expect(enum1.getSuperClasses({ filter: { fromVocabulary: ["ex"], strictMode: true } })).not.toContain("schema:Enumeration");
+    expect(enum1.getSuperClasses({ filter: { fromVocabulary: ["schema"], strictMode: false } })).toContain("schema:Enumeration");
+    expect(enum1.getSuperClasses({ filter: { fromVocabulary: ["ex"], strictMode: false } })).not.toContain("schema:Enumeration");
   });
+
 
   // applyFilter with schemaModule filters
   test("applyFilter schema modules", async () => {

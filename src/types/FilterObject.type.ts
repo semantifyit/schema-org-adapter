@@ -57,4 +57,9 @@ export type FilterObject = {
    * {@link SchemaModule | Schema module identifiers} can be passed here to sort out vocabulary terms from the given schema modules. This filter is the opposite of `schemaModule` and they rule each other out (only one of them can be used at the same time). More information about the schema modules can be found in [Organization of Schemas - Hosted Sections](https://schema.org/docs/schemas.html)
    */
   schemaModuleExclude?: SchemaModule | SchemaModule[];
+
+  /**
+   * The strictMode defines how IRIs of non-present terms (e.g. a Term that is linked by a vocabulary node, but is itself not present in the current vocabulary) should be handled. Some filters (e.g. termType) require term instances to do their checks. If the strictMode is true (default), then such IRIs are filtered out. If the strictMode is false then those IRIs are kept in the result.
+   */
+  strictMode?: boolean;
 };

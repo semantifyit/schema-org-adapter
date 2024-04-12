@@ -2336,7 +2336,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.applyFilter = void 0;
 const uniquifyArray_1 = require("../general/uniquifyArray");
 const toArray_1 = require("../general/toArray");
-const namespaces_1 = require("../../data/namespaces");
 const schemaModules_1 = require("../../data/schemaModules");
 const checkFilterValidity_1 = require("./checkFilterValidity");
 function applyFilter(paramObj) {
@@ -2352,27 +2351,38 @@ function applyFilter(paramObj) {
         return (0, uniquifyArray_1.uniquifyArray)(data);
     }
     (0, checkFilterValidity_1.checkFilterValidity)(usedFilter);
-    let terms = createTermInstances((0, uniquifyArray_1.uniquifyArray)(data), graph);
-    terms = filterTermType(terms, usedFilter.termType, false);
-    terms = filterTermType(terms, usedFilter.termTypeExclude, true);
-    terms = filterFromVocabulary(terms, usedFilter.fromVocabulary, graph, false);
-    terms = filterFromVocabulary(terms, usedFilter.fromVocabularyExclude, graph, true);
-    terms = filterSuperseded(terms, usedFilter);
-    terms = filterSchemaModule(terms, usedFilter.schemaModule, false);
-    terms = filterSchemaModule(terms, usedFilter.schemaModuleExclude, true);
-    return terms.map(t => t.getIRI("Compact"));
+    let result = (0, uniquifyArray_1.uniquifyArray)(data);
+    result = filterFromVocabulary(result, usedFilter.fromVocabulary, graph, false);
+    result = filterFromVocabulary(result, usedFilter.fromVocabularyExclude, graph, true);
+    const { createdTerms, unavailableTerms } = createTermInstances(result, graph);
+    let filteredTerms = filterTermType(createdTerms, usedFilter.termType, false);
+    filteredTerms = filterTermType(filteredTerms, usedFilter.termTypeExclude, true);
+    filteredTerms = filterSuperseded(filteredTerms, usedFilter);
+    filteredTerms = filterSchemaModule(filteredTerms, usedFilter.schemaModule, false);
+    filteredTerms = filterSchemaModule(filteredTerms, usedFilter.schemaModuleExclude, true);
+    const filteredTermIRIs = filteredTerms.map(t => t.getIRI("Compact"));
+    const strictFilter = (iris) => iris.filter(iri => filteredTermIRIs.includes(iri));
+    const nonStrictFilter = (iris) => iris.filter(iri => filteredTermIRIs.includes(iri) || unavailableTerms.includes(iri));
+    if (usedFilter.strictMode === false) {
+        return nonStrictFilter(result);
+    }
+    else {
+        return strictFilter(result);
+    }
 }
 exports.applyFilter = applyFilter;
 function createTermInstances(data, graph) {
-    const result = [];
+    const createdTerms = [];
+    const unavailableTerms = [];
     for (const termIri of data) {
         try {
-            result.push(graph.getTerm(termIri, {}));
+            createdTerms.push(graph.getTerm(termIri, {}));
         }
         catch (e) {
+            unavailableTerms.push(termIri);
         }
     }
-    return result;
+    return { createdTerms, unavailableTerms };
 }
 function filterFromVocabulary(terms, fromVocabularyFilter, graph, excludeCheck) {
     if (!fromVocabularyFilter) {
@@ -2389,14 +2399,13 @@ function filterFromVocabulary(terms, fromVocabularyFilter, graph, excludeCheck) 
         }
     }
     const result = [];
-    for (const term of terms) {
-        const termIri = term.getIRI("Compact");
+    for (const termIri of terms) {
         const matchFound = namespaces.some(ns => termIri.startsWith(ns + ":"));
         if (matchFound && !excludeCheck) {
-            result.push(term);
+            result.push(termIri);
         }
         else if (!matchFound && excludeCheck) {
-            result.push(term);
+            result.push(termIri);
         }
     }
     return result;
@@ -2421,10 +2430,6 @@ function filterTermType(terms, termTypeFilter, excludeCheck) {
         return terms;
     }
     const termTypeArray = (0, toArray_1.toArray)(termTypeFilter);
-    const invalidTermType = termTypeArray.find((el) => !(0, namespaces_1.isTermTypeLabelValue)(el));
-    if (invalidTermType) {
-        throw new Error("Invalid filter.termType " + invalidTermType);
-    }
     const result = [];
     for (const term of terms) {
         if ((termTypeArray.includes(term.getTermTypeLabel()) && !excludeCheck) ||
@@ -2439,10 +2444,6 @@ function filterSchemaModule(terms, schemaModuleFilter, excludeCheck) {
         return terms;
     }
     const schemaModuleArray = (0, toArray_1.toArray)(schemaModuleFilter);
-    const invalidSchemaModule = schemaModuleArray.find((el) => !(0, schemaModules_1.isSchemaModule)(el));
-    if (invalidSchemaModule) {
-        throw new Error("Invalid filter.schemaModule " + invalidSchemaModule);
-    }
     const result = [];
     for (const term of terms) {
         const schemaModuleMatch = (0, schemaModules_1.getSchemaModuleMatch)(term.getVocabulary());
@@ -2455,7 +2456,7 @@ function filterSchemaModule(terms, schemaModuleFilter, excludeCheck) {
     return result;
 }
 
-},{"../../data/namespaces":10,"../../data/schemaModules":11,"../general/toArray":25,"../general/uniquifyArray":27,"./checkFilterValidity":52}],52:[function(require,module,exports){
+},{"../../data/schemaModules":11,"../general/toArray":25,"../general/uniquifyArray":27,"./checkFilterValidity":52}],52:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.checkFilterValidity = void 0;

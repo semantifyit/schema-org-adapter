@@ -1,11 +1,11 @@
 import { FilterParamObj } from "../../types/types";
 import { uniquifyArray } from "../general/uniquifyArray";
 import { toArray } from "../general/toArray";
-import { isTermTypeLabelValue, TermTypeLabelValue } from "../../data/namespaces";
+import { TermTypeLabelValue } from "../../data/namespaces";
 import { Term } from "../../classes/Term";
 import { FilterObject } from "../../types/FilterObject.type";
 import { Graph } from "../../classes/Graph";
-import { getSchemaModuleMatch, isSchemaModule, SchemaModule } from "../../data/schemaModules";
+import { getSchemaModuleMatch, SchemaModule } from "../../data/schemaModules";
 import { checkFilterValidity } from "./checkFilterValidity";
 
 /** @ignore
@@ -29,35 +29,55 @@ export function applyFilter(paramObj: FilterParamObj): string[] {
     return uniquifyArray(data);
   }
   checkFilterValidity(usedFilter);
+  let result = uniquifyArray(data);
 
-  let terms = createTermInstances(uniquifyArray(data), graph);
-  terms = filterTermType(terms, usedFilter.termType, false);
-  terms = filterTermType(terms, usedFilter.termTypeExclude, true);
-  terms = filterFromVocabulary(terms, usedFilter.fromVocabulary, graph, false);
-  terms = filterFromVocabulary(terms, usedFilter.fromVocabularyExclude, graph, true);
-  terms = filterSuperseded(terms, usedFilter);
-  terms = filterSchemaModule(terms, usedFilter.schemaModule, false);
-  terms = filterSchemaModule(terms, usedFilter.schemaModuleExclude, true);
-  return terms.map(t => t.getIRI("Compact"));
+  // can be filtered only with compact IRI
+  result = filterFromVocabulary(result, usedFilter.fromVocabulary, graph, false);
+  result = filterFromVocabulary(result, usedFilter.fromVocabularyExclude, graph, true);
+
+  const { createdTerms, unavailableTerms } = createTermInstances(result, graph);
+
+  // must be filtered with Term instance
+  let filteredTerms = filterTermType(createdTerms, usedFilter.termType, false);
+  filteredTerms = filterTermType(filteredTerms, usedFilter.termTypeExclude, true);
+  filteredTerms = filterSuperseded(filteredTerms, usedFilter);
+  filteredTerms = filterSchemaModule(filteredTerms, usedFilter.schemaModule, false);
+  filteredTerms = filterSchemaModule(filteredTerms, usedFilter.schemaModuleExclude, true);
+  const filteredTermIRIs = filteredTerms.map(t => t.getIRI("Compact"));
+
+  // final filter depends on the strict mode (keep the original order of IRIs !!)
+  // strict -> allow only terms where we can ensure that the filters apply (term instance needed)
+  const strictFilter = (iris: string []) => iris.filter(iri => filteredTermIRIs.includes(iri));
+  // non-strict -> allow also terms where we can't know if they match (no term instances available)
+  const nonStrictFilter = (iris: string []) => iris.filter(iri => filteredTermIRIs.includes(iri) || unavailableTerms.includes(iri));
+
+  if (usedFilter.strictMode === false) {
+    return nonStrictFilter(result);
+  } else {
+    // default is strict
+    return strictFilter(result);
+  }
 }
 
-// removes all IRIs from terms that are not present in the current graph and returns term instances for those valid
-// (in order to apply most of the filters, we need the actual instances of the terms)
+// creates term instances for the compact IRIs given that are present in the vocabulary
+// returns unavailable terms as a string array
 function createTermInstances(data: string[], graph: Graph) {
-  const result: Term[] = [];
+  const createdTerms: Term[] = [];
+  const unavailableTerms: string[] = [];
   for (const termIri of data) {
     try {
-      result.push(graph.getTerm(termIri,{})); // empty filter to avoid recursion
+      createdTerms.push(graph.getTerm(termIri, {})); // empty filter to avoid recursion
     } catch (e) {
-      // term doesn't exist, we filter them out
+      // term doesn't exist, -> unavailable
+      unavailableTerms.push(termIri);
     }
   }
-  return result;
+  return { createdTerms, unavailableTerms };
 }
 
-// filters the given terms based on their vocabulary namespace
+// filters the given compact IRIs based on their vocabulary namespace
 // parameter "fromVocabularyFilter" is the value of the filter "fromVocabulary" or "fromVocabularyExclude"
-function filterFromVocabulary(terms: Term[], fromVocabularyFilter: undefined | string | string[], graph: Graph, excludeCheck: boolean) {
+function filterFromVocabulary(terms: string[], fromVocabularyFilter: undefined | string | string[], graph: Graph, excludeCheck: boolean) {
   if (!fromVocabularyFilter) {
     return terms;
   }
@@ -74,14 +94,13 @@ function filterFromVocabulary(terms: Term[], fromVocabularyFilter: undefined | s
     }
   }
   // namespaces are given as vocabulary indicators at this point (e.g. "schema")
-  const result: Term[] = [];
-  for (const term of terms) {
-    const termIri = term.getIRI("Compact");
+  const result: string[] = [];
+  for (const termIri of terms) {
     const matchFound = namespaces.some(ns => termIri.startsWith(ns + ":"));
     if (matchFound && !excludeCheck) {
-      result.push(term);
+      result.push(termIri);
     } else if (!matchFound && excludeCheck) {
-      result.push(term);
+      result.push(termIri);
     }
   }
   return result;
@@ -110,14 +129,6 @@ function filterTermType(terms: Term[], termTypeFilter: undefined | TermTypeLabel
     return terms;
   }
   const termTypeArray = toArray(termTypeFilter);
-  // check if an invalid term type has been given in the filter
-  const invalidTermType = termTypeArray.find(
-    (el) => !isTermTypeLabelValue(el)
-  );
-  if (invalidTermType) {
-    throw new Error("Invalid filter.termType " + invalidTermType);
-  }
-
   const result: Term[] = [];
   for (const term of terms) {
     // check if the type of the term matches any of the filtered types
@@ -138,14 +149,6 @@ function filterSchemaModule(terms: Term[], schemaModuleFilter: undefined | Schem
     return terms;
   }
   const schemaModuleArray = toArray(schemaModuleFilter);
-  // check if an invalid schema module has been given in the filter
-  const invalidSchemaModule = schemaModuleArray.find(
-    (el) => !isSchemaModule(el)
-  );
-  if (invalidSchemaModule) {
-    throw new Error("Invalid filter.schemaModule " + invalidSchemaModule);
-  }
-
   const result: Term[] = [];
   for (const term of terms) {
     const schemaModuleMatch = getSchemaModuleMatch(term.getVocabulary());

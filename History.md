@@ -1,3 +1,7 @@
+6.2.2 / 2024-04-12
+==================
+* Added `strictMode` as option for the `FilterObject`. This option defaults to true, and defines how the filter algorithm should behave on terms that are only referenced but not defined in the current vocabulary. Strict -> exclude those terms from the result if they cant be ruled out for sure. Non-strict -> include those terms in the result if they can't be ruled out for sure.
+
 6.2.1 / 2024-04-10
 ==================
 * Removed a leftover console.log() from applyFilter() 
