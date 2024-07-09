@@ -1,0 +1,100 @@
+{
+  "@context": {
+    "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+    "xsd": "http://www.w3.org/2001/XMLSchema#",
+    "ds": "https://vocab.sti2.at/ds/",
+    "schema": "https://schema.org/",
+    "rdfs:subClassOf": {
+      "@id": "rdfs:subClassOf",
+      "@type": "@id"
+    },
+    "rdfs:subPropertyOf": {
+      "@id": "rdfs:subPropertyOf",
+      "@type": "@id"
+    },
+    "schema:inverseOf": {
+      "@id": "schema:inverseOf",
+      "@type": "@id"
+    },
+    "schema:supersededBy": {
+      "@id": "schema:supersededBy",
+      "@type": "@id"
+    },
+    "schema:domainIncludes": {
+      "@id": "schema:domainIncludes",
+      "@type": "@id",
+      "@container": "@set"
+    },
+    "schema:rangeIncludes": {
+      "@id": "schema:rangeIncludes",
+      "@type": "@id",
+      "@container": "@set"
+    },
+    "odta": "https://odta.io/voc/",
+    "rdfs:label": {
+      "@container": "@set"
+    },
+    "rdfs:comment": {
+      "@container": "@set"
+    }
+  },
+  "@graph": [
+    {
+      "@id": "odta:SustainableTransportationEnumeration",
+      "@type": "rdfs:Class",
+      "rdfs:comment": [
+        {
+          "@language": "en",
+          "@value": "An enumeration type for sustainable transportation"
+        }
+      ],
+      "rdfs:label": [
+        {
+          "@language": "en",
+          "@value": "SustainableTransportationEnumeration"
+        }
+      ],
+      "rdfs:subClassOf": "schema:Enumeration"
+    },
+    {
+      "@id": "odta:sustainabilityFeature",
+      "@type": "rdf:Property",
+      "rdfs:comment": [
+        {
+          "@language": "en",
+          "@value": "A property for defining sustainability features for different types of touristic entities."
+        }
+      ],
+      "rdfs:label": [
+        {
+          "@language": "en",
+          "@value": "sustainabilityFeature"
+        }
+      ],
+      "schema:domainIncludes": [
+        "schema:Event",
+        "schema:Offer",
+        "schema:Organization",
+        "schema:Place",
+        "schema:Trip"
+      ],
+      "schema:rangeIncludes": [
+        "odta:SustainableTransportationEnumeration"
+      ],
+      "schema:inverseOf": "schema:name",
+      "schema:supersededBy": "schema:description",
+      "rdfs:subPropertyOf": "schema:legalName"
+    }
+  ],
+  "@id": "https://semantify.it/voc/test",
+  "@type": "ds:Vocabulary",
+  "schema:description": {
+    "@language": "en",
+    "@value": "test"
+  },
+  "schema:name": {
+    "@language": "en",
+    "@value": "test"
+  }
+}
