@@ -7,11 +7,13 @@
     "schema": "https://schema.org/",
     "rdfs:subClassOf": {
       "@id": "rdfs:subClassOf",
-      "@type": "@id"
+      "@type": "@id",
+      "@container": "@set"
     },
     "rdfs:subPropertyOf": {
       "@id": "rdfs:subPropertyOf",
-      "@type": "@id"
+      "@type": "@id",
+      "@container": "@set"
     },
     "schema:inverseOf": {
       "@id": "schema:inverseOf",
@@ -31,13 +33,13 @@
       "@type": "@id",
       "@container": "@set"
     },
-    "odta": "https://odta.io/voc/",
     "rdfs:label": {
       "@container": "@set"
     },
     "rdfs:comment": {
       "@container": "@set"
-    }
+    },
+    "odta": "https://odta.io/voc/"
   },
   "@graph": [
     {
@@ -55,7 +57,9 @@
           "@value": "SustainableTransportationEnumeration"
         }
       ],
-      "rdfs:subClassOf": "schema:Enumeration"
+      "rdfs:subClassOf": [
+        "schema:Enumeration"
+      ]
     },
     {
       "@id": "odta:sustainabilityFeature",
@@ -72,6 +76,9 @@
           "@value": "sustainabilityFeature"
         }
       ],
+      "rdfs:subPropertyOf": [
+        "schema:legalName"
+      ],
       "schema:domainIncludes": [
         "schema:Event",
         "schema:Offer",
@@ -79,12 +86,11 @@
         "schema:Place",
         "schema:Trip"
       ],
+      "schema:inverseOf": "schema:name",
       "schema:rangeIncludes": [
         "odta:SustainableTransportationEnumeration"
       ],
-      "schema:inverseOf": "schema:name",
-      "schema:supersededBy": "schema:description",
-      "rdfs:subPropertyOf": "schema:legalName"
+      "schema:supersededBy": "schema:description"
     }
   ],
   "@id": "https://semantify.it/voc/test",
