@@ -1,10 +1,11 @@
-import { VersionsFile } from "../types/types";
+import { VersionsFile, VersionsFileSemantify } from "../types/types";
 import { RetrievalMemory } from "../utilities/infrastructure/RetrievalMemory";
 import { getFileNameForSchemaOrgVersion } from "../utilities/infrastructure/getFileNameForSchemaOrgVersion";
 import { checkIfUrlExists } from "../utilities/infrastructure/checkIfUrlExists";
 import axios from "axios";
 import { sortReleaseEntriesByDate } from "../utilities/infrastructure/sortReleaseEntriesByDate";
 import { getGitHubBaseURL } from "../utilities/infrastructure/getGitHubBaseURL";
+import { SEMANTIFY_COMMIT, SEMANTIFY_VERSION_FILE_URL } from "../data/semantify";
 
 const myRetrievalMemory = RetrievalMemory.getInstance();
 
@@ -30,9 +31,20 @@ export async function constructURLSchemaVocabulary(version = "latest", schemaHtt
   if (version === "latest") {
     version = await getLatestSchemaVersion(commit);
   }
-  const fileName = getFileNameForSchemaOrgVersion(version, schemaHttps); // This can throw an error
-  return getGitHubBaseURL(commit) + "/data/releases/" + version + "/" + fileName;
-  // e.g. "https://raw.githubusercontent.com/schemaorg/schemaorg/main/data/releases/3.9/all-layers.jsonld";
+  if (commit === SEMANTIFY_COMMIT) {
+    // we return here the hardcoded semantify URL, to not have to fetch the all-versions-file when it is not necessary
+    // supporting only versions from 12.0 upwards
+    if (!(Number(version) > 11.01)) {
+      throw new Error(
+        "There is no vocabulary file for the wanted schema.org version " + version + " hosted at semantify.it"
+      );
+    }
+    return "https://semantify.it/voc/schema-" + version;
+  } else {
+    const fileName = getFileNameForSchemaOrgVersion(version, schemaHttps); // This can throw an error
+    return getGitHubBaseURL(commit) + "/data/releases/" + version + "/" + fileName;
+    // e.g. "https://raw.githubusercontent.com/schemaorg/schemaorg/main/data/releases/3.9/all-layers.jsonld";
+  }
 }
 
 /**
@@ -59,41 +71,70 @@ export async function constructURLSchemaVocabulary(version = "latest", schemaHtt
  * @param commit - The commit string from https://github.com/schemaorg/schemaorg which is taken as source (if not given, the latest commit of our fork at https://github.com/semantifyit/schemaorg is taken). Use this parameter only if you want to change the schema.org repository used as source for the schema versions file. By standard, SDO Adapter uses a fork of the schema.org repository, which is updated only when schema.org releases a new vocabulary version, and that version passes all tests of SDO Adapter.
  * @returns The version file as JSON object
  */
-export async function fetchSchemaVersions(cacheClear = false, commit?: string): Promise<VersionsFile> {
-  let versionFile;
-  // 0. cache handling
+export async function fetchSchemaVersions(
+  cacheClear = false,
+  commit?: string
+): Promise<VersionsFile | VersionsFileSemantify> {
+  // 1. cache handling
   if (cacheClear) {
     // clear cache
     myRetrievalMemory.deleteCache();
   } else {
     // check if we already have a cached version
     const cachedData = myRetrievalMemory.getData("versionsFile", commit);
+    if (cachedData && commit === SEMANTIFY_COMMIT) {
+      return cachedData as VersionsFileSemantify;
+    }
     if (cachedData) {
       return cachedData as VersionsFile;
     }
   }
+  // 2. fetch versions file
+  let versionFile: VersionsFile | VersionsFileSemantify;
+  let latestVersion: string;
+  if (commit !== SEMANTIFY_COMMIT) {
+    // 2.a. fetch from GitHub
+    const resGH = await getSchemaVersionsFromGithub(commit);
+    latestVersion = resGH.latestVersion;
+    versionFile = resGH.versionFile;
+  } else {
+    // 2.b. fetch from Semantify
+    const resSem = await getSchemaVersionsFromSemantify();
+    latestVersion = resSem.latestVersion;
+    versionFile = resSem.versionFile;
+  }
+  // 3. save in cache and return versionFile
+  myRetrievalMemory.setData("versionsFile", versionFile, commit);
+  myRetrievalMemory.setData("latest", latestVersion, commit);
+  return versionFile;
+}
+
+async function getSchemaVersionsFromGithub(commit?: string): Promise<{
+  versionFile: VersionsFile;
+  latestVersion: string;
+}> {
+  let versionFileRes;
+  let latestVersion;
   // 1. retrieve versions file
   const urlSchemaVersions = getGitHubBaseURL(commit) + "/versions.json";
   try {
-    versionFile = await axios.get(urlSchemaVersions);
+    versionFileRes = await axios.get(urlSchemaVersions);
   } catch (e) {
     throw new Error("Unable to retrieve the schema.org versions file at " + urlSchemaVersions);
   }
-  if (!versionFile || !versionFile.data || !versionFile.data.releaseLog) {
+  if (!versionFileRes || !versionFileRes.data || !versionFileRes.data.releaseLog) {
     throw new Error("The schema.org versions file at " + urlSchemaVersions + " returned an unexpected result.");
   }
   // 2. determine the latest valid version
-  const schemaVersions = versionFile.data as VersionsFile;
-  myRetrievalMemory.setData("versionsFile", schemaVersions, commit);
-  let latestVersion;
+  const versionFile = versionFileRes.data as VersionsFile;
   if (
-    schemaVersions.schemaversion &&
-    (await checkIfUrlExists(await constructURLSchemaVocabulary(schemaVersions.schemaversion, true, commit)))
+    versionFile.schemaversion &&
+    (await checkIfUrlExists(await constructURLSchemaVocabulary(versionFile.schemaversion, true, commit)))
   ) {
-    latestVersion = schemaVersions.schemaversion;
+    latestVersion = versionFile.schemaversion;
   } else {
     // If the version stated as latest by schema.org doesn't exist, then try the other versions given in the release log until we find a valid one
-    const sortedArray = sortReleaseEntriesByDate(schemaVersions.releaseLog);
+    const sortedArray = sortReleaseEntriesByDate(versionFile.releaseLog);
     // Sort release entries by the date. latest is first in array
     for (const currVersion of sortedArray) {
       if (await checkIfUrlExists(await constructURLSchemaVocabulary(currVersion[0], true, commit))) {
@@ -105,8 +146,38 @@ export async function fetchSchemaVersions(cacheClear = false, commit?: string): 
   if (!latestVersion) {
     throw new Error('Could not find any valid vocabulary file in the schema.org versions to be declared as "latest".');
   }
-  myRetrievalMemory.setData("latest", latestVersion, commit);
-  return schemaVersions;
+  return {
+    versionFile,
+    latestVersion
+  };
+}
+
+async function getSchemaVersionsFromSemantify(): Promise<{
+  versionFile: VersionsFileSemantify;
+  latestVersion: string;
+}> {
+  let versionFileRes;
+  // 1. retrieve versions file
+  try {
+    versionFileRes = await axios.get(SEMANTIFY_VERSION_FILE_URL);
+  } catch (e) {
+    throw new Error("Unable to retrieve the schema.org versions file at " + SEMANTIFY_VERSION_FILE_URL);
+  }
+  if (!versionFileRes || !versionFileRes.data || !versionFileRes.data.latest || !versionFileRes.data.all) {
+    throw new Error(
+      "The schema.org versions file at " + SEMANTIFY_VERSION_FILE_URL + " returned an unexpected result."
+    );
+  }
+  // 2. determine the latest version (no need for validity check, since we know that Semantify will have only valid IRIs)
+  const versionFile = versionFileRes.data as VersionsFileSemantify;
+  const latestVersion = versionFile.latest.schemaVersion;
+  if (!latestVersion) {
+    throw new Error('Could not find any valid vocabulary file in the schema.org versions to be declared as "latest".');
+  }
+  return {
+    versionFile,
+    latestVersion
+  };
 }
 
 /**

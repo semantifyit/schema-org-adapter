@@ -1,6 +1,6 @@
 {
   "name": "schema-org-adapter",
-  "version": "6.2.2",
+  "version": "7.0.0",
   "engines": {
     "node": ">=10.0.0"
   },
@@ -16,6 +16,7 @@
     "test:badges": "npm run-script testSoaRepo && npm run-script badges",
     "testSoaRepo": "jest",
     "testSchemaRepo": "COMMIT=255a5b7c94b21014eb8c536ab33e332b8d6b6119 jest",
+    "testSemantifyRepo": "COMMIT=SEMANTIFY jest",
     "testSchemaRepoInfra": "COMMIT=255a5b7c94b21014eb8c536ab33e332b8d6b6119 jest tests/classes/Infrastructure.test.ts",
     "buildTestExperimental1": "tsc tests/experimental/vocabulary-comparison.ts",
     "runTestExperimental1": "node tests/experimental/vocabulary-comparison.js",

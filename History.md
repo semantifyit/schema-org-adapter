@@ -1,3 +1,7 @@
+7.0.0 / 2024-10-07
+==================
+* Added support for the self-hosted versions of schema.org. To enable this host, one has to use `"SEMANTIFY"` as `commit` parameter. Note that the structure for the VersionFile for this self-host has an improved format. One may obtain the corresponding JSON through the function `fetchSchemaVersions()`.
+
 6.2.2 / 2024-04-12
 ==================
 * Added `strictMode` as option for the `FilterObject`. This option defaults to true, and defines how the filter algorithm should behave on terms that are only referenced but not defined in the current vocabulary. Strict -> exclude those terms from the result if they cant be ruled out for sure. Non-strict -> include those terms in the result if they can't be ruled out for sure.

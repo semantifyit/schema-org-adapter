@@ -3,6 +3,7 @@ import { commit, debugFuncErr } from "./resources/utilities/testUtilities";
 import VOC_OBJ_SDO_3_7 from "./resources/data/vocabularies/schema/schema-3.7.json";
 import VOC_OBJ_GWON from "./resources/data/vocabularies/graph-with-one-node.json";
 import { getGitHubBaseURL } from "../src/utilities/infrastructure/getGitHubBaseURL";
+import { SEMANTIFY_COMMIT } from "../src/data/semantify";
 
 /**
  *  Tests regarding the JS-Class for "SDOAdapter"
@@ -56,6 +57,10 @@ describe("SDO Adapter methods", () => {
   });
 
   test("constructURLSchemaVocabulary()", async () => {
+    // this test makes only sense for GitHub-hosted vocabulary versions
+    if(commit === SEMANTIFY_COMMIT){
+      return;
+    }
     const url = await SOA.constructURLSchemaVocabulary("9.0", true, commit);
     expect(url).toBe(getGitHubBaseURL(commit) + "/data/releases/9.0/schemaorg-all-https.jsonld");
     const url2 = await SOA.constructURLSchemaVocabulary("3.9", false, commit);

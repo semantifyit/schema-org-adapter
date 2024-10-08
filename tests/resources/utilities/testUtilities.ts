@@ -1,7 +1,8 @@
-import { SOA, ParamObjCreateSdoAdapter, SDOAdapter } from "../../../src";
-import { getFileNameForSchemaOrgVersion } from "../../../src/utilities/infrastructure/getFileNameForSchemaOrgVersion";
+import { SOA, ParamObjCreateSdoAdapter, SDOAdapter, VersionsFile, VersionsFileSemantify } from "../../../src";
 import VOC_OBJ_ZOO from "../data/vocabularies/vocabulary-animal.json";
 import { isString } from "../../../src/utilities/general/isString";
+import { SEMANTIFY_COMMIT } from "../../../src/data/semantify";
+import { constructURLSchemaVocabulary } from "../../../src/classes/Infrastructure";
 
 export type SdoAdapterMap = Record<string, SDOAdapter>;
 
@@ -68,10 +69,18 @@ export async function testSdoAdapter(params: Partial<ParamObjCreateSdoAdapter> =
  */
 export async function initializeSdoAdapterMap() {
   const sdoAdapterMap: SdoAdapterMap = {};
-  const schemaVersions = (await SOA.fetchSchemaVersions(false, commit)).releaseLog;
-  for (const v of Object.keys(schemaVersions)) {
+  const schemaVersions: string[] = []; // array of schema version strings, e.g. "15.0"
+  if(commit === SEMANTIFY_COMMIT){
+    const versionFile = (await SOA.fetchSchemaVersions(false, commit)) as VersionsFileSemantify
+    schemaVersions.push(...versionFile.all.map(item => item.schemaVersion))
+  } else {
+    const releaseLog = ((await SOA.fetchSchemaVersions(false, commit)) as VersionsFile).releaseLog;
+    schemaVersions.push(...Object.keys(releaseLog))
+  }
+  for (const v of schemaVersions) {
     try {
-      getFileNameForSchemaOrgVersion(v);
+      // this is supposed to throw an error for versions that are not supported in the current test scenario
+      await constructURLSchemaVocabulary(v,true, commit);
       sdoAdapterMap[v] = await testSdoAdapter({
         vocabularies: [VOC_OBJ_ZOO],
         schemaVersion: v,

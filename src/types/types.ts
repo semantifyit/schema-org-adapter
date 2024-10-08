@@ -95,6 +95,19 @@ export interface VersionsFile {
 }
 
 /** @ignore */
+interface VersionsFileSemantifyItem {
+  schemaVersion: string, // version identifier
+  iri: string,  // url to vocabulary
+  lastUpdate: string, // ISO datetime string
+}
+
+/** @ignore */
+export interface VersionsFileSemantify {
+  latest: VersionsFileSemantifyItem,
+  all: VersionsFileSemantifyItem[]
+}
+
+/** @ignore */
 export interface FilterParamObj {
   data: string[];
   filter?: FilterObject;

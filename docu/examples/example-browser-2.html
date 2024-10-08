@@ -18,14 +18,15 @@
 <!--<script src="https://cdn.jsdelivr.net/gh/semantifyit/schema-org-adapter/dist/schema-org-adapter.min.js"></script>-->
 <script>
   (async function() {
-    const schemaUrl = "https://raw.githubusercontent.com/semantifyit/schemaorg/main/data/releases/13.0/schemaorg-all-https.jsonld";
     const externalVocabURL = "https://raw.githubusercontent.com/semantifyit/schema-org-adapter/master/tests/resources/data/vocabularies/vocabulary-animal.json";
     let mySdoAdapter = await SOA.create({
       schemaHttps: true,
-      vocabularies: [schemaUrl, externalVocabURL],
+      schemaVersion: "latest",
+      vocabularies: [externalVocabURL],
       defaultFilter: {
         schemaModuleExclude: "attic"
-      }
+      },
+      commit: "SEMANTIFY" // pull schema.org vocabulary from self-hosted semantify
     });
     console.log(await mySdoAdapter.constructURLSchemaVocabulary("latest"));
     let testClass = mySdoAdapter.getClass("Hotel");

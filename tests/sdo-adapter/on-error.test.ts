@@ -10,7 +10,7 @@ describe("SDO Adapter - OnError", () => {
         debugFunc(text);
       }
     });
-    const versionUrl = await mySA.constructURLSchemaVocabulary("3.2");
+    const versionUrl = await mySA.constructURLSchemaVocabulary("12.0");
     await mySA.addVocabularies([versionUrl]);
     // test without onError function
     mySA = new SDOAdapter({ commit });
