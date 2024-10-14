@@ -34,6 +34,9 @@ export function isSchemaModule(value: string): value is SchemaModule {
 
 // returns the matching schema module identifier for the given schema module namespace (if any)
 export function getSchemaModuleMatch(termVocabulary: string): SchemaModule | null {
+  if(!termVocabulary){
+    return null; // should NOT happen, that a term has no vocabulary namespace assigned to it. We add this check for safety nevertheless
+  }
   for (const k of Object.keys(SchemaModuleNamespaceMap) as SchemaModule[]) {
     if (termVocabulary.includes(SchemaModuleNamespaceMap[k])) {
       return k;

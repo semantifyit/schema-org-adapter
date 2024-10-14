@@ -1,3 +1,7 @@
+7.0.1 / 2024-10-14
+==================
+* The assigned vocabulary URL for a term (which can be requested with `.getVocabulary()`) will include namespaces that are blocklisted by default for the global function `.getVocabularies()` (e.g. `rdfs`, `owl`, `sosa`)
+
 7.0.0 / 2024-10-07
 ==================
 * Added support for the self-hosted versions of schema.org. To enable this host, one has to use `"SEMANTIFY"` as `commit` parameter. Note that the structure for the VersionFile for this self-host has an improved format. One may obtain the corresponding JSON through the function `fetchSchemaVersions()`.

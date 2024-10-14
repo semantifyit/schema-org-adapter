@@ -103,7 +103,7 @@ export class Graph {
       this.context = generateContext(this.context, vocab["@context"]);
       // pre-process new vocab
       vocab = (await preProcessVocab(vocab, this.context)) as Vocabulary; // adapt @graph to new context
-      const vocabularies = this.sdoAdapter.getVocabularies();
+      const vocabularies = this.sdoAdapter.getVocabularies(false);
       for (let vocabNode of vocab["@graph"]) {
         vocabNode = curateVocabNode(vocabNode, vocabularies); // curate nodes
       }

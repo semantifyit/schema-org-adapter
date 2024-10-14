@@ -377,7 +377,7 @@ class Graph {
             }
             this.context = (0, generateContext_1.generateContext)(this.context, vocab["@context"]);
             vocab = (await (0, preProcessVocab_1.preProcessVocab)(vocab, this.context));
-            const vocabularies = this.sdoAdapter.getVocabularies();
+            const vocabularies = this.sdoAdapter.getVocabularies(false);
             for (let vocabNode of vocab["@graph"]) {
                 vocabNode = (0, curateVocabNode_1.curateVocabNode)(vocabNode, vocabularies);
             }
@@ -1480,6 +1480,9 @@ function isSchemaModule(value) {
 }
 exports.isSchemaModule = isSchemaModule;
 function getSchemaModuleMatch(termVocabulary) {
+    if (!termVocabulary) {
+        return null;
+    }
     for (const k of Object.keys(exports.SchemaModuleNamespaceMap)) {
         if (termVocabulary.includes(exports.SchemaModuleNamespaceMap[k])) {
             return k;
