@@ -162,29 +162,27 @@ describe("Enumeration tests - All schema versions", () => {
 
   test("getSubClasses()", async () => {
     await executeTestForEach(sdoAdapterMap, (sdoAdapter: SDOAdapter) => {
-      const paymentMethod = sdoAdapter.getEnumeration("schema:PaymentMethod");
-      expect(paymentMethod.getSubClasses()).toContain("schema:PaymentCard");
-      expect(paymentMethod.getSubClasses({ implicit: true })).toContain("schema:PaymentCard");
-      expect(paymentMethod.getSubClasses({ implicit: false })).toContain("schema:PaymentCard");
-      expect(paymentMethod.getSubClasses({ implicit: true })).toContain("schema:CreditCard");
-      expect(paymentMethod.getSubClasses({ implicit: false })).not.toContain("schema:CreditCard");
+      const enumeration = sdoAdapter.getEnumeration("schema:Specialty");
+      expect(enumeration.getSubClasses()).toContain("schema:MedicalSpecialty");
+      expect(enumeration.getSubClasses({ implicit: true })).toContain("schema:MedicalSpecialty");
+      expect(enumeration.getSubClasses({ implicit: false })).toContain("schema:MedicalSpecialty");
     });
   });
 
   test("isRangeOf()", async () => {
     await executeTestForEach(sdoAdapterMap, (sdoAdapter: SDOAdapter) => {
-      const paymentMethod = sdoAdapter.getEnumeration("schema:PaymentMethod");
-      expect(paymentMethod.isRangeOf()).toContain("schema:paymentMethod");
-      expect(paymentMethod.isRangeOf({ implicit: false })).toContain("schema:paymentMethod");
-      expect(paymentMethod.isRangeOf()).toContain("schema:itemReviewed");
-      expect(paymentMethod.isRangeOf({ implicit: false })).not.toContain("schema:itemReviewed");
+      const enumeration = sdoAdapter.getEnumeration("schema:MedicalSpecialty");
+      expect(enumeration.isRangeOf()).toContain("schema:specialty");
+      expect(enumeration.isRangeOf({ implicit: false })).not.toContain("schema:specialty");
+      expect(enumeration.isRangeOf({ implicit: true })).toContain("schema:specialty");
+      expect(enumeration.isRangeOf({ implicit: true })).toContain("schema:relevantSpecialty");
     });
   });
 
   test("toString()", async () => {
     await executeTestForEach(sdoAdapterMap, (sdoAdapter: SDOAdapter) => {
-      const PaymentMethod = sdoAdapter.getClass("schema:PaymentMethod");
-      expect(isObject(JSON.parse(PaymentMethod.toString()))).toBe(true);
+      const enumeration = sdoAdapter.getEnumeration("schema:MedicalSpecialty");
+      expect(isObject(JSON.parse(enumeration.toString()))).toBe(true);
     });
   });
 
@@ -386,13 +384,11 @@ describe("Enumeration tests - All schema versions", () => {
 
   test("isValidSuperClassOf()", async () => {
     await executeTestForEach(sdoAdapterMap, (sdoAdapter: SDOAdapter) => {
-      const paymentMethod = sdoAdapter.getEnumeration("schema:PaymentMethod");
-      expect(paymentMethod.isValidSuperClassOf("schema:PaymentMethod")).toBeFalsy(); // although true in RDF, SDO-Adapter does not consider any class a subclass of itself
-      expect(paymentMethod.isValidSuperClassOf("schema:CreditCard")).toBeTruthy();
-      expect(paymentMethod.isValidSuperClassOf("schema:CreditCard", true)).toBeTruthy();
-      expect(paymentMethod.isValidSuperClassOf("schema:CreditCard", false)).toBeFalsy();
-      expect(paymentMethod.isValidSuperClassOf("schema:PaymentCard", true)).toBeTruthy();
-      expect(paymentMethod.isValidSuperClassOf("schema:PaymentCard", false)).toBeTruthy();
+      const enumeration = sdoAdapter.getEnumeration("schema:Specialty");
+      expect(enumeration.isValidSuperClassOf("schema:Specialty")).toBeFalsy(); // although true in RDF, SDO-Adapter does not consider any class a subclass of itself
+      expect(enumeration.isValidSuperClassOf("schema:MedicalSpecialty")).toBeTruthy();
+      expect(enumeration.isValidSuperClassOf("schema:MedicalSpecialty", true)).toBeTruthy();
+      expect(enumeration.isValidSuperClassOf("schema:MedicalSpecialty", false)).toBeTruthy();
     });
   });
 

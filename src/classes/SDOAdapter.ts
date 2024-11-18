@@ -501,7 +501,6 @@ export class SDOAdapter {
    * const allEnumerationsArray = mySdoAdapter.getListOfEnumerations();
    * // creates an array with IRIs of all enumeration terms known to mySdoAdapter
    * [
-   *   'schema:PaymentMethod',
    *   'schema:DayOfWeek',
    *   'schema:GenderType',
    *   ...
@@ -510,7 +509,6 @@ export class SDOAdapter {
    * const allEnumerationsArrayAbsoluteIRIs = mySdoAdapter.getListOfEnumerations({outputFormat: "Absolute"});
    * // creates an array with absolute IRIs
    * [
-   *   'https://schema.org/PaymentMethod',
    *   'https://schema.org/DayOfWeek',
    *   'https://schema.org/GenderType',
    *   ...

@@ -7,7 +7,7 @@ main();
  * example usage of the SDOAdapter in node.js
  */
 async function main() {
-  const mySA = await SOA.create({schemaVersion: "latest", vocabularies:[VOC_EXAMPLE]});
+  const mySA = await SOA.create({schemaVersion: "20.0", vocabularies:[VOC_EXAMPLE]});
   let PaymentMethod = mySA.getEnumeration("schema:PaymentMethod");
   console.log(mySA.getVocabularies(true))
   console.log(JSON.stringify(PaymentMethod.toJSON(), null, 2));

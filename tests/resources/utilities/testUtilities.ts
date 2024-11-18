@@ -77,6 +77,7 @@ export async function initializeSdoAdapterMap() {
     const releaseLog = ((await SOA.fetchSchemaVersions(false, commit)) as VersionsFile).releaseLog;
     schemaVersions.push(...Object.keys(releaseLog))
   }
+  // console.log("schemaVersions",schemaVersions)
   for (const v of schemaVersions) {
     try {
       // this is supposed to throw an error for versions that are not supported in the current test scenario
@@ -87,6 +88,8 @@ export async function initializeSdoAdapterMap() {
         equateVocabularyProtocols: true
       });
     } catch (e) {
+      // jsonld versions of the vocab are only available from 3.1 upwards
+      // console.log("sdoAdapterMap adding failed for version",v)
       // console.log(e)
     }
   }
