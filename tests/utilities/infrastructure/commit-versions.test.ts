@@ -1,13 +1,13 @@
 import { SDOAdapter, SOA } from "../../../src";
 import { SEMANTIFY_COMMIT } from "../../../src/data/semantify";
 
-const schemaRepoCommit = "ad42b25994b238eb6e5b982b079ae2f403c5bba0";
+const schemaRepoCommit = "9d7406b660197aa9559090bcaf516ad80fdce7a0";
 const semantifyHostCommit = SEMANTIFY_COMMIT
 
 // here we want to check that the schema.org ontologies are the same, despite the source of the vocabularies (different commit versions)
 // 1. no commit -> GitHub repo of semantify (fork from schema.org GitHub Repo) - stops at version 15.0 currently
-// 2. commit "ad42b25994b238eb6e5b982b079ae2f403c5bba0" -> GitHub repo of schema.org - latest version 28.0
-// 3. commit "SEMANTIFY" -> Self-hosted versions, starts at 12.0, latest is 28.0
+// 2. commit "9d7406b660197aa9559090bcaf516ad80fdce7a0" -> GitHub repo of schema.org - latest version 28.1
+// 3. commit "SEMANTIFY" -> Self-hosted versions, starts at 12.0, latest is 28.1
 
 describe("Commit versions", () => {
 

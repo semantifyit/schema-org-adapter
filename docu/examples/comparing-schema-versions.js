@@ -4,10 +4,10 @@ main();
 
 // compare the terms from different schema.org vocabulary versions
 async function main() {
-  const v1 = "27.02"; // 3.1 is the lowest version possible
-  const commit1 = "ad42b25994b238eb6e5b982b079ae2f403c5bba0";
-  const v2 = "latest";
-  const commit2 = "ad42b25994b238eb6e5b982b079ae2f403c5bba0";
+  const v1 = "28.0"; // 3.1 is the lowest version possible
+  const commit1 = "9d7406b660197aa9559090bcaf516ad80fdce7a0";
+  const v2 = "28.1";
+  const commit2 = "9d7406b660197aa9559090bcaf516ad80fdce7a0";
   console.log("Comparing version " + v1 + " from commit " + commit1 + " with version " + v2 + " from commit " + commit2);
   const mySa1 = await SOA.create({ schemaVersion: v1, commit: commit1 });
   const mySa2 = await SOA.create({ schemaVersion: v2, commit: commit2 });
