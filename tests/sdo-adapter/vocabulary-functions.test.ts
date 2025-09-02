@@ -16,7 +16,6 @@ describe("SDO Adapter - Vocabulary functions", () => {
     await mySA.addVocabularies([VOC_OBJ_SDO_3_7, VOC_OBJ_GWON]);
     const testClass = mySA.getClass("namespace:AwesomePerson");
     expect(testClass.getName()).toEqual("validValue");
-    // await mySA.addVocabularies('http://noVocab.com')
     await expect(mySA.addVocabularies("http://noVocab.com")).rejects.toEqual(
       Error("The given URL http://noVocab.com did not contain a valid JSON-LD vocabulary.")
     );
@@ -24,6 +23,11 @@ describe("SDO Adapter - Vocabulary functions", () => {
     await expect(mySA.addVocabularies([true] as unknown as string)).rejects.toEqual(
       Error(
         "The first argument of the function must be an Array of vocabularies or a single vocabulary (JSON-LD as Object/String)"
+      )
+    );
+    await expect(mySA.addVocabularies("Test String that should trigger JSON.parse() to throw")).rejects.toEqual(
+      Error(
+        "Parsing of vocabulary string produced an invalid JSON-LD."
       )
     );
     await mySA.addVocabularies(JSON.stringify(VOC_OBJ_SDO_3_7)); // try stringified version

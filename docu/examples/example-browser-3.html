@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>SDO Adapter Test</title>
+</head>
+<body>
+<div style="padding: 100px; background-color: #8e908c; font-size: 18px; ">
+    <pre id="output">
+        Loading of multiple vocabularies...
+    </pre>
+</div>
+
+</body>
+<!--<script src="../../dist/schema-org-adapter.min.js"></script>-->
+<script src="../../dist/schema-org-adapter.js"></script>
+<!--You can also use a CDN!-->
+<!--<script src="https://cdn.jsdelivr.net/gh/semantifyit/schema-org-adapter/dist/schema-org-adapter.min.js"></script>-->
+<script>
+  (async function() {
+    const externalVocabularies = [
+      "https://app-playground2.onlim.com/api/dvs/voc/uHSAQVjdHhca",
+      "https://app-playground2.onlim.com/api/dvs/voc/mCdVNONMWsvV",
+      "https://app-playground2.onlim.com/api/dvs/voc/sgezkXRUUtMx",
+      "https://app-playground2.onlim.com/api/dvs/voc/UZTXEBEGDWuk",
+      "https://app-playground2.onlim.com/api/dvs/voc/gIUTYyZUjBIx",
+    ];
+    const t1 = new Date();
+    let mySdoAdapter = await SOA.create({
+      schemaHttps: true,
+      schemaVersion: "latest",
+      vocabularies: externalVocabularies,
+      defaultFilter: {
+        schemaModuleExclude: "attic"
+      },
+      commit: "SEMANTIFY" // pull schema.org vocabulary from self-hosted semantify
+    });
+    const t2 = new Date();
+    document.getElementById("output").innerHTML = "Loading took "+(t2.getTime() - t1.getTime()) + " ms";
+  })();
+</script>
+</html>

@@ -1,3 +1,7 @@
+7.0.2 / 2025-09-02
+==================
+* Multiple vocabularies are fetched synchronously now. They will be added in the order they were passed to SDOAdapter, regardless of fetching completion order. This change should decrease the loading time for multiple vocabularies.
+
 7.0.1 / 2024-10-14
 ==================
 * The assigned vocabulary URL for a term (which can be requested with `.getVocabulary()`) will include namespaces that are blocklisted by default for the global function `.getVocabularies()` (e.g. `rdfs`, `owl`, `sosa`)

@@ -1,6 +1,7 @@
 import { SDOAdapter } from "./classes/SDOAdapter";
 import { fetchSchemaVersions, getLatestSchemaVersion, constructURLSchemaVocabulary } from "./classes/Infrastructure";
 import { ParamObjCreateSdoAdapter } from "./types/ParamObjCreateSdoAdapter.type";
+import { Vocabulary } from "./types/types";
 
 /**
  * Creates a new {@link SDOAdapter | SDO Adapter} instance. The optional {@link ParamObjCreateSdoAdapter | parameter object} can help you to pass settings to the SDO Adapter. Have a look to understand the possible settings and default values. The minimal setting you would like to pass is the schema.org vocabulary version you want to use.
@@ -17,13 +18,14 @@ import { ParamObjCreateSdoAdapter } from "./types/ParamObjCreateSdoAdapter.type"
  */
 async function create(paramObj?: ParamObjCreateSdoAdapter) {
   const newInstance = new SDOAdapter(paramObj);
+  const vocabulariesToAdd: (Vocabulary | string)[] = [];
   if (paramObj && paramObj.schemaVersion) {
-    const schemaUrl = await constructURLSchemaVocabulary(paramObj.schemaVersion, paramObj.schemaHttps, paramObj.commit);
-    await newInstance.addVocabularies(schemaUrl);
+    vocabulariesToAdd.push(await constructURLSchemaVocabulary(paramObj.schemaVersion, paramObj.schemaHttps, paramObj.commit));
   }
   if (paramObj && paramObj.vocabularies) {
-    await newInstance.addVocabularies(paramObj.vocabularies);
+    vocabulariesToAdd.push(...paramObj.vocabularies);
   }
+  await newInstance.addVocabularies(vocabulariesToAdd);
   return newInstance;
 }
 
