@@ -1,3 +1,7 @@
+7.1.1 / 2025-09-11
+==================
+* Removed an unused dependency
+
 7.1.0 / 2025-09-10
 ==================
 * Updated (dev-)dependencies
