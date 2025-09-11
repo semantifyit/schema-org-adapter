@@ -22,9 +22,8 @@ export abstract class Term {
    * @param graph - The underlying data graph to enable the methods of this Term
    */
   protected constructor(
-    // eslint-disable-next-line no-unused-vars
     protected readonly IRI: string,
-    // eslint-disable-next-line no-unused-vars
+
     protected readonly graph: Graph
   ) {}
 

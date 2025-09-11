@@ -27,7 +27,7 @@ async function main() {
   if (isString(voc2)) {
     voc2 = JSON.parse(voc2);
   }
-  const result: any = {};
+  const result: Record<string, object> = {};
   // context
   result.contextChanges = getDiff(voc1["@context"], voc2["@context"]);
   const g1 = voc1["@graph"];
@@ -53,7 +53,7 @@ async function main() {
   console.log(result);
 }
 
-function getDiff(obj1: any, obj2: any) {
+function getDiff(obj1: object, obj2: object) {
   const d = diff(sortObjValues(obj1), sortObjValues(obj2));
   const result = {};
   for (const k of Object.keys(d)) {
@@ -72,7 +72,7 @@ function getDiff(obj1: any, obj2: any) {
   return result;
 }
 
-function sortObjValues(obj: any) {
+function sortObjValues(obj: Array<object> | object | string) {
   if (Array.isArray(obj)) {
     let r1 = obj.sort();
     if (r1[0] && typeof r1[0] === "object" && r1[0]["@id"]) {

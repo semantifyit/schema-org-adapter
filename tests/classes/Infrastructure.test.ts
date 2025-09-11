@@ -19,12 +19,12 @@ describe("Infrastructure testing", () => {
   test("fetchSchemaVersions - file structure", async () => {
     const versionsFile = await SOA.fetchSchemaVersions(false, commit);
     debugFunc(versionsFile);
-    if(commit === SEMANTIFY_COMMIT){
+    if (commit === SEMANTIFY_COMMIT) {
       const vf = versionsFile as VersionsFileSemantify;
       expect(isObject(vf)).toBe(true);
       expect(isObject(vf?.latest)).toBe(true);
       expect(isArray(vf?.all)).toBe(true);
-      expect(vf?.all?.find(entry=> entry.schemaVersion === vf?.latest.schemaVersion)).toBeDefined();
+      expect(vf?.all?.find((entry) => entry.schemaVersion === vf?.latest.schemaVersion)).toBeDefined();
     } else {
       const vf = versionsFile as VersionsFile;
       expect(isObject(vf)).toBe(true);
@@ -37,8 +37,8 @@ describe("Infrastructure testing", () => {
 
   // Check if the latest version found in the versionsFile is also the latest valid version elaborated by the schema-org-adapter adapter (schema-org-adapter only marks a version as valid if the corresponding vocabulary file exists)
   test("fetchSchemaVersions - latestVersionIsCorrect", async () => {
-    if(commit === SEMANTIFY_COMMIT){
-      const versionsFile = await SOA.fetchSchemaVersions(false, commit) as VersionsFileSemantify;
+    if (commit === SEMANTIFY_COMMIT) {
+      const versionsFile = (await SOA.fetchSchemaVersions(false, commit)) as VersionsFileSemantify;
       if (!versionsFile) {
         throw new Error("SOA.fetchSchemaVersions() for commit: " + commit + " not working.");
       }
@@ -49,7 +49,7 @@ describe("Infrastructure testing", () => {
       // Check if the latest version is also available
       await axios.get(versionsFile.latest.iri);
     } else {
-      const versionsFile = await SOA.fetchSchemaVersions(false, commit) as VersionsFile;
+      const versionsFile = (await SOA.fetchSchemaVersions(false, commit)) as VersionsFile;
       if (!versionsFile) {
         throw new Error("SOA.fetchSchemaVersions() for commit: " + commit + " not working.");
       }
@@ -68,13 +68,13 @@ describe("Infrastructure testing", () => {
   // Checks if the version files returned from getFileNameForSchemaOrgVersion() really exist (if they can be fetched)
   test("fetchSchemaVersions - getAllVocabularyVersions", async () => {
     // this test makes only sense for the GitHub-hosted vocabularies
-    if(commit === SEMANTIFY_COMMIT){
+    if (commit === SEMANTIFY_COMMIT) {
       return;
     }
     // 2.0 - 3.0 have no jsonld
     // 3.1 - 8.0 have all-layers.jsonld (no https variant)
     // 9.0 + have schemaorg-all-http(s).jsonld
-    const versionsFile = await SOA.fetchSchemaVersions(false, commit) as VersionsFile;
+    const versionsFile = (await SOA.fetchSchemaVersions(false, commit)) as VersionsFile;
     if (!versionsFile) {
       throw new Error("SOA.fetchSchemaVersions() for commit: " + commit + " not working.");
     }

@@ -14,7 +14,6 @@ import { toArray } from "../utilities/general/toArray";
 import { ParamObjIRIList } from "../types/ParamObjIRIList.type";
 import { filterAndTransformIRIList } from "../utilities/general/filterAndTransformIRIList";
 import { checkFilterValidity } from "../utilities/reasoning/checkFilterValidity";
-import { Promise } from "core-js";
 
 /**
  * An **SDOAdapter** is an instance of the library itself that holds its own settings and vocabularies (specified by the user). Based on these internal settings and vocabularies the SDOAdapter provides corresponding data through the methods described below (an SDOAdapter can only provide data about a vocabulary, if that vocabulary has been added to the instance). An SDOAdapter instance is created with {@link create | .create()}, have a look at the different settings.
@@ -51,7 +50,7 @@ export class SDOAdapter {
     if (typeof paramObj?.onError === "function") {
       this.onError = paramObj.onError;
     } else {
-      this.onError = function() {
+      this.onError = function () {
         // do nothing; The users should pass their own function to handle unexpected errors, they have else no way to hide automatic error messages once the SDO Adapter is compiled
       };
     }
@@ -98,23 +97,28 @@ export class SDOAdapter {
     vocabArray = toArray(vocabArray);
     // 1. Fetch if needed (asynchronous)
     const promises: Promise<{
-      vocab: Vocabulary, vocabURL?: string
+      vocab: Vocabulary;
+      vocabURL?: string;
     }>[] = [];
     // check every vocab if it is a valid JSON-LD. If string -> try to JSON.parse()
     for (const vocab of vocabArray) {
       if (isString(vocab)) {
         if ((vocab as string).startsWith("www") || (vocab as string).startsWith("http")) {
           // assume it is a URL
-          promises.push(new Promise((resolve, reject) => {
-            this.fetchVocabularyFromURL(vocab).then(fetchedVocab => {
-              if (isString(fetchedVocab)) {
-                fetchedVocab = JSON.parse(fetchedVocab as string); // try to parse the fetched content as JSON
-              }
-              resolve({ vocab: fetchedVocab as Vocabulary, vocabURL: vocab });
-            }).catch(() => {
-              reject("The given URL " + vocab + " did not contain a valid JSON-LD vocabulary.");
-            });
-          }));
+          promises.push(
+            new Promise((resolve, reject) => {
+              this.fetchVocabularyFromURL(vocab)
+                .then((fetchedVocab) => {
+                  if (isString(fetchedVocab)) {
+                    fetchedVocab = JSON.parse(fetchedVocab as string); // try to parse the fetched content as JSON
+                  }
+                  resolve({ vocab: fetchedVocab as Vocabulary, vocabURL: vocab });
+                })
+                .catch(() => {
+                  reject("The given URL " + vocab + " did not contain a valid JSON-LD vocabulary.");
+                });
+            })
+          );
         } else {
           // assume it is a string-version of a JSON-LD
           try {
@@ -133,13 +137,15 @@ export class SDOAdapter {
       }
     }
     // 2. add vocabularies in expected order (synchronous)
-    await Promise.all(promises).then(async (values) => {
-      for (const v of values) {
-        await this.graph.addVocabulary(v.vocab, v.vocabURL);
-      }
-    }).catch(e => {
-      throw new Error(e);
-    });
+    await Promise.all(promises)
+      .then(async (values) => {
+        for (const v of values) {
+          await this.graph.addVocabulary(v.vocab, v.vocabURL);
+        }
+      })
+      .catch((e) => {
+        throw new Error(e);
+      });
     return true;
   }
 

@@ -26,9 +26,7 @@ describe("SDO Adapter - Vocabulary functions", () => {
       )
     );
     await expect(mySA.addVocabularies("Test String that should trigger JSON.parse() to throw")).rejects.toEqual(
-      Error(
-        "Parsing of vocabulary string produced an invalid JSON-LD."
-      )
+      Error("Parsing of vocabulary string produced an invalid JSON-LD.")
     );
     await mySA.addVocabularies(JSON.stringify(VOC_OBJ_SDO_3_7)); // try stringified version
   });

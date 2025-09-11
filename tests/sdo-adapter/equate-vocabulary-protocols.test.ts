@@ -23,7 +23,7 @@ describe("SDO Adapter - equateVocabularyProtocols", () => {
 
   test("schemaHttps 2", async () => {
     // this test makes only sense for the GitHub-hosted vocabularies
-    if(commit === SEMANTIFY_COMMIT){
+    if (commit === SEMANTIFY_COMMIT) {
       return;
     }
     const mySA = new SDOAdapter({
@@ -43,7 +43,7 @@ describe("SDO Adapter - equateVocabularyProtocols", () => {
 
   test("schemaHttps with incompatible version", async () => {
     // this test makes only sense for the GitHub-hosted vocabularies
-    if(commit === SEMANTIFY_COMMIT){
+    if (commit === SEMANTIFY_COMMIT) {
       return;
     }
     const mySA = new SDOAdapter({
@@ -63,7 +63,7 @@ describe("SDO Adapter - equateVocabularyProtocols", () => {
 
   test("https not equated", async () => {
     // this test makes only sense for the GitHub-hosted vocabularies
-    if(commit === SEMANTIFY_COMMIT){
+    if (commit === SEMANTIFY_COMMIT) {
       return;
     }
     const mySA = new SDOAdapter({
@@ -99,7 +99,7 @@ describe("SDO Adapter - equateVocabularyProtocols", () => {
 
   test("https equated", async () => {
     // this test makes only sense for the GitHub-hosted vocabularies
-    if(commit === SEMANTIFY_COMMIT){
+    if (commit === SEMANTIFY_COMMIT) {
       return;
     }
     const mySA = new SDOAdapter({
@@ -123,7 +123,7 @@ describe("SDO Adapter - equateVocabularyProtocols", () => {
 
   test("http equated multiple vocabs", async () => {
     // this test makes only sense for the GitHub-hosted vocabularies
-    if(commit === SEMANTIFY_COMMIT){
+    if (commit === SEMANTIFY_COMMIT) {
       return;
     }
     const mySA = new SDOAdapter({
@@ -141,7 +141,7 @@ describe("SDO Adapter - equateVocabularyProtocols", () => {
 
   test("http not equated multiple vocabs", async () => {
     // this test makes only sense for the GitHub-hosted vocabularies
-    if(commit === SEMANTIFY_COMMIT){
+    if (commit === SEMANTIFY_COMMIT) {
       return;
     }
     const mySA = new SDOAdapter({
@@ -159,7 +159,7 @@ describe("SDO Adapter - equateVocabularyProtocols", () => {
 
   test("http equated multiple vocabs 2", async () => {
     // this test makes only sense for the GitHub-hosted vocabularies
-    if(commit === SEMANTIFY_COMMIT){
+    if (commit === SEMANTIFY_COMMIT) {
       return;
     }
     const mySA = new SDOAdapter({
@@ -177,7 +177,7 @@ describe("SDO Adapter - equateVocabularyProtocols", () => {
 
   test("http not equated multiple vocabs 2", async () => {
     // this test makes only sense for the GitHub-hosted vocabularies
-    if(commit === SEMANTIFY_COMMIT){
+    if (commit === SEMANTIFY_COMMIT) {
       return;
     }
     const mySA = new SDOAdapter({
@@ -194,7 +194,7 @@ describe("SDO Adapter - equateVocabularyProtocols", () => {
 
   test("http equated multiple vocabs 3", async () => {
     // this test makes only sense for the GitHub-hosted vocabularies
-    if(commit === SEMANTIFY_COMMIT){
+    if (commit === SEMANTIFY_COMMIT) {
       return;
     }
     const mySA = new SDOAdapter({
@@ -212,7 +212,7 @@ describe("SDO Adapter - equateVocabularyProtocols", () => {
 
   test("http not equated multiple vocabs 3", async () => {
     // this test makes only sense for the GitHub-hosted vocabularies
-    if(commit === SEMANTIFY_COMMIT){
+    if (commit === SEMANTIFY_COMMIT) {
       return;
     }
     const mySA = new SDOAdapter({

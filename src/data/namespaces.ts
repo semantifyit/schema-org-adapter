@@ -94,7 +94,7 @@ export type TermType = keyof typeof TermTypeLabel;
  * @privateRemarks
  * Type for values of TermTypeLabel
  */
-export type TermTypeLabelValue = typeof TermTypeLabel[TermType];
+export type TermTypeLabelValue = (typeof TermTypeLabel)[TermType];
 
 export function isTermTypeLabelValue(value: string): value is TermTypeLabelValue {
   return Object.values(TermTypeLabel).includes(value as TermTypeLabelValue);
@@ -110,7 +110,7 @@ export function isTermTypeLabelValue(value: string): value is TermTypeLabelValue
  * @privateRemarks
  * Type for values of TermTypeIRI
  */
-export type TermTypeIRIValue = typeof TermTypeIRI[TermType];
+export type TermTypeIRIValue = (typeof TermTypeIRI)[TermType];
 
 export function isTermTypeIRIValue(value: string): value is TermTypeIRIValue {
   return Object.values(TermTypeIRI).includes(value as TermTypeIRIValue);

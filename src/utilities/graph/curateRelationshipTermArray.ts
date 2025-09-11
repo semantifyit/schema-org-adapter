@@ -1,4 +1,4 @@
-import { VocabularyNode } from "../../types/types";
+import { VocabularyNode, VocabularyNodeKey } from "../../types/types";
 import { TermTypeIRIValue } from "../../data/namespaces";
 import { isString } from "../general/isString";
 import { isArray } from "../general/isArray";
@@ -12,7 +12,7 @@ import { isArray } from "../general/isArray";
  */
 export function curateRelationshipTermArray(
   vocabNode: VocabularyNode,
-  term: string,
+  term: VocabularyNodeKey,
   initDefaultIf: TermTypeIRIValue
 ): void {
   // the relationships should always be an array, even for 1 and 0 (if the @type of the vocabulary node matches) values
@@ -27,6 +27,6 @@ export function curateRelationshipTermArray(
   }
   // remove terms that are defined as subclasses of themselves (see vocabulary-animal-altered-2.json for details)
   if (isArray(vocabNode[term])) {
-    vocabNode[term] = vocabNode[term].filter((iri: string) => iri !== vocabNode["@id"]);
+    vocabNode[term] = vocabNode[term].filter((iri) => iri !== vocabNode["@id"]);
   }
 }

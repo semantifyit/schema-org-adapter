@@ -5,7 +5,6 @@ import { OutputIRIType } from "./OutputIRIType.type";
 
 /** @ignore */
 export interface ErrorFunction {
-  // eslint-disable-next-line no-unused-vars
   (msg: string): void;
 }
 
@@ -77,7 +76,10 @@ export type ContextEntry = ContextWord | ContextObject;
 export type Context = Record<string, ContextEntry>;
 
 /** @ignore */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type VocabularyNode = Record<string, any>;
+/** @ignore */
+export type VocabularyNodeKey = keyof VocabularyNode;
 
 export type Vocabulary = {
   "@context": Context;
@@ -96,15 +98,15 @@ export interface VersionsFile {
 
 /** @ignore */
 interface VersionsFileSemantifyItem {
-  schemaVersion: string, // version identifier
-  iri: string,  // url to vocabulary
-  lastUpdate: string, // ISO datetime string
+  schemaVersion: string; // version identifier
+  iri: string; // url to vocabulary
+  lastUpdate: string; // ISO datetime string
 }
 
 /** @ignore */
 export interface VersionsFileSemantify {
-  latest: VersionsFileSemantifyItem,
-  all: VersionsFileSemantifyItem[]
+  latest: VersionsFileSemantifyItem;
+  all: VersionsFileSemantifyItem[];
 }
 
 /** @ignore */

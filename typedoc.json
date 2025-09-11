@@ -1,16 +1,20 @@
 {
   "out": "docs",
   "entryPoints": [
-    "./src/"
+    "./src/classes/",
+    "./src/dist.ts",
+    "./src/types/",
+    "./src/data/namespaces.ts",
+    "./src/data/schemaModules.ts"
   ],
-  "entryPointStrategy": "Expand",
+  "entryPointStrategy": "expand",
   "tsconfig": "./src/tsconfig.json",
   "disableSources": true,
-  "excludeTags": [
-    "privateremarks"
-  ],
   "hideGenerator": true,
   "customCss": "./docu/typedoc.css",
   "readme": "./docu/docuReadme.md",
-  "name": "Schema.org Adapter"
+  "name": "Schema.org Adapter",
+  "plugin": ["typedoc-plugin-merge-modules"],
+  "mergeModulesRenameDefaults": true,
+  "mergeModulesMergeMode": "project"
 }

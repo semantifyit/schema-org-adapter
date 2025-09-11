@@ -1,3 +1,9 @@
+7.1.0 / 2025-09-10
+==================
+* Updated (dev-)dependencies
+* Dist files are smaller now
+* Updated documentation and examples
+
 7.0.2 / 2025-09-02
 ==================
 * Multiple vocabularies are fetched synchronously now. They will be added in the order they were passed to SDOAdapter, regardless of fetching completion order. This change should decrease the loading time for multiple vocabularies.
