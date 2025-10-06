@@ -6,6 +6,8 @@ import {
   SdoAdapterMap
 } from "../resources/utilities/testUtilities";
 import { SDOAdapter } from "../../src";
+import { SOA } from "../../src/";
+import VOC_OBJ_ZOO_1 from "../resources/data/vocabularies/vocabulary-animal-dvs-extend-enum-member.json";
 
 /**
  *  Tests regarding the JS-Class for "EnumerationMember"
@@ -166,5 +168,23 @@ describe("EnumerationMember tests - All schema versions", () => {
       expect(eventPostponedEM.isValidEnumerationMemberOf("EventStatusType", true)).toBeTruthy();
       expect(eventPostponedEM.isValidEnumerationMemberOf("schema:EventStatusType", false)).toBeTruthy();
     });
+  });
+
+  // what if a vocabulary only extends an already existing enumeration member?
+  // is the @type (enumeration domain(s)) also required?
+  // decision: Yes, we need the @type to identify the enumeration member as such
+  test("enumeration member extension", async () => {
+    const sdoAdapter = await SOA.create({
+      vocabularies: [VOC_OBJ_ZOO_1]
+    })
+    const obj1 = sdoAdapter.getEnumerationMember("ex:AnimalLivingEnvironmentDomestic2");
+    expect(obj1.getDomainEnumerations()).toEqual(["ex:AnimalLivingEnvironment"]);
+    // SDO Adapter does NOT identify the next term as Enumeration Member (or even as Term), because no @type was given
+    expect(() => {
+      sdoAdapter.getTerm("ex:AnimalLivingEnvironmentDomestic3");
+    }).toThrow();
+    expect(() => {
+      sdoAdapter.getEnumerationMember("schema:Monday");
+    }).toThrow();
   });
 });

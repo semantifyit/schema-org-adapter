@@ -6,8 +6,8 @@ main();
 async function main() {
   const v1 = "29.1"; // 3.1 is the lowest version possible
   const commit1 = "4d57f1f4d8dba156d40509c52d84624912bcafe0";
-  const v2 = "29.2";
-  const commit2 = "4605d2024ea48ead95af78c3f271052619bdff30";
+  const v2 = "29.3";
+  const commit2 = "d5ed5b8de39127c42cc7e252f242e4eb5e862996";
   console.log("Comparing version " + v1 + " from commit " + commit1 + " with version " + v2 + " from commit " + commit2);
   const mySa1 = await SOA.create({ schemaVersion: v1, commit: commit1 });
   const mySa2 = await SOA.create({ schemaVersion: v2, commit: commit2 });
