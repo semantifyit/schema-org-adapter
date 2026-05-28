@@ -3,9 +3,6 @@
 <b>Fast, simple & flexible API for the Schema.org Vocabulary (and vocabulary extensions!) for Node and Browsers</b>
 <br><br>
 <a href="https://www.typescriptlang.org/"><img src="https://img.shields.io/npm/types/scrub-js.svg" alt="Built with TypeScript" /></a>
-<a href="https://github.com/semantifyit/schema-org-adapter/issues"><img src="https://img.shields.io/github/issues/semantifyit/schema-org-adapter.svg" alt="Issues open" /></a>
-<a href="https://eslint.org/"><img src="https://img.shields.io/badge/code%20style-ESLint-brightgreen" alt="Code style in ESLint" /></a>
-<br>
 <a href="https://www.npmjs.com/package/schema-org-adapter" rel="nofollow"><img src="https://img.shields.io/npm/v/schema-org-adapter.svg" alt="NPM Version"></a>
 <a href="https://www.apache.org/licenses/LICENSE-2.0"><img src="https://img.shields.io/badge/License-Apache%202.0-blue.svg" alt="License: CC BY-SA 4.0" /></a>
 </div>

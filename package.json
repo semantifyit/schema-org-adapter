@@ -80,14 +80,6 @@
     "preset": "ts-jest/presets/js-with-ts",
     "testEnvironment": "node",
     "testTimeout": 300000,
-    "collectCoverage": true,
-    "collectCoverageFrom": [
-      "src/**/*.ts"
-    ],
-    "coverageDirectory": "docu/coverage",
-    "coverageReporters": [
-      "json-summary"
-    ],
     "transform": {
       "^.+\\.tsx?$": [
         "ts-jest",
