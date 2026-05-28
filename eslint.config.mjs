@@ -1,5 +1,5 @@
 import { defineConfig, globalIgnores } from "eslint/config";
-import jest from "eslint-plugin-jest";
+import vitest from "@vitest/eslint-plugin";
 import prettier from "eslint-plugin-prettier";
 import typescriptEslint from "@typescript-eslint/eslint-plugin";
 import globals from "globals";
@@ -28,20 +28,17 @@ export default defineConfig([
   ]), {
     extends: compat.extends(
       "plugin:@typescript-eslint/recommended",
-      "prettier",
-      "plugin:jest/recommended"
+      "prettier"
     ),
     plugins: {
-      jest,
+      vitest,
       prettier,
       "@typescript-eslint": typescriptEslint
     },
     languageOptions: {
       globals: {
         ...globals.node,
-        ...globals.browser,
-        ...globals.jest,
-        ...jest.environments.globals.globals
+        ...globals.browser
       },
       parser: tsParser,
       ecmaVersion: 2020,
@@ -52,6 +49,7 @@ export default defineConfig([
       }
     },
     rules: {
+      ...vitest.configs.recommended.rules,
       "spaced-comment": ["warn", "always", {
         block: {
           balanced: true,

@@ -1,3 +1,4 @@
+import { describe, expect, test } from "vitest";
 import { debugFunc } from "../../resources/utilities/testUtilities";
 import { isString } from "../../../src/utilities/general/isString";
 import { isArray } from "../../../src/utilities/general/isArray";

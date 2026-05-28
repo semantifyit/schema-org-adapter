@@ -1,3 +1,4 @@
+import { describe, expect, test } from "vitest";
 import { Graph } from "../../src/classes/Graph";
 import VOC_OBJ_ZOO from "../resources/data/vocabularies/vocabulary-animal.json";
 import VOC_OBJ_ZOO_DVS from "../resources/data/vocabularies/vocabulary-animal-dvs.json";

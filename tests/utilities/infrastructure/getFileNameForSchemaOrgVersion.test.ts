@@ -1,3 +1,4 @@
+import { describe, expect, test } from "vitest";
 import { getFileNameForSchemaOrgVersion } from "../../../src/utilities/infrastructure/getFileNameForSchemaOrgVersion";
 
 describe("getFileNameForSchemaOrgVersion()", () => {
@@ -35,12 +36,12 @@ describe("getFileNameForSchemaOrgVersion()", () => {
     for (const currVersion of Object.entries(expectedFileMapping)) {
       if (currVersion[1] === null) {
         // expect to fail (You must wrap the code in a function, otherwise the error will not be caught and the assertion will fail.)
-        // eslint-disable-next-line jest/no-conditional-expect
+        // eslint-disable-next-line vitest/no-conditional-expect
         expect(() => {
           getFileNameForSchemaOrgVersion(currVersion[0]);
         }).toThrow();
       } else {
-        // eslint-disable-next-line jest/no-conditional-expect
+        // eslint-disable-next-line vitest/no-conditional-expect
         expect(getFileNameForSchemaOrgVersion(currVersion[0])).toBe(
           currVersion[1]
         );

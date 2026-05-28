@@ -6,6 +6,6 @@ export function getGitHubBaseURL(commit?: string) {
   if (commit) {
     return "https://raw.githubusercontent.com/schemaorg/schemaorg/" + commit;
   } else {
-    return "https://raw.githubusercontent.com/semantifyit/schemaorg/main";
+    return "https://raw.githubusercontent.com/semantifyit/schemaorg/main"; // legacy - is not updated anymore
   }
 }

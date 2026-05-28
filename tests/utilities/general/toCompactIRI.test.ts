@@ -1,3 +1,4 @@
+import { describe, expect, test } from "vitest";
 import { toCompactIRI } from "../../../src/utilities/general/toCompactIRI";
 import CONTEXT_1 from "../../resources/data/context/test-context.json";
 

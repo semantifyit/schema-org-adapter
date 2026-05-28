@@ -1,3 +1,4 @@
+import { beforeAll, describe, expect, test } from "vitest";
 import { SDOAdapter } from "../../src";
 import { isObject } from "../../src/utilities/general/isObject";
 import {
@@ -203,7 +204,7 @@ describe("Property tests - All schema versions", () => {
         const thisInverse = actProp.getInverseOf();
         if (thisInverse) {
           const inverseProp = sdoAdapter.getProperty(thisInverse);
-          // eslint-disable-next-line jest/no-conditional-expect
+          // eslint-disable-next-line vitest/no-conditional-expect
           expect(inverseProp).toBeDefined();
           // Basically a cool test to check bijection, but there are early versions of schema.org that don't hold this assumption
           // const thisProp = actProp.getIRI(true);
@@ -211,7 +212,7 @@ describe("Property tests - All schema versions", () => {
           // debugFunc(
           //   thisProp + " -> " + thisInverse + " -> " + inversePropInverse
           // );
-          // // eslint-disable-next-line jest/no-conditional-expect
+          // // eslint-disable-next-line vitest/no-conditional-expect
           // expect(inversePropInverse).toBe(thisProp);
         }
       }

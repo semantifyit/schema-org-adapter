@@ -1,3 +1,4 @@
+import { describe, expect, test } from "vitest";
 import { SOA } from "../../../src";
 import VOC_OBJ_ZOO_A2 from "../../resources/data/vocabularies/vocabulary-animal-altered-2.json";
 

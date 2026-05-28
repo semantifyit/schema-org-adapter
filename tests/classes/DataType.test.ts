@@ -1,3 +1,4 @@
+import { beforeAll, describe, expect, test } from "vitest";
 import {
   executeTestForEach,
   initializeSdoAdapterMap,
@@ -46,7 +47,7 @@ describe("DataType tests - All schema versions", () => {
       if (sdoAdapter.getListOfDataTypes().includes("schema:CssSelectorType")) {
         // is a new datatype with a source, not existent in older vocabulary versions
         const cssSelectorType = sdoAdapter.getDataType("schema:CssSelectorType");
-        // eslint-disable-next-line jest/no-conditional-expect
+        // eslint-disable-next-line vitest/no-conditional-expect
         expect(cssSelectorType.getSource()).toBe("https://github.com/schemaorg/schemaorg/issues/1672");
       }
       const number = sdoAdapter.getDataType("schema:Number");

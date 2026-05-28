@@ -1,3 +1,4 @@
+import { describe, expect, test } from "vitest";
 import { SOA, VersionsFile, VersionsFileSemantify } from "../../src";
 import axios from "axios";
 import { debugFunc, commit } from "../resources/utilities/testUtilities";
@@ -9,7 +10,7 @@ import { sortReleaseEntriesByDate } from "../../src/utilities/infrastructure/sor
 import { SEMANTIFY_COMMIT } from "../../src/data/semantify";
 import { isArray } from "../../src/utilities/general/isArray";
 
-/* eslint-disable jest/no-conditional-expect */
+/* eslint-disable vitest/no-conditional-expect */
 
 /**
  *  These tests check the retrieving of data from schema.org to ensure the correct functionality of vocabulary version determination and usage

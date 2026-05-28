@@ -1,3 +1,4 @@
+import { describe, expect, test } from "vitest";
 import { toAbsoluteIRI } from "../../../src/utilities/general/toAbsoluteIRI";
 import CONTEXT_1 from "../../resources/data/context/test-context.json"
 

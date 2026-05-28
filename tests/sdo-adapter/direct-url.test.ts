@@ -1,3 +1,4 @@
+import { describe, expect, test } from "vitest";
 import { SDOAdapter } from "../../src/classes/SDOAdapter";
 import { commit, debugFunc, debugFuncErr } from "../resources/utilities/testUtilities";
 
@@ -33,15 +34,15 @@ describe("SDO Adapter - Direct URL", () => {
 
     const mySaError = new SDOAdapter();
 
-    await expect(async () => await mySaError.fetchVocabularyFromURL("http://www.fantasyurl.test")).rejects.toThrow(
+    await expect(mySaError.fetchVocabularyFromURL("http://www.fantasyurl.test")).rejects.toThrow(
       "Could not find any resource at the given URL."
     );
 
-    await expect(async () => await mySaError.addVocabularies("http://www.fantasyurl.test")).rejects.toThrow(
+    await expect(mySaError.addVocabularies("http://www.fantasyurl.test")).rejects.toThrow(
       "The given URL http://www.fantasyurl.test did not contain a valid JSON-LD vocabulary."
     );
 
-    await expect(async () => await mySaError.addVocabularies("https://typedoc.org/")).rejects.toThrow(
+    await expect(mySaError.addVocabularies("https://typedoc.org/")).rejects.toThrow(
       "The given URL https://typedoc.org/ did not contain a valid JSON-LD vocabulary."
     );
   });

@@ -1,3 +1,4 @@
+import { describe, expect, test } from "vitest";
 import { FilterObject, SOA } from "../../../src";
 import { testSdoAdapter } from "../../resources/utilities/testUtilities";
 import VOC_OBJ_ZOO from "../../resources/data/vocabularies/vocabulary-animal.json";

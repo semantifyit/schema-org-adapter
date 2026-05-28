@@ -1,3 +1,4 @@
+import { describe, expect, test } from "vitest";
 import { FilterObject, SOA } from "../src/index";
 import { commit, debugFuncErr } from "./resources/utilities/testUtilities";
 import VOC_OBJ_SDO_3_7 from "./resources/data/vocabularies/schema/schema-3.7.json";

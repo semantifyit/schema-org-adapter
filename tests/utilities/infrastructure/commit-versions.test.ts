@@ -1,3 +1,4 @@
+import { describe, expect, test } from "vitest";
 import { SDOAdapter, SOA } from "../../../src";
 import { SEMANTIFY_COMMIT } from "../../../src/data/semantify";
 

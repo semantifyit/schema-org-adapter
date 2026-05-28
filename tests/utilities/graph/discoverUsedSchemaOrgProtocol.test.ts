@@ -1,3 +1,4 @@
+import { describe, expect, test } from "vitest";
 import { discoverUsedSchemaOrgProtocol } from "../../../src/utilities/graph/discoverUsedSchemaOrgProtocol";
 import VOC_OBJ_ZOO from "../../resources/data/vocabularies/vocabulary-animal.json";
 import VOC_OBJ_ZOO_2 from "../../resources/data/vocabularies/vocabulary-animal-2.json";

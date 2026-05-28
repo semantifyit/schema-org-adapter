@@ -1,3 +1,4 @@
+import { describe, expect, test } from "vitest";
 import { testSdoAdapter } from "../resources/utilities/testUtilities";
 import VOC_OBJ_ODTA_NEW from "../resources/data/vocabularies/odta-new-context.json";
 import VOC_OBJ_20 from "../resources/data/vocabularies/schema/schema-20.0.json";

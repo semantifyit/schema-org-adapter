@@ -1,3 +1,4 @@
+import { describe, expect, test } from "vitest";
 import { SDOAdapter } from "../../src/classes/SDOAdapter";
 import { commit, debugFuncErr } from "../resources/utilities/testUtilities";
 import VOC_OBJ_ZOO from "../resources/data/vocabularies/vocabulary-animal.json";

@@ -1,3 +1,4 @@
+import { describe, expect, test } from "vitest";
 import { discoverEquateNamespaces } from "../../../src/utilities/graph/discoverEquateNamespaces";
 import VOC_OBJ_ZOO from "../../resources/data/vocabularies/vocabulary-animal.json";
 import VOC_OBJ_ZOO_2 from "../../resources/data/vocabularies/vocabulary-animal-2.json";

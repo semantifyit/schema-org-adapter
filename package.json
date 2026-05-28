@@ -13,10 +13,10 @@
     "buildTs": "tsc -b src",
     "buildDist": "browserify lib/dist.js -p esmify -s SOA > dist/schema-org-adapter.js",
     "buildDistMinified": "browserify lib/dist.js -p esmify -s SOA | terser --compress --mangle > dist/schema-org-adapter.min.js",
-    "testSemantifyRepo": "COMMIT=SEMANTIFY jest",
-    "testSoaRepo": "jest",
-    "testSchemaRepo": "COMMIT=d5ed5b8de39127c42cc7e252f242e4eb5e862996 jest",
-    "testSchemaRepoInfra": "COMMIT=d5ed5b8de39127c42cc7e252f242e4eb5e862996 jest tests/classes/Infrastructure.test.ts",
+    "testSemantifyRepo": "COMMIT=SEMANTIFY vitest run",
+    "testSoaRepo": "vitest run",
+    "testSchemaRepo": "COMMIT=d5ed5b8de39127c42cc7e252f242e4eb5e862996 vitest run",
+    "testSchemaRepoInfra": "COMMIT=d5ed5b8de39127c42cc7e252f242e4eb5e862996 vitest run tests/classes/Infrastructure.test.ts",
     "buildTestExperimental1": "tsc tests/experimental/vocabulary-comparison.ts",
     "runTestExperimental1": "node tests/experimental/vocabulary-comparison.js",
     "eslint-check": "eslint src/**/*.ts tests/**/*.ts",
@@ -54,8 +54,8 @@
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.1",
     "@eslint/js": "^9.35.0",
-    "@types/jest": "^30.0.0",
     "@types/jsonld": "^1.5.15",
+    "@vitest/eslint-plugin": "^1.1.44",
     "@typescript-eslint/eslint-plugin": "^8.43.0",
     "@typescript-eslint/parser": "^8.43.0",
     "browserify": "^17.0.1",
@@ -63,31 +63,16 @@
     "eslint": "^9.35.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-es": "^4.1.0",
-    "eslint-plugin-jest": "^29.0.1",
     "eslint-plugin-prettier": "^5.5.4",
     "esmify": "^2.1.1",
     "globals": "^14.0.0",
-    "jest": "^29.7.0",
     "prettier": "^3.6.2",
     "rimraf": "^6.0.1",
     "terser": "^4.8.1",
-    "ts-jest": "^29.4.1",
     "typedoc": "^0.28.12",
     "typedoc-plugin-merge-modules": "^7.0.0",
-    "typescript": "^5.9.2"
-  },
-  "jest": {
-    "preset": "ts-jest/presets/js-with-ts",
-    "testEnvironment": "node",
-    "testTimeout": 300000,
-    "transform": {
-      "^.+\\.tsx?$": [
-        "ts-jest",
-        {
-          "tsconfig": "./tests/tsconfig.json"
-        }
-      ]
-    }
+    "typescript": "^5.9.2",
+    "vitest": "^2.1.9"
   },
   "files": [
     "lib/*",
