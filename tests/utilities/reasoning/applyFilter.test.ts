@@ -65,46 +65,62 @@ describe("applyFilter()", () => {
     expect(mySA.getListOfProperties({ filter: filter11 })).toContain("schema:aspect");
     expect(mySA.getListOfDataTypes({ filter: filter13 })).toContain("schema:Text");
 
-    expect(mySA.getListOfProperties({
-      filter: {
-        termTypeExclude: "Class"
-      }
-    })).toContain("schema:aspect");
-    expect(mySA.getListOfProperties({
-      filter: {
-        termTypeExclude: ["Enumeration"]
-      }
-    })).toContain("schema:aspect");
-    expect(mySA.getListOfProperties({
-      filter: {
-        termTypeExclude: ["Property"]
-      }
-    })).not.toContain("schema:aspect");
-    expect(mySA.getListOfProperties({
-      filter: {
-        termTypeExclude: ["Property"]
-      }
-    })).toHaveLength(0);
-    expect(mySA.getListOfProperties({
-      filter: {
-        fromVocabularyExclude: ["ex"]
-      }
-    })).toContain("schema:aspect");
-    expect(mySA.getListOfProperties({
-      filter: {
-        fromVocabularyExclude: ["ex"]
-      }
-    })).not.toContain("ex:animalLivingEnvironment");
-    expect(mySA.getListOfProperties({
-      filter: {
-        fromVocabularyExclude: ["schema"]
-      }
-    })).toContain("ex:animalLivingEnvironment");
-    expect(mySA.getListOfProperties({
-      filter: {
-        fromVocabularyExclude: ["schema"]
-      }
-    })).not.toContain("schema:aspect");
+    expect(
+      mySA.getListOfProperties({
+        filter: {
+          termTypeExclude: "Class"
+        }
+      })
+    ).toContain("schema:aspect");
+    expect(
+      mySA.getListOfProperties({
+        filter: {
+          termTypeExclude: ["Enumeration"]
+        }
+      })
+    ).toContain("schema:aspect");
+    expect(
+      mySA.getListOfProperties({
+        filter: {
+          termTypeExclude: ["Property"]
+        }
+      })
+    ).not.toContain("schema:aspect");
+    expect(
+      mySA.getListOfProperties({
+        filter: {
+          termTypeExclude: ["Property"]
+        }
+      })
+    ).toHaveLength(0);
+    expect(
+      mySA.getListOfProperties({
+        filter: {
+          fromVocabularyExclude: ["ex"]
+        }
+      })
+    ).toContain("schema:aspect");
+    expect(
+      mySA.getListOfProperties({
+        filter: {
+          fromVocabularyExclude: ["ex"]
+        }
+      })
+    ).not.toContain("ex:animalLivingEnvironment");
+    expect(
+      mySA.getListOfProperties({
+        filter: {
+          fromVocabularyExclude: ["schema"]
+        }
+      })
+    ).toContain("ex:animalLivingEnvironment");
+    expect(
+      mySA.getListOfProperties({
+        filter: {
+          fromVocabularyExclude: ["schema"]
+        }
+      })
+    ).not.toContain("schema:aspect");
   });
 
   // applyFilter with partial vocabulary (referenced terms are not part of the current vocabulary)
@@ -116,40 +132,56 @@ describe("applyFilter()", () => {
     expect(enum1.getSuperClasses()).toContain("schema:Enumeration");
     // schema:Enumeration is a Class, but this can't be known by the filterFunction since schema:Enumeration itself is not present in the external vocabulary. In strict mode it will always be filtered out, in non-strict mode it will always be included
     expect(enum1.getSuperClasses({ filter: { termType: ["Class"] } })).not.toContain("schema:Enumeration");
-    expect(enum1.getSuperClasses({
-      filter: {
-        termType: ["Class"],
-        strictMode: true
-      }
-    })).not.toContain("schema:Enumeration");
-    expect(enum1.getSuperClasses({
-      filter: {
-        termType: ["Enumeration"],
-        strictMode: true
-      }
-    })).not.toContain("schema:Enumeration");
-    expect(enum1.getSuperClasses({
-      filter: {
-        termType: ["Class"],
-        strictMode: false
-      }
-    })).toContain("schema:Enumeration");
-    expect(enum1.getSuperClasses({
-      filter: {
-        termType: ["Enumeration"],
-        strictMode: false
-      }
-    })).toContain("schema:Enumeration");
+    expect(
+      enum1.getSuperClasses({
+        filter: {
+          termType: ["Class"],
+          strictMode: true
+        }
+      })
+    ).not.toContain("schema:Enumeration");
+    expect(
+      enum1.getSuperClasses({
+        filter: {
+          termType: ["Enumeration"],
+          strictMode: true
+        }
+      })
+    ).not.toContain("schema:Enumeration");
+    expect(
+      enum1.getSuperClasses({
+        filter: {
+          termType: ["Class"],
+          strictMode: false
+        }
+      })
+    ).toContain("schema:Enumeration");
+    expect(
+      enum1.getSuperClasses({
+        filter: {
+          termType: ["Enumeration"],
+          strictMode: false
+        }
+      })
+    ).toContain("schema:Enumeration");
     // the filter for vocabulary filter doesn't need the term, so, in non-strict mode, it should include unknown terms only when the vocabulary matches
     expect(enum1.getSuperClasses({ filter: { fromVocabulary: ["schema"] } })).not.toContain("schema:Enumeration");
-    expect(enum1.getSuperClasses({ filter: { fromVocabulary: ["schema"], strictMode: true } })).not.toContain("schema:Enumeration");
-    expect(enum1.getSuperClasses({ filter: { fromVocabulary: ["ex"], strictMode: true } })).not.toContain("schema:Enumeration");
-    expect(enum1.getSuperClasses({ filter: { fromVocabulary: ["schema"], strictMode: false } })).toContain("schema:Enumeration");
-    expect(enum1.getSuperClasses({ filter: { fromVocabulary: ["ex"], strictMode: false } })).not.toContain("schema:Enumeration");
+    expect(enum1.getSuperClasses({ filter: { fromVocabulary: ["schema"], strictMode: true } })).not.toContain(
+      "schema:Enumeration"
+    );
+    expect(enum1.getSuperClasses({ filter: { fromVocabulary: ["ex"], strictMode: true } })).not.toContain(
+      "schema:Enumeration"
+    );
+    expect(enum1.getSuperClasses({ filter: { fromVocabulary: ["schema"], strictMode: false } })).toContain(
+      "schema:Enumeration"
+    );
+    expect(enum1.getSuperClasses({ filter: { fromVocabulary: ["ex"], strictMode: false } })).not.toContain(
+      "schema:Enumeration"
+    );
   });
 
-
   // applyFilter with schemaModule filters
+  // eslint-disable-next-line vitest/expect-expect
   test("applyFilter schema modules", async () => {
     const mySA = await testSdoAdapter({ schemaVersion: "15.0", vocabularies: [VOC_OBJ_ZOO] });
     const classIriFromCore = "schema:Hotel";
@@ -172,7 +204,14 @@ describe("applyFilter()", () => {
       }
     });
     const inc1 = [classIriFromCore, classIriFromExternal];
-    const exc1 = [classIriFromAuto, classIriFromBib, classIriFromHealth, classIriFromMeta, classIriFromPending, classIriFromAttic];
+    const exc1 = [
+      classIriFromAuto,
+      classIriFromBib,
+      classIriFromHealth,
+      classIriFromMeta,
+      classIriFromPending,
+      classIriFromAttic
+    ];
     checkMatches(res1, inc1, exc1);
     checkMatches(res1b, inc1, exc1);
 
@@ -188,7 +227,16 @@ describe("applyFilter()", () => {
     const res3 = mySA.getListOfClasses({
       filter: {}
     });
-    const inc3 = [classIriFromCore, classIriFromBib, classIriFromAttic, classIriFromExternal, classIriFromAuto, classIriFromHealth, classIriFromMeta, classIriFromPending];
+    const inc3 = [
+      classIriFromCore,
+      classIriFromBib,
+      classIriFromAttic,
+      classIriFromExternal,
+      classIriFromAuto,
+      classIriFromHealth,
+      classIriFromMeta,
+      classIriFromPending
+    ];
     checkMatches(res3, inc3, []);
 
     const res4 = mySA.getListOfClasses({
@@ -204,23 +252,29 @@ describe("applyFilter()", () => {
   test("applyFilter invalid input check", async () => {
     const mySA = await testSdoAdapter({ schemaVersion: "15.0", vocabularies: [VOC_OBJ_ZOO] });
 
-    expect(() => mySA.getListOfProperties({
-      filter: {
-        isSuperseded: "SomeThingFalse"
-      } as unknown as FilterObject
-    })).toThrow();
+    expect(() =>
+      mySA.getListOfProperties({
+        filter: {
+          isSuperseded: "SomeThingFalse"
+        } as unknown as FilterObject
+      })
+    ).toThrow();
 
-    expect(() => mySA.getListOfProperties({
-      filter: {
-        termType: ["SomeThingFalse"]
-      } as unknown as FilterObject
-    })).toThrow();
+    expect(() =>
+      mySA.getListOfProperties({
+        filter: {
+          termType: ["SomeThingFalse"]
+        } as unknown as FilterObject
+      })
+    ).toThrow();
 
-    expect(() => mySA.getListOfProperties({
-      filter: {
-        termType: ["Class", 42]
-      } as unknown as FilterObject
-    })).toThrow();
+    expect(() =>
+      mySA.getListOfProperties({
+        filter: {
+          termType: ["Class", 42]
+        } as unknown as FilterObject
+      })
+    ).toThrow();
 
     expect(() => {
       mySA.getListOfClasses({
@@ -283,15 +337,15 @@ describe("applyFilter()", () => {
   });
 
   // applyFilter with schemaModule filters
+  // eslint-disable-next-line vitest/expect-expect
   test("applyFilter defaultFilter", async () => {
     const mySA = await testSdoAdapter({
       schemaVersion: "15.0",
       vocabularies: [VOC_OBJ_ZOO],
-      defaultFilter:
-        {
-          schemaModuleExclude: ["attic", "meta"],
-          isSuperseded: false
-        }
+      defaultFilter: {
+        schemaModuleExclude: ["attic", "meta"],
+        isSuperseded: false
+      }
     });
     const classIriFromCore = "schema:Hotel";
     const classIriFromMeta = "schema:Class";
